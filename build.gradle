@@ -1,0 +1,28 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '2.0.0'
+}
+
+allprojects {
+    apply plugin: 'kotlin'
+
+    group = 'com.hiczp'
+    version = '0.0.1'
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        implementation group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib'
+        //implementation group: 'org.jetbrains.kotlin', name: 'kotlin-reflect'
+        testImplementation group: 'org.jetbrains.kotlin', name: 'kotlin-test'
+    }
+
+    kotlin {
+        jvmToolchain(17)
+    }
+
+    test {
+        useJUnitPlatform()
+    }
+}
