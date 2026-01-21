@@ -1,4 +1,0 @@
-rootProject.name = 'kotlin-telegram-bot-protocol'
-
-include 'generator'
-include 'protocol'
