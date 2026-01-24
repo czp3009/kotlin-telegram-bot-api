@@ -1,4 +1,4 @@
-rootProject.name = "kotlin-telegram-bot-protocol"
+rootProject.name = "kotlin-telegram-bot-api"
 
 pluginManagement {
     repositories {
