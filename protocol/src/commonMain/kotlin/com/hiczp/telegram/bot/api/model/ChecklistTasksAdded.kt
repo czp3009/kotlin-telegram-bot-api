@@ -1,6 +1,7 @@
 // Auto-generated from Swagger specificationDo not modify this file manually
 package com.hiczp.telegram.bot.api.model
 
+import kotlin.collections.List
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement

@@ -1,6 +1,9 @@
 // Auto-generated from Swagger specificationDo not modify this file manually
 package com.hiczp.telegram.bot.api.type
 
+import kotlin.Boolean
+import kotlin.Int
+import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
