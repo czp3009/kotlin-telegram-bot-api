@@ -1,9 +1,14 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
+
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
+    alias(libs.plugins.kotlinSerialization)
 }
 
 @Suppress("OPT_IN_USAGE")
 kotlin {
+    jvmToolchain(21)
+    
     applyDefaultHierarchyTemplate()
 
     // Windows
@@ -54,7 +59,23 @@ kotlin {
         nodejs()
         d8()
     }
-    wasmWasi {
-        nodejs()
+
+    sourceSets {
+        commonMain.dependencies {
+            // Only depend on ktorfit-lib-light, no KSP code generation needed
+            implementation(libs.ktorfit.lib.light)
+            implementation(libs.kotlinx.serialization.json)
+        }
     }
+}
+
+val downloadSwagger by tasks.registering(DownloadTelegramBotApiSwaggerTask::class)
+
+val generateKtorfitInterfaces by tasks.registering(GenerateKtorfitInterfacesTask::class) {
+    swaggerFile.set(downloadSwagger.flatMap { it.outputFile })
+    dependsOn(downloadSwagger)
+}
+
+tasks.withType<KotlinCompilationTask<*>>().configureEach {
+    dependsOn(generateKtorfitInterfaces)
 }

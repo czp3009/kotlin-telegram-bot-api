@@ -1,0 +1,1243 @@
+// Auto-generated from Swagger specificationDo not modify this file manually
+package com.hiczp.telegram.bot.api
+
+import com.hiczp.telegram.bot.api.model.*
+import com.hiczp.telegram.bot.api.type.TelegramResponse
+import de.jensklingenberg.ktorfit.http.*
+import kotlinx.serialization.json.JsonElement
+
+public interface TelegramBotApi {
+    /**
+     * getUpdates
+     */
+    @GET("/getUpdates")
+    public suspend fun getUpdates(
+        @Query("offset") offset: Long? = null,
+        @Query("limit") limit: Long? = null,
+        @Query("timeout") timeout: Long? = null,
+        @Query("allowed_updates") allowedUpdates: List<String>? = null,
+    ): TelegramResponse<List<Update>>
+
+    /**
+     * setWebhook
+     */
+    @POST("/setWebhook")
+    @Multipart
+    public suspend fun setWebhook(
+        @Part("url") url: String,
+        @Part("certificate") certificate: JsonElement? = null,
+        @Part("ip_address") ipAddress: String? = null,
+        @Part("max_connections") maxConnections: Long? = null,
+        @Part("allowed_updates") allowedUpdates: List<String>? = null,
+        @Part("drop_pending_updates") dropPendingUpdates: Boolean? = null,
+        @Part("secret_token") secretToken: String? = null,
+    ): TelegramResponse<Boolean>
+
+    /**
+     * deleteWebhook
+     */
+    @POST("/deleteWebhook")
+    public suspend fun deleteWebhook(@Body body: DeleteWebhookRequest): TelegramResponse<Boolean>
+
+    /**
+     * getWebhookInfo
+     */
+    @GET("/getWebhookInfo")
+    public suspend fun getWebhookInfo(): TelegramResponse<WebhookInfo>
+
+    /**
+     * getMe
+     */
+    @GET("/getMe")
+    public suspend fun getMe(): TelegramResponse<User>
+
+    /**
+     * logOut
+     */
+    @POST("/logOut")
+    public suspend fun logOut(@Body body: LogOutRequest): TelegramResponse<Boolean>
+
+    /**
+     * close
+     */
+    @POST("/close")
+    public suspend fun close(@Body body: CloseRequest): TelegramResponse<Boolean>
+
+    /**
+     * sendMessage
+     */
+    @POST("/sendMessage")
+    public suspend fun sendMessage(@Body body: SendMessageRequest): TelegramResponse<Message>
+
+    /**
+     * forwardMessage
+     */
+    @POST("/forwardMessage")
+    public suspend fun forwardMessage(@Body body: ForwardMessageRequest): TelegramResponse<Message>
+
+    /**
+     * forwardMessages
+     */
+    @POST("/forwardMessages")
+    public suspend fun forwardMessages(@Body body: ForwardMessagesRequest): TelegramResponse<List<MessageId>>
+
+    /**
+     * copyMessage
+     */
+    @POST("/copyMessage")
+    public suspend fun copyMessage(@Body body: CopyMessageRequest): TelegramResponse<MessageId>
+
+    /**
+     * copyMessages
+     */
+    @POST("/copyMessages")
+    public suspend fun copyMessages(@Body body: CopyMessagesRequest): TelegramResponse<List<MessageId>>
+
+    /**
+     * sendPhoto
+     */
+    @POST("/sendPhoto")
+    @Multipart
+    public suspend fun sendPhoto(
+        @Part("business_connection_id") businessConnectionId: String? = null,
+        @Part("chat_id") chatId: String,
+        @Part("message_thread_id") messageThreadId: Long? = null,
+        @Part("direct_messages_topic_id") directMessagesTopicId: Long? = null,
+        @Part("photo") photo: String,
+        @Part("caption") caption: String? = null,
+        @Part("parse_mode") parseMode: String? = null,
+        @Part("caption_entities") captionEntities: List<MessageEntity>? = null,
+        @Part("show_caption_above_media") showCaptionAboveMedia: Boolean? = null,
+        @Part("has_spoiler") hasSpoiler: Boolean? = null,
+        @Part("disable_notification") disableNotification: Boolean? = null,
+        @Part("protect_content") protectContent: Boolean? = null,
+        @Part("allow_paid_broadcast") allowPaidBroadcast: Boolean? = null,
+        @Part("message_effect_id") messageEffectId: String? = null,
+        @Part("suggested_post_parameters") suggestedPostParameters: JsonElement? = null,
+        @Part("reply_parameters") replyParameters: JsonElement? = null,
+        @Part("reply_markup") replyMarkup: ReplyMarkup? = null,
+    ): TelegramResponse<Message>
+
+    /**
+     * sendAudio
+     */
+    @POST("/sendAudio")
+    @Multipart
+    public suspend fun sendAudio(
+        @Part("business_connection_id") businessConnectionId: String? = null,
+        @Part("chat_id") chatId: String,
+        @Part("message_thread_id") messageThreadId: Long? = null,
+        @Part("direct_messages_topic_id") directMessagesTopicId: Long? = null,
+        @Part("audio") audio: String,
+        @Part("caption") caption: String? = null,
+        @Part("parse_mode") parseMode: String? = null,
+        @Part("caption_entities") captionEntities: List<MessageEntity>? = null,
+        @Part("duration") duration: Long? = null,
+        @Part("performer") performer: String? = null,
+        @Part("title") title: String? = null,
+        @Part("thumbnail") thumbnail: String? = null,
+        @Part("disable_notification") disableNotification: Boolean? = null,
+        @Part("protect_content") protectContent: Boolean? = null,
+        @Part("allow_paid_broadcast") allowPaidBroadcast: Boolean? = null,
+        @Part("message_effect_id") messageEffectId: String? = null,
+        @Part("suggested_post_parameters") suggestedPostParameters: JsonElement? = null,
+        @Part("reply_parameters") replyParameters: JsonElement? = null,
+        @Part("reply_markup") replyMarkup: ReplyMarkup? = null,
+    ): TelegramResponse<Message>
+
+    /**
+     * sendDocument
+     */
+    @POST("/sendDocument")
+    @Multipart
+    public suspend fun sendDocument(
+        @Part("business_connection_id") businessConnectionId: String? = null,
+        @Part("chat_id") chatId: String,
+        @Part("message_thread_id") messageThreadId: Long? = null,
+        @Part("direct_messages_topic_id") directMessagesTopicId: Long? = null,
+        @Part("document") document: String,
+        @Part("thumbnail") thumbnail: String? = null,
+        @Part("caption") caption: String? = null,
+        @Part("parse_mode") parseMode: String? = null,
+        @Part("caption_entities") captionEntities: List<MessageEntity>? = null,
+        @Part("disable_content_type_detection") disableContentTypeDetection: Boolean? = null,
+        @Part("disable_notification") disableNotification: Boolean? = null,
+        @Part("protect_content") protectContent: Boolean? = null,
+        @Part("allow_paid_broadcast") allowPaidBroadcast: Boolean? = null,
+        @Part("message_effect_id") messageEffectId: String? = null,
+        @Part("suggested_post_parameters") suggestedPostParameters: JsonElement? = null,
+        @Part("reply_parameters") replyParameters: JsonElement? = null,
+        @Part("reply_markup") replyMarkup: ReplyMarkup? = null,
+    ): TelegramResponse<Message>
+
+    /**
+     * sendVideo
+     */
+    @POST("/sendVideo")
+    @Multipart
+    public suspend fun sendVideo(
+        @Part("business_connection_id") businessConnectionId: String? = null,
+        @Part("chat_id") chatId: String,
+        @Part("message_thread_id") messageThreadId: Long? = null,
+        @Part("direct_messages_topic_id") directMessagesTopicId: Long? = null,
+        @Part("video") video: String,
+        @Part("duration") duration: Long? = null,
+        @Part("width") width: Long? = null,
+        @Part("height") height: Long? = null,
+        @Part("thumbnail") thumbnail: String? = null,
+        @Part("cover") cover: String? = null,
+        @Part("start_timestamp") startTimestamp: Long? = null,
+        @Part("caption") caption: String? = null,
+        @Part("parse_mode") parseMode: String? = null,
+        @Part("caption_entities") captionEntities: List<MessageEntity>? = null,
+        @Part("show_caption_above_media") showCaptionAboveMedia: Boolean? = null,
+        @Part("has_spoiler") hasSpoiler: Boolean? = null,
+        @Part("supports_streaming") supportsStreaming: Boolean? = null,
+        @Part("disable_notification") disableNotification: Boolean? = null,
+        @Part("protect_content") protectContent: Boolean? = null,
+        @Part("allow_paid_broadcast") allowPaidBroadcast: Boolean? = null,
+        @Part("message_effect_id") messageEffectId: String? = null,
+        @Part("suggested_post_parameters") suggestedPostParameters: JsonElement? = null,
+        @Part("reply_parameters") replyParameters: JsonElement? = null,
+        @Part("reply_markup") replyMarkup: ReplyMarkup? = null,
+    ): TelegramResponse<Message>
+
+    /**
+     * sendAnimation
+     */
+    @POST("/sendAnimation")
+    @Multipart
+    public suspend fun sendAnimation(
+        @Part("business_connection_id") businessConnectionId: String? = null,
+        @Part("chat_id") chatId: String,
+        @Part("message_thread_id") messageThreadId: Long? = null,
+        @Part("direct_messages_topic_id") directMessagesTopicId: Long? = null,
+        @Part("animation") animation: String,
+        @Part("duration") duration: Long? = null,
+        @Part("width") width: Long? = null,
+        @Part("height") height: Long? = null,
+        @Part("thumbnail") thumbnail: String? = null,
+        @Part("caption") caption: String? = null,
+        @Part("parse_mode") parseMode: String? = null,
+        @Part("caption_entities") captionEntities: List<MessageEntity>? = null,
+        @Part("show_caption_above_media") showCaptionAboveMedia: Boolean? = null,
+        @Part("has_spoiler") hasSpoiler: Boolean? = null,
+        @Part("disable_notification") disableNotification: Boolean? = null,
+        @Part("protect_content") protectContent: Boolean? = null,
+        @Part("allow_paid_broadcast") allowPaidBroadcast: Boolean? = null,
+        @Part("message_effect_id") messageEffectId: String? = null,
+        @Part("suggested_post_parameters") suggestedPostParameters: JsonElement? = null,
+        @Part("reply_parameters") replyParameters: JsonElement? = null,
+        @Part("reply_markup") replyMarkup: ReplyMarkup? = null,
+    ): TelegramResponse<Message>
+
+    /**
+     * sendVoice
+     */
+    @POST("/sendVoice")
+    @Multipart
+    public suspend fun sendVoice(
+        @Part("business_connection_id") businessConnectionId: String? = null,
+        @Part("chat_id") chatId: String,
+        @Part("message_thread_id") messageThreadId: Long? = null,
+        @Part("direct_messages_topic_id") directMessagesTopicId: Long? = null,
+        @Part("voice") voice: String,
+        @Part("caption") caption: String? = null,
+        @Part("parse_mode") parseMode: String? = null,
+        @Part("caption_entities") captionEntities: List<MessageEntity>? = null,
+        @Part("duration") duration: Long? = null,
+        @Part("disable_notification") disableNotification: Boolean? = null,
+        @Part("protect_content") protectContent: Boolean? = null,
+        @Part("allow_paid_broadcast") allowPaidBroadcast: Boolean? = null,
+        @Part("message_effect_id") messageEffectId: String? = null,
+        @Part("suggested_post_parameters") suggestedPostParameters: JsonElement? = null,
+        @Part("reply_parameters") replyParameters: JsonElement? = null,
+        @Part("reply_markup") replyMarkup: ReplyMarkup? = null,
+    ): TelegramResponse<Message>
+
+    /**
+     * sendVideoNote
+     */
+    @POST("/sendVideoNote")
+    @Multipart
+    public suspend fun sendVideoNote(
+        @Part("business_connection_id") businessConnectionId: String? = null,
+        @Part("chat_id") chatId: String,
+        @Part("message_thread_id") messageThreadId: Long? = null,
+        @Part("direct_messages_topic_id") directMessagesTopicId: Long? = null,
+        @Part("video_note") videoNote: String,
+        @Part("duration") duration: Long? = null,
+        @Part("length") length: Long? = null,
+        @Part("thumbnail") thumbnail: String? = null,
+        @Part("disable_notification") disableNotification: Boolean? = null,
+        @Part("protect_content") protectContent: Boolean? = null,
+        @Part("allow_paid_broadcast") allowPaidBroadcast: Boolean? = null,
+        @Part("message_effect_id") messageEffectId: String? = null,
+        @Part("suggested_post_parameters") suggestedPostParameters: JsonElement? = null,
+        @Part("reply_parameters") replyParameters: JsonElement? = null,
+        @Part("reply_markup") replyMarkup: ReplyMarkup? = null,
+    ): TelegramResponse<Message>
+
+    /**
+     * sendPaidMedia
+     */
+    @POST("/sendPaidMedia")
+    public suspend fun sendPaidMedia(@Body body: SendPaidMediaRequest): TelegramResponse<Message>
+
+    /**
+     * sendMediaGroup
+     */
+    @POST("/sendMediaGroup")
+    @Multipart
+    public suspend fun sendMediaGroup(
+        @Part("business_connection_id") businessConnectionId: String? = null,
+        @Part("chat_id") chatId: String,
+        @Part("message_thread_id") messageThreadId: Long? = null,
+        @Part("direct_messages_topic_id") directMessagesTopicId: Long? = null,
+        @Part("media") media: List<JsonElement?>,
+        @Part("disable_notification") disableNotification: Boolean? = null,
+        @Part("protect_content") protectContent: Boolean? = null,
+        @Part("allow_paid_broadcast") allowPaidBroadcast: Boolean? = null,
+        @Part("message_effect_id") messageEffectId: String? = null,
+        @Part("reply_parameters") replyParameters: JsonElement? = null,
+    ): TelegramResponse<List<Message>>
+
+    /**
+     * sendLocation
+     */
+    @POST("/sendLocation")
+    public suspend fun sendLocation(@Body body: SendLocationRequest): TelegramResponse<Message>
+
+    /**
+     * sendVenue
+     */
+    @POST("/sendVenue")
+    public suspend fun sendVenue(@Body body: SendVenueRequest): TelegramResponse<Message>
+
+    /**
+     * sendContact
+     */
+    @POST("/sendContact")
+    public suspend fun sendContact(@Body body: SendContactRequest): TelegramResponse<Message>
+
+    /**
+     * sendPoll
+     */
+    @POST("/sendPoll")
+    public suspend fun sendPoll(@Body body: SendPollRequest): TelegramResponse<Message>
+
+    /**
+     * sendChecklist
+     */
+    @POST("/sendChecklist")
+    public suspend fun sendChecklist(@Body body: SendChecklistRequest): TelegramResponse<Message>
+
+    /**
+     * sendDice
+     */
+    @POST("/sendDice")
+    public suspend fun sendDice(@Body body: SendDiceRequest): TelegramResponse<Message>
+
+    /**
+     * sendMessageDraft
+     */
+    @POST("/sendMessageDraft")
+    public suspend fun sendMessageDraft(@Body body: SendMessageDraftRequest): TelegramResponse<Boolean>
+
+    /**
+     * sendChatAction
+     */
+    @POST("/sendChatAction")
+    public suspend fun sendChatAction(@Body body: SendChatActionRequest): TelegramResponse<Boolean>
+
+    /**
+     * setMessageReaction
+     */
+    @POST("/setMessageReaction")
+    public suspend fun setMessageReaction(@Body body: SetMessageReactionRequest): TelegramResponse<Boolean>
+
+    /**
+     * getUserProfilePhotos
+     */
+    @GET("/getUserProfilePhotos")
+    public suspend fun getUserProfilePhotos(
+        @Query("user_id") userId: Long,
+        @Query("offset") offset: Long? = null,
+        @Query("limit") limit: Long? = null,
+    ): TelegramResponse<UserProfilePhotos>
+
+    /**
+     * setUserEmojiStatus
+     */
+    @POST("/setUserEmojiStatus")
+    public suspend fun setUserEmojiStatus(@Body body: SetUserEmojiStatusRequest): TelegramResponse<Boolean>
+
+    /**
+     * getFile
+     */
+    @GET("/getFile")
+    public suspend fun getFile(@Query("file_id") fileId: String): TelegramResponse<File>
+
+    /**
+     * banChatMember
+     */
+    @POST("/banChatMember")
+    public suspend fun banChatMember(@Body body: BanChatMemberRequest): TelegramResponse<Boolean>
+
+    /**
+     * unbanChatMember
+     */
+    @POST("/unbanChatMember")
+    public suspend fun unbanChatMember(@Body body: UnbanChatMemberRequest): TelegramResponse<Boolean>
+
+    /**
+     * restrictChatMember
+     */
+    @POST("/restrictChatMember")
+    public suspend fun restrictChatMember(@Body body: RestrictChatMemberRequest): TelegramResponse<Boolean>
+
+    /**
+     * promoteChatMember
+     */
+    @POST("/promoteChatMember")
+    public suspend fun promoteChatMember(@Body body: PromoteChatMemberRequest): TelegramResponse<Boolean>
+
+    /**
+     * setChatAdministratorCustomTitle
+     */
+    @POST("/setChatAdministratorCustomTitle")
+    public suspend fun setChatAdministratorCustomTitle(@Body body: SetChatAdministratorCustomTitleRequest): TelegramResponse<Boolean>
+
+    /**
+     * banChatSenderChat
+     */
+    @POST("/banChatSenderChat")
+    public suspend fun banChatSenderChat(@Body body: BanChatSenderChatRequest): TelegramResponse<Boolean>
+
+    /**
+     * unbanChatSenderChat
+     */
+    @POST("/unbanChatSenderChat")
+    public suspend fun unbanChatSenderChat(@Body body: UnbanChatSenderChatRequest): TelegramResponse<Boolean>
+
+    /**
+     * setChatPermissions
+     */
+    @POST("/setChatPermissions")
+    public suspend fun setChatPermissions(@Body body: SetChatPermissionsRequest): TelegramResponse<Boolean>
+
+    /**
+     * exportChatInviteLink
+     */
+    @POST("/exportChatInviteLink")
+    public suspend fun exportChatInviteLink(@Body body: ExportChatInviteLinkRequest): TelegramResponse<String>
+
+    /**
+     * createChatInviteLink
+     */
+    @POST("/createChatInviteLink")
+    public suspend fun createChatInviteLink(@Body body: CreateChatInviteLinkRequest): TelegramResponse<ChatInviteLink>
+
+    /**
+     * editChatInviteLink
+     */
+    @POST("/editChatInviteLink")
+    public suspend fun editChatInviteLink(@Body body: EditChatInviteLinkRequest): TelegramResponse<ChatInviteLink>
+
+    /**
+     * createChatSubscriptionInviteLink
+     */
+    @POST("/createChatSubscriptionInviteLink")
+    public suspend fun createChatSubscriptionInviteLink(@Body body: CreateChatSubscriptionInviteLinkRequest): TelegramResponse<ChatInviteLink>
+
+    /**
+     * editChatSubscriptionInviteLink
+     */
+    @POST("/editChatSubscriptionInviteLink")
+    public suspend fun editChatSubscriptionInviteLink(@Body body: EditChatSubscriptionInviteLinkRequest): TelegramResponse<ChatInviteLink>
+
+    /**
+     * revokeChatInviteLink
+     */
+    @POST("/revokeChatInviteLink")
+    public suspend fun revokeChatInviteLink(@Body body: RevokeChatInviteLinkRequest): TelegramResponse<ChatInviteLink>
+
+    /**
+     * approveChatJoinRequest
+     */
+    @POST("/approveChatJoinRequest")
+    public suspend fun approveChatJoinRequest(@Body body: ApproveChatJoinRequestRequest): TelegramResponse<Boolean>
+
+    /**
+     * declineChatJoinRequest
+     */
+    @POST("/declineChatJoinRequest")
+    public suspend fun declineChatJoinRequest(@Body body: DeclineChatJoinRequestRequest): TelegramResponse<Boolean>
+
+    /**
+     * setChatPhoto
+     */
+    @POST("/setChatPhoto")
+    @Multipart
+    public suspend fun setChatPhoto(
+        @Part("chat_id") chatId: String,
+        @Part("photo") photo: JsonElement?
+    ): TelegramResponse<Boolean>
+
+    /**
+     * deleteChatPhoto
+     */
+    @POST("/deleteChatPhoto")
+    public suspend fun deleteChatPhoto(@Body body: DeleteChatPhotoRequest): TelegramResponse<Boolean>
+
+    /**
+     * setChatTitle
+     */
+    @POST("/setChatTitle")
+    public suspend fun setChatTitle(@Body body: SetChatTitleRequest): TelegramResponse<Boolean>
+
+    /**
+     * setChatDescription
+     */
+    @POST("/setChatDescription")
+    public suspend fun setChatDescription(@Body body: SetChatDescriptionRequest): TelegramResponse<Boolean>
+
+    /**
+     * pinChatMessage
+     */
+    @POST("/pinChatMessage")
+    public suspend fun pinChatMessage(@Body body: PinChatMessageRequest): TelegramResponse<Boolean>
+
+    /**
+     * unpinChatMessage
+     */
+    @POST("/unpinChatMessage")
+    public suspend fun unpinChatMessage(@Body body: UnpinChatMessageRequest): TelegramResponse<Boolean>
+
+    /**
+     * unpinAllChatMessages
+     */
+    @POST("/unpinAllChatMessages")
+    public suspend fun unpinAllChatMessages(@Body body: UnpinAllChatMessagesRequest): TelegramResponse<Boolean>
+
+    /**
+     * leaveChat
+     */
+    @POST("/leaveChat")
+    public suspend fun leaveChat(@Body body: LeaveChatRequest): TelegramResponse<Boolean>
+
+    /**
+     * getChat
+     */
+    @GET("/getChat")
+    public suspend fun getChat(@Query("chat_id") chatId: String): TelegramResponse<ChatFullInfo>
+
+    /**
+     * getChatAdministrators
+     */
+    @GET("/getChatAdministrators")
+    public suspend fun getChatAdministrators(@Query("chat_id") chatId: String): TelegramResponse<List<ChatMember>>
+
+    /**
+     * getChatMemberCount
+     */
+    @GET("/getChatMemberCount")
+    public suspend fun getChatMemberCount(@Query("chat_id") chatId: String): TelegramResponse<Long>
+
+    /**
+     * getChatMember
+     */
+    @GET("/getChatMember")
+    public suspend fun getChatMember(
+        @Query("chat_id") chatId: String,
+        @Query("user_id") userId: Long
+    ): TelegramResponse<ChatMember>
+
+    /**
+     * setChatStickerSet
+     */
+    @POST("/setChatStickerSet")
+    public suspend fun setChatStickerSet(@Body body: SetChatStickerSetRequest): TelegramResponse<Boolean>
+
+    /**
+     * deleteChatStickerSet
+     */
+    @POST("/deleteChatStickerSet")
+    public suspend fun deleteChatStickerSet(@Body body: DeleteChatStickerSetRequest): TelegramResponse<Boolean>
+
+    /**
+     * getForumTopicIconStickers
+     */
+    @GET("/getForumTopicIconStickers")
+    public suspend fun getForumTopicIconStickers(): TelegramResponse<List<Sticker>>
+
+    /**
+     * createForumTopic
+     */
+    @POST("/createForumTopic")
+    public suspend fun createForumTopic(@Body body: CreateForumTopicRequest): TelegramResponse<ForumTopic>
+
+    /**
+     * editForumTopic
+     */
+    @POST("/editForumTopic")
+    public suspend fun editForumTopic(@Body body: EditForumTopicRequest): TelegramResponse<Boolean>
+
+    /**
+     * closeForumTopic
+     */
+    @POST("/closeForumTopic")
+    public suspend fun closeForumTopic(@Body body: CloseForumTopicRequest): TelegramResponse<Boolean>
+
+    /**
+     * reopenForumTopic
+     */
+    @POST("/reopenForumTopic")
+    public suspend fun reopenForumTopic(@Body body: ReopenForumTopicRequest): TelegramResponse<Boolean>
+
+    /**
+     * deleteForumTopic
+     */
+    @POST("/deleteForumTopic")
+    public suspend fun deleteForumTopic(@Body body: DeleteForumTopicRequest): TelegramResponse<Boolean>
+
+    /**
+     * unpinAllForumTopicMessages
+     */
+    @POST("/unpinAllForumTopicMessages")
+    public suspend fun unpinAllForumTopicMessages(@Body body: UnpinAllForumTopicMessagesRequest): TelegramResponse<Boolean>
+
+    /**
+     * editGeneralForumTopic
+     */
+    @POST("/editGeneralForumTopic")
+    public suspend fun editGeneralForumTopic(@Body body: EditGeneralForumTopicRequest): TelegramResponse<Boolean>
+
+    /**
+     * closeGeneralForumTopic
+     */
+    @POST("/closeGeneralForumTopic")
+    public suspend fun closeGeneralForumTopic(@Body body: CloseGeneralForumTopicRequest): TelegramResponse<Boolean>
+
+    /**
+     * reopenGeneralForumTopic
+     */
+    @POST("/reopenGeneralForumTopic")
+    public suspend fun reopenGeneralForumTopic(@Body body: ReopenGeneralForumTopicRequest): TelegramResponse<Boolean>
+
+    /**
+     * hideGeneralForumTopic
+     */
+    @POST("/hideGeneralForumTopic")
+    public suspend fun hideGeneralForumTopic(@Body body: HideGeneralForumTopicRequest): TelegramResponse<Boolean>
+
+    /**
+     * unhideGeneralForumTopic
+     */
+    @POST("/unhideGeneralForumTopic")
+    public suspend fun unhideGeneralForumTopic(@Body body: UnhideGeneralForumTopicRequest): TelegramResponse<Boolean>
+
+    /**
+     * unpinAllGeneralForumTopicMessages
+     */
+    @POST("/unpinAllGeneralForumTopicMessages")
+    public suspend fun unpinAllGeneralForumTopicMessages(@Body body: UnpinAllGeneralForumTopicMessagesRequest): TelegramResponse<Boolean>
+
+    /**
+     * answerCallbackQuery
+     */
+    @POST("/answerCallbackQuery")
+    public suspend fun answerCallbackQuery(@Body body: AnswerCallbackQueryRequest): TelegramResponse<Boolean>
+
+    /**
+     * getUserChatBoosts
+     */
+    @GET("/getUserChatBoosts")
+    public suspend fun getUserChatBoosts(
+        @Query("chat_id") chatId: String,
+        @Query("user_id") userId: Long
+    ): TelegramResponse<UserChatBoosts>
+
+    /**
+     * getBusinessConnection
+     */
+    @GET("/getBusinessConnection")
+    public suspend fun getBusinessConnection(@Query("business_connection_id") businessConnectionId: String): TelegramResponse<BusinessConnection>
+
+    /**
+     * setMyCommands
+     */
+    @POST("/setMyCommands")
+    public suspend fun setMyCommands(@Body body: SetMyCommandsRequest): TelegramResponse<Boolean>
+
+    /**
+     * deleteMyCommands
+     */
+    @POST("/deleteMyCommands")
+    public suspend fun deleteMyCommands(@Body body: DeleteMyCommandsRequest): TelegramResponse<Boolean>
+
+    /**
+     * getMyCommands
+     */
+    @GET("/getMyCommands")
+    public suspend fun getMyCommands(
+        @Query("scope") scope: BotCommandScope? = null,
+        @Query("language_code") languageCode: String? = null
+    ): TelegramResponse<List<BotCommand>>
+
+    /**
+     * setMyName
+     */
+    @POST("/setMyName")
+    public suspend fun setMyName(@Body body: SetMyNameRequest): TelegramResponse<Boolean>
+
+    /**
+     * getMyName
+     */
+    @GET("/getMyName")
+    public suspend fun getMyName(@Query("language_code") languageCode: String? = null): TelegramResponse<BotName>
+
+    /**
+     * setMyDescription
+     */
+    @POST("/setMyDescription")
+    public suspend fun setMyDescription(@Body body: SetMyDescriptionRequest): TelegramResponse<Boolean>
+
+    /**
+     * getMyDescription
+     */
+    @GET("/getMyDescription")
+    public suspend fun getMyDescription(@Query("language_code") languageCode: String? = null): TelegramResponse<BotDescription>
+
+    /**
+     * setMyShortDescription
+     */
+    @POST("/setMyShortDescription")
+    public suspend fun setMyShortDescription(@Body body: SetMyShortDescriptionRequest): TelegramResponse<Boolean>
+
+    /**
+     * getMyShortDescription
+     */
+    @GET("/getMyShortDescription")
+    public suspend fun getMyShortDescription(@Query("language_code") languageCode: String? = null): TelegramResponse<BotShortDescription>
+
+    /**
+     * setChatMenuButton
+     */
+    @POST("/setChatMenuButton")
+    public suspend fun setChatMenuButton(@Body body: SetChatMenuButtonRequest): TelegramResponse<Boolean>
+
+    /**
+     * getChatMenuButton
+     */
+    @GET("/getChatMenuButton")
+    public suspend fun getChatMenuButton(@Query("chat_id") chatId: Long? = null): TelegramResponse<MenuButton>
+
+    /**
+     * setMyDefaultAdministratorRights
+     */
+    @POST("/setMyDefaultAdministratorRights")
+    public suspend fun setMyDefaultAdministratorRights(@Body body: SetMyDefaultAdministratorRightsRequest): TelegramResponse<Boolean>
+
+    /**
+     * getMyDefaultAdministratorRights
+     */
+    @GET("/getMyDefaultAdministratorRights")
+    public suspend fun getMyDefaultAdministratorRights(@Query("for_channels") forChannels: Boolean? = null): TelegramResponse<ChatAdministratorRights>
+
+    /**
+     * getAvailableGifts
+     */
+    @GET("/getAvailableGifts")
+    public suspend fun getAvailableGifts(): TelegramResponse<Gifts>
+
+    /**
+     * sendGift
+     */
+    @POST("/sendGift")
+    public suspend fun sendGift(@Body body: SendGiftRequest): TelegramResponse<Boolean>
+
+    /**
+     * giftPremiumSubscription
+     */
+    @POST("/giftPremiumSubscription")
+    public suspend fun giftPremiumSubscription(@Body body: GiftPremiumSubscriptionRequest): TelegramResponse<Boolean>
+
+    /**
+     * verifyUser
+     */
+    @POST("/verifyUser")
+    public suspend fun verifyUser(@Body body: VerifyUserRequest): TelegramResponse<Boolean>
+
+    /**
+     * verifyChat
+     */
+    @POST("/verifyChat")
+    public suspend fun verifyChat(@Body body: VerifyChatRequest): TelegramResponse<Boolean>
+
+    /**
+     * removeUserVerification
+     */
+    @POST("/removeUserVerification")
+    public suspend fun removeUserVerification(@Body body: RemoveUserVerificationRequest): TelegramResponse<Boolean>
+
+    /**
+     * removeChatVerification
+     */
+    @POST("/removeChatVerification")
+    public suspend fun removeChatVerification(@Body body: RemoveChatVerificationRequest): TelegramResponse<Boolean>
+
+    /**
+     * readBusinessMessage
+     */
+    @POST("/readBusinessMessage")
+    public suspend fun readBusinessMessage(@Body body: ReadBusinessMessageRequest): TelegramResponse<Boolean>
+
+    /**
+     * deleteBusinessMessages
+     */
+    @POST("/deleteBusinessMessages")
+    public suspend fun deleteBusinessMessages(@Body body: DeleteBusinessMessagesRequest): TelegramResponse<Boolean>
+
+    /**
+     * setBusinessAccountName
+     */
+    @POST("/setBusinessAccountName")
+    public suspend fun setBusinessAccountName(@Body body: SetBusinessAccountNameRequest): TelegramResponse<Boolean>
+
+    /**
+     * setBusinessAccountUsername
+     */
+    @POST("/setBusinessAccountUsername")
+    public suspend fun setBusinessAccountUsername(@Body body: SetBusinessAccountUsernameRequest): TelegramResponse<Boolean>
+
+    /**
+     * setBusinessAccountBio
+     */
+    @POST("/setBusinessAccountBio")
+    public suspend fun setBusinessAccountBio(@Body body: SetBusinessAccountBioRequest): TelegramResponse<Boolean>
+
+    /**
+     * setBusinessAccountProfilePhoto
+     */
+    @POST("/setBusinessAccountProfilePhoto")
+    public suspend fun setBusinessAccountProfilePhoto(@Body body: SetBusinessAccountProfilePhotoRequest): TelegramResponse<Boolean>
+
+    /**
+     * removeBusinessAccountProfilePhoto
+     */
+    @POST("/removeBusinessAccountProfilePhoto")
+    public suspend fun removeBusinessAccountProfilePhoto(@Body body: RemoveBusinessAccountProfilePhotoRequest): TelegramResponse<Boolean>
+
+    /**
+     * setBusinessAccountGiftSettings
+     */
+    @POST("/setBusinessAccountGiftSettings")
+    public suspend fun setBusinessAccountGiftSettings(@Body body: SetBusinessAccountGiftSettingsRequest): TelegramResponse<Boolean>
+
+    /**
+     * getBusinessAccountStarBalance
+     */
+    @GET("/getBusinessAccountStarBalance")
+    public suspend fun getBusinessAccountStarBalance(@Query("business_connection_id") businessConnectionId: String): TelegramResponse<StarAmount>
+
+    /**
+     * transferBusinessAccountStars
+     */
+    @POST("/transferBusinessAccountStars")
+    public suspend fun transferBusinessAccountStars(@Body body: TransferBusinessAccountStarsRequest): TelegramResponse<Boolean>
+
+    /**
+     * getBusinessAccountGifts
+     */
+    @GET("/getBusinessAccountGifts")
+    public suspend fun getBusinessAccountGifts(
+        @Query("business_connection_id") businessConnectionId: String,
+        @Query("exclude_unsaved") excludeUnsaved: Boolean? = null,
+        @Query("exclude_saved") excludeSaved: Boolean? = null,
+        @Query("exclude_unlimited") excludeUnlimited: Boolean? = null,
+        @Query("exclude_limited_upgradable") excludeLimitedUpgradable: Boolean? = null,
+        @Query("exclude_limited_non_upgradable") excludeLimitedNonUpgradable: Boolean? = null,
+        @Query("exclude_unique") excludeUnique: Boolean? = null,
+        @Query("exclude_from_blockchain") excludeFromBlockchain: Boolean? = null,
+        @Query("sort_by_price") sortByPrice: Boolean? = null,
+        @Query("offset") offset: String? = null,
+        @Query("limit") limit: Long? = null,
+    ): TelegramResponse<OwnedGifts>
+
+    /**
+     * getUserGifts
+     */
+    @GET("/getUserGifts")
+    public suspend fun getUserGifts(
+        @Query("user_id") userId: Long,
+        @Query("exclude_unlimited") excludeUnlimited: Boolean? = null,
+        @Query("exclude_limited_upgradable") excludeLimitedUpgradable: Boolean? = null,
+        @Query("exclude_limited_non_upgradable") excludeLimitedNonUpgradable: Boolean? = null,
+        @Query("exclude_from_blockchain") excludeFromBlockchain: Boolean? = null,
+        @Query("exclude_unique") excludeUnique: Boolean? = null,
+        @Query("sort_by_price") sortByPrice: Boolean? = null,
+        @Query("offset") offset: String? = null,
+        @Query("limit") limit: Long? = null,
+    ): TelegramResponse<OwnedGifts>
+
+    /**
+     * getChatGifts
+     */
+    @GET("/getChatGifts")
+    public suspend fun getChatGifts(
+        @Query("chat_id") chatId: String,
+        @Query("exclude_unsaved") excludeUnsaved: Boolean? = null,
+        @Query("exclude_saved") excludeSaved: Boolean? = null,
+        @Query("exclude_unlimited") excludeUnlimited: Boolean? = null,
+        @Query("exclude_limited_upgradable") excludeLimitedUpgradable: Boolean? = null,
+        @Query("exclude_limited_non_upgradable") excludeLimitedNonUpgradable: Boolean? = null,
+        @Query("exclude_from_blockchain") excludeFromBlockchain: Boolean? = null,
+        @Query("exclude_unique") excludeUnique: Boolean? = null,
+        @Query("sort_by_price") sortByPrice: Boolean? = null,
+        @Query("offset") offset: String? = null,
+        @Query("limit") limit: Long? = null,
+    ): TelegramResponse<OwnedGifts>
+
+    /**
+     * convertGiftToStars
+     */
+    @POST("/convertGiftToStars")
+    public suspend fun convertGiftToStars(@Body body: ConvertGiftToStarsRequest): TelegramResponse<Boolean>
+
+    /**
+     * upgradeGift
+     */
+    @POST("/upgradeGift")
+    public suspend fun upgradeGift(@Body body: UpgradeGiftRequest): TelegramResponse<Boolean>
+
+    /**
+     * transferGift
+     */
+    @POST("/transferGift")
+    public suspend fun transferGift(@Body body: TransferGiftRequest): TelegramResponse<Boolean>
+
+    /**
+     * postStory
+     */
+    @POST("/postStory")
+    public suspend fun postStory(@Body body: PostStoryRequest): TelegramResponse<Story>
+
+    /**
+     * repostStory
+     */
+    @POST("/repostStory")
+    public suspend fun repostStory(@Body body: RepostStoryRequest): TelegramResponse<Story>
+
+    /**
+     * editStory
+     */
+    @POST("/editStory")
+    public suspend fun editStory(@Body body: EditStoryRequest): TelegramResponse<Story>
+
+    /**
+     * deleteStory
+     */
+    @POST("/deleteStory")
+    public suspend fun deleteStory(@Body body: DeleteStoryRequest): TelegramResponse<Boolean>
+
+    /**
+     * editMessageText
+     */
+    @POST("/editMessageText")
+    public suspend fun editMessageText(@Body body: EditMessageTextRequest): TelegramResponse<Boolean>
+
+    /**
+     * editMessageCaption
+     */
+    @POST("/editMessageCaption")
+    public suspend fun editMessageCaption(@Body body: EditMessageCaptionRequest): TelegramResponse<Boolean>
+
+    /**
+     * editMessageMedia
+     */
+    @POST("/editMessageMedia")
+    @Multipart
+    public suspend fun editMessageMedia(
+        @Part("business_connection_id") businessConnectionId: String? = null,
+        @Part("chat_id") chatId: String? = null,
+        @Part("message_id") messageId: Long? = null,
+        @Part("inline_message_id") inlineMessageId: String? = null,
+        @Part("media") media: JsonElement?,
+        @Part("reply_markup") replyMarkup: JsonElement? = null,
+    ): TelegramResponse<Boolean>
+
+    /**
+     * editMessageLiveLocation
+     */
+    @POST("/editMessageLiveLocation")
+    public suspend fun editMessageLiveLocation(@Body body: EditMessageLiveLocationRequest): TelegramResponse<Boolean>
+
+    /**
+     * stopMessageLiveLocation
+     */
+    @POST("/stopMessageLiveLocation")
+    public suspend fun stopMessageLiveLocation(@Body body: StopMessageLiveLocationRequest): TelegramResponse<Boolean>
+
+    /**
+     * editMessageChecklist
+     */
+    @POST("/editMessageChecklist")
+    public suspend fun editMessageChecklist(@Body body: EditMessageChecklistRequest): TelegramResponse<Message>
+
+    /**
+     * editMessageReplyMarkup
+     */
+    @POST("/editMessageReplyMarkup")
+    public suspend fun editMessageReplyMarkup(@Body body: EditMessageReplyMarkupRequest): TelegramResponse<Boolean>
+
+    /**
+     * stopPoll
+     */
+    @POST("/stopPoll")
+    public suspend fun stopPoll(@Body body: StopPollRequest): TelegramResponse<Poll>
+
+    /**
+     * approveSuggestedPost
+     */
+    @POST("/approveSuggestedPost")
+    public suspend fun approveSuggestedPost(@Body body: ApproveSuggestedPostRequest): TelegramResponse<Boolean>
+
+    /**
+     * declineSuggestedPost
+     */
+    @POST("/declineSuggestedPost")
+    public suspend fun declineSuggestedPost(@Body body: DeclineSuggestedPostRequest): TelegramResponse<Boolean>
+
+    /**
+     * deleteMessage
+     */
+    @POST("/deleteMessage")
+    public suspend fun deleteMessage(@Body body: DeleteMessageRequest): TelegramResponse<Boolean>
+
+    /**
+     * deleteMessages
+     */
+    @POST("/deleteMessages")
+    public suspend fun deleteMessages(@Body body: DeleteMessagesRequest): TelegramResponse<Boolean>
+
+    /**
+     * sendSticker
+     */
+    @POST("/sendSticker")
+    @Multipart
+    public suspend fun sendSticker(
+        @Part("business_connection_id") businessConnectionId: String? = null,
+        @Part("chat_id") chatId: String,
+        @Part("message_thread_id") messageThreadId: Long? = null,
+        @Part("direct_messages_topic_id") directMessagesTopicId: Long? = null,
+        @Part("sticker") sticker: String,
+        @Part("emoji") emoji: String? = null,
+        @Part("disable_notification") disableNotification: Boolean? = null,
+        @Part("protect_content") protectContent: Boolean? = null,
+        @Part("allow_paid_broadcast") allowPaidBroadcast: Boolean? = null,
+        @Part("message_effect_id") messageEffectId: String? = null,
+        @Part("suggested_post_parameters") suggestedPostParameters: JsonElement? = null,
+        @Part("reply_parameters") replyParameters: JsonElement? = null,
+        @Part("reply_markup") replyMarkup: ReplyMarkup? = null,
+    ): TelegramResponse<Message>
+
+    /**
+     * getStickerSet
+     */
+    @GET("/getStickerSet")
+    public suspend fun getStickerSet(@Query("name") name: String): TelegramResponse<StickerSet>
+
+    /**
+     * getCustomEmojiStickers
+     */
+    @GET("/getCustomEmojiStickers")
+    public suspend fun getCustomEmojiStickers(@Query("custom_emoji_ids") customEmojiIds: List<String>): TelegramResponse<List<Sticker>>
+
+    /**
+     * uploadStickerFile
+     */
+    @POST("/uploadStickerFile")
+    @Multipart
+    public suspend fun uploadStickerFile(
+        @Part("user_id") userId: Long,
+        @Part("sticker") sticker: JsonElement?,
+        @Part("sticker_format") stickerFormat: String,
+    ): TelegramResponse<File>
+
+    /**
+     * createNewStickerSet
+     */
+    @POST("/createNewStickerSet")
+    public suspend fun createNewStickerSet(@Body body: CreateNewStickerSetRequest): TelegramResponse<Boolean>
+
+    /**
+     * addStickerToSet
+     */
+    @POST("/addStickerToSet")
+    public suspend fun addStickerToSet(@Body body: AddStickerToSetRequest): TelegramResponse<Boolean>
+
+    /**
+     * setStickerPositionInSet
+     */
+    @POST("/setStickerPositionInSet")
+    public suspend fun setStickerPositionInSet(@Body body: SetStickerPositionInSetRequest): TelegramResponse<Boolean>
+
+    /**
+     * deleteStickerFromSet
+     */
+    @POST("/deleteStickerFromSet")
+    public suspend fun deleteStickerFromSet(@Body body: DeleteStickerFromSetRequest): TelegramResponse<Boolean>
+
+    /**
+     * replaceStickerInSet
+     */
+    @POST("/replaceStickerInSet")
+    public suspend fun replaceStickerInSet(@Body body: ReplaceStickerInSetRequest): TelegramResponse<Boolean>
+
+    /**
+     * setStickerEmojiList
+     */
+    @POST("/setStickerEmojiList")
+    public suspend fun setStickerEmojiList(@Body body: SetStickerEmojiListRequest): TelegramResponse<Boolean>
+
+    /**
+     * setStickerKeywords
+     */
+    @POST("/setStickerKeywords")
+    public suspend fun setStickerKeywords(@Body body: SetStickerKeywordsRequest): TelegramResponse<Boolean>
+
+    /**
+     * setStickerMaskPosition
+     */
+    @POST("/setStickerMaskPosition")
+    public suspend fun setStickerMaskPosition(@Body body: SetStickerMaskPositionRequest): TelegramResponse<Boolean>
+
+    /**
+     * setStickerSetTitle
+     */
+    @POST("/setStickerSetTitle")
+    public suspend fun setStickerSetTitle(@Body body: SetStickerSetTitleRequest): TelegramResponse<Boolean>
+
+    /**
+     * setStickerSetThumbnail
+     */
+    @POST("/setStickerSetThumbnail")
+    @Multipart
+    public suspend fun setStickerSetThumbnail(
+        @Part("name") name: String,
+        @Part("user_id") userId: Long,
+        @Part("thumbnail") thumbnail: String? = null,
+        @Part("format") format: String,
+    ): TelegramResponse<Boolean>
+
+    /**
+     * setCustomEmojiStickerSetThumbnail
+     */
+    @POST("/setCustomEmojiStickerSetThumbnail")
+    public suspend fun setCustomEmojiStickerSetThumbnail(@Body body: SetCustomEmojiStickerSetThumbnailRequest): TelegramResponse<Boolean>
+
+    /**
+     * deleteStickerSet
+     */
+    @POST("/deleteStickerSet")
+    public suspend fun deleteStickerSet(@Body body: DeleteStickerSetRequest): TelegramResponse<Boolean>
+
+    /**
+     * answerInlineQuery
+     */
+    @POST("/answerInlineQuery")
+    public suspend fun answerInlineQuery(@Body body: AnswerInlineQueryRequest): TelegramResponse<Boolean>
+
+    /**
+     * answerWebAppQuery
+     */
+    @POST("/answerWebAppQuery")
+    public suspend fun answerWebAppQuery(@Body body: AnswerWebAppQueryRequest): TelegramResponse<SentWebAppMessage>
+
+    /**
+     * savePreparedInlineMessage
+     */
+    @POST("/savePreparedInlineMessage")
+    public suspend fun savePreparedInlineMessage(@Body body: SavePreparedInlineMessageRequest): TelegramResponse<PreparedInlineMessage>
+
+    /**
+     * sendInvoice
+     */
+    @POST("/sendInvoice")
+    public suspend fun sendInvoice(@Body body: SendInvoiceRequest): TelegramResponse<Message>
+
+    /**
+     * createInvoiceLink
+     */
+    @POST("/createInvoiceLink")
+    public suspend fun createInvoiceLink(@Body body: CreateInvoiceLinkRequest): TelegramResponse<String>
+
+    /**
+     * answerShippingQuery
+     */
+    @POST("/answerShippingQuery")
+    public suspend fun answerShippingQuery(@Body body: AnswerShippingQueryRequest): TelegramResponse<Boolean>
+
+    /**
+     * answerPreCheckoutQuery
+     */
+    @POST("/answerPreCheckoutQuery")
+    public suspend fun answerPreCheckoutQuery(@Body body: AnswerPreCheckoutQueryRequest): TelegramResponse<Boolean>
+
+    /**
+     * getMyStarBalance
+     */
+    @GET("/getMyStarBalance")
+    public suspend fun getMyStarBalance(): TelegramResponse<StarAmount>
+
+    /**
+     * getStarTransactions
+     */
+    @GET("/getStarTransactions")
+    public suspend fun getStarTransactions(
+        @Query("offset") offset: Long? = null,
+        @Query("limit") limit: Long? = null
+    ): TelegramResponse<StarTransactions>
+
+    /**
+     * refundStarPayment
+     */
+    @POST("/refundStarPayment")
+    public suspend fun refundStarPayment(@Body body: RefundStarPaymentRequest): TelegramResponse<Boolean>
+
+    /**
+     * editUserStarSubscription
+     */
+    @POST("/editUserStarSubscription")
+    public suspend fun editUserStarSubscription(@Body body: EditUserStarSubscriptionRequest): TelegramResponse<Boolean>
+
+    /**
+     * setPassportDataErrors
+     */
+    @POST("/setPassportDataErrors")
+    public suspend fun setPassportDataErrors(@Body body: SetPassportDataErrorsRequest): TelegramResponse<Boolean>
+
+    /**
+     * sendGame
+     */
+    @POST("/sendGame")
+    public suspend fun sendGame(@Body body: SendGameRequest): TelegramResponse<Message>
+
+    /**
+     * setGameScore
+     */
+    @POST("/setGameScore")
+    public suspend fun setGameScore(@Body body: SetGameScoreRequest): TelegramResponse<Boolean>
+
+    /**
+     * getGameHighScores
+     */
+    @GET("/getGameHighScores")
+    public suspend fun getGameHighScores(
+        @Query("user_id") userId: Long,
+        @Query("chat_id") chatId: Long? = null,
+        @Query("message_id") messageId: Long? = null,
+        @Query("inline_message_id") inlineMessageId: String? = null,
+    ): TelegramResponse<List<GameHighScore>>
+}

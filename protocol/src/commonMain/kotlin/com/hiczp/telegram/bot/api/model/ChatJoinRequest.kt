@@ -1,0 +1,39 @@
+// Auto-generated from Swagger specificationDo not modify this file manually
+package com.hiczp.telegram.bot.api.model
+
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
+
+/**
+ * Represents a join request sent to a chat.
+ */
+@Serializable
+public data class ChatJoinRequest(
+    /**
+     * Chat to which the request was sent
+     */
+    public val chat: JsonElement?,
+    /**
+     * User that sent the join request
+     */
+    public val from: JsonElement?,
+    /**
+     * Identifier of a private chat with the user who sent the join request. This number may have more than 32 significant bits and some programming languages may have difficulty/silent defects in interpreting it. But it has at most 52 significant bits, so a 64-bit integer or double-precision float type are safe for storing this identifier. The bot can use this identifier for 5 minutes to send messages until the join request is processed, assuming no other administrator contacted the user.
+     */
+    @SerialName("user_chat_id")
+    public val userChatId: Long,
+    /**
+     * Date the request was sent in Unix time
+     */
+    public val date: Long,
+    /**
+     * *Optional*. Bio of the user.
+     */
+    public val bio: String? = null,
+    /**
+     * *Optional*. Chat invite link that was used by the user to send the join request
+     */
+    @SerialName("invite_link")
+    public val inviteLink: JsonElement? = null,
+)
