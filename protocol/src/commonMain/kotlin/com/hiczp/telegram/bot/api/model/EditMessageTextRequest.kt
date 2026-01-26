@@ -6,7 +6,6 @@ import kotlin.String
 import kotlin.collections.List
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 @Serializable
 public data class EditMessageTextRequest(
@@ -47,10 +46,10 @@ public data class EditMessageTextRequest(
      * Link preview generation options for the message
      */
     @SerialName("link_preview_options")
-    public val linkPreviewOptions: JsonElement? = null,
+    public val linkPreviewOptions: LinkPreviewOptions? = null,
     /**
      * A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards).
      */
     @SerialName("reply_markup")
-    public val replyMarkup: JsonElement? = null,
+    public val replyMarkup: InlineKeyboardMarkup? = null,
 )

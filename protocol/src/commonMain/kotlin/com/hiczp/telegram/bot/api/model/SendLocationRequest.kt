@@ -7,7 +7,6 @@ import kotlin.Long
 import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 @Serializable
 public data class SendLocationRequest(
@@ -82,12 +81,12 @@ public data class SendLocationRequest(
      * A JSON-serialized object containing the parameters of the suggested post to send; for direct messages chats only. If the message is sent as a reply to another suggested post, then that suggested post is automatically declined.
      */
     @SerialName("suggested_post_parameters")
-    public val suggestedPostParameters: JsonElement? = null,
+    public val suggestedPostParameters: SuggestedPostParameters? = null,
     /**
      * Description of the message to reply to
      */
     @SerialName("reply_parameters")
-    public val replyParameters: JsonElement? = null,
+    public val replyParameters: ReplyParameters? = null,
     /**
      * Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user
      */

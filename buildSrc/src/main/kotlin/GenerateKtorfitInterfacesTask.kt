@@ -40,13 +40,22 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
         logger.lifecycle("Generating Ktorfit interfaces from ${swaggerFile.get().asFile.name}")
 
-        // Clean output directory
+        // Clean output directory (except the type directory which contains handwritten TelegramResponse)
         val apiDir = File(outputDirectory, "com/hiczp/telegram/bot/api")
         val modelDir = File(apiDir, "model")
-        val typeDir = File(apiDir, "type")
-        apiDir.deleteRecursively()
+        val formDir = File(apiDir, "form")
+
+        // Delete model and form directories, but keep the type directory
+        modelDir.deleteRecursively()
+        formDir.deleteRecursively()
+
+        // Delete the API interface file
+        File(apiDir, "TelegramBotApi.kt").delete()
+        File(apiDir, "TelegramBotApiExtensions.kt").delete()
+
+        // Create directories
         modelDir.mkdirs()
-        typeDir.mkdirs()
+        formDir.mkdirs()
 
         // Store all schemas for reference
         allSchemas = swagger.get("components")?.get("schemas")?.fields()?.asSequence()
@@ -55,9 +64,6 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         // Collect all ReplyMarkup types from the swagger spec
         collectReplyMarkupTypes(swagger)
         logger.lifecycle("Detected ReplyMarkup types: $replyMarkupTypes")
-
-        // Generate TelegramResponse type first
-        generateTelegramResponseType(outputDirectory)
 
         // Generate ReplyMarkup sealed interface if we found any types
         if (replyMarkupTypes.isNotEmpty()) {
@@ -73,74 +79,6 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         logger.lifecycle("Successfully generated Ktorfit interfaces to ${outputDirectory.absolutePath}")
     }
 
-    private fun generateTelegramResponseType(outputDir: File) {
-        val packageName = "com.hiczp.telegram.bot.api.type"
-        val className = "TelegramResponse"
-
-        val fileSpec = createFileSpec(packageName, className)
-
-        val responseClass = TypeSpec.classBuilder(className)
-            .addModifiers(KModifier.DATA)
-            .addTypeVariable(TypeVariableName("T"))
-            .addAnnotation(
-                AnnotationSpec.builder(ClassName("kotlinx.serialization", "Serializable"))
-                    .build()
-            )
-            .addKdoc("Generic wrapper for Telegram Bot API responses")
-            .primaryConstructor(
-                FunSpec.constructorBuilder()
-                    .addParameter("ok", BOOLEAN)
-                    .addParameter(
-                        ParameterSpec.builder("result", TypeVariableName("T").copy(nullable = true))
-                            .defaultValue("null")
-                            .build()
-                    )
-                    .addParameter(
-                        ParameterSpec.builder("description", STRING.copy(nullable = true))
-                            .defaultValue("null")
-                            .build()
-                    )
-                    .addParameter(
-                        ParameterSpec.builder("errorCode", INT.copy(nullable = true))
-                            .addAnnotation(
-                                AnnotationSpec.builder(ClassName("kotlinx.serialization", "SerialName"))
-                                    .addMember("%S", "error_code")
-                                    .build()
-                            )
-                            .defaultValue("null")
-                            .build()
-                    )
-                    .build()
-            )
-            .addProperty(
-                PropertySpec.builder("ok", BOOLEAN)
-                    .initializer("ok")
-                    .addKdoc("True if the request was successful")
-                    .build()
-            )
-            .addProperty(
-                PropertySpec.builder("result", TypeVariableName("T").copy(nullable = true))
-                    .initializer("result")
-                    .addKdoc("The result of the request, if successful")
-                    .build()
-            )
-            .addProperty(
-                PropertySpec.builder("description", STRING.copy(nullable = true))
-                    .initializer("description")
-                    .addKdoc("Human-readable description of the result or error")
-                    .build()
-            )
-            .addProperty(
-                PropertySpec.builder("errorCode", INT.copy(nullable = true))
-                    .initializer("errorCode")
-                    .addKdoc("Error code, if the request failed")
-                    .build()
-            )
-            .build()
-
-        fileSpec.addType(responseClass)
-        fileSpec.build().writeTo(outputDir)
-    }
 
     /**
      * Collect all types that appear in reply_markup fields across the entire swagger spec
@@ -150,7 +88,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
         paths.fields().forEach { (_, methods) ->
             methods.fields().forEach { (_, operation) ->
-                // Check in request body
+                // Check in the request body
                 val requestBody = operation.get("requestBody")
                 if (requestBody != null) {
                     collectReplyMarkupFromRequestBody(requestBody)
@@ -187,30 +125,273 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         }
     }
 
+    /**
+     * Extracts type names from a oneOf or allOf array by extracting $ref values
+     */
+    private fun extractTypeNamesFromRefArray(refArray: JsonNode?): List<String> {
+        if (refArray == null || !refArray.isArray) return emptyList()
+
+        return refArray.mapNotNull { option ->
+            option.get($$"$ref")?.asText()?.substringAfterLast("/")
+        }
+    }
+
     private fun collectReplyMarkupFromField(field: JsonNode) {
         // Check for oneOf
         val oneOf = field.get("oneOf")
-        if (oneOf != null && oneOf.isArray) {
-            oneOf.forEach { option ->
-                val ref = option.get("\$ref")?.asText()
-                if (ref != null) {
-                    val typeName = ref.substringAfterLast("/")
-                    replyMarkupTypes.add(typeName)
-                }
-            }
+        extractTypeNamesFromRefArray(oneOf).forEach { typeName ->
+            replyMarkupTypes.add(typeName)
         }
 
         // Check for allOf (single type reference)
         val allOf = field.get("allOf")
-        if (allOf != null && allOf.isArray) {
-            allOf.forEach { option ->
-                val ref = option.get("\$ref")?.asText()
-                if (ref != null) {
-                    val typeName = ref.substringAfterLast("/")
-                    replyMarkupTypes.add(typeName)
+        extractTypeNamesFromRefArray(allOf).forEach { typeName ->
+            replyMarkupTypes.add(typeName)
+        }
+    }
+
+    /**
+     * Adds @Serializable annotation to a type builder if not a Form class
+     */
+    private fun TypeSpec.Builder.addSerializableAnnotationIfNeeded(isFormClass: Boolean): TypeSpec.Builder {
+        if (!isFormClass) {
+            addAnnotation(
+                AnnotationSpec.builder(ClassName("kotlinx.serialization", "Serializable"))
+                    .build()
+            )
+        }
+        return this
+    }
+
+    /**
+     * Adds ReplyMarkup superinterface if the class is a ReplyMarkup type
+     */
+    private fun TypeSpec.Builder.addReplyMarkupInterfaceIfNeeded(className: String): TypeSpec.Builder {
+        if (isReplyMarkupType(className)) {
+            addSuperinterface(ClassName("com.hiczp.telegram.bot.api.model", "ReplyMarkup"))
+        }
+        return this
+    }
+
+    /**
+     * Adds KDoc to a type builder if the description is not null
+     */
+    private fun TypeSpec.Builder.addKDocIfPresent(description: String?): TypeSpec.Builder {
+        if (description != null) {
+            addKdoc(sanitizeKDoc(description))
+        }
+        return this
+    }
+
+    /**
+     * Configures a type builder with common annotations and documentation
+     */
+    private fun TypeSpec.Builder.configureTypeBuilder(
+        className: String,
+        description: String?,
+        isFormClass: Boolean
+    ): TypeSpec.Builder {
+        return this
+            .addSerializableAnnotationIfNeeded(isFormClass)
+            .addReplyMarkupInterfaceIfNeeded(className)
+            .addKDocIfPresent(description)
+    }
+
+    /**
+     * Data class to hold schema type information
+     */
+    private data class SchemaTypeInfo(
+        val type: String?,
+        val format: String?,
+        val ref: String?,
+        val oneOf: JsonNode?,
+        val allOf: JsonNode?
+    )
+
+    /**
+     * Data class to hold common class generation info extracted from a schema
+     */
+    private data class ClassGenerationInfo(
+        val description: String?,
+        val properties: JsonNode,
+        val required: Set<String>
+    )
+
+    /**
+     * Extracts common class generation info from a schema.
+     * Returns null if the schema doesn't have properties.
+     */
+    private fun extractClassGenerationInfo(schema: JsonNode): ClassGenerationInfo? {
+        val properties = schema.get("properties") ?: return null
+        return ClassGenerationInfo(
+            description = schema.get("description")?.asText(),
+            properties = properties,
+            required = schema.get("required")?.map { it.asText() }?.toSet() ?: emptySet()
+        )
+    }
+
+    /**
+     * Extracts common type information from a schema
+     */
+    private fun extractSchemaTypeInfo(schema: JsonNode?): SchemaTypeInfo {
+        if (schema == null) {
+            return SchemaTypeInfo(null, null, null, null, null)
+        }
+        return SchemaTypeInfo(
+            type = schema.get("type")?.asText(),
+            format = schema.get("format")?.asText(),
+            ref = schema.get($$"$ref")?.asText(),
+            oneOf = schema.get("oneOf"),
+            allOf = schema.get("allOf")
+        )
+    }
+
+    /**
+     * Checks if a schema represents an InputFile type
+     */
+    private fun isInputFileType(ref: String?, oneOf: JsonNode?, allOf: JsonNode? = null): Boolean {
+        val isInputFile = ref?.substringAfterLast("/") == "InputFile"
+        val canBeInputFile = oneOf != null && oneOf.any {
+            it.get($$"$ref")?.asText()?.substringAfterLast("/") == "InputFile"
+        }
+        val isInputFileViaAllOf = allOf != null && allOf.any {
+            it.get($$"$ref")?.asText()?.substringAfterLast("/") == "InputFile"
+        }
+        return isInputFile || canBeInputFile || isInputFileViaAllOf
+    }
+
+    /**
+     * Determines the type name for a oneOf schema.
+     * Tries to find a common parent type in allSchemas, otherwise falls back to primitive type detection.
+     * 
+     * @param oneOf The oneOf JSON node
+     * @param context Optional context string for logging (e.g., "ClassName.propertyName")
+     */
+    private fun determineOneOfType(oneOf: JsonNode, context: String? = null): TypeName {
+        val refs = oneOf.mapNotNull { it.get($$"$ref")?.asText()?.substringAfterLast("/") }
+
+        // Check if this is a ReplyMarkup oneOf
+        if (isReplyMarkupOneOf(refs)) {
+            return ClassName("com.hiczp.telegram.bot.api.model", "ReplyMarkup")
+        }
+
+        // Try to find a common parent type in allSchemas
+        // Look for a schema that has a oneOf containing exactly these refs
+        if (refs.isNotEmpty()) {
+            val parentType = findParentTypeForOneOf(refs)
+            if (parentType != null) {
+                return ClassName("com.hiczp.telegram.bot.api.model", parentType)
+            }
+        }
+
+        // Handle oneOf for basic types - choose the "largest" type
+        return determineLargestPrimitiveType(oneOf, context)
+    }
+
+    /**
+     * Find a parent type in allSchemas that has a oneOf containing exactly the given refs.
+     */
+    private fun findParentTypeForOneOf(refs: List<String>): String? {
+        val refsSet = refs.toSet()
+
+        for ((schemaName, schema) in allSchemas) {
+            val schemaOneOf = schema.get("oneOf")
+            if (schemaOneOf != null && schemaOneOf.isArray) {
+                val schemaRefs = extractTypeNamesFromRefArray(schemaOneOf).toSet()
+                // Check if the refs are a subset of the schema's oneOf refs
+                if (refsSet.isNotEmpty() && refsSet.all { it in schemaRefs }) {
+                    return schemaName
                 }
             }
         }
+        return null
+    }
+
+    /**
+     * Creates a property builder with @SerialName annotation and KDoc if needed
+     */
+    private fun createPropertyBuilder(
+        propName: String,
+        propType: TypeName,
+        propDescription: String?
+    ): PropertySpec.Builder {
+        val camelCaseName = snakeToCamelCase(propName)
+        val propertyBuilder = PropertySpec.builder(camelCaseName, propType)
+            .initializer(camelCaseName)
+
+        // Add @SerialName if the property name differs from snake_case
+        if (camelCaseName != propName) {
+            propertyBuilder.addAnnotation(
+                AnnotationSpec.builder(ClassName("kotlinx.serialization", "SerialName"))
+                    .addMember("%S", propName)
+                    .build()
+            )
+        }
+
+        if (propDescription != null) {
+            propertyBuilder.addKdoc(sanitizeKDoc(propDescription))
+        }
+
+        return propertyBuilder
+    }
+
+    /**
+     * Creates a parameter builder with a default value if not required
+     */
+    private fun createParameterBuilder(
+        propName: String,
+        propType: TypeName,
+        isRequired: Boolean
+    ): ParameterSpec.Builder {
+        val camelCaseName = snakeToCamelCase(propName)
+        val paramBuilder = ParameterSpec.builder(camelCaseName, propType)
+        if (!isRequired) {
+            paramBuilder.defaultValue("null")
+        }
+        return paramBuilder
+    }
+
+    /**
+     * Creates and configures a property with its parameter for a data class
+     */
+    private fun addPropertyWithParameter(
+        classBuilder: TypeSpec.Builder,
+        constructorBuilder: FunSpec.Builder,
+        propName: String,
+        propSchema: JsonNode,
+        isRequired: Boolean,
+        className: String? = null
+    ) {
+        val context = className?.let { "$it.$propName" }
+        val propType = determinePropertyType(propSchema, context = context)
+        val finalType = if (isRequired) propType else propType.copy(nullable = true)
+        val propDescription = propSchema.get("description")?.asText()
+
+        val propertyBuilder = createPropertyBuilder(propName, finalType, propDescription)
+        val paramBuilder = createParameterBuilder(propName, finalType, isRequired)
+
+        constructorBuilder.addParameter(paramBuilder.build())
+        classBuilder.addProperty(propertyBuilder.build())
+    }
+
+    /**
+     * Creates and configures a property with its parameter for a data class (with custom type determination)
+     */
+    private fun addPropertyWithParameter(
+        classBuilder: TypeSpec.Builder,
+        constructorBuilder: FunSpec.Builder,
+        propName: String,
+        propType: TypeName,
+        propDescription: String?,
+        isRequired: Boolean
+    ) {
+        val finalType = if (isRequired) propType else propType.copy(nullable = true)
+
+        val propertyBuilder = createPropertyBuilder(propName, finalType, propDescription)
+        val paramBuilder = createParameterBuilder(propName, finalType, isRequired)
+
+        constructorBuilder.addParameter(paramBuilder.build())
+        classBuilder.addProperty(propertyBuilder.build())
     }
 
     private fun generateReplyMarkupInterface(outputDir: File) {
@@ -250,14 +431,13 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
     private fun generateModel(packageName: String, className: String, schema: JsonNode, outputDir: File) {
         val description = schema.get("description")?.asText()
-        val type = schema.get("type")?.asText()
         val oneOf = schema.get("oneOf")
 
         // Handle union types
         if (oneOf != null && oneOf.isArray) {
-            val unionMembers = oneOf.map { it.get("\$ref")?.asText()?.substringAfterLast("/") }.filterNotNull()
+            val unionMembers = extractTypeNamesFromRefArray(oneOf)
 
-            // Check if this is a field-overlapping case (use largest subclass)
+            // Check if this is a field-overlapping case (use the largest subclass)
             if (shouldUseLargestSubclass(className, unionMembers)) {
                 val largestMember = findLargestSubclass(unionMembers)
                 if (largestMember != null) {
@@ -280,16 +460,39 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             }
 
             // First, check if schema has explicit discriminator definition
-            val discriminatorInfo = extractDiscriminatorFromSchema(schema, unionMembers)
-                ?: findDiscriminatorInfo(unionMembers)
+            val discriminatorResult = extractDiscriminatorFromSchema(schema, unionMembers)
+            val fallbackDiscriminatorInfo =
+                if (discriminatorResult == null) findDiscriminatorInfo(unionMembers) else null
 
-            if (discriminatorInfo != null) {
+            if (discriminatorResult != null && discriminatorResult.isComplete) {
+                // Complete discriminator mapping - generate polymorphic sealed interface
                 generatePolymorphicSealedInterface(
                     packageName,
                     className,
                     description,
                     unionMembers,
-                    discriminatorInfo,
+                    discriminatorResult.info,
+                    outputDir
+                )
+            } else if (discriminatorResult != null) {
+                // Incomplete discriminator mapping - warn and generate standalone classes
+                logger.warn("Discriminator mapping mismatch for $className: oneOf has ${unionMembers.size} members but mapping has fewer entries. Generating standalone classes.")
+                generateStandaloneClassesWithDiscriminator(
+                    packageName,
+                    className,
+                    description,
+                    unionMembers,
+                    discriminatorResult.info,
+                    outputDir
+                )
+            } else if (fallbackDiscriminatorInfo != null) {
+                // Found discriminator via fallback method - generate polymorphic sealed interface
+                generatePolymorphicSealedInterface(
+                    packageName,
+                    className,
+                    description,
+                    unionMembers,
+                    fallbackDiscriminatorInfo,
                     outputDir
                 )
             } else {
@@ -308,79 +511,48 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         val description = schema.get("description")?.asText()
         val type = schema.get("type")?.asText()
 
+        // Check if this is a Form class (in form package)
+        val isFormClass = packageName.endsWith(".form")
+
         val fileSpec = createFileSpec(packageName, className)
 
         when (type) {
             "object" -> {
                 val properties = schema.get("properties")
 
-                // If no properties, generate a simple object instead of data class
+                // If no properties, generate a simple object instead of a data class
                 if (properties == null || !properties.isObject || !properties.fields().hasNext()) {
                     val objectBuilder = TypeSpec.objectBuilder(className)
-                        .addAnnotation(
-                            AnnotationSpec.builder(ClassName("kotlinx.serialization", "Serializable"))
-                                .build()
-                        )
+                        .configureTypeBuilder(className, description, isFormClass)
 
-                    // Check if this is a ReplyMarkup type
-                    if (isReplyMarkupType(className)) {
-                        objectBuilder.addSuperinterface(ClassName("com.hiczp.telegram.bot.api.model", "ReplyMarkup"))
-                    }
-
-                    if (description != null) {
-                        objectBuilder.addKdoc(sanitizeKDoc(description))
-                    }
                     fileSpec.addType(objectBuilder.build())
                 } else {
                     val classBuilder = TypeSpec.classBuilder(className)
                         .addModifiers(KModifier.DATA)
-                        .addAnnotation(
-                            AnnotationSpec.builder(ClassName("kotlinx.serialization", "Serializable"))
-                                .build()
-                        )
-
-                    // Check if this is a ReplyMarkup type
-                    if (isReplyMarkupType(className)) {
-                        classBuilder.addSuperinterface(ClassName("com.hiczp.telegram.bot.api.model", "ReplyMarkup"))
-                    }
-
-                    if (description != null) {
-                        classBuilder.addKdoc(sanitizeKDoc(description))
-                    }
+                        .configureTypeBuilder(className, description, isFormClass)
 
                     val required = schema.get("required")?.map { it.asText() }?.toSet() ?: emptySet()
                     val constructorBuilder = FunSpec.constructorBuilder()
 
                     properties.fields().forEach { (propName, propSchema) ->
-                        val propType = determinePropertyType(propSchema)
+                        // For Form classes, convert file types to PartData
+                        val context = "$className.$propName"
+                        val propType = if (isFormClass) {
+                            convertToPartDataIfNeeded(propSchema, context)
+                        } else {
+                            determinePropertyType(propSchema, context = context)
+                        }
                         val isRequired = required.contains(propName)
-                        val finalType = if (isRequired) propType else propType.copy(nullable = true)
-
                         val propDescription = propSchema.get("description")?.asText()
-                        val camelCaseName = snakeToCamelCase(propName)
-                        val propertyBuilder = PropertySpec.builder(camelCaseName, finalType)
-                            .initializer(camelCaseName)
 
-                        // Add @SerialName if property name differs from snake_case
-                        if (camelCaseName != propName) {
-                            propertyBuilder.addAnnotation(
-                                AnnotationSpec.builder(ClassName("kotlinx.serialization", "SerialName"))
-                                    .addMember("%S", propName)
-                                    .build()
-                            )
-                        }
-
-                        if (propDescription != null) {
-                            propertyBuilder.addKdoc(sanitizeKDoc(propDescription))
-                        }
-
-                        val paramBuilder = ParameterSpec.builder(camelCaseName, finalType)
-                        if (!isRequired) {
-                            paramBuilder.defaultValue("null")
-                        }
-
-                        constructorBuilder.addParameter(paramBuilder.build())
-                        classBuilder.addProperty(propertyBuilder.build())
+                        addPropertyWithParameter(
+                            classBuilder,
+                            constructorBuilder,
+                            propName,
+                            propType,
+                            propDescription,
+                            isRequired
+                        )
                     }
 
                     classBuilder.primaryConstructor(constructorBuilder.build())
@@ -390,7 +562,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
             else -> {
                 // For non-object types, create a typealias
-                val aliasType = determinePropertyType(schema)
+                val aliasType = determinePropertyType(schema, context = className)
                 fileSpec.addTypeAlias(TypeAliasSpec.builder(className, aliasType).build())
             }
         }
@@ -409,7 +581,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     )
 
     private fun shouldUseLargestSubclass(parentName: String, unionMembers: List<String>): Boolean {
-        // Special handling for MaybeInaccessibleMessage: use Message as deserialization type
+        // Special handling for MaybeInaccessibleMessage: use Message as a deserialization type
         // but keep InaccessibleMessage as a separate serializable class
         if (parentName == "MaybeInaccessibleMessage") return true
 
@@ -440,28 +612,70 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     }
 
     /**
-     * Extract discriminator info from OpenAPI discriminator field in schema
+     * Result of extracting discriminator info from the schema.
+     * Contains both the discriminator info and whether the mapping is complete.
      */
-    private fun extractDiscriminatorFromSchema(schema: JsonNode, unionMembers: List<String>): DiscriminatorInfo? {
+    private data class DiscriminatorExtractionResult(
+        val info: DiscriminatorInfo,
+        val isComplete: Boolean // true if all oneOf members are in the mapping
+    )
+
+    /**
+     * Extract discriminator info from OpenAPI discriminator field in schema.
+     * 
+     * Returns a DiscriminatorExtractionResult that includes:
+     * - The discriminator info (property name and member values)
+     * - Whether the mapping is complete (all oneOf members have mappings)
+     * 
+     * For incomplete mappings (e.g., InlineQueryResult with 20 members but only 13 in mapping),
+     * we still extract values from member schemas but mark the result as incomplete.
+     */
+    private fun extractDiscriminatorFromSchema(
+        schema: JsonNode,
+        unionMembers: List<String>
+    ): DiscriminatorExtractionResult? {
         val discriminator = schema.get("discriminator") ?: return null
         val propertyName = discriminator.get("propertyName")?.asText() ?: return null
-        val mapping = discriminator.get("mapping") ?: return null
-
-        if (!mapping.isObject) return null
+        val mapping = discriminator.get("mapping")
 
         val memberValues = mutableMapOf<String, String>()
+        var mappingCount = 0
 
-        // Build reverse mapping: className -> discriminatorValue
-        mapping.fields().forEach { (discriminatorValue, ref) ->
-            val className = ref.asText().substringAfterLast("/")
-            if (className in unionMembers) {
-                memberValues[className] = discriminatorValue
+        // Build reverse mapping from explicit discriminator mapping: className -> discriminatorValue
+        if (mapping != null && mapping.isObject) {
+            mapping.fields().forEach { (discriminatorValue, ref) ->
+                val className = ref.asText().substringAfterLast("/")
+                mappingCount++
+                if (className in unionMembers) {
+                    memberValues[className] = discriminatorValue
+                }
+            }
+        }
+
+        val isComplete = mappingCount == unionMembers.size
+
+        // For members not in the mapping, try to extract discriminator value from their schema
+        val missingMembers = unionMembers.filter { it !in memberValues }
+        for (memberName in missingMembers) {
+            val memberSchema = allSchemas[memberName] ?: continue
+            val properties = memberSchema.get("properties") ?: continue
+            val discriminatorField = properties.get(propertyName) ?: continue
+
+            val value = extractDiscriminatorValue(discriminatorField, memberName)
+            if (value != null) {
+                memberValues[memberName] = value
             }
         }
 
         // Check if we have mappings for all members
         if (memberValues.size == unionMembers.size) {
-            return DiscriminatorInfo(propertyName, memberValues)
+            return DiscriminatorExtractionResult(DiscriminatorInfo(propertyName, memberValues), isComplete)
+        }
+
+        // Log which members are still missing for debugging
+        val stillMissing = unionMembers.filter { it !in memberValues }
+        if (stillMissing.isNotEmpty()) {
+            logger.warn("Discriminator '$propertyName' incomplete for members: $stillMissing")
         }
 
         return null
@@ -495,7 +709,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                 }
             }
 
-            // If we found values for all members and they're unique, we have a discriminator
+            // If we found values for all members, and they're unique, we have a discriminator
             if (memberValues.size == unionMembers.size && memberValues.values.toSet().size == unionMembers.size) {
                 return DiscriminatorInfo(discriminator, memberValues)
             }
@@ -505,7 +719,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     }
 
     private fun extractDiscriminatorValue(field: JsonNode, memberName: String): String? {
-        // Check for enum with single value
+        // Check for enum with a single value
         val enumValues = field.get("enum")
         if (enumValues != null && enumValues.isArray && enumValues.size() == 1) {
             return enumValues.get(0).asText()
@@ -514,21 +728,29 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         // Extract from description patterns like: always "value" or must be "value"
         val description = field.get("description")?.asText() ?: return null
 
+        @Suppress("GrazieInspection")
         // Pattern: always "value" or Type of ..., always "value"
-        val alwaysPattern = """always\s+[""]([^""]+)[""]""".toRegex()
+        val alwaysPattern = """always\s+"([^"]+)"""".toRegex()
         val match = alwaysPattern.find(description)
         if (match != null) {
             return match.groupValues[1]
         }
 
-        // Pattern: must be "value"
-        val mustBePattern = """must be\s+[""]([^""]+)[""]""".toRegex()
+        // Pattern: must be "value" (with quotes)
+        val mustBePattern = """must be\s+"([^"]+)"""".toRegex()
         val mustMatch = mustBePattern.find(description)
         if (mustMatch != null) {
             return mustMatch.groupValues[1]
         }
 
-        // Fallback: try to infer from class name (e.g., BackgroundFillSolid -> "solid")
+        // Pattern: must be *value* (Markdown format, e.g., "must be *audio*")
+        val mustBeMarkdownPattern = """must be\s+\*([^*]+)\*""".toRegex()
+        val mustMarkdownMatch = mustBeMarkdownPattern.find(description)
+        if (mustMarkdownMatch != null) {
+            return mustMarkdownMatch.groupValues[1]
+        }
+
+        // Fallback: try to infer from the class name (e.g., BackgroundFillSolid -> "solid")
         return inferDiscriminatorFromClassName(memberName)
     }
 
@@ -553,9 +775,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     ) {
         val fileSpec = createFileSpec(packageName, interfaceName)
 
-        val camelDiscriminator = snakeToCamelCase(discriminatorInfo.fieldName)
-
-        // Create sealed interface
+        // Create the sealed interface
         val interfaceBuilder = TypeSpec.interfaceBuilder(interfaceName)
             .addModifiers(KModifier.SEALED)
             .addAnnotation(
@@ -605,10 +825,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         parentInterface: String,
         discriminatorInfo: DiscriminatorInfo
     ): TypeSpec? {
-        val description = schema.get("description")?.asText()
-        val properties = schema.get("properties") ?: return null
-        val required = schema.get("required")?.map { it.asText() }?.toSet() ?: emptySet()
-
+        val info = extractClassGenerationInfo(schema) ?: return null
         val discriminatorValue = discriminatorInfo.memberValues[className] ?: return null
 
         val classBuilder = TypeSpec.classBuilder(className)
@@ -623,58 +840,159 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                     .addMember("%S", discriminatorValue)
                     .build()
             )
-
-        if (description != null) {
-            classBuilder.addKdoc(sanitizeKDoc(description))
-        }
+            .addKDocIfPresent(info.description)
 
         val constructorBuilder = FunSpec.constructorBuilder()
 
-        properties.fields().forEach { (propName, propSchema) ->
+        info.properties.fields().forEach { (propName, propSchema) ->
             // Skip the discriminator field - @JsonClassDiscriminator handles it automatically
             if (propName == discriminatorInfo.fieldName) {
                 return@forEach
             }
 
-            val propType = determinePropertyType(propSchema)
-            val isRequired = required.contains(propName)
-            val finalType = if (isRequired) propType else propType.copy(nullable = true)
-
-            val propDescription = propSchema.get("description")?.asText()
-            val camelCaseName = snakeToCamelCase(propName)
-
-            val propertyBuilder = PropertySpec.builder(camelCaseName, finalType)
-                .initializer(camelCaseName)
-
-            // Add @SerialName if property name differs from snake_case
-            if (camelCaseName != propName) {
-                propertyBuilder.addAnnotation(
-                    AnnotationSpec.builder(ClassName("kotlinx.serialization", "SerialName"))
-                        .addMember("%S", propName)
-                        .build()
-                )
-            }
-
-            if (propDescription != null) {
-                propertyBuilder.addKdoc(sanitizeKDoc(propDescription))
-            }
-
-            val paramBuilder = ParameterSpec.builder(camelCaseName, finalType)
-            if (!isRequired) {
-                paramBuilder.defaultValue("null")
-            }
-
-            constructorBuilder.addParameter(paramBuilder.build())
-            classBuilder.addProperty(propertyBuilder.build())
+            addPropertyWithParameter(
+                classBuilder,
+                constructorBuilder,
+                propName,
+                propSchema,
+                info.required.contains(propName),
+                className
+            )
         }
 
-        // Only add primary constructor if there are parameters
+        // Only add a primary constructor if there are parameters
         if (constructorBuilder.parameters.isNotEmpty()) {
             classBuilder.primaryConstructor(constructorBuilder.build())
         } else {
-            // If no properties, remove DATA modifier and make it a regular class
+            // If no properties, remove the DATA modifier and make it a regular class
             classBuilder.modifiers.remove(KModifier.DATA)
         }
+        return classBuilder.build()
+    }
+
+    /**
+     * Generate standalone classes for union types with incomplete discriminator mapping.
+     * 
+     * This is used when the discriminator mapping in the swagger spec doesn't cover all oneOf members.
+     * For example, InlineQueryResult has 20 members but only 13 in the mapping.
+     * 
+     * Generates:
+     * - An empty interface with the parent name
+     * - Each member as a standalone class (no inheritance) with:
+     *   - @Serializable annotation
+     *   - @SerialName annotation with the discriminator value
+     *   - The discriminator field included with a default value
+     * 
+     * All classes are generated in the same file named after the parent interface.
+     */
+    private fun generateStandaloneClassesWithDiscriminator(
+        packageName: String,
+        parentName: String,
+        description: String?,
+        unionMembers: List<String>,
+        discriminatorInfo: DiscriminatorInfo,
+        outputDir: File
+    ) {
+        val fileSpec = createFileSpec(packageName, parentName)
+
+        // Generate an empty sealed interface (same as a normal parent, but subclasses don't inherit from it)
+        val interfaceBuilder = TypeSpec.interfaceBuilder(parentName)
+            .addModifiers(KModifier.SEALED)
+            .addAnnotation(
+                AnnotationSpec.builder(ClassName("kotlinx.serialization", "Serializable"))
+                    .build()
+            )
+        if (description != null) {
+            interfaceBuilder.addKdoc(sanitizeKDoc(description))
+        }
+        fileSpec.addType(interfaceBuilder.build())
+
+        // Generate each member as a standalone class in the same file
+        unionMembers.forEach { memberName ->
+            val memberSchema = allSchemas[memberName]
+            if (memberSchema != null) {
+                val memberClass = generateStandaloneClassWithDiscriminator(
+                    memberName,
+                    memberSchema,
+                    discriminatorInfo
+                )
+                if (memberClass != null) {
+                    fileSpec.addType(memberClass)
+                    processedSchemas.add(memberName)
+                }
+            }
+        }
+
+        fileSpec.build().writeTo(outputDir)
+    }
+
+    /**
+     * Generate a standalone class with the discriminator field and @SerialName annotation.
+     * Returns a TypeSpec to be added to the parent file.
+     */
+    private fun generateStandaloneClassWithDiscriminator(
+        className: String,
+        schema: JsonNode,
+        discriminatorInfo: DiscriminatorInfo
+    ): TypeSpec? {
+        val info = extractClassGenerationInfo(schema) ?: return null
+        val discriminatorValue = discriminatorInfo.memberValues[className] ?: return null
+
+        val classBuilder = TypeSpec.classBuilder(className)
+            .addModifiers(KModifier.DATA)
+            .addAnnotation(
+                AnnotationSpec.builder(ClassName("kotlinx.serialization", "Serializable"))
+                    .build()
+            )
+            .addAnnotation(
+                AnnotationSpec.builder(ClassName("kotlinx.serialization", "SerialName"))
+                    .addMember("%S", discriminatorValue)
+                    .build()
+            )
+            .addKDocIfPresent(info.description)
+
+        val constructorBuilder = FunSpec.constructorBuilder()
+
+        // Add the discriminator field first with a default value
+        val discriminatorFieldName = discriminatorInfo.fieldName
+        val discriminatorCamelName = snakeToCamelCase(discriminatorFieldName)
+
+        // Add discriminator property with default value
+        val discriminatorProperty = PropertySpec.builder(discriminatorCamelName, STRING)
+            .initializer(discriminatorCamelName)
+        if (discriminatorCamelName != discriminatorFieldName) {
+            discriminatorProperty.addAnnotation(
+                AnnotationSpec.builder(ClassName("kotlinx.serialization", "SerialName"))
+                    .addMember("%S", discriminatorFieldName)
+                    .build()
+            )
+        }
+        classBuilder.addProperty(discriminatorProperty.build())
+
+        // Add discriminator parameter with default value
+        constructorBuilder.addParameter(
+            ParameterSpec.builder(discriminatorCamelName, STRING)
+                .defaultValue("%S", discriminatorValue)
+                .build()
+        )
+
+        // Add other properties (skip the discriminator field since we already added it)
+        info.properties.fields().forEach { (propName, propSchema) ->
+            if (propName == discriminatorFieldName) {
+                return@forEach
+            }
+
+            addPropertyWithParameter(
+                classBuilder,
+                constructorBuilder,
+                propName,
+                propSchema,
+                info.required.contains(propName),
+                className
+            )
+        }
+
+        classBuilder.primaryConstructor(constructorBuilder.build())
         return classBuilder.build()
     }
 
@@ -725,9 +1043,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         schema: JsonNode,
         parentInterface: String
     ): TypeSpec? {
-        val description = schema.get("description")?.asText()
-        val properties = schema.get("properties") ?: return null
-        val required = schema.get("required")?.map { it.asText() }?.toSet() ?: emptySet()
+        val info = extractClassGenerationInfo(schema) ?: return null
 
         val classBuilder = TypeSpec.classBuilder(className)
             .addModifiers(KModifier.DATA)
@@ -736,93 +1052,97 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                 AnnotationSpec.builder(ClassName("kotlinx.serialization", "Serializable"))
                     .build()
             )
-
-        if (description != null) {
-            classBuilder.addKdoc(sanitizeKDoc(description))
-        }
+            .addKDocIfPresent(info.description)
 
         val constructorBuilder = FunSpec.constructorBuilder()
 
-        properties.fields().forEach { (propName, propSchema) ->
-            val propType = determinePropertyType(propSchema)
-            val isRequired = required.contains(propName)
-            val finalType = if (isRequired) propType else propType.copy(nullable = true)
-
-            val propDescription = propSchema.get("description")?.asText()
-            val camelCaseName = snakeToCamelCase(propName)
-            val propertyBuilder = PropertySpec.builder(camelCaseName, finalType)
-                .initializer(camelCaseName)
-
-            if (camelCaseName != propName) {
-                propertyBuilder.addAnnotation(
-                    AnnotationSpec.builder(ClassName("kotlinx.serialization", "SerialName"))
-                        .addMember("%S", propName)
-                        .build()
-                )
-            }
-
-            if (propDescription != null) {
-                propertyBuilder.addKdoc(sanitizeKDoc(propDescription))
-            }
-
-            val paramBuilder = ParameterSpec.builder(camelCaseName, finalType)
-            if (!isRequired) {
-                paramBuilder.defaultValue("null")
-            }
-
-            constructorBuilder.addParameter(paramBuilder.build())
-            classBuilder.addProperty(propertyBuilder.build())
+        info.properties.fields().forEach { (propName, propSchema) ->
+            addPropertyWithParameter(
+                classBuilder,
+                constructorBuilder,
+                propName,
+                propSchema,
+                info.required.contains(propName),
+                className
+            )
         }
 
-        // Only add primary constructor if there are parameters
+        // Only add a primary constructor if there are parameters
         if (constructorBuilder.parameters.isNotEmpty()) {
             classBuilder.primaryConstructor(constructorBuilder.build())
         } else {
-            // If no properties, remove DATA modifier and make it a regular class
+            // If no properties, remove the DATA modifier and make it a regular class
             classBuilder.modifiers.remove(KModifier.DATA)
         }
         return classBuilder.build()
     }
 
-    private fun determinePropertyType(schema: JsonNode?): TypeName {
+    /**
+     * Determine the property type from a JSON schema.
+     * This is the unified type determination function used for both model classes and form classes.
+     * 
+     * @param schema The JSON schema node
+     * @param forMultipart If true, InputFile types will be converted to PartData
+     * @param context Optional context string for logging (e.g., "ClassName.propertyName")
+     */
+    private fun determinePropertyType(
+        schema: JsonNode?,
+        forMultipart: Boolean = false,
+        context: String? = null
+    ): TypeName {
         if (schema == null) return STRING
 
-        val type = schema.get("type")?.asText()
-        val format = schema.get("format")?.asText()
-        val ref = schema.get("\$ref")?.asText()
-        val oneOf = schema.get("oneOf")
+        val typeInfo = extractSchemaTypeInfo(schema)
+
+        // For multipart forms, check if this is an InputFile type first
+        if (forMultipart && isInputFileType(typeInfo.ref, typeInfo.oneOf, typeInfo.allOf)) {
+            return ClassName("io.ktor.http.content", "PartData")
+        }
 
         return when {
-            ref != null -> {
-                val typeName = ref.substringAfterLast("/")
-                // Replace MaybeInaccessibleMessage with Message
-                if (typeName == "MaybeInaccessibleMessage") {
-                    ClassName("com.hiczp.telegram.bot.api.model", "Message")
+            // Handle direct $ref
+            typeInfo.ref != null -> {
+                val typeName = typeInfo.ref.substringAfterLast("/")
+                resolveTypeName(typeName)
+            }
+
+            // Handle allOf - typically used for a single type reference
+            typeInfo.allOf != null && typeInfo.allOf.isArray -> {
+                val refs = extractTypeNamesFromRefArray(typeInfo.allOf)
+                if (refs.isNotEmpty()) {
+                    resolveTypeName(refs.first())
                 } else {
-                    ClassName("com.hiczp.telegram.bot.api.model", typeName)
+                    if (context != null) {
+                        logger.warn("Using JsonElement for $context: allOf has no refs")
+                    }
+                    ClassName("kotlinx.serialization.json", "JsonElement").copy(nullable = true)
                 }
             }
 
-            oneOf != null && oneOf.isArray -> {
-                // Check if this is a ReplyMarkup oneOf
-                val refs = oneOf.mapNotNull { it.get("\$ref")?.asText()?.substringAfterLast("/") }
-                if (isReplyMarkupOneOf(refs)) {
-                    ClassName("com.hiczp.telegram.bot.api.model", "ReplyMarkup")
-                } else {
-                    // Handle oneOf for basic types - choose the "largest" type
-                    determineLargestPrimitiveType(oneOf)
-                }
-            }
+            // Handle oneOf - union types
+            typeInfo.oneOf != null && typeInfo.oneOf.isArray -> determineOneOfType(typeInfo.oneOf, context)
 
-            type == "array" -> {
+            // Handle arrays
+            typeInfo.type == "array" -> {
                 val items = schema.get("items")
                 val itemType = if (items == null || items.isNull) {
-                    // If items is not specified, use JsonElement instead of Any?
+                    if (context != null) {
+                        logger.warn("Using JsonElement for $context: array has no items definition")
+                    }
                     ClassName("kotlinx.serialization.json", "JsonElement")
                 } else {
-                    val determinedType = determinePropertyType(items)
-                    // If the determined type is Any?, replace it with JsonElement
+                    // For multipart arrays, check if items are InputFile
+                    if (forMultipart) {
+                        val itemTypeInfo = extractSchemaTypeInfo(items)
+                        if (isInputFileType(itemTypeInfo.ref, itemTypeInfo.oneOf, itemTypeInfo.allOf)) {
+                            return LIST.parameterizedBy(ClassName("io.ktor.http.content", "PartData"))
+                        }
+                    }
+                    val determinedType = determinePropertyType(items, forMultipart, context?.let { "$it[]" })
                     if (determinedType == ANY.copy(nullable = true)) {
+                        if (context != null) {
+                            logger.warn("Using JsonElement for $context: array item type resolved to Any")
+                        }
                         ClassName("kotlinx.serialization.json", "JsonElement")
                     } else {
                         determinedType
@@ -831,28 +1151,50 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                 LIST.parameterizedBy(itemType)
             }
 
-            type == "object" -> {
-                // Use JsonElement for dynamic objects instead of Map<String, Any?>
+            // Handle inline objects (no concrete type available)
+            typeInfo.type == "object" -> {
+                if (context != null) {
+                    logger.warn("Using JsonElement for $context: inline object without concrete type")
+                }
                 ClassName("kotlinx.serialization.json", "JsonElement").copy(nullable = true)
             }
 
-            type == "string" -> STRING
-            type == "integer" -> {
-                when (format) {
+            // Handle primitive types
+            typeInfo.type == "string" -> STRING
+            typeInfo.type == "integer" -> {
+                when (typeInfo.format) {
                     "int64" -> LONG
                     else -> INT
                 }
             }
 
-            type == "number" -> {
-                when (format) {
+            typeInfo.type == "number" -> {
+                when (typeInfo.format) {
                     "float" -> FLOAT
                     else -> DOUBLE
                 }
             }
 
-            type == "boolean" -> BOOLEAN
-            else -> ClassName("kotlinx.serialization.json", "JsonElement").copy(nullable = true)
+            typeInfo.type == "boolean" -> BOOLEAN
+
+            // Fallback
+            else -> {
+                if (context != null) {
+                    logger.warn("Using JsonElement for $context: unknown schema type '${typeInfo.type}'")
+                }
+                ClassName("kotlinx.serialization.json", "JsonElement").copy(nullable = true)
+            }
+        }
+    }
+
+    /**
+     * Resolve a type name to a ClassName, handling special cases like MaybeInaccessibleMessage.
+     */
+    private fun resolveTypeName(typeName: String): ClassName {
+        return if (typeName == "MaybeInaccessibleMessage") {
+            ClassName("com.hiczp.telegram.bot.api.model", "Message")
+        } else {
+            ClassName("com.hiczp.telegram.bot.api.model", typeName)
         }
     }
 
@@ -865,8 +1207,11 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     /**
      * Determine the largest primitive type from a oneOf array.
      * Type hierarchy: String > Double > Float > Long > Int > Boolean
+     * 
+     * @param oneOf The oneOf JSON node
+     * @param context Optional context string for logging (e.g., "ClassName.propertyName")
      */
-    private fun determineLargestPrimitiveType(oneOf: JsonNode): TypeName {
+    private fun determineLargestPrimitiveType(oneOf: JsonNode, context: String? = null): TypeName {
         var hasString = false
         var hasDouble = false
         var hasFloat = false
@@ -906,7 +1251,13 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             hasLong -> LONG
             hasInt -> INT
             hasBoolean -> BOOLEAN
-            else -> ClassName("kotlinx.serialization.json", "JsonElement").copy(nullable = true)
+            else -> {
+                if (context != null) {
+                    val refs = oneOf.mapNotNull { it.get($$"$ref")?.asText()?.substringAfterLast("/") }
+                    logger.warn("Using JsonElement for $context: oneOf contains no primitive types, refs=$refs")
+                }
+                ClassName("kotlinx.serialization.json", "JsonElement").copy(nullable = true)
+            }
         }
     }
 
@@ -923,8 +1274,10 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         paths.fields().forEach { (path, methods) ->
             methods.fields().forEach { (method, operation) ->
                 try {
-                    val function = generateFunction(path, method, operation, outputDir)
-                    interfaceBuilder.addFunction(function)
+                    val functions = generateFunction(path, method, operation, outputDir)
+                    functions.forEach { function ->
+                        interfaceBuilder.addFunction(function)
+                    }
                 } catch (e: Exception) {
                     logger.warn("Failed to generate function for $method $path: ${e.message}")
                 }
@@ -940,10 +1293,20 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         }
     }
 
-    private fun generateFunction(path: String, method: String, operation: JsonNode, outputDir: File): FunSpec {
-        val operationId = operation.get("operationId")?.asText() ?: generateOperationId(method, path)
-        val summary = operation.get("summary")?.asText()
-
+    /**
+     * Creates a base function builder with the common setup:
+     * - abstract and suspend modifiers
+     * - KDoc from summary
+     * - HTTP method annotation
+     * - Query/path/header parameters from operation
+     */
+    private fun createBaseFunctionBuilder(
+        operationId: String,
+        summary: String?,
+        method: String,
+        path: String,
+        operation: JsonNode
+    ): FunSpec.Builder {
         val functionBuilder = FunSpec.builder(operationId)
             .addModifiers(KModifier.ABSTRACT, KModifier.SUSPEND)
 
@@ -965,7 +1328,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         httpAnnotation.addMember("%S", path)
         functionBuilder.addAnnotation(httpAnnotation.build())
 
-        // Add parameters
+        // Add query/path/header parameters from the operation
         val parameters = operation.get("parameters")
         if (parameters != null && parameters.isArray) {
             parameters.forEach { param ->
@@ -973,17 +1336,92 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             }
         }
 
-        // Determine return type first
-        val returnType = determineReturnType(operation)
+        return functionBuilder
+    }
+
+    private fun generateFunction(path: String, method: String, operation: JsonNode, outputDir: File): List<FunSpec> {
+        val operationId = operation.get("operationId")?.asText() ?: generateOperationId(method, path)
+        val summary = operation.get("summary")?.asText()
+        val requestBody = operation.get("requestBody")
+        val returnType = determineReturnType(operation, operationId)
+
+        // Check if this is a multipart operation
+        val content = requestBody?.get("content")
+        val jsonContent = content?.get("application/json")
+        val multipartContent = content?.get("multipart/form-data")
+        val isMultipart = jsonContent == null && multipartContent != null
+
+        if (isMultipart) {
+            // Generate two overloads for multipart operations
+            val schema = multipartContent.get("schema")
+            if (schema != null) {
+                val functions = mutableListOf<FunSpec>()
+
+                // 1. Generate MultiPartFormDataContent overload
+                val multipartFormFunction = createBaseFunctionBuilder(operationId, summary, method, path, operation)
+                    .returns(returnType)
+                    .addParameter(
+                        ParameterSpec.builder(
+                            "formData",
+                            ClassName("io.ktor.client.request.forms", "MultiPartFormDataContent")
+                        ).addAnnotation(
+                            AnnotationSpec.builder(ClassName("de.jensklingenberg.ktorfit.http", "Body"))
+                                .build()
+                        ).build()
+                    )
+                    .build()
+                functions.add(multipartFormFunction)
+
+                // 2. Generate scattered parameters overload
+                val scatteredFunction = createBaseFunctionBuilder(operationId, summary, method, path, operation)
+                    .returns(returnType)
+                scatteredFunction.addAnnotation(
+                    AnnotationSpec.builder(ClassName("de.jensklingenberg.ktorfit.http", "Multipart"))
+                        .build()
+                )
+
+                // Store schema and return type for later extension function generation
+                multipartOperations[operationId] = MultipartOperationInfo(schema, returnType)
+
+                // Generate form class for this multipart operation
+                generateFormClass(operationId, schema, outputDir)
+
+                val properties = schema.get("properties")
+                val required = schema.get("required")?.map { it.asText() }?.toSet() ?: emptySet()
+
+                properties?.fields()?.forEach { (propName, propSchema) ->
+                    val camelName = snakeToCamelCase(propName)
+                    val isRequired = required.contains(propName)
+
+                    // For InputFile types, use PartData or List<PartData>
+                    val propType = convertToPartDataIfNeeded(propSchema, "$operationId.$propName")
+                    val finalType = if (isRequired) propType else propType.copy(nullable = true)
+
+                    addPartParameter(scatteredFunction, camelName, propName, finalType, isRequired)
+                }
+
+                functions.add(scatteredFunction.build())
+                return functions
+            }
+        }
+
+        // For non-multipart operations, generate a single function
+        val functionBuilder = createBaseFunctionBuilder(operationId, summary, method, path, operation)
         functionBuilder.returns(returnType)
 
-        // Add request body parameter (pass returnType for multipart operations)
-        val requestBody = operation.get("requestBody")
         if (requestBody != null) {
             addBodyParameter(functionBuilder, requestBody, operationId, returnType, outputDir)
         }
 
-        return functionBuilder.build()
+        return listOf(functionBuilder.build())
+    }
+
+    /**
+     * Convert InputFile types to PartData for multipart operations.
+     * For other types, delegates to the unified determinePropertyType function.
+     */
+    private fun convertToPartDataIfNeeded(schema: JsonNode, context: String? = null): TypeName {
+        return determinePropertyType(schema, forMultipart = true, context = context)
     }
 
     private fun addParameter(functionBuilder: FunSpec.Builder, param: JsonNode) {
@@ -992,13 +1430,13 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         val required = param.get("required")?.asBoolean() ?: false
         val schema = param.get("schema")
 
-        val paramType = determinePropertyType(schema)
+        val paramType = determinePropertyType(schema, context = "parameter.$name")
         val finalType = if (required) paramType else paramType.copy(nullable = true)
         val camelName = snakeToCamelCase(name)
 
         val paramBuilder = ParameterSpec.builder(camelName, finalType)
 
-        // Add annotation based on parameter location
+        // Add annotation based on a parameter location
         when (paramIn) {
             "query" -> {
                 val annotation = AnnotationSpec.builder(ClassName("de.jensklingenberg.ktorfit.http", "Query"))
@@ -1029,6 +1467,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         functionBuilder.addParameter(paramBuilder.build())
     }
 
+    @Suppress("unused")
     private fun addBodyParameter(
         functionBuilder: FunSpec.Builder,
         requestBody: JsonNode,
@@ -1038,19 +1477,12 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     ) {
         val content = requestBody.get("content") ?: return
 
-        // Try to get schema from either application/json or multipart/form-data
-        val jsonContent = content.get("application/json")
-        val multipartContent = content.get("multipart/form-data")
-        val schema = jsonContent?.get("schema") ?: multipartContent?.get("schema") ?: return
-        val isMultipart = jsonContent == null && multipartContent != null
+        // Only handle JSON content (multipart is handled in generateFunction)
+        val jsonContent = content.get("application/json") ?: return
+        val schema = jsonContent.get("schema") ?: return
 
-        if (isMultipart) {
-            // For multipart requests, generate @Part parameters
-            addMultipartParameters(functionBuilder, schema, operationId, returnType, outputDir)
-        } else {
-            // For JSON requests, use @Body parameter
-            addJsonBodyParameter(functionBuilder, schema, operationId, outputDir)
-        }
+        // For JSON requests, use @Body parameter
+        addJsonBodyParameter(functionBuilder, schema, operationId, outputDir)
     }
 
     private fun addJsonBodyParameter(
@@ -1059,18 +1491,18 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         operationId: String,
         outputDir: File
     ) {
-        // Check if schema is an inline object definition (no $ref)
-        val ref = schema.get("\$ref")?.asText()
+        // Check if the schema is an inline object definition (no $ref)
+        val ref = schema.get($$"$ref")?.asText()
         val bodyType = if (ref != null) {
             // Use existing schema reference
-            determinePropertyType(schema)
+            determinePropertyType(schema, context = "$operationId.body")
         } else if (schema.get("type")?.asText() == "object") {
             // Generate a request body class for inline object schema
             val className = generateRequestBodyClass(operationId, schema, outputDir)
             ClassName("com.hiczp.telegram.bot.api.model", className)
         } else {
             // Fallback to determinePropertyType for other cases
-            determinePropertyType(schema)
+            determinePropertyType(schema, context = "$operationId.body")
         }
 
         val paramBuilder = ParameterSpec.builder("body", bodyType)
@@ -1080,38 +1512,6 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         functionBuilder.addParameter(paramBuilder.build())
     }
 
-    private fun addMultipartParameters(
-        functionBuilder: FunSpec.Builder,
-        schema: JsonNode,
-        operationId: String,
-        returnType: TypeName,
-        outputDir: File
-    ) {
-        // Add @Multipart annotation to the function
-        val multipartAnnotation = AnnotationSpec.builder(ClassName("de.jensklingenberg.ktorfit.http", "Multipart"))
-            .build()
-        functionBuilder.addAnnotation(multipartAnnotation)
-
-        // Generate request body class for multipart operations
-        val requestClassName = generateRequestBodyClass(operationId, schema, outputDir)
-
-        // Store schema and return type for later extension function generation
-        multipartOperations[operationId] = MultipartOperationInfo(schema, returnType)
-
-        val properties = schema.get("properties") ?: return
-        val required = schema.get("required")?.map { it.asText() }?.toSet() ?: emptySet()
-
-        properties.fields().forEach { (propName, propSchema) ->
-            val camelName = snakeToCamelCase(propName)
-            val isRequired = required.contains(propName)
-
-            // Determine the property type (will handle ReplyMarkup oneOf correctly)
-            val propType = determinePropertyType(propSchema)
-            val finalType = if (isRequired) propType else propType.copy(nullable = true)
-
-            addPartParameter(functionBuilder, camelName, propName, finalType, isRequired)
-        }
-    }
 
     private fun addPartParameter(
         functionBuilder: FunSpec.Builder,
@@ -1135,15 +1535,22 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         functionBuilder.addParameter(paramBuilder.build())
     }
 
-    private fun generateRequestBodyClass(operationId: String, schema: JsonNode, outputDir: File): String {
+    private fun generateRequestBodyClass(
+        operationId: String,
+        schema: JsonNode,
+        outputDir: File,
+        isMultipart: Boolean = false
+    ): String {
         // Check if we already generated this request body
         generatedRequestBodies[operationId]?.let { return it }
 
-        // Generate class name from operation ID (e.g., sendMessage -> SendMessageRequest)
-        val className = operationId.replaceFirstChar { it.uppercase() } + "Request"
+        // Generate class name from operation ID
+        // For multipart: sendMessage -> SendMessageForm
+        // For JSON: sendMessage -> SendMessageRequest
+        val className = operationId.replaceFirstChar { it.uppercase() } + if (isMultipart) "Form" else "Request"
 
-        // Generate the request body class
-        val packageName = "com.hiczp.telegram.bot.api.model"
+        // Generate the request body class in the appropriate package
+        val packageName = if (isMultipart) "com.hiczp.telegram.bot.api.form" else "com.hiczp.telegram.bot.api.model"
         generateRegularClass(packageName, className, schema, outputDir)
 
         // Mark as processed
@@ -1153,7 +1560,58 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         return className
     }
 
-    private fun determineReturnType(operation: JsonNode): TypeName {
+    /**
+     * Generate a form class for multipart operations.
+     * Form classes are generated in the form package and use PartData for InputFile types.
+     */
+    private fun generateFormClass(operationId: String, schema: JsonNode, outputDir: File): String {
+        // Check if we already generated this form class
+        generatedRequestBodies[operationId]?.let { return it }
+
+        // Generate the class name from operation ID: sendPhoto -> SendPhotoForm
+        val className = operationId.replaceFirstChar { it.uppercase() } + "Form"
+        val packageName = "com.hiczp.telegram.bot.api.form"
+
+        val fileSpec = createFileSpec(packageName, className)
+
+        val properties = schema.get("properties")
+        val required = schema.get("required")?.map { it.asText() }?.toSet() ?: emptySet()
+
+        if (properties != null && properties.isObject && properties.fields().hasNext()) {
+            val classBuilder = TypeSpec.classBuilder(className)
+                .addModifiers(KModifier.DATA)
+
+            val constructorBuilder = FunSpec.constructorBuilder()
+
+            properties.fields().forEach { (propName, propSchema) ->
+                val isRequired = required.contains(propName)
+                // For form classes, convert InputFile types to PartData
+                val propType = convertToPartDataIfNeeded(propSchema, "$className.$propName")
+                val propDescription = propSchema.get("description")?.asText()
+
+                addPropertyWithParameter(
+                    classBuilder,
+                    constructorBuilder,
+                    propName,
+                    propType,
+                    propDescription,
+                    isRequired
+                )
+            }
+
+            classBuilder.primaryConstructor(constructorBuilder.build())
+            fileSpec.addType(classBuilder.build())
+        }
+
+        fileSpec.build().writeTo(outputDir)
+
+        // Mark as processed
+        generatedRequestBodies[operationId] = className
+
+        return className
+    }
+
+    private fun determineReturnType(operation: JsonNode, operationId: String): TypeName {
         val responses = operation.get("responses") ?: return ClassName(
             "com.hiczp.telegram.bot.api.type",
             "TelegramResponse"
@@ -1180,12 +1638,12 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         if (properties != null && properties.has("ok") && properties.has("result")) {
             // Extract the result type
             val resultProperty = properties.get("result")
-            val resultType = determinePropertyType(resultProperty)
+            val resultType = determinePropertyType(resultProperty, context = "$operationId.response.result")
             return ClassName("com.hiczp.telegram.bot.api.type", "TelegramResponse").parameterizedBy(resultType)
         }
 
         // Fallback to the schema type directly wrapped in TelegramResponse
-        val schemaType = determinePropertyType(schema)
+        val schemaType = determinePropertyType(schema, context = "$operationId.response")
         return ClassName("com.hiczp.telegram.bot.api.type", "TelegramResponse").parameterizedBy(schemaType)
     }
 
@@ -1242,8 +1700,9 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     }
 
     /**
-     * Generate extension functions for multipart operations that accept Request data classes
+     * Generate extension functions for multipart operations that accept Form data classes
      */
+    @Suppress("SameParameterValue")
     private fun generateMultipartExtensions(packageName: String, interfaceName: String, outputDir: File) {
         val fileSpec = createFileSpec(
             packageName,
@@ -1252,17 +1711,16 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         )
 
         multipartOperations.forEach { (operationId, info) ->
-            val requestClassName = generatedRequestBodies[operationId]
-            if (requestClassName != null) {
-                val extensionFunction = generateMultipartExtensionFunction(
-                    interfaceName,
-                    operationId,
-                    requestClassName,
-                    info.schema,
-                    info.returnType
-                )
-                fileSpec.addFunction(extensionFunction)
-            }
+            // Form class name is operationId with the first letter uppercase + "Form"
+            val formClassName = operationId.replaceFirstChar { it.uppercase() } + "Form"
+            val extensionFunction = generateMultipartExtensionFunction(
+                interfaceName,
+                operationId,
+                formClassName,
+                info.schema,
+                info.returnType
+            )
+            fileSpec.addFunction(extensionFunction)
         }
 
         fileSpec.build().writeTo(outputDir)
@@ -1271,7 +1729,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     private fun generateMultipartExtensionFunction(
         interfaceName: String,
         operationId: String,
-        requestClassName: String,
+        formClassName: String,
         schema: JsonNode,
         returnType: TypeName
     ): FunSpec {
@@ -1280,10 +1738,10 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         val functionBuilder = FunSpec.builder(operationId)
             .addModifiers(KModifier.SUSPEND)
             .receiver(ClassName("com.hiczp.telegram.bot.api", interfaceName))
-            .addParameter("request", ClassName("com.hiczp.telegram.bot.api.model", requestClassName))
+            .addParameter("form", ClassName("com.hiczp.telegram.bot.api.form", formClassName))
             .returns(returnType)
 
-        // Build the function call
+        // Build the function call - call the scattered parameter overload
         val codeBuilder = CodeBlock.builder()
         codeBuilder.add("return %N(\n", operationId)
         codeBuilder.indent()
@@ -1291,7 +1749,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         val paramsList = mutableListOf<String>()
         properties?.fields()?.forEach { (propName, _) ->
             val camelName = snakeToCamelCase(propName)
-            paramsList.add("$camelName = request.$camelName")
+            paramsList.add("$camelName = form.$camelName")
         }
 
         paramsList.forEachIndexed { index, param ->

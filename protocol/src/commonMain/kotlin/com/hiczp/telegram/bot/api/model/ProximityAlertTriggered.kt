@@ -3,7 +3,6 @@ package com.hiczp.telegram.bot.api.model
 
 import kotlin.Long
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object represents the content of a service message, sent whenever a user in the chat triggers a proximity alert set by another user.
@@ -13,11 +12,11 @@ public data class ProximityAlertTriggered(
     /**
      * User that triggered the alert
      */
-    public val traveler: JsonElement?,
+    public val traveler: User,
     /**
      * User that set the alert
      */
-    public val watcher: JsonElement?,
+    public val watcher: User,
     /**
      * The distance between the users
      */

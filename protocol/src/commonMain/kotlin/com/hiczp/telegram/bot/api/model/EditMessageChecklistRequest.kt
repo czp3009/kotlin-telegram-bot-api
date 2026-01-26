@@ -5,7 +5,6 @@ import kotlin.Long
 import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 @Serializable
 public data class EditMessageChecklistRequest(
@@ -27,10 +26,10 @@ public data class EditMessageChecklistRequest(
     /**
      * A JSON-serialized object for the new checklist
      */
-    public val checklist: JsonElement?,
+    public val checklist: InputChecklist,
     /**
      * A JSON-serialized object for the new inline keyboard for the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: JsonElement? = null,
+    public val replyMarkup: InlineKeyboardMarkup? = null,
 )

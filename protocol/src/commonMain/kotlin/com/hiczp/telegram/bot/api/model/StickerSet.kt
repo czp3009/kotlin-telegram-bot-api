@@ -5,7 +5,6 @@ import kotlin.String
 import kotlin.collections.List
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object represents a sticker set.
@@ -32,5 +31,5 @@ public data class StickerSet(
     /**
      * *Optional*. Sticker set thumbnail in the .WEBP, .TGS, or .WEBM format
      */
-    public val thumbnail: JsonElement? = null,
+    public val thumbnail: PhotoSize? = null,
 )

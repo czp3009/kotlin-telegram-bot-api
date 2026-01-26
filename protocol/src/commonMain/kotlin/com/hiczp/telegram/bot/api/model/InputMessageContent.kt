@@ -8,7 +8,6 @@ import kotlin.String
 import kotlin.collections.List
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object represents the content of a message to be sent as a result of an inline query. Telegram clients currently support the following 5 types:
@@ -40,7 +39,7 @@ public data class InputTextMessageContent(
      * *Optional*. Link preview generation options for the message
      */
     @SerialName("link_preview_options")
-    public val linkPreviewOptions: JsonElement? = null,
+    public val linkPreviewOptions: LinkPreviewOptions? = null,
 ) : InputMessageContent
 
 /**

@@ -3,7 +3,6 @@ package com.hiczp.telegram.bot.api.model
 
 import kotlin.String
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * Contains information about the start page settings of a Telegram Business account.
@@ -21,5 +20,5 @@ public data class BusinessIntro(
     /**
      * *Optional*. Sticker of the business intro
      */
-    public val sticker: JsonElement? = null,
+    public val sticker: Sticker? = null,
 )

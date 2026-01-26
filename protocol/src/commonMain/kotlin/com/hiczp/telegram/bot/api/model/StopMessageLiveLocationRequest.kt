@@ -5,7 +5,6 @@ import kotlin.Long
 import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 @Serializable
 public data class StopMessageLiveLocationRequest(
@@ -33,5 +32,5 @@ public data class StopMessageLiveLocationRequest(
      * A JSON-serialized object for a new [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards).
      */
     @SerialName("reply_markup")
-    public val replyMarkup: JsonElement? = null,
+    public val replyMarkup: InlineKeyboardMarkup? = null,
 )

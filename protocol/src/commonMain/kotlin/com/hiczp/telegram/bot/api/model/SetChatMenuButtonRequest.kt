@@ -4,7 +4,6 @@ package com.hiczp.telegram.bot.api.model
 import kotlin.Long
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 @Serializable
 public data class SetChatMenuButtonRequest(
@@ -17,5 +16,5 @@ public data class SetChatMenuButtonRequest(
      * A JSON-serialized object for the bot's new menu button. Defaults to [MenuButtonDefault](https://core.telegram.org/bots/api#menubuttondefault)
      */
     @SerialName("menu_button")
-    public val menuButton: JsonElement? = null,
+    public val menuButton: MenuButton? = null,
 )

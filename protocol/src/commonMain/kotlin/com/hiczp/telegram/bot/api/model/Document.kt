@@ -5,7 +5,6 @@ import kotlin.Long
 import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object represents a general file (as opposed to photos, voice messages and audio files).
@@ -25,7 +24,7 @@ public data class Document(
     /**
      * *Optional*. Document thumbnail as defined by the sender
      */
-    public val thumbnail: JsonElement? = null,
+    public val thumbnail: PhotoSize? = null,
     /**
      * *Optional*. Original filename as defined by the sender
      */

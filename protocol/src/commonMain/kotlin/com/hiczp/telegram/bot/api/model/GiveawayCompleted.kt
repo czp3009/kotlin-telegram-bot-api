@@ -5,7 +5,6 @@ import kotlin.Boolean
 import kotlin.Long
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object represents a service message about the completion of a giveaway without public winners.
@@ -26,7 +25,7 @@ public data class GiveawayCompleted(
      * *Optional*. Message with the giveaway that was completed, if it wasn't deleted
      */
     @SerialName("giveaway_message")
-    public val giveawayMessage: JsonElement? = null,
+    public val giveawayMessage: Message? = null,
     /**
      * *Optional*. *True*, if the giveaway is a Telegram Star giveaway. Otherwise, currently, the giveaway is a Telegram Premium giveaway.
      */

@@ -6,7 +6,6 @@ import kotlin.String
 import kotlin.collections.List
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object represents an answer of a user in a non-anonymous poll.
@@ -22,11 +21,11 @@ public data class PollAnswer(
      * *Optional*. The chat that changed the answer to the poll, if the voter is anonymous
      */
     @SerialName("voter_chat")
-    public val voterChat: JsonElement? = null,
+    public val voterChat: Chat? = null,
     /**
      * *Optional*. The user that changed the answer to the poll, if the voter isn't anonymous
      */
-    public val user: JsonElement? = null,
+    public val user: User? = null,
     /**
      * 0-based identifiers of chosen answer options. May be empty if the vote was retracted.
      */

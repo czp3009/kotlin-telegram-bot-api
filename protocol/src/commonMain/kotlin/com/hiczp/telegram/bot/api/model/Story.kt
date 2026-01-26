@@ -3,7 +3,6 @@ package com.hiczp.telegram.bot.api.model
 
 import kotlin.Long
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object represents a story.
@@ -13,7 +12,7 @@ public data class Story(
     /**
      * Chat that posted the story
      */
-    public val chat: JsonElement?,
+    public val chat: Chat,
     /**
      * Unique identifier for the story in the chat
      */

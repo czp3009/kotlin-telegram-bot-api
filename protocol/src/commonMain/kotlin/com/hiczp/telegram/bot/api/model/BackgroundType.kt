@@ -9,7 +9,6 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonClassDiscriminator
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object describes the type of a background. Currently, it can be one of
@@ -29,7 +28,7 @@ public data class BackgroundTypeFill(
     /**
      * The background fill
      */
-    public val fill: JsonElement?,
+    public val fill: BackgroundFill,
     /**
      * Dimming of the background in dark themes, as a percentage; 0-100
      */
@@ -46,7 +45,7 @@ public data class BackgroundTypeWallpaper(
     /**
      * Document with the wallpaper
      */
-    public val document: JsonElement?,
+    public val document: Document,
     /**
      * Dimming of the background in dark themes, as a percentage; 0-100
      */
@@ -73,11 +72,11 @@ public data class BackgroundTypePattern(
     /**
      * Document with the pattern
      */
-    public val document: JsonElement?,
+    public val document: Document,
     /**
      * The background fill that is combined with the pattern
      */
-    public val fill: JsonElement?,
+    public val fill: BackgroundFill,
     /**
      * Intensity of the pattern when it is shown above the filled background; 0-100
      */

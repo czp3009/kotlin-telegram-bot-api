@@ -5,7 +5,6 @@ import kotlin.Long
 import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object represents a video message (available in Telegram apps as of v.4.0).
@@ -33,7 +32,7 @@ public data class VideoNote(
     /**
      * *Optional*. Video thumbnail
      */
-    public val thumbnail: JsonElement? = null,
+    public val thumbnail: PhotoSize? = null,
     /**
      * *Optional*. File size in bytes
      */

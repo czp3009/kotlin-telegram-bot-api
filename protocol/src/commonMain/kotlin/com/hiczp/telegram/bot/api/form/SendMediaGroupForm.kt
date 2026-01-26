@@ -1,16 +1,15 @@
 // Auto-generated from Swagger specificationDo not modify this file manually
-package com.hiczp.telegram.bot.api.model
+package com.hiczp.telegram.bot.api.form
 
+import com.hiczp.telegram.bot.api.model.InputMedia
+import com.hiczp.telegram.bot.api.model.ReplyParameters
 import kotlin.Boolean
 import kotlin.Long
 import kotlin.String
 import kotlin.collections.List
 import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
-@Serializable
-public data class SendMediaGroupRequest(
+public data class SendMediaGroupForm(
     /**
      * Unique identifier of the business connection on behalf of which the message will be sent
      */
@@ -34,7 +33,7 @@ public data class SendMediaGroupRequest(
     /**
      * A JSON-serialized array describing messages to be sent, must include 2-10 items
      */
-    public val media: List<JsonElement?>,
+    public val media: List<InputMedia>,
     /**
      * Sends messages [silently](https://telegram.org/blog/channels-2-0#silent-messages). Users will receive a notification with no sound.
      */
@@ -59,5 +58,5 @@ public data class SendMediaGroupRequest(
      * Description of the message to reply to
      */
     @SerialName("reply_parameters")
-    public val replyParameters: JsonElement? = null,
+    public val replyParameters: ReplyParameters? = null,
 )

@@ -5,7 +5,6 @@ import kotlin.Long
 import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object represents a boost removed from a chat.
@@ -15,7 +14,7 @@ public data class ChatBoostRemoved(
     /**
      * Chat which was boosted
      */
-    public val chat: JsonElement?,
+    public val chat: Chat,
     /**
      * Unique identifier of the boost
      */
@@ -29,5 +28,5 @@ public data class ChatBoostRemoved(
     /**
      * Source of the removed boost
      */
-    public val source: JsonElement?,
+    public val source: ChatBoostSource,
 )

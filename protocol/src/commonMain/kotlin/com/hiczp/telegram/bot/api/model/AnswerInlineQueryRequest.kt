@@ -7,7 +7,6 @@ import kotlin.String
 import kotlin.collections.List
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 @Serializable
 public data class AnswerInlineQueryRequest(
@@ -38,5 +37,5 @@ public data class AnswerInlineQueryRequest(
     /**
      * A JSON-serialized object describing a button to be shown above inline query results
      */
-    public val button: JsonElement? = null,
+    public val button: InlineQueryResultsButton? = null,
 )

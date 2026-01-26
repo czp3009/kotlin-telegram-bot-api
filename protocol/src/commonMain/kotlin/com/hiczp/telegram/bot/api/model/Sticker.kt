@@ -6,7 +6,6 @@ import kotlin.Long
 import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object represents a sticker.
@@ -48,7 +47,7 @@ public data class Sticker(
     /**
      * *Optional*. Sticker thumbnail in the .WEBP or .JPG format
      */
-    public val thumbnail: JsonElement? = null,
+    public val thumbnail: PhotoSize? = null,
     /**
      * *Optional*. Emoji associated with the sticker
      */
@@ -62,12 +61,12 @@ public data class Sticker(
      * *Optional*. For premium regular stickers, premium animation for the sticker
      */
     @SerialName("premium_animation")
-    public val premiumAnimation: JsonElement? = null,
+    public val premiumAnimation: File? = null,
     /**
      * *Optional*. For mask stickers, the position where the mask should be placed
      */
     @SerialName("mask_position")
-    public val maskPosition: JsonElement? = null,
+    public val maskPosition: MaskPosition? = null,
     /**
      * *Optional*. For custom emoji stickers, unique identifier of the custom emoji
      */

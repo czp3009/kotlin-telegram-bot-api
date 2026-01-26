@@ -4,7 +4,6 @@ package com.hiczp.telegram.bot.api.model
 import kotlin.Long
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * Describes a topic of a direct messages chat.
@@ -19,5 +18,5 @@ public data class DirectMessagesTopic(
     /**
      * *Optional*. Information about the user that created the topic. Currently, it is always present
      */
-    public val user: JsonElement? = null,
+    public val user: User? = null,
 )

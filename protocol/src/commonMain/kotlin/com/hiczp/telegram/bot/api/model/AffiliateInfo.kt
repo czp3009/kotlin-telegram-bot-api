@@ -4,7 +4,6 @@ package com.hiczp.telegram.bot.api.model
 import kotlin.Long
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * Contains information about the affiliate that received a commission via this transaction.
@@ -15,12 +14,12 @@ public data class AffiliateInfo(
      * *Optional*. The bot or the user that received an affiliate commission if it was received by a bot or a user
      */
     @SerialName("affiliate_user")
-    public val affiliateUser: JsonElement? = null,
+    public val affiliateUser: User? = null,
     /**
      * *Optional*. The chat that received an affiliate commission if it was received by a chat
      */
     @SerialName("affiliate_chat")
-    public val affiliateChat: JsonElement? = null,
+    public val affiliateChat: Chat? = null,
     /**
      * The number of Telegram Stars received by the affiliate for each 1000 Telegram Stars received by the bot from referred users
      */

@@ -6,7 +6,6 @@ import kotlin.Long
 import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object describes a unique gift that was upgraded from a regular gift.
@@ -34,15 +33,15 @@ public data class UniqueGift(
     /**
      * Model of the gift
      */
-    public val model: JsonElement?,
+    public val model: UniqueGiftModel,
     /**
      * Symbol of the gift
      */
-    public val symbol: JsonElement?,
+    public val symbol: UniqueGiftSymbol,
     /**
      * Backdrop of the gift
      */
-    public val backdrop: JsonElement?,
+    public val backdrop: UniqueGiftBackdrop,
     /**
      * *Optional*. *True*, if the original regular gift was exclusively purchaseable by Telegram Premium subscribers
      */
@@ -56,10 +55,10 @@ public data class UniqueGift(
     /**
      * *Optional*. The color scheme that can be used by the gift's owner for the chat's name, replies to messages and link previews; for business account gifts and gifts that are currently on sale only
      */
-    public val colors: JsonElement? = null,
+    public val colors: UniqueGiftColors? = null,
     /**
      * *Optional*. Information about the chat that published the gift
      */
     @SerialName("publisher_chat")
-    public val publisherChat: JsonElement? = null,
+    public val publisherChat: Chat? = null,
 )

@@ -2,7 +2,6 @@
 package com.hiczp.telegram.bot.api.model
 
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * Describes a clickable area on a story media.
@@ -12,9 +11,9 @@ public data class StoryArea(
     /**
      * Position of the area
      */
-    public val position: JsonElement?,
+    public val position: StoryAreaPosition,
     /**
      * Type of the area
      */
-    public val type: JsonElement?,
+    public val type: StoryAreaType,
 )

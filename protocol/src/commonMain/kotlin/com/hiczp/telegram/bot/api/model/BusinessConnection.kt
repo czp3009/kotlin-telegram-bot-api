@@ -6,7 +6,6 @@ import kotlin.Long
 import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * Describes the connection of the bot with a business account.
@@ -20,7 +19,7 @@ public data class BusinessConnection(
     /**
      * Business account user that created the business connection
      */
-    public val user: JsonElement?,
+    public val user: User,
     /**
      * Identifier of a private chat with the user who created the business connection. This number may have more than 32 significant bits and some programming languages may have difficulty/silent defects in interpreting it. But it has at most 52 significant bits, so a 64-bit integer or double-precision float type are safe for storing this identifier.
      */
@@ -33,7 +32,7 @@ public data class BusinessConnection(
     /**
      * *Optional*. Rights of the business bot
      */
-    public val rights: JsonElement? = null,
+    public val rights: BusinessBotRights? = null,
     /**
      * *True*, if the connection is active
      */

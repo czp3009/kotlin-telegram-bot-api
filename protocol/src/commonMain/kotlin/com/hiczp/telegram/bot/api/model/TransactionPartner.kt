@@ -9,7 +9,6 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonClassDiscriminator
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object describes the source of a transaction, or its recipient for outgoing transactions. Currently, it can be one of
@@ -34,11 +33,11 @@ public data class TransactionPartnerUser(
     /**
      * Information about the user
      */
-    public val user: JsonElement?,
+    public val user: User,
     /**
      * *Optional*. Information about the affiliate that received a commission via this transaction. Can be available only for “invoice_payment” and “paid_media_payment” transactions.
      */
-    public val affiliate: JsonElement? = null,
+    public val affiliate: AffiliateInfo? = null,
     /**
      * *Optional*. Bot-specified invoice payload. Can be available only for “invoice_payment” transactions.
      */
@@ -62,7 +61,7 @@ public data class TransactionPartnerUser(
     /**
      * *Optional*. The gift sent to the user by the bot; for “gift_purchase” transactions only
      */
-    public val gift: JsonElement? = null,
+    public val gift: Gift? = null,
     /**
      * *Optional*. Number of months the gifted Telegram Premium subscription will be active for; for “premium_purchase” transactions only
      */
@@ -79,11 +78,11 @@ public data class TransactionPartnerChat(
     /**
      * Information about the chat
      */
-    public val chat: JsonElement?,
+    public val chat: Chat,
     /**
      * *Optional*. The gift sent to the chat by the bot
      */
-    public val gift: JsonElement? = null,
+    public val gift: Gift? = null,
 ) : TransactionPartner
 
 /**
@@ -96,7 +95,7 @@ public data class TransactionPartnerAffiliateProgram(
      * *Optional*. Information about the bot that sponsored the affiliate program
      */
     @SerialName("sponsor_user")
-    public val sponsorUser: JsonElement? = null,
+    public val sponsorUser: User? = null,
     /**
      * The number of Telegram Stars received by the bot for each 1000 Telegram Stars received by the affiliate program sponsor from referred users
      */
@@ -114,7 +113,7 @@ public data class TransactionPartnerFragment(
      * *Optional*. State of the transaction if the transaction is outgoing
      */
     @SerialName("withdrawal_state")
-    public val withdrawalState: JsonElement? = null,
+    public val withdrawalState: RevenueWithdrawalState? = null,
 ) : TransactionPartner
 
 /**

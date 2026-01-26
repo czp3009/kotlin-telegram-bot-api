@@ -4,7 +4,6 @@ package com.hiczp.telegram.bot.api.model
 import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object represents a venue.
@@ -14,7 +13,7 @@ public data class Venue(
     /**
      * Venue location. Can't be a live location
      */
-    public val location: JsonElement?,
+    public val location: Location,
     /**
      * Name of the venue
      */

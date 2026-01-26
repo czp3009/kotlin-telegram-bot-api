@@ -5,7 +5,6 @@ import kotlin.Boolean
 import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 @Serializable
 public data class SetBusinessAccountGiftSettingsRequest(
@@ -23,5 +22,5 @@ public data class SetBusinessAccountGiftSettingsRequest(
      * Types of gifts accepted by the business account
      */
     @SerialName("accepted_gift_types")
-    public val acceptedGiftTypes: JsonElement?,
+    public val acceptedGiftTypes: AcceptedGiftTypes,
 )

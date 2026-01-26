@@ -6,7 +6,6 @@ import kotlin.String
 import kotlin.collections.List
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object is received when messages are deleted from a connected business account.
@@ -21,7 +20,7 @@ public data class BusinessMessagesDeleted(
     /**
      * Information about a chat in the business account. The bot may not have access to the chat or the corresponding user.
      */
-    public val chat: JsonElement?,
+    public val chat: Chat,
     /**
      * The list of identifiers of deleted messages in the chat of the business account
      */

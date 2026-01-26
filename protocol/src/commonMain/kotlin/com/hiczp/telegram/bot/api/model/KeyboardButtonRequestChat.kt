@@ -5,7 +5,6 @@ import kotlin.Boolean
 import kotlin.Long
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object defines the criteria used to request a suitable chat. Information about the selected chat will be shared with the bot when the corresponding button is pressed. The bot will be granted requested rights in the chat if appropriate. More about requesting chats .
@@ -41,12 +40,12 @@ public data class KeyboardButtonRequestChat(
      * *Optional*. A JSON-serialized object listing the required administrator rights of the user in the chat. The rights must be a superset of *bot_administrator_rights*. If not specified, no additional restrictions are applied.
      */
     @SerialName("user_administrator_rights")
-    public val userAdministratorRights: JsonElement? = null,
+    public val userAdministratorRights: ChatAdministratorRights? = null,
     /**
      * *Optional*. A JSON-serialized object listing the required administrator rights of the bot in the chat. The rights must be a subset of *user_administrator_rights*. If not specified, no additional restrictions are applied.
      */
     @SerialName("bot_administrator_rights")
-    public val botAdministratorRights: JsonElement? = null,
+    public val botAdministratorRights: ChatAdministratorRights? = null,
     /**
      * *Optional*. Pass *True* to request a chat with the bot as a member. Otherwise, no additional restrictions are applied.
      */

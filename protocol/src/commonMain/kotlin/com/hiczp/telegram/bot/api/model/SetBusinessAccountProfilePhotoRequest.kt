@@ -5,7 +5,6 @@ import kotlin.Boolean
 import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 @Serializable
 public data class SetBusinessAccountProfilePhotoRequest(
@@ -17,7 +16,7 @@ public data class SetBusinessAccountProfilePhotoRequest(
     /**
      * The new profile photo to set
      */
-    public val photo: JsonElement?,
+    public val photo: InputProfilePhoto,
     /**
      * Pass *True* to set the public photo, which will be visible even if the main photo is hidden by the business account's privacy settings. An account can have only one public photo.
      */

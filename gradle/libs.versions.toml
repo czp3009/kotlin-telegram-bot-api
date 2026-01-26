@@ -5,6 +5,7 @@ kotlinx-serialization = "1.10.0"
 kotlinLogging = "7.0.14"
 jackson = "2.18.2"
 kotlinpoet = "2.2.0"
+ktor = "3.4.0"
 ktorfit = "2.7.2"
 kotlin-openapi-bindings = "0.2.1"
 
@@ -15,6 +16,7 @@ kotlinLogging = { module = "io.github.oshai:kotlin-logging", version.ref = "kotl
 jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
 kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet" }
 kotlin-openapi-bindings = { module = "community.flock.kotlinx.openapi.bindings:kotlin-openapi-bindings", version.ref = "kotlin-openapi-bindings" }
+ktor-http = { module = "io.ktor:ktor-http", version.ref = "ktor" }
 ktorfit-lib = { module = "de.jensklingenberg.ktorfit:ktorfit-lib", version.ref = "ktorfit" }
 ktorfit-lib-light = { module = "de.jensklingenberg.ktorfit:ktorfit-lib-light", version.ref = "ktorfit" }
 

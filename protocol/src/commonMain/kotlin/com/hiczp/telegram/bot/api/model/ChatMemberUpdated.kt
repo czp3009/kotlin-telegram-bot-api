@@ -5,7 +5,6 @@ import kotlin.Boolean
 import kotlin.Long
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object represents changes in the status of a chat member.
@@ -15,11 +14,11 @@ public data class ChatMemberUpdated(
     /**
      * Chat the user belongs to
      */
-    public val chat: JsonElement?,
+    public val chat: Chat,
     /**
      * Performer of the action, which resulted in the change
      */
-    public val from: JsonElement?,
+    public val from: User,
     /**
      * Date the change was done in Unix time
      */
@@ -28,17 +27,17 @@ public data class ChatMemberUpdated(
      * Previous information about the chat member
      */
     @SerialName("old_chat_member")
-    public val oldChatMember: JsonElement?,
+    public val oldChatMember: ChatMember,
     /**
      * New information about the chat member
      */
     @SerialName("new_chat_member")
-    public val newChatMember: JsonElement?,
+    public val newChatMember: ChatMember,
     /**
      * *Optional*. Chat invite link, which was used by the user to join the chat; for joining by invite link events only.
      */
     @SerialName("invite_link")
-    public val inviteLink: JsonElement? = null,
+    public val inviteLink: ChatInviteLink? = null,
     /**
      * *Optional*. *True*, if the user joined the chat after sending a direct join request without using an invite link and being approved by an administrator
      */

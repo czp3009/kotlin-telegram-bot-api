@@ -4,7 +4,6 @@ package com.hiczp.telegram.bot.api.model
 import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * Represents a result of an inline query that was chosen by the user and sent to their chat partner.
@@ -20,11 +19,11 @@ public data class ChosenInlineResult(
     /**
      * The user that chose the result
      */
-    public val from: JsonElement?,
+    public val from: User,
     /**
      * *Optional*. Sender location, only for bots that require user location
      */
-    public val location: JsonElement? = null,
+    public val location: Location? = null,
     /**
      * *Optional*. Identifier of the sent inline message. Available only if there is an [inline keyboard](https://core.telegram.org/bots/api#inlinekeyboardmarkup) attached to the message. Will be also received in [callback queries](https://core.telegram.org/bots/api#callbackquery) and can be used to [edit](https://core.telegram.org/bots/api#updating-messages) the message.
      */

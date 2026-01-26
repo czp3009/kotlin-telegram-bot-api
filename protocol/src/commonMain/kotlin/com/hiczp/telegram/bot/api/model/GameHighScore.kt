@@ -3,7 +3,6 @@ package com.hiczp.telegram.bot.api.model
 
 import kotlin.Long
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object represents one row of the high scores table for a game.
@@ -19,7 +18,7 @@ public data class GameHighScore(
     /**
      * User
      */
-    public val user: JsonElement?,
+    public val user: User,
     /**
      * Score
      */

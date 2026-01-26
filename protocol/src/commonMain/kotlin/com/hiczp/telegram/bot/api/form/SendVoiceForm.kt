@@ -1,16 +1,18 @@
 // Auto-generated from Swagger specificationDo not modify this file manually
-package com.hiczp.telegram.bot.api.model
+package com.hiczp.telegram.bot.api.form
 
+import com.hiczp.telegram.bot.api.model.MessageEntity
+import com.hiczp.telegram.bot.api.model.ReplyMarkup
+import com.hiczp.telegram.bot.api.model.ReplyParameters
+import com.hiczp.telegram.bot.api.model.SuggestedPostParameters
+import io.ktor.http.content.PartData
 import kotlin.Boolean
 import kotlin.Long
 import kotlin.String
 import kotlin.collections.List
 import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
-@Serializable
-public data class SendDocumentRequest(
+public data class SendVoiceForm(
     /**
      * Unique identifier of the business connection on behalf of which the message will be sent
      */
@@ -32,19 +34,15 @@ public data class SendDocumentRequest(
     @SerialName("direct_messages_topic_id")
     public val directMessagesTopicId: Long? = null,
     /**
-     * File to send. Pass a file_id as String to send a file that exists on the Telegram servers (recommended), pass an HTTP URL as a String for Telegram to get a file from the Internet, or upload a new one using multipart/form-data. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files)
+     * Audio file to send. Pass a file_id as String to send a file that exists on the Telegram servers (recommended), pass an HTTP URL as a String for Telegram to get a file from the Internet, or upload a new one using multipart/form-data. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files)
      */
-    public val document: String,
+    public val voice: PartData,
     /**
-     * Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side. The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using multipart/form-data. Thumbnails can't be reused and can be only uploaded as a new file, so you can pass “attach://<file_attach_name>” if the thumbnail was uploaded using multipart/form-data under <file_attach_name>. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files)
-     */
-    public val thumbnail: String? = null,
-    /**
-     * Document caption (may also be used when resending documents by *file_id*), 0-1024 characters after entities parsing
+     * Voice message caption, 0-1024 characters after entities parsing
      */
     public val caption: String? = null,
     /**
-     * Mode for parsing entities in the document caption. See [formatting options](https://core.telegram.org/bots/api#formatting-options) for more details.
+     * Mode for parsing entities in the voice message caption. See [formatting options](https://core.telegram.org/bots/api#formatting-options) for more details.
      */
     @SerialName("parse_mode")
     public val parseMode: String? = null,
@@ -54,10 +52,9 @@ public data class SendDocumentRequest(
     @SerialName("caption_entities")
     public val captionEntities: List<MessageEntity>? = null,
     /**
-     * Disables automatic server-side content type detection for files uploaded using multipart/form-data
+     * Duration of the voice message in seconds
      */
-    @SerialName("disable_content_type_detection")
-    public val disableContentTypeDetection: Boolean? = null,
+    public val duration: Long? = null,
     /**
      * Sends the message [silently](https://telegram.org/blog/channels-2-0#silent-messages). Users will receive a notification with no sound.
      */
@@ -82,12 +79,12 @@ public data class SendDocumentRequest(
      * A JSON-serialized object containing the parameters of the suggested post to send; for direct messages chats only. If the message is sent as a reply to another suggested post, then that suggested post is automatically declined.
      */
     @SerialName("suggested_post_parameters")
-    public val suggestedPostParameters: JsonElement? = null,
+    public val suggestedPostParameters: SuggestedPostParameters? = null,
     /**
      * Description of the message to reply to
      */
     @SerialName("reply_parameters")
-    public val replyParameters: JsonElement? = null,
+    public val replyParameters: ReplyParameters? = null,
     /**
      * Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user
      */

@@ -5,7 +5,6 @@ import kotlin.String
 import kotlin.collections.List
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object describes a sticker to be added to a sticker set.
@@ -29,7 +28,7 @@ public data class InputSticker(
      * *Optional*. Position where the mask should be placed on faces. For “mask” stickers only.
      */
     @SerialName("mask_position")
-    public val maskPosition: JsonElement? = null,
+    public val maskPosition: MaskPosition? = null,
     /**
      * *Optional*. List of 0-20 search keywords for the sticker with total length of up to 64 characters. For “regular” and “custom_emoji” stickers only.
      */

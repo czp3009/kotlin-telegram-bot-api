@@ -4,7 +4,6 @@ package com.hiczp.telegram.bot.api.model
 import kotlin.Long
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * Represents a reaction added to a message along with the number of times it was added.
@@ -14,7 +13,7 @@ public data class ReactionCount(
     /**
      * Type of the reaction
      */
-    public val type: JsonElement?,
+    public val type: ReactionType,
     /**
      * Number of times the reaction was added
      */

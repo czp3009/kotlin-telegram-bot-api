@@ -6,7 +6,6 @@ import kotlin.Long
 import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 @Serializable
 public data class SendChecklistRequest(
@@ -23,7 +22,7 @@ public data class SendChecklistRequest(
     /**
      * A JSON-serialized object for the checklist to send
      */
-    public val checklist: JsonElement?,
+    public val checklist: InputChecklist,
     /**
      * Sends the message silently. Users will receive a notification with no sound.
      */
@@ -43,10 +42,10 @@ public data class SendChecklistRequest(
      * A JSON-serialized object for description of the message to reply to
      */
     @SerialName("reply_parameters")
-    public val replyParameters: JsonElement? = null,
+    public val replyParameters: ReplyParameters? = null,
     /**
      * A JSON-serialized object for an inline keyboard
      */
     @SerialName("reply_markup")
-    public val replyMarkup: JsonElement? = null,
+    public val replyMarkup: InlineKeyboardMarkup? = null,
 )

@@ -7,7 +7,6 @@ import kotlin.String
 import kotlin.collections.List
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 @Serializable
 public data class SendInvoiceRequest(
@@ -150,15 +149,15 @@ public data class SendInvoiceRequest(
      * A JSON-serialized object containing the parameters of the suggested post to send; for direct messages chats only. If the message is sent as a reply to another suggested post, then that suggested post is automatically declined.
      */
     @SerialName("suggested_post_parameters")
-    public val suggestedPostParameters: JsonElement? = null,
+    public val suggestedPostParameters: SuggestedPostParameters? = null,
     /**
      * Description of the message to reply to
      */
     @SerialName("reply_parameters")
-    public val replyParameters: JsonElement? = null,
+    public val replyParameters: ReplyParameters? = null,
     /**
      * A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards). If empty, one 'Pay `total price`' button will be shown. If not empty, the first button must be a Pay button.
      */
     @SerialName("reply_markup")
-    public val replyMarkup: JsonElement? = null,
+    public val replyMarkup: InlineKeyboardMarkup? = null,
 )

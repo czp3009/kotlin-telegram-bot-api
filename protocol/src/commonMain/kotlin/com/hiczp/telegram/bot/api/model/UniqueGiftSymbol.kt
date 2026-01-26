@@ -5,7 +5,6 @@ import kotlin.Long
 import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object describes the symbol shown on the pattern of a unique gift.
@@ -19,7 +18,7 @@ public data class UniqueGiftSymbol(
     /**
      * The sticker that represents the unique gift
      */
-    public val sticker: JsonElement?,
+    public val sticker: Sticker,
     /**
      * The number of unique gifts that receive this model for every 1000 gifts upgraded
      */

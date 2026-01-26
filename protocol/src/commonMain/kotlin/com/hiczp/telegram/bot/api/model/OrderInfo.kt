@@ -4,7 +4,6 @@ package com.hiczp.telegram.bot.api.model
 import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object represents information about an order.
@@ -28,5 +27,5 @@ public data class OrderInfo(
      * *Optional*. User shipping address
      */
     @SerialName("shipping_address")
-    public val shippingAddress: JsonElement? = null,
+    public val shippingAddress: ShippingAddress? = null,
 )

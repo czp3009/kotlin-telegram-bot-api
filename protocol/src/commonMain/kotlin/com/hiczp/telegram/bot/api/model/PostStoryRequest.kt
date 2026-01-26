@@ -7,7 +7,6 @@ import kotlin.String
 import kotlin.collections.List
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 @Serializable
 public data class PostStoryRequest(
@@ -19,7 +18,7 @@ public data class PostStoryRequest(
     /**
      * Content of the story
      */
-    public val content: JsonElement?,
+    public val content: InputStoryContent,
     /**
      * Period after which the story is moved to the archive, in seconds; must be one of `6 * 3600`, `12 * 3600`, `86400`, or `2 * 86400`
      */

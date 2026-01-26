@@ -10,7 +10,6 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonClassDiscriminator
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object describes a gift received and owned by a user or a chat. Currently, it can be one of
@@ -30,7 +29,7 @@ public data class OwnedGiftRegular(
     /**
      * Information about the regular gift
      */
-    public val gift: JsonElement?,
+    public val gift: Gift,
     /**
      * *Optional*. Unique identifier of the gift for the bot; for gifts received on behalf of business accounts only
      */
@@ -40,7 +39,7 @@ public data class OwnedGiftRegular(
      * *Optional*. Sender of the gift if it is a known user
      */
     @SerialName("sender_user")
-    public val senderUser: JsonElement? = null,
+    public val senderUser: User? = null,
     /**
      * Date the gift was sent in Unix time
      */
@@ -105,7 +104,7 @@ public data class OwnedGiftUnique(
     /**
      * Information about the unique gift
      */
-    public val gift: JsonElement?,
+    public val gift: UniqueGift,
     /**
      * *Optional*. Unique identifier of the received gift for the bot; for gifts received on behalf of business accounts only
      */
@@ -115,7 +114,7 @@ public data class OwnedGiftUnique(
      * *Optional*. Sender of the gift if it is a known user
      */
     @SerialName("sender_user")
-    public val senderUser: JsonElement? = null,
+    public val senderUser: User? = null,
     /**
      * Date the gift was sent in Unix time
      */

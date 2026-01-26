@@ -5,7 +5,6 @@ import kotlin.Long
 import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * Describes a service message about a unique gift that was sent or received.
@@ -15,7 +14,7 @@ public data class UniqueGiftInfo(
     /**
      * Information about the gift
      */
-    public val gift: JsonElement?,
+    public val gift: UniqueGift,
     /**
      * Origin of the gift. Currently, either “upgrade” for gifts upgraded from regular gifts, “transfer” for gifts transferred from other users or channels, “resale” for gifts bought from other users, “gifted_upgrade” for upgrades purchased after the gift was sent, or “offer” for gifts bought or sold through gift purchase offers
      */

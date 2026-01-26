@@ -8,7 +8,6 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonClassDiscriminator
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object describes the source of a chat boost. It can be one of
@@ -28,7 +27,7 @@ public data class ChatBoostSourcePremium(
     /**
      * User that boosted the chat
      */
-    public val user: JsonElement?,
+    public val user: User,
 ) : ChatBoostSource
 
 /**
@@ -40,7 +39,7 @@ public data class ChatBoostSourceGiftCode(
     /**
      * User for which the gift code was created
      */
-    public val user: JsonElement?,
+    public val user: User,
 ) : ChatBoostSource
 
 /**
@@ -57,7 +56,7 @@ public data class ChatBoostSourceGiveaway(
     /**
      * *Optional*. User that won the prize in the giveaway if any; for Telegram Premium giveaways only
      */
-    public val user: JsonElement? = null,
+    public val user: User? = null,
     /**
      * *Optional*. The number of Telegram Stars to be split between giveaway winners; for Telegram Star giveaways only
      */

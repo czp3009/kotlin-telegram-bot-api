@@ -1,16 +1,16 @@
 // Auto-generated from Swagger specificationDo not modify this file manually
-package com.hiczp.telegram.bot.api.model
+package com.hiczp.telegram.bot.api.form
 
+import com.hiczp.telegram.bot.api.model.ReplyMarkup
+import com.hiczp.telegram.bot.api.model.ReplyParameters
+import com.hiczp.telegram.bot.api.model.SuggestedPostParameters
+import io.ktor.http.content.PartData
 import kotlin.Boolean
 import kotlin.Long
 import kotlin.String
-import kotlin.collections.List
 import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
-@Serializable
-public data class SendPhotoRequest(
+public data class SendStickerForm(
     /**
      * Unique identifier of the business connection on behalf of which the message will be sent
      */
@@ -32,33 +32,13 @@ public data class SendPhotoRequest(
     @SerialName("direct_messages_topic_id")
     public val directMessagesTopicId: Long? = null,
     /**
-     * Photo to send. Pass a file_id as String to send a photo that exists on the Telegram servers (recommended), pass an HTTP URL as a String for Telegram to get a photo from the Internet, or upload a new photo using multipart/form-data. The photo must be at most 10 MB in size. The photo's width and height must not exceed 10000 in total. Width and height ratio must be at most 20. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files)
+     * Sticker to send. Pass a file_id as String to send a file that exists on the Telegram servers (recommended), pass an HTTP URL as a String for Telegram to get a .WEBP sticker from the Internet, or upload a new .WEBP, .TGS, or .WEBM sticker using multipart/form-data. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files). Video and animated stickers can't be sent via an HTTP URL.
      */
-    public val photo: String,
+    public val sticker: PartData,
     /**
-     * Photo caption (may also be used when resending photos by *file_id*), 0-1024 characters after entities parsing
+     * Emoji associated with the sticker; only for just uploaded stickers
      */
-    public val caption: String? = null,
-    /**
-     * Mode for parsing entities in the photo caption. See [formatting options](https://core.telegram.org/bots/api#formatting-options) for more details.
-     */
-    @SerialName("parse_mode")
-    public val parseMode: String? = null,
-    /**
-     * A JSON-serialized list of special entities that appear in the caption, which can be specified instead of *parse_mode*
-     */
-    @SerialName("caption_entities")
-    public val captionEntities: List<MessageEntity>? = null,
-    /**
-     * Pass *True*, if the caption must be shown above the message media
-     */
-    @SerialName("show_caption_above_media")
-    public val showCaptionAboveMedia: Boolean? = null,
-    /**
-     * Pass *True* if the photo needs to be covered with a spoiler animation
-     */
-    @SerialName("has_spoiler")
-    public val hasSpoiler: Boolean? = null,
+    public val emoji: String? = null,
     /**
      * Sends the message [silently](https://telegram.org/blog/channels-2-0#silent-messages). Users will receive a notification with no sound.
      */
@@ -83,12 +63,12 @@ public data class SendPhotoRequest(
      * A JSON-serialized object containing the parameters of the suggested post to send; for direct messages chats only. If the message is sent as a reply to another suggested post, then that suggested post is automatically declined.
      */
     @SerialName("suggested_post_parameters")
-    public val suggestedPostParameters: JsonElement? = null,
+    public val suggestedPostParameters: SuggestedPostParameters? = null,
     /**
      * Description of the message to reply to
      */
     @SerialName("reply_parameters")
-    public val replyParameters: JsonElement? = null,
+    public val replyParameters: ReplyParameters? = null,
     /**
      * Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user
      */

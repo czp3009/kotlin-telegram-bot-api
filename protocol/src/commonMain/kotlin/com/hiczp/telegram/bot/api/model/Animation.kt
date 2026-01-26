@@ -5,7 +5,6 @@ import kotlin.Long
 import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object represents an animation file (GIF or H.264/MPEG-4 AVC video without sound).
@@ -37,7 +36,7 @@ public data class Animation(
     /**
      * *Optional*. Animation thumbnail as defined by the sender
      */
-    public val thumbnail: JsonElement? = null,
+    public val thumbnail: PhotoSize? = null,
     /**
      * *Optional*. Original animation filename as defined by the sender
      */

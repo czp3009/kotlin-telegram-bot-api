@@ -2,7 +2,6 @@
 package com.hiczp.telegram.bot.api.model
 
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object represents a chat background.
@@ -12,5 +11,5 @@ public data class ChatBackground(
     /**
      * Type of the background
      */
-    public val type: JsonElement?,
+    public val type: BackgroundType,
 )

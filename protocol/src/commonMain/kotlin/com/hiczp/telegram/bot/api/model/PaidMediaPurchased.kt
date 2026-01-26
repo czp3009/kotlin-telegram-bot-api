@@ -4,7 +4,6 @@ package com.hiczp.telegram.bot.api.model
 import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object contains information about a paid media purchase.
@@ -14,7 +13,7 @@ public data class PaidMediaPurchased(
     /**
      * User who purchased the media
      */
-    public val from: JsonElement?,
+    public val from: User,
     /**
      * Bot-specified paid media payload
      */

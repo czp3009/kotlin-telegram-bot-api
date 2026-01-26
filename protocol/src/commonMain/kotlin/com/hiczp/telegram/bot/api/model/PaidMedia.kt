@@ -8,7 +8,6 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonClassDiscriminator
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object describes paid media. Currently, it can be one of
@@ -60,5 +59,5 @@ public data class PaidMediaVideo(
     /**
      * The video
      */
-    public val video: JsonElement?,
+    public val video: Video,
 ) : PaidMedia

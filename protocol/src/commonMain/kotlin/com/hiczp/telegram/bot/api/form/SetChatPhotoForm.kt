@@ -1,13 +1,11 @@
 // Auto-generated from Swagger specificationDo not modify this file manually
-package com.hiczp.telegram.bot.api.model
+package com.hiczp.telegram.bot.api.form
 
+import io.ktor.http.content.PartData
 import kotlin.String
 import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
-@Serializable
-public data class SetChatPhotoRequest(
+public data class SetChatPhotoForm(
     /**
      * Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
      */
@@ -16,5 +14,5 @@ public data class SetChatPhotoRequest(
     /**
      * New chat photo, uploaded using multipart/form-data
      */
-    public val photo: JsonElement?,
+    public val photo: PartData,
 )

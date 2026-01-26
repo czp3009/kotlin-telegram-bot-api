@@ -3,7 +3,6 @@ package com.hiczp.telegram.bot.api.model
 
 import kotlin.String
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * Contains information about the location of a Telegram Business account.
@@ -17,5 +16,5 @@ public data class BusinessLocation(
     /**
      * *Optional*. Location of the business
      */
-    public val location: JsonElement? = null,
+    public val location: Location? = null,
 )

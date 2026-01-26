@@ -1,14 +1,13 @@
 // Auto-generated from Swagger specificationDo not modify this file manually
-package com.hiczp.telegram.bot.api.model
+package com.hiczp.telegram.bot.api.form
 
+import com.hiczp.telegram.bot.api.model.InlineKeyboardMarkup
+import com.hiczp.telegram.bot.api.model.InputMedia
 import kotlin.Long
 import kotlin.String
 import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
-@Serializable
-public data class EditMessageMediaRequest(
+public data class EditMessageMediaForm(
     /**
      * Unique identifier of the business connection on behalf of which the message to be edited was sent
      */
@@ -32,10 +31,10 @@ public data class EditMessageMediaRequest(
     /**
      * A JSON-serialized object for a new media content of the message
      */
-    public val media: JsonElement?,
+    public val media: InputMedia,
     /**
      * A JSON-serialized object for a new [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards).
      */
     @SerialName("reply_markup")
-    public val replyMarkup: JsonElement? = null,
+    public val replyMarkup: InlineKeyboardMarkup? = null,
 )

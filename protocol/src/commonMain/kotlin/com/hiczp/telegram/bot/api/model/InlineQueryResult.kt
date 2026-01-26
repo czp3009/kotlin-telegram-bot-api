@@ -1,4 +1,4 @@
-// Auto-generated from Swagger specificationDo not modify this file manuallyWARNING: This sealed interface does not have a clear discriminator field
+// Auto-generated from Swagger specificationDo not modify this file manually
 package com.hiczp.telegram.bot.api.model
 
 import kotlin.Boolean
@@ -8,7 +8,6 @@ import kotlin.String
 import kotlin.collections.List
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object represents one result of an inline query. Telegram clients currently support results of the following 20 types:
@@ -22,11 +21,9 @@ public sealed interface InlineQueryResult
  * Represents a link to an MP3 audio file stored on the Telegram servers. By default, this audio file will be sent by the user. Alternatively, you can use input_message_content to send a message with the specified content instead of the audio.
  */
 @Serializable
+@SerialName("audio")
 public data class InlineQueryResultCachedAudio(
-    /**
-     * Type of the result, must be *audio*
-     */
-    public val type: String,
+    public val type: String = "audio",
     /**
      * Unique identifier for this result, 1-64 bytes
      */
@@ -54,23 +51,21 @@ public data class InlineQueryResultCachedAudio(
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: JsonElement? = null,
+    public val replyMarkup: InlineKeyboardMarkup? = null,
     /**
      * *Optional*. Content of the message to be sent instead of the audio
      */
     @SerialName("input_message_content")
-    public val inputMessageContent: JsonElement? = null,
-) : InlineQueryResult
+    public val inputMessageContent: InputMessageContent? = null,
+)
 
 /**
  * Represents a link to a file stored on the Telegram servers. By default, this file will be sent by the user with an optional caption. Alternatively, you can use input_message_content to send a message with the specified content instead of the file.
  */
 @Serializable
+@SerialName("document")
 public data class InlineQueryResultCachedDocument(
-    /**
-     * Type of the result, must be *document*
-     */
-    public val type: String,
+    public val type: String = "document",
     /**
      * Unique identifier for this result, 1-64 bytes
      */
@@ -106,23 +101,21 @@ public data class InlineQueryResultCachedDocument(
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: JsonElement? = null,
+    public val replyMarkup: InlineKeyboardMarkup? = null,
     /**
      * *Optional*. Content of the message to be sent instead of the file
      */
     @SerialName("input_message_content")
-    public val inputMessageContent: JsonElement? = null,
-) : InlineQueryResult
+    public val inputMessageContent: InputMessageContent? = null,
+)
 
 /**
  * Represents a link to an animated GIF file stored on the Telegram servers. By default, this animated GIF file will be sent by the user with an optional caption. Alternatively, you can use input_message_content to send a message with specified content instead of the animation.
  */
 @Serializable
+@SerialName("gif")
 public data class InlineQueryResultCachedGif(
-    /**
-     * Type of the result, must be *gif*
-     */
-    public val type: String,
+    public val type: String = "gif",
     /**
      * Unique identifier for this result, 1-64 bytes
      */
@@ -159,23 +152,21 @@ public data class InlineQueryResultCachedGif(
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: JsonElement? = null,
+    public val replyMarkup: InlineKeyboardMarkup? = null,
     /**
      * *Optional*. Content of the message to be sent instead of the GIF animation
      */
     @SerialName("input_message_content")
-    public val inputMessageContent: JsonElement? = null,
-) : InlineQueryResult
+    public val inputMessageContent: InputMessageContent? = null,
+)
 
 /**
  * Represents a link to a video animation (H.264/MPEG-4 AVC video without sound) stored on the Telegram servers. By default, this animated MPEG-4 file will be sent by the user with an optional caption. Alternatively, you can use input_message_content to send a message with the specified content instead of the animation.
  */
 @Serializable
+@SerialName("mpeg4_gif")
 public data class InlineQueryResultCachedMpeg4Gif(
-    /**
-     * Type of the result, must be *mpeg4_gif*
-     */
-    public val type: String,
+    public val type: String = "mpeg4_gif",
     /**
      * Unique identifier for this result, 1-64 bytes
      */
@@ -212,23 +203,21 @@ public data class InlineQueryResultCachedMpeg4Gif(
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: JsonElement? = null,
+    public val replyMarkup: InlineKeyboardMarkup? = null,
     /**
      * *Optional*. Content of the message to be sent instead of the video animation
      */
     @SerialName("input_message_content")
-    public val inputMessageContent: JsonElement? = null,
-) : InlineQueryResult
+    public val inputMessageContent: InputMessageContent? = null,
+)
 
 /**
  * Represents a link to a photo stored on the Telegram servers. By default, this photo will be sent by the user with an optional caption. Alternatively, you can use input_message_content to send a message with the specified content instead of the photo.
  */
 @Serializable
+@SerialName("photo")
 public data class InlineQueryResultCachedPhoto(
-    /**
-     * Type of the result, must be *photo*
-     */
-    public val type: String,
+    public val type: String = "photo",
     /**
      * Unique identifier for this result, 1-64 bytes
      */
@@ -269,23 +258,21 @@ public data class InlineQueryResultCachedPhoto(
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: JsonElement? = null,
+    public val replyMarkup: InlineKeyboardMarkup? = null,
     /**
      * *Optional*. Content of the message to be sent instead of the photo
      */
     @SerialName("input_message_content")
-    public val inputMessageContent: JsonElement? = null,
-) : InlineQueryResult
+    public val inputMessageContent: InputMessageContent? = null,
+)
 
 /**
  * Represents a link to a sticker stored on the Telegram servers. By default, this sticker will be sent by the user. Alternatively, you can use input_message_content to send a message with the specified content instead of the sticker.
  */
 @Serializable
+@SerialName("sticker")
 public data class InlineQueryResultCachedSticker(
-    /**
-     * Type of the result, must be *sticker*
-     */
-    public val type: String,
+    public val type: String = "sticker",
     /**
      * Unique identifier for this result, 1-64 bytes
      */
@@ -299,23 +286,21 @@ public data class InlineQueryResultCachedSticker(
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: JsonElement? = null,
+    public val replyMarkup: InlineKeyboardMarkup? = null,
     /**
      * *Optional*. Content of the message to be sent instead of the sticker
      */
     @SerialName("input_message_content")
-    public val inputMessageContent: JsonElement? = null,
-) : InlineQueryResult
+    public val inputMessageContent: InputMessageContent? = null,
+)
 
 /**
  * Represents a link to a video file stored on the Telegram servers. By default, this video file will be sent by the user with an optional caption. Alternatively, you can use input_message_content to send a message with the specified content instead of the video.
  */
 @Serializable
+@SerialName("video")
 public data class InlineQueryResultCachedVideo(
-    /**
-     * Type of the result, must be *video*
-     */
-    public val type: String,
+    public val type: String = "video",
     /**
      * Unique identifier for this result, 1-64 bytes
      */
@@ -356,23 +341,21 @@ public data class InlineQueryResultCachedVideo(
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: JsonElement? = null,
+    public val replyMarkup: InlineKeyboardMarkup? = null,
     /**
      * *Optional*. Content of the message to be sent instead of the video
      */
     @SerialName("input_message_content")
-    public val inputMessageContent: JsonElement? = null,
-) : InlineQueryResult
+    public val inputMessageContent: InputMessageContent? = null,
+)
 
 /**
  * Represents a link to a voice message stored on the Telegram servers. By default, this voice message will be sent by the user. Alternatively, you can use input_message_content to send a message with the specified content instead of the voice message.
  */
 @Serializable
+@SerialName("voice")
 public data class InlineQueryResultCachedVoice(
-    /**
-     * Type of the result, must be *voice*
-     */
-    public val type: String,
+    public val type: String = "voice",
     /**
      * Unique identifier for this result, 1-64 bytes
      */
@@ -404,23 +387,21 @@ public data class InlineQueryResultCachedVoice(
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: JsonElement? = null,
+    public val replyMarkup: InlineKeyboardMarkup? = null,
     /**
      * *Optional*. Content of the message to be sent instead of the voice message
      */
     @SerialName("input_message_content")
-    public val inputMessageContent: JsonElement? = null,
-) : InlineQueryResult
+    public val inputMessageContent: InputMessageContent? = null,
+)
 
 /**
  * Represents a link to an article or web page.
  */
 @Serializable
+@SerialName("article")
 public data class InlineQueryResultArticle(
-    /**
-     * Type of the result, must be *article*
-     */
-    public val type: String,
+    public val type: String = "article",
     /**
      * Unique identifier for this result, 1-64 Bytes
      */
@@ -433,12 +414,12 @@ public data class InlineQueryResultArticle(
      * Content of the message to be sent
      */
     @SerialName("input_message_content")
-    public val inputMessageContent: JsonElement?,
+    public val inputMessageContent: InputMessageContent,
     /**
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: JsonElement? = null,
+    public val replyMarkup: InlineKeyboardMarkup? = null,
     /**
      * *Optional*. URL of the result
      */
@@ -462,17 +443,15 @@ public data class InlineQueryResultArticle(
      */
     @SerialName("thumbnail_height")
     public val thumbnailHeight: Long? = null,
-) : InlineQueryResult
+)
 
 /**
  * Represents a link to an MP3 audio file. By default, this audio file will be sent by the user. Alternatively, you can use input_message_content to send a message with the specified content instead of the audio.
  */
 @Serializable
+@SerialName("audio")
 public data class InlineQueryResultAudio(
-    /**
-     * Type of the result, must be *audio*
-     */
-    public val type: String,
+    public val type: String = "audio",
     /**
      * Unique identifier for this result, 1-64 bytes
      */
@@ -513,23 +492,21 @@ public data class InlineQueryResultAudio(
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: JsonElement? = null,
+    public val replyMarkup: InlineKeyboardMarkup? = null,
     /**
      * *Optional*. Content of the message to be sent instead of the audio
      */
     @SerialName("input_message_content")
-    public val inputMessageContent: JsonElement? = null,
-) : InlineQueryResult
+    public val inputMessageContent: InputMessageContent? = null,
+)
 
 /**
  * Represents a contact with a phone number. By default, this contact will be sent by the user. Alternatively, you can use input_message_content to send a message with the specified content instead of the contact.
  */
 @Serializable
+@SerialName("contact")
 public data class InlineQueryResultContact(
-    /**
-     * Type of the result, must be *contact*
-     */
-    public val type: String,
+    public val type: String = "contact",
     /**
      * Unique identifier for this result, 1-64 Bytes
      */
@@ -557,12 +534,12 @@ public data class InlineQueryResultContact(
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: JsonElement? = null,
+    public val replyMarkup: InlineKeyboardMarkup? = null,
     /**
      * *Optional*. Content of the message to be sent instead of the contact
      */
     @SerialName("input_message_content")
-    public val inputMessageContent: JsonElement? = null,
+    public val inputMessageContent: InputMessageContent? = null,
     /**
      * *Optional*. Url of the thumbnail for the result
      */
@@ -578,17 +555,15 @@ public data class InlineQueryResultContact(
      */
     @SerialName("thumbnail_height")
     public val thumbnailHeight: Long? = null,
-) : InlineQueryResult
+)
 
 /**
  * Represents a Game.
  */
 @Serializable
+@SerialName("game")
 public data class InlineQueryResultGame(
-    /**
-     * Type of the result, must be *game*
-     */
-    public val type: String,
+    public val type: String = "game",
     /**
      * Unique identifier for this result, 1-64 bytes
      */
@@ -602,18 +577,16 @@ public data class InlineQueryResultGame(
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: JsonElement? = null,
-) : InlineQueryResult
+    public val replyMarkup: InlineKeyboardMarkup? = null,
+)
 
 /**
  * Represents a link to a file. By default, this file will be sent by the user with an optional caption. Alternatively, you can use input_message_content to send a message with the specified content instead of the file. Currently, only .PDF and .ZIP files can be sent using this method.
  */
 @Serializable
+@SerialName("document")
 public data class InlineQueryResultDocument(
-    /**
-     * Type of the result, must be *document*
-     */
-    public val type: String,
+    public val type: String = "document",
     /**
      * Unique identifier for this result, 1-64 bytes
      */
@@ -654,12 +627,12 @@ public data class InlineQueryResultDocument(
      * *Optional*. Inline keyboard attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: JsonElement? = null,
+    public val replyMarkup: InlineKeyboardMarkup? = null,
     /**
      * *Optional*. Content of the message to be sent instead of the file
      */
     @SerialName("input_message_content")
-    public val inputMessageContent: JsonElement? = null,
+    public val inputMessageContent: InputMessageContent? = null,
     /**
      * *Optional*. URL of the thumbnail (JPEG only) for the file
      */
@@ -675,17 +648,15 @@ public data class InlineQueryResultDocument(
      */
     @SerialName("thumbnail_height")
     public val thumbnailHeight: Long? = null,
-) : InlineQueryResult
+)
 
 /**
  * Represents a link to an animated GIF file. By default, this animated GIF file will be sent by the user with optional caption. Alternatively, you can use input_message_content to send a message with the specified content instead of the animation.
  */
 @Serializable
+@SerialName("gif")
 public data class InlineQueryResultGif(
-    /**
-     * Type of the result, must be *gif*
-     */
-    public val type: String,
+    public val type: String = "gif",
     /**
      * Unique identifier for this result, 1-64 bytes
      */
@@ -747,23 +718,21 @@ public data class InlineQueryResultGif(
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: JsonElement? = null,
+    public val replyMarkup: InlineKeyboardMarkup? = null,
     /**
      * *Optional*. Content of the message to be sent instead of the GIF animation
      */
     @SerialName("input_message_content")
-    public val inputMessageContent: JsonElement? = null,
-) : InlineQueryResult
+    public val inputMessageContent: InputMessageContent? = null,
+)
 
 /**
  * Represents a location on a map. By default, the location will be sent by the user. Alternatively, you can use input_message_content to send a message with the specified content instead of the location.
  */
 @Serializable
+@SerialName("location")
 public data class InlineQueryResultLocation(
-    /**
-     * Type of the result, must be *location*
-     */
-    public val type: String,
+    public val type: String = "location",
     /**
      * Unique identifier for this result, 1-64 Bytes
      */
@@ -803,12 +772,12 @@ public data class InlineQueryResultLocation(
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: JsonElement? = null,
+    public val replyMarkup: InlineKeyboardMarkup? = null,
     /**
      * *Optional*. Content of the message to be sent instead of the location
      */
     @SerialName("input_message_content")
-    public val inputMessageContent: JsonElement? = null,
+    public val inputMessageContent: InputMessageContent? = null,
     /**
      * *Optional*. Url of the thumbnail for the result
      */
@@ -824,17 +793,15 @@ public data class InlineQueryResultLocation(
      */
     @SerialName("thumbnail_height")
     public val thumbnailHeight: Long? = null,
-) : InlineQueryResult
+)
 
 /**
  * Represents a link to a video animation (H.264/MPEG-4 AVC video without sound). By default, this animated MPEG-4 file will be sent by the user with optional caption. Alternatively, you can use input_message_content to send a message with the specified content instead of the animation.
  */
 @Serializable
+@SerialName("mpeg4_gif")
 public data class InlineQueryResultMpeg4Gif(
-    /**
-     * Type of the result, must be *mpeg4_gif*
-     */
-    public val type: String,
+    public val type: String = "mpeg4_gif",
     /**
      * Unique identifier for this result, 1-64 bytes
      */
@@ -896,23 +863,21 @@ public data class InlineQueryResultMpeg4Gif(
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: JsonElement? = null,
+    public val replyMarkup: InlineKeyboardMarkup? = null,
     /**
      * *Optional*. Content of the message to be sent instead of the video animation
      */
     @SerialName("input_message_content")
-    public val inputMessageContent: JsonElement? = null,
-) : InlineQueryResult
+    public val inputMessageContent: InputMessageContent? = null,
+)
 
 /**
  * Represents a link to a photo. By default, this photo will be sent by the user with optional caption. Alternatively, you can use input_message_content to send a message with the specified content instead of the photo.
  */
 @Serializable
+@SerialName("photo")
 public data class InlineQueryResultPhoto(
-    /**
-     * Type of the result, must be *photo*
-     */
-    public val type: String,
+    public val type: String = "photo",
     /**
      * Unique identifier for this result, 1-64 bytes
      */
@@ -968,23 +933,21 @@ public data class InlineQueryResultPhoto(
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: JsonElement? = null,
+    public val replyMarkup: InlineKeyboardMarkup? = null,
     /**
      * *Optional*. Content of the message to be sent instead of the photo
      */
     @SerialName("input_message_content")
-    public val inputMessageContent: JsonElement? = null,
-) : InlineQueryResult
+    public val inputMessageContent: InputMessageContent? = null,
+)
 
 /**
  * Represents a venue. By default, the venue will be sent by the user. Alternatively, you can use input_message_content to send a message with the specified content instead of the venue.
  */
 @Serializable
+@SerialName("venue")
 public data class InlineQueryResultVenue(
-    /**
-     * Type of the result, must be *venue*
-     */
-    public val type: String,
+    public val type: String = "venue",
     /**
      * Unique identifier for this result, 1-64 Bytes
      */
@@ -1029,12 +992,12 @@ public data class InlineQueryResultVenue(
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: JsonElement? = null,
+    public val replyMarkup: InlineKeyboardMarkup? = null,
     /**
      * *Optional*. Content of the message to be sent instead of the venue
      */
     @SerialName("input_message_content")
-    public val inputMessageContent: JsonElement? = null,
+    public val inputMessageContent: InputMessageContent? = null,
     /**
      * *Optional*. Url of the thumbnail for the result
      */
@@ -1050,18 +1013,16 @@ public data class InlineQueryResultVenue(
      */
     @SerialName("thumbnail_height")
     public val thumbnailHeight: Long? = null,
-) : InlineQueryResult
+)
 
 /**
  * Represents a link to a page containing an embedded video player or a video file. By default, this video file will be sent by the user with an optional caption. Alternatively, you can use input_message_content to send a message with the specified content instead of the video.
  * If an InlineQueryResultVideo message contains an embedded video (e.g., YouTube), you must replace its content using input_message_content.
  */
 @Serializable
+@SerialName("video")
 public data class InlineQueryResultVideo(
-    /**
-     * Type of the result, must be *video*
-     */
-    public val type: String,
+    public val type: String = "video",
     /**
      * Unique identifier for this result, 1-64 bytes
      */
@@ -1127,23 +1088,21 @@ public data class InlineQueryResultVideo(
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: JsonElement? = null,
+    public val replyMarkup: InlineKeyboardMarkup? = null,
     /**
      * *Optional*. Content of the message to be sent instead of the video. This field is **required** if InlineQueryResultVideo is used to send an HTML-page as a result (e.g., a YouTube video).
      */
     @SerialName("input_message_content")
-    public val inputMessageContent: JsonElement? = null,
-) : InlineQueryResult
+    public val inputMessageContent: InputMessageContent? = null,
+)
 
 /**
  * Represents a link to a voice recording in an .OGG container encoded with OPUS. By default, this voice recording will be sent by the user. Alternatively, you can use input_message_content to send a message with the specified content instead of the the voice message.
  */
 @Serializable
+@SerialName("voice")
 public data class InlineQueryResultVoice(
-    /**
-     * Type of the result, must be *voice*
-     */
-    public val type: String,
+    public val type: String = "voice",
     /**
      * Unique identifier for this result, 1-64 bytes
      */
@@ -1180,10 +1139,10 @@ public data class InlineQueryResultVoice(
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: JsonElement? = null,
+    public val replyMarkup: InlineKeyboardMarkup? = null,
     /**
      * *Optional*. Content of the message to be sent instead of the voice recording
      */
     @SerialName("input_message_content")
-    public val inputMessageContent: JsonElement? = null,
-) : InlineQueryResult
+    public val inputMessageContent: InputMessageContent? = null,
+)

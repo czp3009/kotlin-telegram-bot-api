@@ -5,7 +5,6 @@ import kotlin.Long
 import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object describes the backdrop of a unique gift.
@@ -19,7 +18,7 @@ public data class UniqueGiftBackdrop(
     /**
      * Colors of the backdrop
      */
-    public val colors: JsonElement?,
+    public val colors: UniqueGiftBackdropColors,
     /**
      * The number of unique gifts that receive this backdrop for every 1000 gifts upgraded
      */

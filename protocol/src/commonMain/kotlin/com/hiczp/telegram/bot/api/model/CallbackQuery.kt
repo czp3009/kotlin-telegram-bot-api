@@ -4,7 +4,6 @@ package com.hiczp.telegram.bot.api.model
 import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object represents an incoming callback query from a callback button in an inline keyboard. If the button that originated the query was attached to a message sent by the bot, the field message will be present. If the button was attached to a message sent via the bot (in inline mode), the field inline_message_id will be present. Exactly one of the fields data or game_short_name will be present.
@@ -19,11 +18,11 @@ public data class CallbackQuery(
     /**
      * Sender
      */
-    public val from: JsonElement?,
+    public val from: User,
     /**
      * *Optional*. Message sent by the bot with the callback button that originated the query
      */
-    public val message: JsonElement? = null,
+    public val message: Message? = null,
     /**
      * *Optional*. Identifier of the message sent via the bot in inline mode, that originated the query.
      */

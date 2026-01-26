@@ -5,7 +5,6 @@ import kotlin.Long
 import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object contains information about an incoming pre-checkout query.
@@ -19,7 +18,7 @@ public data class PreCheckoutQuery(
     /**
      * User who sent the query
      */
-    public val from: JsonElement?,
+    public val from: User,
     /**
      * Three-letter ISO 4217 [currency](https://core.telegram.org/bots/payments#supported-currencies) code, or “XTR” for payments in [Telegram Stars](https://t.me/BotNews/90)
      */
@@ -43,5 +42,5 @@ public data class PreCheckoutQuery(
      * *Optional*. Order information provided by the user
      */
     @SerialName("order_info")
-    public val orderInfo: JsonElement? = null,
+    public val orderInfo: OrderInfo? = null,
 )

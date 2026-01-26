@@ -7,7 +7,6 @@ import kotlin.String
 import kotlin.collections.List
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object contains full information about a chat.
@@ -63,7 +62,7 @@ public data class ChatFullInfo(
     /**
      * *Optional*. Chat photo
      */
-    public val photo: JsonElement? = null,
+    public val photo: ChatPhoto? = null,
     /**
      * *Optional*. If non-empty, the list of all [active chat usernames](https://telegram.org/blog/topics-in-groups-collectible-usernames#collectible-usernames); for private chats, supergroups and channels
      */
@@ -72,32 +71,32 @@ public data class ChatFullInfo(
     /**
      * *Optional*. For private chats, the date of birth of the user
      */
-    public val birthdate: JsonElement? = null,
+    public val birthdate: Birthdate? = null,
     /**
      * *Optional*. For private chats with business accounts, the intro of the business
      */
     @SerialName("business_intro")
-    public val businessIntro: JsonElement? = null,
+    public val businessIntro: BusinessIntro? = null,
     /**
      * *Optional*. For private chats with business accounts, the location of the business
      */
     @SerialName("business_location")
-    public val businessLocation: JsonElement? = null,
+    public val businessLocation: BusinessLocation? = null,
     /**
      * *Optional*. For private chats with business accounts, the opening hours of the business
      */
     @SerialName("business_opening_hours")
-    public val businessOpeningHours: JsonElement? = null,
+    public val businessOpeningHours: BusinessOpeningHours? = null,
     /**
      * *Optional*. For private chats, the personal channel of the user
      */
     @SerialName("personal_chat")
-    public val personalChat: JsonElement? = null,
+    public val personalChat: Chat? = null,
     /**
      * *Optional*. Information about the corresponding channel chat; for direct messages chats only
      */
     @SerialName("parent_chat")
-    public val parentChat: JsonElement? = null,
+    public val parentChat: Chat? = null,
     /**
      * *Optional*. List of available reactions allowed in the chat. If omitted, then all [emoji reactions](https://core.telegram.org/bots/api#reactiontypeemoji) are allowed.
      */
@@ -165,16 +164,16 @@ public data class ChatFullInfo(
      * *Optional*. The most recent pinned message (by sending date)
      */
     @SerialName("pinned_message")
-    public val pinnedMessage: JsonElement? = null,
+    public val pinnedMessage: Message? = null,
     /**
      * *Optional*. Default chat member permissions, for groups and supergroups
      */
-    public val permissions: JsonElement? = null,
+    public val permissions: ChatPermissions? = null,
     /**
      * Information about types of gifts that are accepted by the chat or by the corresponding user for private chats
      */
     @SerialName("accepted_gift_types")
-    public val acceptedGiftTypes: JsonElement?,
+    public val acceptedGiftTypes: AcceptedGiftTypes,
     /**
      * *Optional*. *True*, if paid media messages can be sent or forwarded to the channel chat. The field is available only for channel chats.
      */
@@ -238,16 +237,16 @@ public data class ChatFullInfo(
     /**
      * *Optional*. For supergroups, the location to which the supergroup is connected
      */
-    public val location: JsonElement? = null,
+    public val location: ChatLocation? = null,
     /**
      * *Optional*. For private chats, the rating of the user if any
      */
-    public val rating: JsonElement? = null,
+    public val rating: UserRating? = null,
     /**
      * *Optional*. The color scheme based on a unique gift that must be used for the chat's name, message replies and link previews
      */
     @SerialName("unique_gift_colors")
-    public val uniqueGiftColors: JsonElement? = null,
+    public val uniqueGiftColors: UniqueGiftColors? = null,
     /**
      * *Optional*. The number of Telegram Stars a general user have to pay to send a message to the chat
      */

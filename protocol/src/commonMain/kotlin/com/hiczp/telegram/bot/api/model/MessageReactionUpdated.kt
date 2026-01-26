@@ -5,7 +5,6 @@ import kotlin.Long
 import kotlin.collections.List
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object represents a change of a reaction on a message performed by a user.
@@ -15,7 +14,7 @@ public data class MessageReactionUpdated(
     /**
      * The chat containing the message the user reacted to
      */
-    public val chat: JsonElement?,
+    public val chat: Chat,
     /**
      * Unique identifier of the message inside the chat
      */
@@ -24,12 +23,12 @@ public data class MessageReactionUpdated(
     /**
      * *Optional*. The user that changed the reaction, if the user isn't anonymous
      */
-    public val user: JsonElement? = null,
+    public val user: User? = null,
     /**
      * *Optional*. The chat on behalf of which the reaction was changed, if the user is anonymous
      */
     @SerialName("actor_chat")
-    public val actorChat: JsonElement? = null,
+    public val actorChat: Chat? = null,
     /**
      * Date of the change in Unix time
      */

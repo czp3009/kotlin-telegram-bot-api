@@ -6,7 +6,6 @@ import kotlin.String
 import kotlin.collections.List
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 @Serializable
 public data class EditStoryRequest(
@@ -23,7 +22,7 @@ public data class EditStoryRequest(
     /**
      * Content of the story
      */
-    public val content: JsonElement?,
+    public val content: InputStoryContent,
     /**
      * Caption of the story, 0-2048 characters after entities parsing
      */

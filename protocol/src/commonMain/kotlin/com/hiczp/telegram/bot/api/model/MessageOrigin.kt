@@ -8,7 +8,6 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonClassDiscriminator
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object describes the origin of a message. It can be one of
@@ -33,7 +32,7 @@ public data class MessageOriginUser(
      * User that sent the message originally
      */
     @SerialName("sender_user")
-    public val senderUser: JsonElement?,
+    public val senderUser: User,
 ) : MessageOrigin
 
 /**
@@ -67,7 +66,7 @@ public data class MessageOriginChat(
      * Chat that sent the message originally
      */
     @SerialName("sender_chat")
-    public val senderChat: JsonElement?,
+    public val senderChat: Chat,
     /**
      * *Optional*. For messages originally sent by an anonymous chat administrator, original message author signature
      */
@@ -88,7 +87,7 @@ public data class MessageOriginChannel(
     /**
      * Channel chat to which the message was originally sent
      */
-    public val chat: JsonElement?,
+    public val chat: Chat,
     /**
      * Unique message identifier inside the chat
      */

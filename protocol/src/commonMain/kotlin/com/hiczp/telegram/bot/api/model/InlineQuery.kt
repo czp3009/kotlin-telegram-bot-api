@@ -4,7 +4,6 @@ package com.hiczp.telegram.bot.api.model
 import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object represents an incoming inline query. When the user sends an empty query, your bot could return some default or trending results.
@@ -18,7 +17,7 @@ public data class InlineQuery(
     /**
      * Sender
      */
-    public val from: JsonElement?,
+    public val from: User,
     /**
      * Text of the query (up to 256 characters)
      */
@@ -35,5 +34,5 @@ public data class InlineQuery(
     /**
      * *Optional*. Sender location, only for bots that request user location
      */
-    public val location: JsonElement? = null,
+    public val location: Location? = null,
 )

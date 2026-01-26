@@ -1,16 +1,14 @@
 // Auto-generated from Swagger specificationDo not modify this file manually
-package com.hiczp.telegram.bot.api.model
+package com.hiczp.telegram.bot.api.form
 
+import io.ktor.http.content.PartData
 import kotlin.Boolean
 import kotlin.Long
 import kotlin.String
 import kotlin.collections.List
 import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
-@Serializable
-public data class SetWebhookRequest(
+public data class SetWebhookForm(
     /**
      * HTTPS URL to send updates to. Use an empty string to remove webhook integration
      */
@@ -18,7 +16,7 @@ public data class SetWebhookRequest(
     /**
      * Upload your public key certificate so that the root certificate in use can be checked. See our [self-signed guide](https://core.telegram.org/bots/self-signed) for details.
      */
-    public val certificate: JsonElement? = null,
+    public val certificate: PartData? = null,
     /**
      * The fixed IP address which will be used to send webhook requests instead of the IP address resolved through DNS
      */

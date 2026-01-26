@@ -7,7 +7,6 @@ import kotlin.String
 import kotlin.collections.List
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object represents a message about the completion of a giveaway with public winners.
@@ -17,7 +16,7 @@ public data class GiveawayWinners(
     /**
      * The chat that created the giveaway
      */
-    public val chat: JsonElement?,
+    public val chat: Chat,
     /**
      * Identifier of the message with the giveaway in the chat
      */

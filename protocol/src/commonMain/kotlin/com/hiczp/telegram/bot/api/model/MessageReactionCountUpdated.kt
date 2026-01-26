@@ -5,7 +5,6 @@ import kotlin.Long
 import kotlin.collections.List
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object represents reaction changes on a message with anonymous reactions.
@@ -15,7 +14,7 @@ public data class MessageReactionCountUpdated(
     /**
      * The chat containing the message
      */
-    public val chat: JsonElement?,
+    public val chat: Chat,
     /**
      * Unique message identifier inside the chat
      */

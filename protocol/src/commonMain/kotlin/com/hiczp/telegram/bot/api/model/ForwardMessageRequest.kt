@@ -6,7 +6,6 @@ import kotlin.Long
 import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 @Serializable
 public data class ForwardMessageRequest(
@@ -54,7 +53,7 @@ public data class ForwardMessageRequest(
      * A JSON-serialized object containing the parameters of the suggested post to send; for direct messages chats only
      */
     @SerialName("suggested_post_parameters")
-    public val suggestedPostParameters: JsonElement? = null,
+    public val suggestedPostParameters: SuggestedPostParameters? = null,
     /**
      * Message identifier in the chat specified in *from_chat_id*
      */

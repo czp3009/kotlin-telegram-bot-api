@@ -5,7 +5,6 @@ import kotlin.Long
 import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * Contains information about a suggested post.
@@ -19,7 +18,7 @@ public data class SuggestedPostInfo(
     /**
      * *Optional*. Proposed price of the post. If the field is omitted, then the post is unpaid.
      */
-    public val price: JsonElement? = null,
+    public val price: SuggestedPostPrice? = null,
     /**
      * *Optional*. Proposed send date of the post. If the field is omitted, then the post can be published at any time within 30 days at the sole discretion of the user or administrator who approves it.
      */

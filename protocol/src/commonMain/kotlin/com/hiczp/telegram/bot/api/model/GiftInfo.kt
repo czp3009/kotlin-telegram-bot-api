@@ -7,7 +7,6 @@ import kotlin.String
 import kotlin.collections.List
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * Describes a service message about a regular gift that was sent or received.
@@ -17,7 +16,7 @@ public data class GiftInfo(
     /**
      * Information about the gift
      */
-    public val gift: JsonElement?,
+    public val gift: Gift,
     /**
      * *Optional*. Unique identifier of the received gift for the bot; only present for gifts received on behalf of business accounts
      */

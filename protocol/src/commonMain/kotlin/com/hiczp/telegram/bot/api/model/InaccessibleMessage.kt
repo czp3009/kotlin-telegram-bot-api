@@ -4,7 +4,6 @@ package com.hiczp.telegram.bot.api.model
 import kotlin.Long
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object describes a message that was deleted or is otherwise inaccessible to the bot.
@@ -14,7 +13,7 @@ public data class InaccessibleMessage(
     /**
      * Chat the message belonged to
      */
-    public val chat: JsonElement?,
+    public val chat: Chat,
     /**
      * Unique message identifier inside the chat
      */

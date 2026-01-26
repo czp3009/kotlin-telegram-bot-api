@@ -6,7 +6,6 @@ import kotlin.Long
 import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object represents a gift that can be sent by the bot.
@@ -20,7 +19,7 @@ public data class Gift(
     /**
      * The sticker that represents the gift
      */
-    public val sticker: JsonElement?,
+    public val sticker: Sticker,
     /**
      * The number of Telegram Stars that must be paid to send the sticker
      */
@@ -64,7 +63,7 @@ public data class Gift(
     /**
      * *Optional*. Background of the gift
      */
-    public val background: JsonElement? = null,
+    public val background: GiftBackground? = null,
     /**
      * *Optional*. The total number of different unique gifts that can be obtained by upgrading the gift
      */
@@ -74,5 +73,5 @@ public data class Gift(
      * *Optional*. Information about the chat that published the gift
      */
     @SerialName("publisher_chat")
-    public val publisherChat: JsonElement? = null,
+    public val publisherChat: Chat? = null,
 )

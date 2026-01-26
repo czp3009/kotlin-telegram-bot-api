@@ -4,7 +4,6 @@ package com.hiczp.telegram.bot.api.model
 import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 @Serializable
 public data class AnswerWebAppQueryRequest(
@@ -16,5 +15,5 @@ public data class AnswerWebAppQueryRequest(
     /**
      * A JSON-serialized object describing the message to be sent
      */
-    public val result: JsonElement?,
+    public val result: InlineQueryResult,
 )

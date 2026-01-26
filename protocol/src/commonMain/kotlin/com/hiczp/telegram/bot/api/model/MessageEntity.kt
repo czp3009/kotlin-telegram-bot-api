@@ -5,7 +5,6 @@ import kotlin.Long
 import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object represents one special entity in a text message. For example, hashtags, usernames, URLs, etc.
@@ -31,7 +30,7 @@ public data class MessageEntity(
     /**
      * *Optional*. For “text_mention” only, the mentioned user
      */
-    public val user: JsonElement? = null,
+    public val user: User? = null,
     /**
      * *Optional*. For “pre” only, the programming language of the entity text
      */

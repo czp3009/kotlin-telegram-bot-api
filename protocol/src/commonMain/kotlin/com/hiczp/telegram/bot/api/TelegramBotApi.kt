@@ -65,6 +65,8 @@ import com.hiczp.telegram.bot.api.model.GameHighScore
 import com.hiczp.telegram.bot.api.model.GiftPremiumSubscriptionRequest
 import com.hiczp.telegram.bot.api.model.Gifts
 import com.hiczp.telegram.bot.api.model.HideGeneralForumTopicRequest
+import com.hiczp.telegram.bot.api.model.InlineKeyboardMarkup
+import com.hiczp.telegram.bot.api.model.InputMedia
 import com.hiczp.telegram.bot.api.model.LeaveChatRequest
 import com.hiczp.telegram.bot.api.model.LogOutRequest
 import com.hiczp.telegram.bot.api.model.MenuButton
@@ -86,6 +88,7 @@ import com.hiczp.telegram.bot.api.model.ReopenForumTopicRequest
 import com.hiczp.telegram.bot.api.model.ReopenGeneralForumTopicRequest
 import com.hiczp.telegram.bot.api.model.ReplaceStickerInSetRequest
 import com.hiczp.telegram.bot.api.model.ReplyMarkup
+import com.hiczp.telegram.bot.api.model.ReplyParameters
 import com.hiczp.telegram.bot.api.model.RepostStoryRequest
 import com.hiczp.telegram.bot.api.model.RestrictChatMemberRequest
 import com.hiczp.telegram.bot.api.model.RevokeChatInviteLinkRequest
@@ -137,6 +140,7 @@ import com.hiczp.telegram.bot.api.model.StickerSet
 import com.hiczp.telegram.bot.api.model.StopMessageLiveLocationRequest
 import com.hiczp.telegram.bot.api.model.StopPollRequest
 import com.hiczp.telegram.bot.api.model.Story
+import com.hiczp.telegram.bot.api.model.SuggestedPostParameters
 import com.hiczp.telegram.bot.api.model.TransferBusinessAccountStarsRequest
 import com.hiczp.telegram.bot.api.model.TransferGiftRequest
 import com.hiczp.telegram.bot.api.model.UnbanChatMemberRequest
@@ -161,11 +165,12 @@ import de.jensklingenberg.ktorfit.http.Multipart
 import de.jensklingenberg.ktorfit.http.POST
 import de.jensklingenberg.ktorfit.http.Part
 import de.jensklingenberg.ktorfit.http.Query
+import io.ktor.client.request.forms.MultiPartFormDataContent
+import io.ktor.http.content.PartData
 import kotlin.Boolean
 import kotlin.Long
 import kotlin.String
 import kotlin.collections.List
-import kotlinx.serialization.json.JsonElement
 
 public interface TelegramBotApi {
     /**
@@ -183,10 +188,16 @@ public interface TelegramBotApi {
      * setWebhook
      */
     @POST("/setWebhook")
+    public suspend fun setWebhook(@Body formData: MultiPartFormDataContent): TelegramResponse<Boolean>
+
+    /**
+     * setWebhook
+     */
+    @POST("/setWebhook")
     @Multipart
     public suspend fun setWebhook(
         @Part("url") url: String,
-        @Part("certificate") certificate: JsonElement? = null,
+        @Part("certificate") certificate: PartData? = null,
         @Part("ip_address") ipAddress: String? = null,
         @Part("max_connections") maxConnections: Long? = null,
         @Part("allowed_updates") allowedUpdates: List<String>? = null,
@@ -258,13 +269,19 @@ public interface TelegramBotApi {
      * sendPhoto
      */
     @POST("/sendPhoto")
+    public suspend fun sendPhoto(@Body formData: MultiPartFormDataContent): TelegramResponse<Message>
+
+    /**
+     * sendPhoto
+     */
+    @POST("/sendPhoto")
     @Multipart
     public suspend fun sendPhoto(
         @Part("business_connection_id") businessConnectionId: String? = null,
         @Part("chat_id") chatId: String,
         @Part("message_thread_id") messageThreadId: Long? = null,
         @Part("direct_messages_topic_id") directMessagesTopicId: Long? = null,
-        @Part("photo") photo: String,
+        @Part("photo") photo: PartData,
         @Part("caption") caption: String? = null,
         @Part("parse_mode") parseMode: String? = null,
         @Part("caption_entities") captionEntities: List<MessageEntity>? = null,
@@ -274,10 +291,16 @@ public interface TelegramBotApi {
         @Part("protect_content") protectContent: Boolean? = null,
         @Part("allow_paid_broadcast") allowPaidBroadcast: Boolean? = null,
         @Part("message_effect_id") messageEffectId: String? = null,
-        @Part("suggested_post_parameters") suggestedPostParameters: JsonElement? = null,
-        @Part("reply_parameters") replyParameters: JsonElement? = null,
+        @Part("suggested_post_parameters") suggestedPostParameters: SuggestedPostParameters? = null,
+        @Part("reply_parameters") replyParameters: ReplyParameters? = null,
         @Part("reply_markup") replyMarkup: ReplyMarkup? = null,
     ): TelegramResponse<Message>
+
+    /**
+     * sendAudio
+     */
+    @POST("/sendAudio")
+    public suspend fun sendAudio(@Body formData: MultiPartFormDataContent): TelegramResponse<Message>
 
     /**
      * sendAudio
@@ -289,22 +312,28 @@ public interface TelegramBotApi {
         @Part("chat_id") chatId: String,
         @Part("message_thread_id") messageThreadId: Long? = null,
         @Part("direct_messages_topic_id") directMessagesTopicId: Long? = null,
-        @Part("audio") audio: String,
+        @Part("audio") audio: PartData,
         @Part("caption") caption: String? = null,
         @Part("parse_mode") parseMode: String? = null,
         @Part("caption_entities") captionEntities: List<MessageEntity>? = null,
         @Part("duration") duration: Long? = null,
         @Part("performer") performer: String? = null,
         @Part("title") title: String? = null,
-        @Part("thumbnail") thumbnail: String? = null,
+        @Part("thumbnail") thumbnail: PartData? = null,
         @Part("disable_notification") disableNotification: Boolean? = null,
         @Part("protect_content") protectContent: Boolean? = null,
         @Part("allow_paid_broadcast") allowPaidBroadcast: Boolean? = null,
         @Part("message_effect_id") messageEffectId: String? = null,
-        @Part("suggested_post_parameters") suggestedPostParameters: JsonElement? = null,
-        @Part("reply_parameters") replyParameters: JsonElement? = null,
+        @Part("suggested_post_parameters") suggestedPostParameters: SuggestedPostParameters? = null,
+        @Part("reply_parameters") replyParameters: ReplyParameters? = null,
         @Part("reply_markup") replyMarkup: ReplyMarkup? = null,
     ): TelegramResponse<Message>
+
+    /**
+     * sendDocument
+     */
+    @POST("/sendDocument")
+    public suspend fun sendDocument(@Body formData: MultiPartFormDataContent): TelegramResponse<Message>
 
     /**
      * sendDocument
@@ -316,8 +345,8 @@ public interface TelegramBotApi {
         @Part("chat_id") chatId: String,
         @Part("message_thread_id") messageThreadId: Long? = null,
         @Part("direct_messages_topic_id") directMessagesTopicId: Long? = null,
-        @Part("document") document: String,
-        @Part("thumbnail") thumbnail: String? = null,
+        @Part("document") document: PartData,
+        @Part("thumbnail") thumbnail: PartData? = null,
         @Part("caption") caption: String? = null,
         @Part("parse_mode") parseMode: String? = null,
         @Part("caption_entities") captionEntities: List<MessageEntity>? = null,
@@ -326,10 +355,16 @@ public interface TelegramBotApi {
         @Part("protect_content") protectContent: Boolean? = null,
         @Part("allow_paid_broadcast") allowPaidBroadcast: Boolean? = null,
         @Part("message_effect_id") messageEffectId: String? = null,
-        @Part("suggested_post_parameters") suggestedPostParameters: JsonElement? = null,
-        @Part("reply_parameters") replyParameters: JsonElement? = null,
+        @Part("suggested_post_parameters") suggestedPostParameters: SuggestedPostParameters? = null,
+        @Part("reply_parameters") replyParameters: ReplyParameters? = null,
         @Part("reply_markup") replyMarkup: ReplyMarkup? = null,
     ): TelegramResponse<Message>
+
+    /**
+     * sendVideo
+     */
+    @POST("/sendVideo")
+    public suspend fun sendVideo(@Body formData: MultiPartFormDataContent): TelegramResponse<Message>
 
     /**
      * sendVideo
@@ -341,12 +376,12 @@ public interface TelegramBotApi {
         @Part("chat_id") chatId: String,
         @Part("message_thread_id") messageThreadId: Long? = null,
         @Part("direct_messages_topic_id") directMessagesTopicId: Long? = null,
-        @Part("video") video: String,
+        @Part("video") video: PartData,
         @Part("duration") duration: Long? = null,
         @Part("width") width: Long? = null,
         @Part("height") height: Long? = null,
-        @Part("thumbnail") thumbnail: String? = null,
-        @Part("cover") cover: String? = null,
+        @Part("thumbnail") thumbnail: PartData? = null,
+        @Part("cover") cover: PartData? = null,
         @Part("start_timestamp") startTimestamp: Long? = null,
         @Part("caption") caption: String? = null,
         @Part("parse_mode") parseMode: String? = null,
@@ -358,10 +393,16 @@ public interface TelegramBotApi {
         @Part("protect_content") protectContent: Boolean? = null,
         @Part("allow_paid_broadcast") allowPaidBroadcast: Boolean? = null,
         @Part("message_effect_id") messageEffectId: String? = null,
-        @Part("suggested_post_parameters") suggestedPostParameters: JsonElement? = null,
-        @Part("reply_parameters") replyParameters: JsonElement? = null,
+        @Part("suggested_post_parameters") suggestedPostParameters: SuggestedPostParameters? = null,
+        @Part("reply_parameters") replyParameters: ReplyParameters? = null,
         @Part("reply_markup") replyMarkup: ReplyMarkup? = null,
     ): TelegramResponse<Message>
+
+    /**
+     * sendAnimation
+     */
+    @POST("/sendAnimation")
+    public suspend fun sendAnimation(@Body formData: MultiPartFormDataContent): TelegramResponse<Message>
 
     /**
      * sendAnimation
@@ -373,11 +414,11 @@ public interface TelegramBotApi {
         @Part("chat_id") chatId: String,
         @Part("message_thread_id") messageThreadId: Long? = null,
         @Part("direct_messages_topic_id") directMessagesTopicId: Long? = null,
-        @Part("animation") animation: String,
+        @Part("animation") animation: PartData,
         @Part("duration") duration: Long? = null,
         @Part("width") width: Long? = null,
         @Part("height") height: Long? = null,
-        @Part("thumbnail") thumbnail: String? = null,
+        @Part("thumbnail") thumbnail: PartData? = null,
         @Part("caption") caption: String? = null,
         @Part("parse_mode") parseMode: String? = null,
         @Part("caption_entities") captionEntities: List<MessageEntity>? = null,
@@ -387,10 +428,16 @@ public interface TelegramBotApi {
         @Part("protect_content") protectContent: Boolean? = null,
         @Part("allow_paid_broadcast") allowPaidBroadcast: Boolean? = null,
         @Part("message_effect_id") messageEffectId: String? = null,
-        @Part("suggested_post_parameters") suggestedPostParameters: JsonElement? = null,
-        @Part("reply_parameters") replyParameters: JsonElement? = null,
+        @Part("suggested_post_parameters") suggestedPostParameters: SuggestedPostParameters? = null,
+        @Part("reply_parameters") replyParameters: ReplyParameters? = null,
         @Part("reply_markup") replyMarkup: ReplyMarkup? = null,
     ): TelegramResponse<Message>
+
+    /**
+     * sendVoice
+     */
+    @POST("/sendVoice")
+    public suspend fun sendVoice(@Body formData: MultiPartFormDataContent): TelegramResponse<Message>
 
     /**
      * sendVoice
@@ -402,7 +449,7 @@ public interface TelegramBotApi {
         @Part("chat_id") chatId: String,
         @Part("message_thread_id") messageThreadId: Long? = null,
         @Part("direct_messages_topic_id") directMessagesTopicId: Long? = null,
-        @Part("voice") voice: String,
+        @Part("voice") voice: PartData,
         @Part("caption") caption: String? = null,
         @Part("parse_mode") parseMode: String? = null,
         @Part("caption_entities") captionEntities: List<MessageEntity>? = null,
@@ -411,10 +458,16 @@ public interface TelegramBotApi {
         @Part("protect_content") protectContent: Boolean? = null,
         @Part("allow_paid_broadcast") allowPaidBroadcast: Boolean? = null,
         @Part("message_effect_id") messageEffectId: String? = null,
-        @Part("suggested_post_parameters") suggestedPostParameters: JsonElement? = null,
-        @Part("reply_parameters") replyParameters: JsonElement? = null,
+        @Part("suggested_post_parameters") suggestedPostParameters: SuggestedPostParameters? = null,
+        @Part("reply_parameters") replyParameters: ReplyParameters? = null,
         @Part("reply_markup") replyMarkup: ReplyMarkup? = null,
     ): TelegramResponse<Message>
+
+    /**
+     * sendVideoNote
+     */
+    @POST("/sendVideoNote")
+    public suspend fun sendVideoNote(@Body formData: MultiPartFormDataContent): TelegramResponse<Message>
 
     /**
      * sendVideoNote
@@ -426,16 +479,16 @@ public interface TelegramBotApi {
         @Part("chat_id") chatId: String,
         @Part("message_thread_id") messageThreadId: Long? = null,
         @Part("direct_messages_topic_id") directMessagesTopicId: Long? = null,
-        @Part("video_note") videoNote: String,
+        @Part("video_note") videoNote: PartData,
         @Part("duration") duration: Long? = null,
         @Part("length") length: Long? = null,
-        @Part("thumbnail") thumbnail: String? = null,
+        @Part("thumbnail") thumbnail: PartData? = null,
         @Part("disable_notification") disableNotification: Boolean? = null,
         @Part("protect_content") protectContent: Boolean? = null,
         @Part("allow_paid_broadcast") allowPaidBroadcast: Boolean? = null,
         @Part("message_effect_id") messageEffectId: String? = null,
-        @Part("suggested_post_parameters") suggestedPostParameters: JsonElement? = null,
-        @Part("reply_parameters") replyParameters: JsonElement? = null,
+        @Part("suggested_post_parameters") suggestedPostParameters: SuggestedPostParameters? = null,
+        @Part("reply_parameters") replyParameters: ReplyParameters? = null,
         @Part("reply_markup") replyMarkup: ReplyMarkup? = null,
     ): TelegramResponse<Message>
 
@@ -449,18 +502,24 @@ public interface TelegramBotApi {
      * sendMediaGroup
      */
     @POST("/sendMediaGroup")
+    public suspend fun sendMediaGroup(@Body formData: MultiPartFormDataContent): TelegramResponse<List<Message>>
+
+    /**
+     * sendMediaGroup
+     */
+    @POST("/sendMediaGroup")
     @Multipart
     public suspend fun sendMediaGroup(
         @Part("business_connection_id") businessConnectionId: String? = null,
         @Part("chat_id") chatId: String,
         @Part("message_thread_id") messageThreadId: Long? = null,
         @Part("direct_messages_topic_id") directMessagesTopicId: Long? = null,
-        @Part("media") media: List<JsonElement?>,
+        @Part("media") media: List<InputMedia>,
         @Part("disable_notification") disableNotification: Boolean? = null,
         @Part("protect_content") protectContent: Boolean? = null,
         @Part("allow_paid_broadcast") allowPaidBroadcast: Boolean? = null,
         @Part("message_effect_id") messageEffectId: String? = null,
-        @Part("reply_parameters") replyParameters: JsonElement? = null,
+        @Part("reply_parameters") replyParameters: ReplyParameters? = null,
     ): TelegramResponse<List<Message>>
 
     /**
@@ -639,8 +698,14 @@ public interface TelegramBotApi {
      * setChatPhoto
      */
     @POST("/setChatPhoto")
+    public suspend fun setChatPhoto(@Body formData: MultiPartFormDataContent): TelegramResponse<Boolean>
+
+    /**
+     * setChatPhoto
+     */
+    @POST("/setChatPhoto")
     @Multipart
-    public suspend fun setChatPhoto(@Part("chat_id") chatId: String, @Part("photo") photo: JsonElement?): TelegramResponse<Boolean>
+    public suspend fun setChatPhoto(@Part("chat_id") chatId: String, @Part("photo") photo: PartData): TelegramResponse<Boolean>
 
     /**
      * deleteChatPhoto
@@ -1106,14 +1171,20 @@ public interface TelegramBotApi {
      * editMessageMedia
      */
     @POST("/editMessageMedia")
+    public suspend fun editMessageMedia(@Body formData: MultiPartFormDataContent): TelegramResponse<Boolean>
+
+    /**
+     * editMessageMedia
+     */
+    @POST("/editMessageMedia")
     @Multipart
     public suspend fun editMessageMedia(
         @Part("business_connection_id") businessConnectionId: String? = null,
         @Part("chat_id") chatId: String? = null,
         @Part("message_id") messageId: Long? = null,
         @Part("inline_message_id") inlineMessageId: String? = null,
-        @Part("media") media: JsonElement?,
-        @Part("reply_markup") replyMarkup: JsonElement? = null,
+        @Part("media") media: InputMedia,
+        @Part("reply_markup") replyMarkup: InlineKeyboardMarkup? = null,
     ): TelegramResponse<Boolean>
 
     /**
@@ -1174,20 +1245,26 @@ public interface TelegramBotApi {
      * sendSticker
      */
     @POST("/sendSticker")
+    public suspend fun sendSticker(@Body formData: MultiPartFormDataContent): TelegramResponse<Message>
+
+    /**
+     * sendSticker
+     */
+    @POST("/sendSticker")
     @Multipart
     public suspend fun sendSticker(
         @Part("business_connection_id") businessConnectionId: String? = null,
         @Part("chat_id") chatId: String,
         @Part("message_thread_id") messageThreadId: Long? = null,
         @Part("direct_messages_topic_id") directMessagesTopicId: Long? = null,
-        @Part("sticker") sticker: String,
+        @Part("sticker") sticker: PartData,
         @Part("emoji") emoji: String? = null,
         @Part("disable_notification") disableNotification: Boolean? = null,
         @Part("protect_content") protectContent: Boolean? = null,
         @Part("allow_paid_broadcast") allowPaidBroadcast: Boolean? = null,
         @Part("message_effect_id") messageEffectId: String? = null,
-        @Part("suggested_post_parameters") suggestedPostParameters: JsonElement? = null,
-        @Part("reply_parameters") replyParameters: JsonElement? = null,
+        @Part("suggested_post_parameters") suggestedPostParameters: SuggestedPostParameters? = null,
+        @Part("reply_parameters") replyParameters: ReplyParameters? = null,
         @Part("reply_markup") replyMarkup: ReplyMarkup? = null,
     ): TelegramResponse<Message>
 
@@ -1207,10 +1284,16 @@ public interface TelegramBotApi {
      * uploadStickerFile
      */
     @POST("/uploadStickerFile")
+    public suspend fun uploadStickerFile(@Body formData: MultiPartFormDataContent): TelegramResponse<File>
+
+    /**
+     * uploadStickerFile
+     */
+    @POST("/uploadStickerFile")
     @Multipart
     public suspend fun uploadStickerFile(
         @Part("user_id") userId: Long,
-        @Part("sticker") sticker: JsonElement?,
+        @Part("sticker") sticker: PartData,
         @Part("sticker_format") stickerFormat: String,
     ): TelegramResponse<File>
 
@@ -1272,11 +1355,17 @@ public interface TelegramBotApi {
      * setStickerSetThumbnail
      */
     @POST("/setStickerSetThumbnail")
+    public suspend fun setStickerSetThumbnail(@Body formData: MultiPartFormDataContent): TelegramResponse<Boolean>
+
+    /**
+     * setStickerSetThumbnail
+     */
+    @POST("/setStickerSetThumbnail")
     @Multipart
     public suspend fun setStickerSetThumbnail(
         @Part("name") name: String,
         @Part("user_id") userId: Long,
-        @Part("thumbnail") thumbnail: String? = null,
+        @Part("thumbnail") thumbnail: PartData? = null,
         @Part("format") format: String,
     ): TelegramResponse<Boolean>
 

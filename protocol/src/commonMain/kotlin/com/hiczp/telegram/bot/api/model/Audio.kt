@@ -5,7 +5,6 @@ import kotlin.Long
 import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object represents an audio file to be treated as music by the Telegram clients.
@@ -52,5 +51,5 @@ public data class Audio(
     /**
      * *Optional*. Thumbnail of the album cover to which the music file belongs
      */
-    public val thumbnail: JsonElement? = null,
+    public val thumbnail: PhotoSize? = null,
 )

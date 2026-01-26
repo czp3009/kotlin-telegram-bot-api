@@ -6,7 +6,6 @@ import kotlin.Long
 import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object contains basic information about a successful payment. Note that if the buyer initiates a chargeback with the relevant payment provider following this transaction, the funds may be debited from your balance. This is outside of Telegram's control.
@@ -51,7 +50,7 @@ public data class SuccessfulPayment(
      * *Optional*. Order information provided by the user
      */
     @SerialName("order_info")
-    public val orderInfo: JsonElement? = null,
+    public val orderInfo: OrderInfo? = null,
     /**
      * Telegram payment identifier
      */

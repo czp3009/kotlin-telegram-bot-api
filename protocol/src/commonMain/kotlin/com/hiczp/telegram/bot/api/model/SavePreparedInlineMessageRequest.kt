@@ -5,7 +5,6 @@ import kotlin.Boolean
 import kotlin.Long
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 @Serializable
 public data class SavePreparedInlineMessageRequest(
@@ -17,7 +16,7 @@ public data class SavePreparedInlineMessageRequest(
     /**
      * A JSON-serialized object describing the message to be sent
      */
-    public val result: JsonElement?,
+    public val result: InlineQueryResult,
     /**
      * Pass *True* if the message can be sent to private chats with users
      */

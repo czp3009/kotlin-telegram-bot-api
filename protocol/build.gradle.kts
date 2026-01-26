@@ -8,7 +8,7 @@ plugins {
 @Suppress("OPT_IN_USAGE")
 kotlin {
     jvmToolchain(21)
-    
+
     applyDefaultHierarchyTemplate()
 
     // Windows
@@ -65,6 +65,7 @@ kotlin {
             // Only depend on ktorfit-lib-light, no KSP code generation needed
             implementation(libs.ktorfit.lib.light)
             implementation(libs.kotlinx.serialization.json)
+            implementation(libs.ktor.http)
         }
     }
 }

@@ -5,7 +5,6 @@ import kotlin.Long
 import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object contains information about a chat boost.
@@ -30,5 +29,5 @@ public data class ChatBoost(
     /**
      * Source of the added boost
      */
-    public val source: JsonElement?,
+    public val source: ChatBoostSource,
 )

@@ -6,7 +6,6 @@ import kotlin.Long
 import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * Represents an invite link for a chat.
@@ -21,7 +20,7 @@ public data class ChatInviteLink(
     /**
      * Creator of the link
      */
-    public val creator: JsonElement?,
+    public val creator: User,
     /**
      * *True*, if users joining the chat via the link need to be approved by chat administrators
      */

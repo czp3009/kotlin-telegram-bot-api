@@ -6,7 +6,6 @@ import kotlin.String
 import kotlin.collections.List
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This object represents a video file.
@@ -38,7 +37,7 @@ public data class Video(
     /**
      * *Optional*. Video thumbnail
      */
-    public val thumbnail: JsonElement? = null,
+    public val thumbnail: PhotoSize? = null,
     /**
      * *Optional*. Available sizes of the cover of the video in the message
      */

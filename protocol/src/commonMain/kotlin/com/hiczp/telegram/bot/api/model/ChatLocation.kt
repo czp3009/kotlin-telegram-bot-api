@@ -3,7 +3,6 @@ package com.hiczp.telegram.bot.api.model
 
 import kotlin.String
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * Represents a location to which a chat is connected.
@@ -13,7 +12,7 @@ public data class ChatLocation(
     /**
      * The location to which the supergroup is connected. Can't be a live location.
      */
-    public val location: JsonElement?,
+    public val location: Location,
     /**
      * Location address; 1-64 characters, as defined by the chat owner
      */

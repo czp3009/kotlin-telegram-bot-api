@@ -3,7 +3,6 @@ package com.hiczp.telegram.bot.api.model
 
 import kotlin.collections.List
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * Describes Telegram Passport data shared with the bot by the user.
@@ -17,5 +16,5 @@ public data class PassportData(
     /**
      * Encrypted credentials required to decrypt the data
      */
-    public val credentials: JsonElement?,
+    public val credentials: EncryptedCredentials,
 )

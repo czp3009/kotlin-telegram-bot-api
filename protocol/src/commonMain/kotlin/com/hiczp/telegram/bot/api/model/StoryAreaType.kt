@@ -10,7 +10,6 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonClassDiscriminator
-import kotlinx.serialization.json.JsonElement
 
 /**
  * Describes the type of a clickable area on a story. Currently, it can be one of
@@ -38,7 +37,7 @@ public data class StoryAreaTypeLocation(
     /**
      * *Optional*. Address of the location
      */
-    public val address: JsonElement? = null,
+    public val address: LocationAddress? = null,
 ) : StoryAreaType
 
 /**
@@ -51,7 +50,7 @@ public data class StoryAreaTypeSuggestedReaction(
      * Type of the reaction
      */
     @SerialName("reaction_type")
-    public val reactionType: JsonElement?,
+    public val reactionType: ReactionType,
     /**
      * *Optional*. Pass *True* if the reaction area has a dark background
      */
