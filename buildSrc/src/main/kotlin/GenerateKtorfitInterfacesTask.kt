@@ -411,7 +411,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             .addKdoc("Sealed interface for all reply markup types ($typesString)")
 
         fileSpec.addType(interfaceBuilder.build())
-        fileSpec.build().writeTo(outputDir)
+        fileSpec.build().writeToWithUnixLineEndings(outputDir)
     }
 
     private fun generateModels(swagger: JsonNode, outputDir: File) {
@@ -567,7 +567,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             }
         }
 
-        fileSpec.build().writeTo(outputDir)
+        fileSpec.build().writeToWithUnixLineEndings(outputDir)
     }
 
     private fun isReplyMarkupType(className: String): Boolean {
@@ -815,7 +815,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             }
         }
 
-        fileSpec.build().writeTo(outputDir)
+        fileSpec.build().writeToWithUnixLineEndings(outputDir)
     }
 
     private fun generateSubclass(
@@ -923,7 +923,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             }
         }
 
-        fileSpec.build().writeTo(outputDir)
+        fileSpec.build().writeToWithUnixLineEndings(outputDir)
     }
 
     /**
@@ -1034,7 +1034,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             }
         }
 
-        fileSpec.build().writeTo(outputDir)
+        fileSpec.build().writeToWithUnixLineEndings(outputDir)
     }
 
     private fun generateSimpleSubclass(
@@ -1285,7 +1285,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         }
 
         fileSpec.addType(interfaceBuilder.build())
-        fileSpec.build().writeTo(outputDir)
+        fileSpec.build().writeToWithUnixLineEndings(outputDir)
 
         // Generate extension functions for multipart operations
         if (multipartOperations.isNotEmpty()) {
@@ -1603,7 +1603,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             fileSpec.addType(classBuilder.build())
         }
 
-        fileSpec.build().writeTo(outputDir)
+        fileSpec.build().writeToWithUnixLineEndings(outputDir)
 
         // Mark as processed
         generatedRequestBodies[operationId] = className
@@ -1674,6 +1674,20 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             }
     }
 
+    /**
+     * Write FileSpec to directory with Unix line endings (LF) regardless of platform
+     */
+    private fun FileSpec.writeToWithUnixLineEndings(directory: File) {
+        val stringBuilder = StringBuilder()
+        writeTo(stringBuilder)
+        val content = stringBuilder.toString().replace("\r\n", "\n")
+
+        val outputDirectory = directory.resolve(packageName.replace('.', File.separatorChar))
+        outputDirectory.mkdirs()
+        val outputFile = outputDirectory.resolve("$name.kt")
+        outputFile.writeText(content, Charsets.UTF_8)
+    }
+
     private fun snakeToCamelCase(snakeCase: String): String {
         if (!snakeCase.contains('_')) return snakeCase
 
@@ -1723,7 +1737,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             fileSpec.addFunction(extensionFunction)
         }
 
-        fileSpec.build().writeTo(outputDir)
+        fileSpec.build().writeToWithUnixLineEndings(outputDir)
     }
 
     private fun generateMultipartExtensionFunction(
