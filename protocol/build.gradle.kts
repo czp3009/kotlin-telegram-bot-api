@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 
 plugins {
@@ -68,7 +69,7 @@ kotlin {
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.ktor.http)
         }
-        
+
         commonTest.dependencies {
             implementation(kotlin("test"))
             implementation(libs.kotlinx.coroutines.core)
@@ -79,12 +80,35 @@ kotlin {
             implementation(libs.ktorfit.lib)
             implementation(libs.kotlinLogging)
         }
-        jvmTest.dependencies { 
+
+        jvmTest.dependencies {
             implementation(libs.logback.classic)
             implementation(libs.ktor.client.cio)
         }
-        nativeTest.dependencies {
-            implementation(libs.ktor.client.curl)
+        webTest.dependencies {
+            implementation(libs.ktor.client.js)
+        }
+
+        val commonTest by getting
+        val desktopNativeTest by creating {
+            dependsOn(commonTest)
+            dependencies {
+                implementation(libs.ktor.client.curl)
+            }
+        }
+        val otherNativeTest by creating {
+            dependsOn(commonTest)
+        }
+        targets.withType<KotlinNativeTarget>().configureEach {
+            val testSourceSet = this.compilations.getByName("test").defaultSourceSet
+            if (testSourceSet.name.contains("linux") ||
+                testSourceSet.name.contains("macos") ||
+                testSourceSet.name.contains("mingw")
+            ) {
+                testSourceSet.dependsOn(desktopNativeTest)
+            } else {
+                testSourceSet.dependsOn(otherNativeTest)
+            }
         }
     }
 }
