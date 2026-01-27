@@ -1096,7 +1096,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
         // For multipart forms, check if this is an InputFile type first
         if (forMultipart && isInputFileType(typeInfo.ref, typeInfo.oneOf, typeInfo.allOf)) {
-            return ClassName("io.ktor.http.content", "PartData")
+            return ClassName("io.ktor.client.request.forms", "InputProvider")
         }
 
         return when {
@@ -1135,7 +1135,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                     if (forMultipart) {
                         val itemTypeInfo = extractSchemaTypeInfo(items)
                         if (isInputFileType(itemTypeInfo.ref, itemTypeInfo.oneOf, itemTypeInfo.allOf)) {
-                            return LIST.parameterizedBy(ClassName("io.ktor.http.content", "PartData"))
+                            return LIST.parameterizedBy(ClassName("io.ktor.client.request.forms", "InputProvider"))
                         }
                     }
                     val determinedType = determinePropertyType(items, forMultipart, context?.let { "$it[]" })
@@ -1266,6 +1266,14 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         val className = "TelegramBotApi"
 
         val fileSpec = createFileSpec(packageName, className)
+        // Add `@file:Suppress` annotation to suppress duplicate code warnings
+        fileSpec.addAnnotation(
+            AnnotationSpec.builder(ClassName("kotlin", "Suppress"))
+                .useSiteTarget(AnnotationSpec.UseSiteTarget.FILE)
+                .addMember("%S", "RedundantVisibilityModifier")
+                .addMember("%S", "unused")
+                .build()
+        )
 
         val interfaceBuilder = TypeSpec.interfaceBuilder(className)
 
@@ -1274,7 +1282,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         paths.fields().forEach { (path, methods) ->
             methods.fields().forEach { (method, operation) ->
                 try {
-                    val functions = generateFunction(path, method, operation, outputDir)
+                    val functions = generateFunction(path.trimStart('/'), method, operation, outputDir)
                     functions.forEach { function ->
                         interfaceBuilder.addFunction(function)
                     }
@@ -1352,12 +1360,11 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         val isMultipart = jsonContent == null && multipartContent != null
 
         if (isMultipart) {
-            // Generate two overloads for multipart operations
+            // Generate only the MultiPartFormDataContent overload for multipart operations
+            // The scattered parameters version will be generated as an extension function
             val schema = multipartContent.get("schema")
             if (schema != null) {
-                val functions = mutableListOf<FunSpec>()
-
-                // 1. Generate MultiPartFormDataContent overload
+                // Generate MultiPartFormDataContent overload
                 val multipartFormFunction = createBaseFunctionBuilder(operationId, summary, method, path, operation)
                     .returns(returnType)
                     .addParameter(
@@ -1370,15 +1377,6 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                         ).build()
                     )
                     .build()
-                functions.add(multipartFormFunction)
-
-                // 2. Generate scattered parameters overload
-                val scatteredFunction = createBaseFunctionBuilder(operationId, summary, method, path, operation)
-                    .returns(returnType)
-                scatteredFunction.addAnnotation(
-                    AnnotationSpec.builder(ClassName("de.jensklingenberg.ktorfit.http", "Multipart"))
-                        .build()
-                )
 
                 // Store schema and return type for later extension function generation
                 multipartOperations[operationId] = MultipartOperationInfo(schema, returnType)
@@ -1386,22 +1384,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                 // Generate form class for this multipart operation
                 generateFormClass(operationId, schema, outputDir)
 
-                val properties = schema.get("properties")
-                val required = schema.get("required")?.map { it.asText() }?.toSet() ?: emptySet()
-
-                properties?.fields()?.forEach { (propName, propSchema) ->
-                    val camelName = snakeToCamelCase(propName)
-                    val isRequired = required.contains(propName)
-
-                    // For InputFile types, use PartData or List<PartData>
-                    val propType = convertToPartDataIfNeeded(propSchema, "$operationId.$propName")
-                    val finalType = if (isRequired) propType else propType.copy(nullable = true)
-
-                    addPartParameter(scatteredFunction, camelName, propName, finalType, isRequired)
-                }
-
-                functions.add(scatteredFunction.build())
-                return functions
+                return listOf(multipartFormFunction)
             }
         }
 
@@ -1509,29 +1492,6 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         val annotation = AnnotationSpec.builder(ClassName("de.jensklingenberg.ktorfit.http", "Body"))
             .build()
         paramBuilder.addAnnotation(annotation)
-        functionBuilder.addParameter(paramBuilder.build())
-    }
-
-
-    private fun addPartParameter(
-        functionBuilder: FunSpec.Builder,
-        camelName: String,
-        originalName: String,
-        paramType: TypeName,
-        isRequired: Boolean
-    ) {
-        val paramBuilder = ParameterSpec.builder(camelName, paramType)
-
-        // Add @Part annotation
-        val partAnnotation = AnnotationSpec.builder(ClassName("de.jensklingenberg.ktorfit.http", "Part"))
-            .addMember("%S", originalName)
-            .build()
-        paramBuilder.addAnnotation(partAnnotation)
-
-        if (!isRequired) {
-            paramBuilder.defaultValue("null")
-        }
-
         functionBuilder.addParameter(paramBuilder.build())
     }
 
@@ -1675,7 +1635,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     }
 
     /**
-     * Write FileSpec to directory with Unix line endings (LF) regardless of platform
+     * Write FileSpec to the directory with Unix line endings (LF) regardless of platform
      */
     private fun FileSpec.writeToWithUnixLineEndings(directory: File) {
         val stringBuilder = StringBuilder()
@@ -1723,24 +1683,209 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             "${interfaceName}Extensions",
             "Extension functions for multipart operations"
         )
+        // Add `@file:Suppress` annotation to suppress duplicate code warnings
+        fileSpec.addAnnotation(
+            AnnotationSpec.builder(ClassName("kotlin", "Suppress"))
+                .useSiteTarget(AnnotationSpec.UseSiteTarget.FILE)
+                .addMember("%S", "RedundantVisibilityModifier")
+                .addMember("%S", "unused")
+                .addMember("%S", "DuplicatedCode")
+                .build()
+        )
 
         multipartOperations.forEach { (operationId, info) ->
             // Form class name is operationId with the first letter uppercase + "Form"
             val formClassName = operationId.replaceFirstChar { it.uppercase() } + "Form"
-            val extensionFunction = generateMultipartExtensionFunction(
+
+            // 1. Generate scattered parameters extension function (builds MultiPartFormDataContent)
+            val scatteredExtensionFunction = generateScatteredParametersExtensionFunction(
+                interfaceName,
+                operationId,
+                info.schema,
+                info.returnType
+            )
+            fileSpec.addFunction(scatteredExtensionFunction)
+
+            // 2. Generate Form-based extension function (calls the scattered parameters extension)
+            val formExtensionFunction = generateFormExtensionFunction(
                 interfaceName,
                 operationId,
                 formClassName,
                 info.schema,
                 info.returnType
             )
-            fileSpec.addFunction(extensionFunction)
+            fileSpec.addFunction(formExtensionFunction)
         }
 
         fileSpec.build().writeToWithUnixLineEndings(outputDir)
     }
 
-    private fun generateMultipartExtensionFunction(
+    /**
+     * Generate an extension function with scattered parameters that builds MultiPartFormDataContent
+     * and calls the interface method.
+     */
+    private fun generateScatteredParametersExtensionFunction(
+        interfaceName: String,
+        operationId: String,
+        schema: JsonNode,
+        returnType: TypeName
+    ): FunSpec {
+        val properties = schema.get("properties")
+        val required = schema.get("required")?.map { it.asText() }?.toSet() ?: emptySet()
+
+        val functionBuilder = FunSpec.builder(operationId)
+            .addModifiers(KModifier.SUSPEND)
+            .receiver(ClassName("com.hiczp.telegram.bot.api", interfaceName))
+            .returns(returnType)
+
+        // Add parameters for each property
+        properties?.fields()?.forEach { (propName, propSchema) ->
+            val camelName = snakeToCamelCase(propName)
+            val isRequired = required.contains(propName)
+            val propType = convertToPartDataIfNeeded(propSchema, "$operationId.$propName")
+            val finalType = if (isRequired) propType else propType.copy(nullable = true)
+
+            val paramBuilder = ParameterSpec.builder(camelName, finalType)
+            if (!isRequired) {
+                paramBuilder.defaultValue("null")
+            }
+            functionBuilder.addParameter(paramBuilder.build())
+        }
+
+        // Build the function body - construct MultiPartFormDataContent and call the interface method
+        val codeBuilder = CodeBlock.builder()
+        codeBuilder.addStatement(
+            "val formData = %T(%T {",
+            ClassName("io.ktor.client.request.forms", "MultiPartFormDataContent"),
+            ClassName("io.ktor.client.request.forms", "formData")
+        )
+        codeBuilder.indent()
+
+        // Add each parameter to the form data, skipping null values
+        properties?.fields()?.forEach { (propName, propSchema) ->
+            val camelName = snakeToCamelCase(propName)
+            val isRequired = required.contains(propName)
+            val typeInfo = extractSchemaTypeInfo(propSchema)
+            val isInputFile = isInputFileType(typeInfo.ref, typeInfo.oneOf, typeInfo.allOf)
+            val isArray = typeInfo.type == "array"
+
+            if (isRequired) {
+                // Required parameter - add directly
+                if (isInputFile) {
+                    // Use FormPart to add InputProvider with the multipart key from swagger
+                    codeBuilder.addStatement(
+                        "append(%T(%S, %L))",
+                        ClassName("io.ktor.client.request.forms", "FormPart"),
+                        propName,
+                        camelName
+                    )
+                } else if (isArray) {
+                    // Check if array items are InputFile
+                    val items = propSchema.get("items")
+                    val itemTypeInfo = extractSchemaTypeInfo(items)
+                    val isInputFileArray = isInputFileType(itemTypeInfo.ref, itemTypeInfo.oneOf, itemTypeInfo.allOf)
+                    if (isInputFileArray) {
+                        codeBuilder.addStatement(
+                            "%L.forEachIndexed { index, item -> append(%T(%S + index, item)) }",
+                            camelName,
+                            ClassName("io.ktor.client.request.forms", "FormPart"),
+                            propName
+                        )
+                    } else {
+                        codeBuilder.addStatement(
+                            "append(%S, %T.encodeToString(%L))",
+                            propName,
+                            ClassName("kotlinx.serialization.json", "Json"),
+                            camelName
+                        )
+                    }
+                } else {
+                    // Primitive or complex type
+                    addFormAppend(codeBuilder, propName, camelName, propSchema)
+                }
+            } else {
+                // Optional parameter - check for null
+                if (isInputFile) {
+                    codeBuilder.addStatement(
+                        "%L?.let { append(%T(%S, it)) }",
+                        camelName,
+                        ClassName("io.ktor.client.request.forms", "FormPart"),
+                        propName
+                    )
+                } else if (isArray) {
+                    val items = propSchema.get("items")
+                    val itemTypeInfo = extractSchemaTypeInfo(items)
+                    val isInputFileArray = isInputFileType(itemTypeInfo.ref, itemTypeInfo.oneOf, itemTypeInfo.allOf)
+                    if (isInputFileArray) {
+                        codeBuilder.addStatement(
+                            "%L?.forEachIndexed { index, item -> append(%T(%S + index, item)) }",
+                            camelName,
+                            ClassName("io.ktor.client.request.forms", "FormPart"),
+                            propName
+                        )
+                    } else {
+                        codeBuilder.beginControlFlow("%L?.let", camelName)
+                        codeBuilder.addStatement(
+                            "append(%S, %T.encodeToString(it))",
+                            propName,
+                            ClassName("kotlinx.serialization.json", "Json")
+                        )
+                        codeBuilder.endControlFlow()
+                    }
+                } else {
+                    codeBuilder.beginControlFlow("%L?.let", camelName)
+                    addFormAppendForLet(codeBuilder, propName, propSchema)
+                    codeBuilder.endControlFlow()
+                }
+            }
+        }
+
+        codeBuilder.unindent()
+        codeBuilder.addStatement("})")
+        codeBuilder.addStatement("return %N(formData)", operationId)
+
+        functionBuilder.addCode(codeBuilder.build())
+
+        return functionBuilder.build()
+    }
+
+    /**
+     * Add a form append statement for a required parameter using FormBuilder.append(key, value)
+     */
+    private fun addFormAppend(codeBuilder: CodeBlock.Builder, propName: String, camelName: String, propSchema: JsonNode) {
+        val resolvedType = determinePropertyType(propSchema, forMultipart = true, context = null)
+        when (resolvedType) {
+            STRING -> codeBuilder.addStatement("append(%S, %L)", propName, camelName)
+            INT, LONG, FLOAT, DOUBLE, BOOLEAN -> codeBuilder.addStatement("append(%S, %L.toString())", propName, camelName)
+            else -> codeBuilder.addStatement(
+                "append(%S, %T.encodeToString(%L))",
+                propName,
+                ClassName("kotlinx.serialization.json", "Json"),
+                camelName
+            )
+        }
+    }
+
+    /**
+     * Add a form append statement inside a let block (uses 'it' instead of the variable name)
+     */
+    private fun addFormAppendForLet(codeBuilder: CodeBlock.Builder, propName: String, propSchema: JsonNode) {
+        val resolvedType = determinePropertyType(propSchema, forMultipart = true, context = null)
+        when (resolvedType) {
+            STRING -> codeBuilder.addStatement("append(%S, it)", propName)
+            INT, LONG, FLOAT, DOUBLE, BOOLEAN -> codeBuilder.addStatement("append(%S, it.toString())", propName)
+            else -> codeBuilder.addStatement(
+                "append(%S, %T.encodeToString(it))",
+                propName,
+                ClassName("kotlinx.serialization.json", "Json")
+            )
+        }
+    }
+
+    /**
+     * Generate an extension function that accepts a Form data class and calls the scattered parameters extension.
+     */
+    private fun generateFormExtensionFunction(
         interfaceName: String,
         operationId: String,
         formClassName: String,
@@ -1755,7 +1900,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             .addParameter("form", ClassName("com.hiczp.telegram.bot.api.form", formClassName))
             .returns(returnType)
 
-        // Build the function call - call the scattered parameter overload
+        // Build the function call - call the scattered parameter extension function
         val codeBuilder = CodeBlock.builder()
         codeBuilder.add("return %N(\n", operationId)
         codeBuilder.indent()
