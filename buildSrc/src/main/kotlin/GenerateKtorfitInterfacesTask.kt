@@ -1272,6 +1272,8 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                 .useSiteTarget(AnnotationSpec.UseSiteTarget.FILE)
                 .addMember("%S", "RedundantVisibilityModifier")
                 .addMember("%S", "unused")
+                .addMember("%S", "GrazieStyle")
+                .addMember("%S", "GrazieInspection")
                 .build()
         )
 
@@ -1304,13 +1306,13 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     /**
      * Creates a base function builder with the common setup:
      * - abstract and suspend modifiers
-     * - KDoc from summary
+     * - KDoc from description
      * - HTTP method annotation
      * - Query/path/header parameters from operation
      */
     private fun createBaseFunctionBuilder(
         operationId: String,
-        summary: String?,
+        description: String?,
         method: String,
         path: String,
         operation: JsonNode
@@ -1318,8 +1320,8 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         val functionBuilder = FunSpec.builder(operationId)
             .addModifiers(KModifier.ABSTRACT, KModifier.SUSPEND)
 
-        if (summary != null) {
-            functionBuilder.addKdoc(sanitizeKDoc(summary))
+        if (description != null) {
+            functionBuilder.addKdoc(sanitizeKDoc(description))
         }
 
         // Add HTTP method annotation
@@ -1349,7 +1351,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
     private fun generateFunction(path: String, method: String, operation: JsonNode, outputDir: File): List<FunSpec> {
         val operationId = operation.get("operationId")?.asText() ?: generateOperationId(method, path)
-        val summary = operation.get("summary")?.asText()
+        val description = operation.get("description")?.asText()
         val requestBody = operation.get("requestBody")
         val returnType = determineReturnType(operation, operationId)
 
@@ -1365,7 +1367,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             val schema = multipartContent.get("schema")
             if (schema != null) {
                 // Generate MultiPartFormDataContent overload
-                val multipartFormFunction = createBaseFunctionBuilder(operationId, summary, method, path, operation)
+                val multipartFormFunction = createBaseFunctionBuilder(operationId, description, method, path, operation)
                     .returns(returnType)
                     .addParameter(
                         ParameterSpec.builder(
@@ -1389,7 +1391,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         }
 
         // For non-multipart operations, generate a single function
-        val functionBuilder = createBaseFunctionBuilder(operationId, summary, method, path, operation)
+        val functionBuilder = createBaseFunctionBuilder(operationId, description, method, path, operation)
         functionBuilder.returns(returnType)
 
         if (requestBody != null) {
@@ -1412,6 +1414,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         val paramIn = param.get("in")?.asText() ?: return
         val required = param.get("required")?.asBoolean() ?: false
         val schema = param.get("schema")
+        val description = param.get("description")?.asText()
 
         val paramType = determinePropertyType(schema, context = "parameter.$name")
         val finalType = if (required) paramType else paramType.copy(nullable = true)
@@ -1445,6 +1448,10 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
         if (!required) {
             paramBuilder.defaultValue("null")
+        }
+        
+        if (description!=null) {
+            paramBuilder.addKdoc(sanitizeKDoc(description))
         }
 
         functionBuilder.addParameter(paramBuilder.build())
