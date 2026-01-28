@@ -2,12 +2,12 @@ package com.hiczp.telegram.bot.api
 
 import de.jensklingenberg.ktorfit.Ktorfit
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.client.HttpClient
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.logging.LogLevel
-import io.ktor.client.plugins.logging.Logging
-import io.ktor.serialization.kotlinx.json.json
+import io.ktor.client.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.logging.*
+import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
 import kotlin.test.Test
 
 private val logger = KotlinLogging.logger {}
@@ -20,7 +20,9 @@ private val telegramBotApi by lazy {
             level = LogLevel.ALL
         }
         install(ContentNegotiation) {
-            json()
+            json(Json(DefaultJson) {
+                ignoreUnknownKeys = true
+            })
         }
     }
     Ktorfit.Builder().httpClient(httpClient)
