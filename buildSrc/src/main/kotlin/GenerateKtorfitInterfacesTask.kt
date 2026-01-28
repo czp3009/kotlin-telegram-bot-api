@@ -1634,8 +1634,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     ): FileSpec.Builder {
         return FileSpec.builder(packageName, fileName)
             .indent("    ")
-            .addFileComment("Auto-generated from Swagger specification")
-            .addFileComment("Do not modify this file manually")
+            .addFileComment("Auto-generated from Swagger specification, do not modify this file manually")
             .apply {
                 additionalComments.forEach { addFileComment(it) }
             }

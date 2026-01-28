@@ -1,4 +1,4 @@
-// Auto-generated from Swagger specificationDo not modify this file manuallyExtension functions for multipart operations
+// Auto-generated from Swagger specification, do not modify this file manuallyExtension functions for multipart operations
 @file:Suppress(
     "RedundantVisibilityModifier",
     "unused",

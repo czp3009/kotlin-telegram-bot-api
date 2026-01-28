@@ -1,4 +1,4 @@
-// Auto-generated from Swagger specificationDo not modify this file manuallyWARNING: This sealed interface does not have a clear discriminator field
+// Auto-generated from Swagger specification, do not modify this file manuallyWARNING: This sealed interface does not have a clear discriminator field
 package com.hiczp.telegram.bot.api.model
 
 import kotlin.Boolean

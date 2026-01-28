@@ -1,4 +1,4 @@
-// Auto-generated from Swagger specificationDo not modify this file manuallySealed interface for reply markup types
+// Auto-generated from Swagger specification, do not modify this file manuallySealed interface for reply markup types
 package com.hiczp.telegram.bot.api.model
 
 import kotlinx.serialization.Serializable
