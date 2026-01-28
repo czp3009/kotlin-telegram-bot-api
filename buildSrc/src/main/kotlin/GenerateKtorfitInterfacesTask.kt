@@ -32,6 +32,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
     private val multipartOperations = mutableMapOf<String, MultipartOperationInfo>() // operationId -> info
     private val replyMarkupTypes = mutableSetOf<String>() // Collected ReplyMarkup types
+    private val updateFieldTypes = mutableSetOf<String>() // Types used in Update's optional non-primitive fields
 
     @TaskAction
     fun generate() {
@@ -64,6 +65,10 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         // Collect all ReplyMarkup types from the swagger spec
         collectReplyMarkupTypes(swagger)
         logger.lifecycle("Detected ReplyMarkup types: $replyMarkupTypes")
+
+        // Collect all types used in Update's optional non-primitive fields
+        collectUpdateFieldTypes(swagger)
+        logger.lifecycle("Detected Update field types: $updateFieldTypes")
 
         // Generate ReplyMarkup sealed interface if we found any types
         if (replyMarkupTypes.isNotEmpty()) {
@@ -102,6 +107,41 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             if (properties != null && properties.has("reply_markup")) {
                 val replyMarkupField = properties.get("reply_markup")
                 collectReplyMarkupFromField(replyMarkupField)
+            }
+        }
+    }
+
+    /**
+     * Collect all types used in Update's optional non-primitive fields
+     */
+    private fun collectUpdateFieldTypes(swagger: JsonNode) {
+        val updateSchema = allSchemas["Update"] ?: return
+        val properties = updateSchema.get("properties") ?: return
+        val required = updateSchema.get("required")?.map { it.asText() }?.toSet() ?: emptySet()
+
+        properties.fields().forEach { (propName, propSchema) ->
+            // Skip required fields (like update_id)
+            if (propName in required) return@forEach
+
+            // Extract type from the property schema
+            val typeInfo = extractSchemaTypeInfo(propSchema)
+
+            // Handle direct $ref
+            if (typeInfo.ref != null) {
+                val typeName = typeInfo.ref.substringAfterLast("/")
+                // Skip primitive types and special cases
+                if (typeName != "MaybeInaccessibleMessage") {
+                    updateFieldTypes.add(typeName)
+                }
+            }
+
+            // Handle allOf
+            if (typeInfo.allOf != null && typeInfo.allOf.isArray) {
+                extractTypeNamesFromRefArray(typeInfo.allOf).forEach { typeName ->
+                    if (typeName != "MaybeInaccessibleMessage") {
+                        updateFieldTypes.add(typeName)
+                    }
+                }
             }
         }
     }
@@ -165,10 +205,21 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
     /**
      * Adds ReplyMarkup superinterface if the class is a ReplyMarkup type
+     * Adds IncomingUpdate superinterface if the class is used in Update's optional fields
      */
     private fun TypeSpec.Builder.addReplyMarkupInterfaceIfNeeded(className: String): TypeSpec.Builder {
         if (isReplyMarkupType(className)) {
             addSuperinterface(ClassName("com.hiczp.telegram.bot.api.model", "ReplyMarkup"))
+        }
+        return this
+    }
+
+    /**
+     * Adds IncomingUpdate superinterface if the class is used in Update's optional fields
+     */
+    private fun TypeSpec.Builder.addIncomingUpdateInterfaceIfNeeded(className: String): TypeSpec.Builder {
+        if (isUpdateFieldType(className)) {
+            addSuperinterface(ClassName("com.hiczp.telegram.bot.api.type", "IncomingUpdate"))
         }
         return this
     }
@@ -194,6 +245,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         return this
             .addSerializableAnnotationIfNeeded(isFormClass)
             .addReplyMarkupInterfaceIfNeeded(className)
+            .addIncomingUpdateInterfaceIfNeeded(className)
             .addKDocIfPresent(description)
     }
 
@@ -575,6 +627,11 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         return className in replyMarkupTypes
     }
 
+    private fun isUpdateFieldType(className: String): Boolean {
+        // Check if this type is used in Update's optional non-primitive fields
+        return className in updateFieldTypes
+    }
+
     private data class DiscriminatorInfo(
         val fieldName: String,
         val memberValues: Map<String, String> // memberClassName -> discriminatorValue
@@ -842,6 +899,11 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             )
             .addKDocIfPresent(info.description)
 
+        // Add IncomingUpdate interface if this class is used in Update's optional fields
+        if (isUpdateFieldType(className)) {
+            classBuilder.addSuperinterface(ClassName("com.hiczp.telegram.bot.api.type", "IncomingUpdate"))
+        }
+
         val constructorBuilder = FunSpec.constructorBuilder()
 
         info.properties.fields().forEach { (propName, propSchema) ->
@@ -951,6 +1013,11 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             )
             .addKDocIfPresent(info.description)
 
+        // Add IncomingUpdate interface if this class is used in Update's optional fields
+        if (isUpdateFieldType(className)) {
+            classBuilder.addSuperinterface(ClassName("com.hiczp.telegram.bot.api.type", "IncomingUpdate"))
+        }
+
         val constructorBuilder = FunSpec.constructorBuilder()
 
         // Add the discriminator field first with a default value
@@ -1053,6 +1120,11 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                     .build()
             )
             .addKDocIfPresent(info.description)
+
+        // Add IncomingUpdate interface if this class is used in Update's optional fields
+        if (isUpdateFieldType(className)) {
+            classBuilder.addSuperinterface(ClassName("com.hiczp.telegram.bot.api.type", "IncomingUpdate"))
+        }
 
         val constructorBuilder = FunSpec.constructorBuilder()
 
@@ -1449,8 +1521,8 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         if (!required) {
             paramBuilder.defaultValue("null")
         }
-        
-        if (description!=null) {
+
+        if (description != null) {
             paramBuilder.addKdoc(sanitizeKDoc(description))
         }
 
@@ -1858,11 +1930,21 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     /**
      * Add a form append statement for a required parameter using FormBuilder.append(key, value)
      */
-    private fun addFormAppend(codeBuilder: CodeBlock.Builder, propName: String, camelName: String, propSchema: JsonNode) {
+    private fun addFormAppend(
+        codeBuilder: CodeBlock.Builder,
+        propName: String,
+        camelName: String,
+        propSchema: JsonNode
+    ) {
         val resolvedType = determinePropertyType(propSchema, forMultipart = true, context = null)
         when (resolvedType) {
             STRING -> codeBuilder.addStatement("append(%S, %L)", propName, camelName)
-            INT, LONG, FLOAT, DOUBLE, BOOLEAN -> codeBuilder.addStatement("append(%S, %L.toString())", propName, camelName)
+            INT, LONG, FLOAT, DOUBLE, BOOLEAN -> codeBuilder.addStatement(
+                "append(%S, %L.toString())",
+                propName,
+                camelName
+            )
+
             else -> codeBuilder.addStatement(
                 "append(%S, %T.encodeToString(%L))",
                 propName,

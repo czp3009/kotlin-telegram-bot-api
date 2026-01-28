@@ -1,6 +1,7 @@
 // Auto-generated from Swagger specification, do not modify this file manually
 package com.hiczp.telegram.bot.api.model
 
+import com.hiczp.telegram.bot.api.type.IncomingUpdate
 import kotlinx.serialization.Serializable
 
 /**
@@ -16,4 +17,4 @@ public data class ChatBoostUpdated(
      * Information about the chat boost
      */
     public val boost: ChatBoost,
-)
+) : IncomingUpdate

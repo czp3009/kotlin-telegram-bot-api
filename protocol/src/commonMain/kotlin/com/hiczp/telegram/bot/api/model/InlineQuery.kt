@@ -1,6 +1,7 @@
 // Auto-generated from Swagger specification, do not modify this file manually
 package com.hiczp.telegram.bot.api.model
 
+import com.hiczp.telegram.bot.api.type.IncomingUpdate
 import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -35,4 +36,4 @@ public data class InlineQuery(
      * *Optional*. Sender location, only for bots that request user location
      */
     public val location: Location? = null,
-)
+) : IncomingUpdate

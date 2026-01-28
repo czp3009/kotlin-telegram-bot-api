@@ -1,6 +1,7 @@
 // Auto-generated from Swagger specification, do not modify this file manually
 package com.hiczp.telegram.bot.api.model
 
+import com.hiczp.telegram.bot.api.type.IncomingUpdate
 import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -19,4 +20,4 @@ public data class PaidMediaPurchased(
      */
     @SerialName("paid_media_payload")
     public val paidMediaPayload: String,
-)
+) : IncomingUpdate

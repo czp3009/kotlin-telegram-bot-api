@@ -1,6 +1,7 @@
 // Auto-generated from Swagger specification, do not modify this file manually
 package com.hiczp.telegram.bot.api.model
 
+import com.hiczp.telegram.bot.api.type.IncomingUpdate
 import kotlin.Boolean
 import kotlin.Long
 import kotlinx.serialization.SerialName
@@ -48,4 +49,4 @@ public data class ChatMemberUpdated(
      */
     @SerialName("via_chat_folder_invite_link")
     public val viaChatFolderInviteLink: Boolean? = null,
-)
+) : IncomingUpdate

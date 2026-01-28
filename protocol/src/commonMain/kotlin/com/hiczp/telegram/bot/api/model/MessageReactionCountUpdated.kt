@@ -1,6 +1,7 @@
 // Auto-generated from Swagger specification, do not modify this file manually
 package com.hiczp.telegram.bot.api.model
 
+import com.hiczp.telegram.bot.api.type.IncomingUpdate
 import kotlin.Long
 import kotlin.collections.List
 import kotlinx.serialization.SerialName
@@ -28,4 +29,4 @@ public data class MessageReactionCountUpdated(
      * List of reactions that are present on the message
      */
     public val reactions: List<ReactionCount>,
-)
+) : IncomingUpdate

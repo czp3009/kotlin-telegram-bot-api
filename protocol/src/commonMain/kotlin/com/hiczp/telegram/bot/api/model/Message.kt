@@ -1,6 +1,7 @@
 // Auto-generated from Swagger specification, do not modify this file manually
 package com.hiczp.telegram.bot.api.model
 
+import com.hiczp.telegram.bot.api.type.IncomingUpdate
 import kotlin.Boolean
 import kotlin.Long
 import kotlin.String
@@ -503,4 +504,4 @@ public data class Message(
      */
     @SerialName("reply_markup")
     public val replyMarkup: InlineKeyboardMarkup? = null,
-)
+) : IncomingUpdate
