@@ -6,5 +6,5 @@ import platform.posix.getenv
 
 @OptIn(ExperimentalForeignApi::class)
 actual fun getBotToken(): String? {
-    return getenv(BOT_TOKEN_ENV_VAR)?.toKString()
+    return getenv(EnvVars.BOT_TOKEN)?.toKString()
 }

@@ -14,8 +14,8 @@ private val logger = KotlinLogging.logger {}
 
 private val telegramBotApi by lazy {
     val botToken = getBotToken()
-    checkNotNull(botToken) { "BOT_TOKEN environment variable is not set" }
-    val httpClient = HttpClient(ktorEngine()) {
+    checkNotNull(botToken) { "Failed to get BOT_TOKEN" }
+    val httpClient = HttpClient(createKtorEngine()) {
         install(Logging) {
             level = LogLevel.ALL
         }

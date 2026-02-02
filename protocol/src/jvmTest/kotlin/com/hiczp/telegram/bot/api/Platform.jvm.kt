@@ -1,14 +1,18 @@
 package com.hiczp.telegram.bot.api
 
-import io.ktor.client.engine.HttpClientEngine
-import io.ktor.client.engine.HttpClientEngineConfig
-import io.ktor.client.engine.HttpClientEngineFactory
-import io.ktor.client.engine.cio.CIO
+import io.ktor.client.engine.*
+import io.ktor.client.engine.cio.*
+import io.ktor.http.*
 
 actual fun getBotToken(): String? {
-    return System.getenv(BOT_TOKEN_ENV_VAR)
+    return System.getenv(EnvVars.BOT_TOKEN)
 }
 
-actual fun  ktorEngine(): HttpClientEngineFactory<*> {
-    return CIO
+actual fun createKtorEngine(): HttpClientEngine {
+    return CIO.create {
+        val httpProxy = System.getenv(EnvVars.HTTPS_PROXY) ?: System.getenv(EnvVars.HTTP_PROXY)
+        if (httpProxy != null) {
+            proxy = ProxyBuilder.http(Url(httpProxy))
+        }
+    }
 }

@@ -1,5 +1,7 @@
 package com.hiczp.telegram.bot.api
 
-actual fun ktorEngine(): io.ktor.client.engine.HttpClientEngineFactory<*> {
-    TODO()
+import io.ktor.client.engine.*
+
+actual fun createKtorEngine(): HttpClientEngine {
+    TODO("Not yet implemented")
 }
