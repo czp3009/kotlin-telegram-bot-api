@@ -1,7 +1,7 @@
 // Auto-generated from Swagger specification, do not modify this file manually
 package com.hiczp.telegram.bot.api.form
 
-import io.ktor.client.request.forms.InputProvider
+import io.ktor.client.request.forms.ChannelProvider
 import kotlin.String
 import kotlinx.serialization.SerialName
 
@@ -14,5 +14,5 @@ public data class SetChatPhotoForm(
     /**
      * New chat photo, uploaded using multipart/form-data
      */
-    public val photo: InputProvider,
+    public val photo: ChannelProvider,
 )

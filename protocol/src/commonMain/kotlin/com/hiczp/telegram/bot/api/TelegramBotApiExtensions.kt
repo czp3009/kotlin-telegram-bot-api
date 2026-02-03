@@ -30,8 +30,8 @@ import com.hiczp.telegram.bot.api.model.ReplyMarkup
 import com.hiczp.telegram.bot.api.model.ReplyParameters
 import com.hiczp.telegram.bot.api.model.SuggestedPostParameters
 import com.hiczp.telegram.bot.api.type.TelegramResponse
+import io.ktor.client.request.forms.ChannelProvider
 import io.ktor.client.request.forms.FormPart
-import io.ktor.client.request.forms.InputProvider
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
 import kotlin.Boolean
@@ -43,7 +43,7 @@ import kotlinx.serialization.json.Json
 
 public suspend fun TelegramBotApi.setWebhook(
     url: String,
-    certificate: InputProvider? = null,
+    certificate: ChannelProvider? = null,
     ipAddress: String? = null,
     maxConnections: Long? = null,
     allowedUpdates: List<String>? = null,
@@ -87,7 +87,7 @@ public suspend fun TelegramBotApi.sendPhoto(
     chatId: String,
     messageThreadId: Long? = null,
     directMessagesTopicId: Long? = null,
-    photo: InputProvider,
+    photo: ChannelProvider,
     caption: String? = null,
     parseMode: String? = null,
     captionEntities: List<MessageEntity>? = null,
@@ -178,14 +178,14 @@ public suspend fun TelegramBotApi.sendAudio(
     chatId: String,
     messageThreadId: Long? = null,
     directMessagesTopicId: Long? = null,
-    audio: InputProvider,
+    audio: ChannelProvider,
     caption: String? = null,
     parseMode: String? = null,
     captionEntities: List<MessageEntity>? = null,
     duration: Long? = null,
     performer: String? = null,
     title: String? = null,
-    thumbnail: InputProvider? = null,
+    thumbnail: ChannelProvider? = null,
     disableNotification: Boolean? = null,
     protectContent: Boolean? = null,
     allowPaidBroadcast: Boolean? = null,
@@ -277,8 +277,8 @@ public suspend fun TelegramBotApi.sendDocument(
     chatId: String,
     messageThreadId: Long? = null,
     directMessagesTopicId: Long? = null,
-    document: InputProvider,
-    thumbnail: InputProvider? = null,
+    document: ChannelProvider,
+    thumbnail: ChannelProvider? = null,
     caption: String? = null,
     parseMode: String? = null,
     captionEntities: List<MessageEntity>? = null,
@@ -366,12 +366,12 @@ public suspend fun TelegramBotApi.sendVideo(
     chatId: String,
     messageThreadId: Long? = null,
     directMessagesTopicId: Long? = null,
-    video: InputProvider,
+    video: ChannelProvider,
     duration: Long? = null,
     width: Long? = null,
     height: Long? = null,
-    thumbnail: InputProvider? = null,
-    cover: InputProvider? = null,
+    thumbnail: ChannelProvider? = null,
+    cover: ChannelProvider? = null,
     startTimestamp: Long? = null,
     caption: String? = null,
     parseMode: String? = null,
@@ -488,11 +488,11 @@ public suspend fun TelegramBotApi.sendAnimation(
     chatId: String,
     messageThreadId: Long? = null,
     directMessagesTopicId: Long? = null,
-    animation: InputProvider,
+    animation: ChannelProvider,
     duration: Long? = null,
     width: Long? = null,
     height: Long? = null,
-    thumbnail: InputProvider? = null,
+    thumbnail: ChannelProvider? = null,
     caption: String? = null,
     parseMode: String? = null,
     captionEntities: List<MessageEntity>? = null,
@@ -597,7 +597,7 @@ public suspend fun TelegramBotApi.sendVoice(
     chatId: String,
     messageThreadId: Long? = null,
     directMessagesTopicId: Long? = null,
-    voice: InputProvider,
+    voice: ChannelProvider,
     caption: String? = null,
     parseMode: String? = null,
     captionEntities: List<MessageEntity>? = null,
@@ -683,10 +683,10 @@ public suspend fun TelegramBotApi.sendVideoNote(
     chatId: String,
     messageThreadId: Long? = null,
     directMessagesTopicId: Long? = null,
-    videoNote: InputProvider,
+    videoNote: ChannelProvider,
     duration: Long? = null,
     length: Long? = null,
-    thumbnail: InputProvider? = null,
+    thumbnail: ChannelProvider? = null,
     disableNotification: Boolean? = null,
     protectContent: Boolean? = null,
     allowPaidBroadcast: Boolean? = null,
@@ -813,7 +813,7 @@ public suspend fun TelegramBotApi.sendMediaGroup(form: SendMediaGroupForm): Tele
     replyParameters = form.replyParameters
 )
 
-public suspend fun TelegramBotApi.setChatPhoto(chatId: String, photo: InputProvider): TelegramResponse<Boolean> {
+public suspend fun TelegramBotApi.setChatPhoto(chatId: String, photo: ChannelProvider): TelegramResponse<Boolean> {
     val formData = MultiPartFormDataContent(formData {
         append("chat_id", chatId)
         append(FormPart("photo", photo))
@@ -869,7 +869,7 @@ public suspend fun TelegramBotApi.sendSticker(
     chatId: String,
     messageThreadId: Long? = null,
     directMessagesTopicId: Long? = null,
-    sticker: InputProvider,
+    sticker: ChannelProvider,
     emoji: String? = null,
     disableNotification: Boolean? = null,
     protectContent: Boolean? = null,
@@ -937,7 +937,7 @@ public suspend fun TelegramBotApi.sendSticker(form: SendStickerForm): TelegramRe
 
 public suspend fun TelegramBotApi.uploadStickerFile(
     userId: Long,
-    sticker: InputProvider,
+    sticker: ChannelProvider,
     stickerFormat: String,
 ): TelegramResponse<File> {
     val formData = MultiPartFormDataContent(formData {
@@ -957,7 +957,7 @@ public suspend fun TelegramBotApi.uploadStickerFile(form: UploadStickerFileForm)
 public suspend fun TelegramBotApi.setStickerSetThumbnail(
     name: String,
     userId: Long,
-    thumbnail: InputProvider? = null,
+    thumbnail: ChannelProvider? = null,
     format: String,
 ): TelegramResponse<Boolean> {
     val formData = MultiPartFormDataContent(formData {

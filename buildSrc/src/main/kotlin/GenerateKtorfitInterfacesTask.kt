@@ -1168,7 +1168,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
         // For multipart forms, check if this is an InputFile type first
         if (forMultipart && isInputFileType(typeInfo.ref, typeInfo.oneOf, typeInfo.allOf)) {
-            return ClassName("io.ktor.client.request.forms", "InputProvider")
+            return ClassName("io.ktor.client.request.forms", "ChannelProvider")
         }
 
         return when {
@@ -1207,7 +1207,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                     if (forMultipart) {
                         val itemTypeInfo = extractSchemaTypeInfo(items)
                         if (isInputFileType(itemTypeInfo.ref, itemTypeInfo.oneOf, itemTypeInfo.allOf)) {
-                            return LIST.parameterizedBy(ClassName("io.ktor.client.request.forms", "InputProvider"))
+                            return LIST.parameterizedBy(ClassName("io.ktor.client.request.forms", "ChannelProvider"))
                         }
                     }
                     val determinedType = determinePropertyType(items, forMultipart, context?.let { "$it[]" })
@@ -1850,7 +1850,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             if (isRequired) {
                 // Required parameter - add directly
                 if (isInputFile) {
-                    // Use FormPart to add InputProvider with the multipart key from swagger
+                    // Use FormPart to add ChannelProvider with the multipart key from swagger
                     codeBuilder.addStatement(
                         "append(%T(%S, %L))",
                         ClassName("io.ktor.client.request.forms", "FormPart"),

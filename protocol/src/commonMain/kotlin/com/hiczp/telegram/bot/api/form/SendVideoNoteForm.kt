@@ -4,7 +4,7 @@ package com.hiczp.telegram.bot.api.form
 import com.hiczp.telegram.bot.api.model.ReplyMarkup
 import com.hiczp.telegram.bot.api.model.ReplyParameters
 import com.hiczp.telegram.bot.api.model.SuggestedPostParameters
-import io.ktor.client.request.forms.InputProvider
+import io.ktor.client.request.forms.ChannelProvider
 import kotlin.Boolean
 import kotlin.Long
 import kotlin.String
@@ -35,7 +35,7 @@ public data class SendVideoNoteForm(
      * Video note to send. Pass a file_id as String to send a video note that exists on the Telegram servers (recommended) or upload a new video using multipart/form-data. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files). Sending video notes by a URL is currently unsupported
      */
     @SerialName("video_note")
-    public val videoNote: InputProvider,
+    public val videoNote: ChannelProvider,
     /**
      * Duration of sent video in seconds
      */
@@ -47,7 +47,7 @@ public data class SendVideoNoteForm(
     /**
      * Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side. The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using multipart/form-data. Thumbnails can't be reused and can be only uploaded as a new file, so you can pass “attach://<file_attach_name>” if the thumbnail was uploaded using multipart/form-data under <file_attach_name>. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files)
      */
-    public val thumbnail: InputProvider? = null,
+    public val thumbnail: ChannelProvider? = null,
     /**
      * Sends the message [silently](https://telegram.org/blog/channels-2-0#silent-messages). Users will receive a notification with no sound.
      */
