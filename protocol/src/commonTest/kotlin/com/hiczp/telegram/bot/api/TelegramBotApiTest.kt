@@ -1,8 +1,11 @@
 package com.hiczp.telegram.bot.api
 
 import com.hiczp.telegram.bot.api.extension.deleteMessage
+import com.hiczp.telegram.bot.api.extension.deleteMessages
 import com.hiczp.telegram.bot.api.extension.toFormPart
+import com.hiczp.telegram.bot.api.form.sendMediaGroup
 import com.hiczp.telegram.bot.api.form.sendPhoto
+import com.hiczp.telegram.bot.api.model.InputMediaPhoto
 import de.jensklingenberg.ktorfit.Ktorfit
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*
@@ -80,5 +83,21 @@ class TelegramBotApiTest {
             photo = fileId
         ).getOrThrow()
         telegramBotApi.deleteMessage(message2)
+    }
+
+    @Test
+    fun sendPhotos() = runTest {
+        val messages = telegramBotApi.sendMediaGroup(
+            chatId = testChatId,
+            media = listOf(
+                InputMediaPhoto(media = "attach://photo1"),
+                InputMediaPhoto(media = "attach://photo2"),
+            ),
+            attachments = listOf(
+                webpFilePath.toFormPart("photo1", ContentType.Image.WEBP),
+                webpFilePath.toFormPart("photo2", ContentType.Image.WEBP),
+            ),
+        ).getOrThrow()
+        telegramBotApi.deleteMessages(messages)
     }
 }

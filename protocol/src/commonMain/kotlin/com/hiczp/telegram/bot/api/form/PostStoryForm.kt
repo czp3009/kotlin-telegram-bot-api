@@ -1,15 +1,18 @@
 // Auto-generated from Swagger specification, do not modify this file manually
-package com.hiczp.telegram.bot.api.model
+package com.hiczp.telegram.bot.api.form
 
+import com.hiczp.telegram.bot.api.model.InputStoryContent
+import com.hiczp.telegram.bot.api.model.MessageEntity
+import com.hiczp.telegram.bot.api.model.StoryArea
+import io.ktor.client.request.forms.ChannelProvider
+import io.ktor.client.request.forms.FormPart
 import kotlin.Boolean
 import kotlin.Long
 import kotlin.String
 import kotlin.collections.List
 import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 
-@Serializable
-public data class PostStoryRequest(
+public data class PostStoryForm(
     /**
      * Unique identifier of the business connection
      */
@@ -52,4 +55,8 @@ public data class PostStoryRequest(
      */
     @SerialName("protect_content")
     public val protectContent: Boolean? = null,
+    /**
+     * Additional file attachments referenced via attach://<file_attach_name> in media fields
+     */
+    public val attachments: List<FormPart<ChannelProvider>>? = null,
 )

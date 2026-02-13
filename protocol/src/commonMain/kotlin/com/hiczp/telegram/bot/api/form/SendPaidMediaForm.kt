@@ -1,15 +1,20 @@
 // Auto-generated from Swagger specification, do not modify this file manually
-package com.hiczp.telegram.bot.api.model
+package com.hiczp.telegram.bot.api.form
 
+import com.hiczp.telegram.bot.api.model.InputPaidMedia
+import com.hiczp.telegram.bot.api.model.MessageEntity
+import com.hiczp.telegram.bot.api.model.ReplyMarkup
+import com.hiczp.telegram.bot.api.model.ReplyParameters
+import com.hiczp.telegram.bot.api.model.SuggestedPostParameters
+import io.ktor.client.request.forms.ChannelProvider
+import io.ktor.client.request.forms.FormPart
 import kotlin.Boolean
 import kotlin.Long
 import kotlin.String
 import kotlin.collections.List
 import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 
-@Serializable
-public data class SendPaidMediaRequest(
+public data class SendPaidMediaForm(
     /**
      * Unique identifier of the business connection on behalf of which the message will be sent
      */
@@ -92,4 +97,8 @@ public data class SendPaidMediaRequest(
      */
     @SerialName("reply_markup")
     public val replyMarkup: ReplyMarkup? = null,
+    /**
+     * Additional file attachments referenced via attach://<file_attach_name> in media fields
+     */
+    public val attachments: List<FormPart<ChannelProvider>>? = null,
 )

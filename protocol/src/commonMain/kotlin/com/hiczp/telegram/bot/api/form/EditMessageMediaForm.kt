@@ -3,8 +3,11 @@ package com.hiczp.telegram.bot.api.form
 
 import com.hiczp.telegram.bot.api.model.InlineKeyboardMarkup
 import com.hiczp.telegram.bot.api.model.InputMedia
+import io.ktor.client.request.forms.ChannelProvider
+import io.ktor.client.request.forms.FormPart
 import kotlin.Long
 import kotlin.String
+import kotlin.collections.List
 import kotlinx.serialization.SerialName
 
 public data class EditMessageMediaForm(
@@ -37,4 +40,8 @@ public data class EditMessageMediaForm(
      */
     @SerialName("reply_markup")
     public val replyMarkup: InlineKeyboardMarkup? = null,
+    /**
+     * Additional file attachments referenced via attach://<file_attach_name> in media fields
+     */
+    public val attachments: List<FormPart<ChannelProvider>>? = null,
 )

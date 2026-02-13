@@ -3,6 +3,8 @@ package com.hiczp.telegram.bot.api.form
 
 import com.hiczp.telegram.bot.api.model.InputMedia
 import com.hiczp.telegram.bot.api.model.ReplyParameters
+import io.ktor.client.request.forms.ChannelProvider
+import io.ktor.client.request.forms.FormPart
 import kotlin.Boolean
 import kotlin.Long
 import kotlin.String
@@ -59,4 +61,8 @@ public data class SendMediaGroupForm(
      */
     @SerialName("reply_parameters")
     public val replyParameters: ReplyParameters? = null,
+    /**
+     * Additional file attachments referenced via attach://<file_attach_name> in media fields
+     */
+    public val attachments: List<FormPart<ChannelProvider>>? = null,
 )

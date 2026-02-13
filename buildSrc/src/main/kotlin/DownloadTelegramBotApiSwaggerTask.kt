@@ -9,16 +9,34 @@ import org.gradle.api.tasks.TaskAction
 import java.net.URI
 import javax.inject.Inject
 
+/**
+ * A Gradle task that downloads the latest Telegram Bot API OpenAPI/Swagger specification file
+ * from a GitHub repository.
+ *
+ * This task connects to the GitHub API to fetch the latest release from the specified repository,
+ * locates the target file in the release assets, and downloads it to the project's build directory.
+ * The downloaded specification file is used as the input for generating Kotlin API bindings.
+ *
+ * @property repository The GitHub repository in format "owner/repo". Defaults to "czp3009/telegram-bot-api-swagger".
+ * @property fileName The name of the file to download from the release assets. Defaults to "telegram-bot-api.json".
+ * @property outputFile The destination file path where the downloaded spec will be saved.
+ *                     Defaults to `build/generated/swagger/telegram-bot-api.json`.
+ *
+ * @constructor Injects the ProjectLayout to provide file system access for the output file configuration.
+ */
 abstract class DownloadTelegramBotApiSwaggerTask @Inject constructor(
     layout: ProjectLayout
 ) : DefaultTask() {
 
+    /** The GitHub repository in "owner/repo" format. Defaults to "czp3009/telegram-bot-api-swagger". */
     @get:Input
     abstract val repository: Property<String>
 
+    /** The name of the file to download from release assets. Defaults to "telegram-bot-api.json". */
     @get:Input
     abstract val fileName: Property<String>
 
+    /** The destination file where the downloaded spec will be saved. Defaults to `build/generated/swagger/telegram-bot-api.json`. */
     @get:OutputFile
     abstract val outputFile: RegularFileProperty
 
@@ -31,6 +49,17 @@ abstract class DownloadTelegramBotApiSwaggerTask @Inject constructor(
         outputFile.convention(layout.buildDirectory.file(fileName.map { "generated/swagger/$it" }))
     }
 
+    /**
+     * Downloads the latest OpenAPI specification file from the GitHub repository.
+     *
+     * This method performs the following steps:
+     * 1. Resolves the download URL by querying the GitHub API for the latest release
+     * 2. Creates the parent directory for the output file if it doesn't exist
+     * 3. Downloads the file from the resolved URL
+     * 4. Writes the content to the output file
+     *
+     * @throws IllegalStateException if the target file is not found in the release assets
+     */
     @TaskAction
     fun download() {
         val downloadUrl = getDownloadUrl()

@@ -10,11 +10,121 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 
+/**
+ * Gradle task that generates Kotlin code from a Telegram Bot API OpenAPI/Swagger specification.
+ *
+ * This task produces type-safe, auto-generated Kotlin bindings for Telegram's REST API,
+ * including data models, form classes, and Ktorfit interfaces for HTTP operations.
+ *
+ * ## Generated Components
+ *
+ * ### Data Models (`model/` package)
+ * Generates serializable data classes for all Telegram API entities (Message, User, Chat, etc.)
+ * with proper type handling including:
+ * - Union types (oneOf) → sealed interfaces with `@JsonClassDiscriminator`
+ * - Nested objects and arrays
+ * - `@SerialName` annotations for snake_case to camelCase mapping
+ * - Automatic interface inheritance for `ReplyMarkup` and `IncomingUpdate` types
+ *
+ * ### Form Data Classes (`form/` package)
+ * Generates wrapper classes for multipart form data requests where file uploads are required.
+ * These classes convert `InputFile` references to `FormPart<ChannelProvider>` for Ktor's multipart handling.
+ * Additional properties with binary format generate an `attachments` parameter for dynamic file attachments
+ * referenced via `attach://<file_attach_name>` in media fields.
+ *
+ * Also generates `Forms.kt` containing extension functions that build `MultiPartFormDataContent` from
+ * form objects and call the corresponding API methods.
+ *
+ * ### Ktorfit Interface (`TelegramBotApi.kt`)
+ * Generates the main `TelegramBotApi` interface with Ktorfit annotations:
+ * - `@GET` for methods without request bodies
+ * - `@POST` for methods with request bodies
+ * - `@Body` for JSON request bodies
+ * - `@Query` for URL query parameters
+ *
+ * ## Type Handling
+ *
+ * The generator handles several special type patterns from the OpenAPI specification:
+ *
+ * - **ReplyMarkup union types**: Dynamically collected from the specification; all types
+ *   implement a `ReplyMarkup` sealed interface with `@JsonClassDiscriminator("type")`
+ *
+ * - **IncomingUpdate types**: Types used in `Update`'s optional non-primitive fields
+ *   implement `IncomingUpdate` interface for polymorphic update handling
+ *
+ * - **Field-overlapping unions**: For unions like `MaybeInaccessibleMessage` where subclasses
+ *   share >70% of properties, the largest subclass (e.g., `Message`) is used for deserialization
+ *
+ * - **Complete discriminator mappings**: When OpenAPI discriminator covers all oneOf members,
+ *   generates a sealed interface with `@JsonClassDiscriminator` and subclasses with `@SerialName`
+ *
+ * - **Incomplete discriminator mappings**: When discriminator mapping doesn't cover all oneOf members
+ *   (e.g., InlineQueryResult with 20 members but 13 in mapping), generates a sealed interface and
+ *   standalone classes with `@SerialName` annotations
+ *
+ * - **Discriminator value extraction**: Attempts multiple strategies to find discriminator values:
+ *   1. Explicit discriminator.mapping from OpenAPI spec
+ *   2. Single-value enum fields in member schemas
+ *   3. Description patterns: `always "value"`, `must be "value"`, `must be *value*`
+ *   4. Fallback inference from class names (e.g., BackgroundFillSolid → "solid")
+ *
+ * ## Configuration
+ *
+ * The task requires two inputs:
+ * - `swaggerFile`: Path to the OpenAPI/Swagger JSON specification file
+ * - `outputDir`: Directory where generated Kotlin code will be written (defaults to `src/commonMain/kotlin`)
+ *
+ * ## Clean Build
+ *
+ * Before generation, the task cleans specific output directories:
+ * - Deletes `model/` and `form/` directories completely
+ * - Deletes `TelegramBotApi.kt` interface file
+ * - Preserves `type/` directory which contains handwritten code (`TelegramResponse`, `IncomingUpdate`)
+ */
 abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
+    companion object {
+        // Package names
+        private const val BASE_PACKAGE = "com.hiczp.telegram.bot.api"
+        private const val MODEL_PACKAGE = "$BASE_PACKAGE.model"
+        private const val FORM_PACKAGE = "$BASE_PACKAGE.form"
+        private const val TYPE_PACKAGE = "$BASE_PACKAGE.type"
+
+        // Type names
+        private const val TELEGRAM_RESPONSE_TYPE = "TelegramResponse"
+        private const val REPLY_MARKUP_INTERFACE = "ReplyMarkup"
+        private const val INCOMING_UPDATE_INTERFACE = "IncomingUpdate"
+        private const val INPUT_FILE_TYPE = "InputFile"
+        private const val MESSAGE_TYPE = "Message"
+        private const val MAYBE_INACCESSIBLE_MESSAGE_TYPE = "MaybeInaccessibleMessage"
+
+        // Content types
+        private const val CONTENT_TYPE_JSON = "application/json"
+        private const val CONTENT_TYPE_MULTIPART = "multipart/form-data"
+    }
+
+    /**
+     * Input property for the OpenAPI/Swagger specification file.
+     *
+     * This file defines the Telegram Bot API structure including all endpoints, request/response schemas,
+     * and data models. The task parses this specification to generate corresponding Kotlin code.
+     */
     @get:InputFile
     abstract val swaggerFile: RegularFileProperty
 
+    /**
+     * Output directory for generated Kotlin code.
+     *
+     * Generated files are organized under this directory:
+     * - `com/hiczp/telegram/bot/api/model/` - Data model classes (100+ files)
+     * - `com/hiczp/telegram/bot/api/form/` - Form wrapper classes (*Form.kt) and Forms.kt extension functions
+     * - `com/hiczp/telegram/bot/api/TelegramBotApi.kt` - Ktorfit HTTP interface
+     *
+     * The `type/` subdirectory is preserved as it contains handwritten code:
+     * - `IncomingUpdate.kt` - Marker interface for Update field types
+     * - `InputFile.kt` - Input file handling
+     * - `TelegramResponse.kt` - Response wrapper with error handling
+     */
     @get:OutputDirectory
     abstract val outputDir: DirectoryProperty
 
@@ -34,6 +144,56 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     private val replyMarkupTypes = mutableSetOf<String>() // Collected ReplyMarkup types
     private val updateFieldTypes = mutableSetOf<String>() // Types used in Update's optional non-primitive fields
 
+    /**
+     * Main entry point for code generation from the OpenAPI specification.
+     *
+     * This method orchestrates the entire code generation process:
+     *
+     * 1. **Parses the specification**: Reads the OpenAPI/Swagger JSON file using Jackson ObjectMapper
+     * 2. **Cleans output directories**: Deletes `model/`, `form/` directories and `TelegramBotApi.kt` file
+     * 3. **Stores all schemas**: Caches all schema definitions for reference during generation
+     * 4. **Collects ReplyMarkup types**: Scans all `reply_markup` fields to identify types for sealed interface
+     * 5. **Collects IncomingUpdate types**: Identifies types used in `Update`'s optional non-primitive fields
+     * 6. **Generates ReplyMarkup interface**: Creates sealed interface if any ReplyMarkup types were found
+     * 7. **Generates data models**: Creates all data classes for API entities (excluding InputFile)
+     * 8. **Generates API interface**: Creates the Ktorfit HTTP interface with all endpoints
+     *
+     * ## Output Structure
+     *
+     * Generated files are written to the configured output directory:
+     * ```
+     * com/hiczp/telegram/bot/api/
+     * ├── TelegramBotApi.kt           # Ktorfit HTTP interface with all API methods
+     * ├── form/                       # Form data wrapper classes for multipart uploads
+     * │   ├── *Form.kt                # Classes with InputFile → FormPart<ChannelProvider> conversion
+     * │   └── Forms.kt                # Extension functions for multipart operations
+     * ├── model/                      # Data model classes (100+ files)
+     * │   ├── ReplyMarkup.kt          # Sealed interface with @JsonClassDiscriminator
+     * │   └── *.kt                    # All other data classes and sealed interfaces
+     * └── type/                       # Handwritten code (preserved, not regenerated)
+     *     ├── IncomingUpdate.kt       # Marker interface for Update field types
+     *     ├── InputFile.kt            # Input file handling
+     *     └── TelegramResponse.kt     # Response wrapper with error handling
+     * ```
+     *
+     * ## Type Collection Strategy
+     *
+     * - **ReplyMarkup types**: Collects from all `reply_markup` fields in request bodies and schemas,
+     *   extracting type names from oneOf/allOf $ref arrays
+     *
+     * - **IncomingUpdate types**: Collects from all optional (non-required) non-primitive fields in
+     *   the `Update` schema, excluding `MaybeInaccessibleMessage`
+     *
+     * ## Clean Build Strategy
+     *
+     * Before generating new code, the task cleans specific output locations:
+     * - Deletes `model/` directory completely (all generated data classes)
+     * - Deletes `form/` directory completely (all generated form classes)
+     * - Deletes `TelegramBotApi.kt` interface file
+     * - **Preserves** `type/` directory which contains handwritten code
+     *
+     * @throws Exception if specification parsing or code generation fails
+     */
     @TaskAction
     fun generate() {
         val swagger = ObjectMapper().readTree(swaggerFile.get().asFile)
@@ -66,7 +226,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         logger.lifecycle("Detected ReplyMarkup types: $replyMarkupTypes")
 
         // Collect all types used in Update's optional non-primitive fields
-        collectUpdateFieldTypes(swagger)
+        collectUpdateFieldTypes()
         logger.lifecycle("Detected Update field types: $updateFieldTypes")
 
         // Generate ReplyMarkup sealed interface if we found any types
@@ -85,7 +245,17 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
 
     /**
-     * Collect all types that appear in reply_markup fields across the entire swagger spec
+     * Collects all types that appear in `reply_markup` fields across the entire OpenAPI specification.
+     *
+     * This method scans:
+     * 1. All request bodies in API paths (both JSON and multipart content types)
+     * 2. All schemas with `reply_markup` properties
+     *
+     * For each `reply_markup` field found, extracts type names from:
+     * - oneOf arrays (multiple possible types)
+     * - allOf arrays (single type references)
+     *
+     * The collected types are stored in `replyMarkupTypes` and used to generate the `ReplyMarkup` sealed interface.
      */
     private fun collectReplyMarkupTypes(swagger: JsonNode) {
         val paths = swagger.get("paths") ?: return
@@ -111,9 +281,18 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     }
 
     /**
-     * Collect all types used in Update's optional non-primitive fields
+     * Collects all types used in `Update`'s optional non-primitive fields.
+     *
+     * This method:
+     * 1. Locates the `Update` schema in the specification
+     * 2. Iterates through all properties, skipping required fields (like `update_id`)
+     * 3. For each optional field, extracts the type name from direct $ref or allOf arrays
+     * 4. Excludes `MaybeInaccessibleMessage` as it's handled as a field-overlapping union
+     *
+     * The collected types are stored in `updateFieldTypes` and will implement the `IncomingUpdate` interface
+     * for polymorphic handling when deserializing Update objects.
      */
-    private fun collectUpdateFieldTypes(swagger: JsonNode) {
+    private fun collectUpdateFieldTypes() {
         val updateSchema = allSchemas["Update"] ?: return
         val properties = updateSchema.get("properties") ?: return
         val required = updateSchema.get("required")?.map { it.asText() }?.toSet() ?: emptySet()
@@ -129,7 +308,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             if (typeInfo.ref != null) {
                 val typeName = typeInfo.ref.substringAfterLast("/")
                 // Skip primitive types and special cases
-                if (typeName != "MaybeInaccessibleMessage") {
+                if (typeName != MAYBE_INACCESSIBLE_MESSAGE_TYPE) {
                     updateFieldTypes.add(typeName)
                 }
             }
@@ -137,7 +316,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             // Handle allOf
             if (typeInfo.allOf != null && typeInfo.allOf.isArray) {
                 extractTypeNamesFromRefArray(typeInfo.allOf).forEach { typeName ->
-                    if (typeName != "MaybeInaccessibleMessage") {
+                    if (typeName != MAYBE_INACCESSIBLE_MESSAGE_TYPE) {
                         updateFieldTypes.add(typeName)
                     }
                 }
@@ -149,7 +328,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         val content = requestBody.get("content") ?: return
 
         // Check both JSON and multipart content types
-        listOf("application/json", "multipart/form-data").forEach { contentType ->
+        listOf(CONTENT_TYPE_JSON, CONTENT_TYPE_MULTIPART).forEach { contentType ->
             val contentNode = content.get(contentType)
             if (contentNode != null) {
                 val schema = contentNode.get("schema")
@@ -165,7 +344,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     }
 
     /**
-     * Extracts type names from a oneOf or allOf array by extracting $ref values
+     * Extracts type names from a oneOf or allOf array by extracting $ref values.
      */
     private fun extractTypeNamesFromRefArray(refArray: JsonNode?): List<String> {
         if (refArray == null || !refArray.isArray) return emptyList()
@@ -190,7 +369,10 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     }
 
     /**
-     * Adds @Serializable annotation to a type builder if not a Form class
+     * Adds @Serializable annotation to a type builder unless it's a Form class.
+     *
+     * Form classes don't get @Serializable because they contain Ktor-specific types
+     * (FormPart<ChannelProvider>) that aren't serializable.
      */
     private fun TypeSpec.Builder.addSerializableAnnotationIfNeeded(isFormClass: Boolean): TypeSpec.Builder {
         if (!isFormClass) {
@@ -203,28 +385,33 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     }
 
     /**
-     * Adds ReplyMarkup superinterface if the class is a ReplyMarkup type
-     * Adds IncomingUpdate superinterface if the class is used in Update's optional fields
+     * Adds the `ReplyMarkup` superinterface if the class is a ReplyMarkup type.
+     *
+     * Types are identified as ReplyMarkup types by the `collectReplyMarkupTypes()` method.
      */
     private fun TypeSpec.Builder.addReplyMarkupInterfaceIfNeeded(className: String): TypeSpec.Builder {
         if (isReplyMarkupType(className)) {
-            addSuperinterface(ClassName("com.hiczp.telegram.bot.api.model", "ReplyMarkup"))
+            addSuperinterface(ClassName(MODEL_PACKAGE, REPLY_MARKUP_INTERFACE))
         }
         return this
     }
 
     /**
-     * Adds IncomingUpdate superinterface if the class is used in Update's optional fields
+     * Adds the `IncomingUpdate` superinterface if the class is used in `Update`'s optional fields.
+     *
+     * Types are identified as IncomingUpdate types by the `collectUpdateFieldTypes()` method.
      */
     private fun TypeSpec.Builder.addIncomingUpdateInterfaceIfNeeded(className: String): TypeSpec.Builder {
         if (isUpdateFieldType(className)) {
-            addSuperinterface(ClassName("com.hiczp.telegram.bot.api.type", "IncomingUpdate"))
+            addSuperinterface(ClassName(TYPE_PACKAGE, INCOMING_UPDATE_INTERFACE))
         }
         return this
     }
 
     /**
-     * Adds KDoc to a type builder if the description is not null
+     * Adds KDoc documentation to a type builder if the description is present.
+     *
+     * The description is sanitized to ensure valid KDoc format (escaping special characters, etc.).
      */
     private fun TypeSpec.Builder.addKDocIfPresent(description: String?): TypeSpec.Builder {
         if (description != null) {
@@ -234,7 +421,13 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     }
 
     /**
-     * Configures a type builder with common annotations and documentation
+     * Configures a type builder with common annotations and documentation.
+     *
+     * This is a convenience method that applies:
+     * - @Serializable annotation (unless it's a Form class)
+     * - ReplyMarkup interface inheritance (if applicable)
+     * - IncomingUpdate interface inheritance (if applicable)
+     * - KDoc documentation (if description is present)
      */
     private fun TypeSpec.Builder.configureTypeBuilder(
         className: String,
@@ -249,7 +442,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     }
 
     /**
-     * Data class to hold schema type information
+     * Data class to hold extracted schema type information from an OpenAPI schema node.
      */
     private data class SchemaTypeInfo(
         val type: String?,
@@ -260,7 +453,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     )
 
     /**
-     * Data class to hold common class generation info extracted from a schema
+     * Data class to hold common class generation information extracted from an object schema.
      */
     private data class ClassGenerationInfo(
         val description: String?,
@@ -269,7 +462,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     )
 
     /**
-     * Extracts common class generation info from a schema.
+     * Extracts common class generation information from an object schema.
      * Returns null if the schema doesn't have properties.
      */
     private fun extractClassGenerationInfo(schema: JsonNode): ClassGenerationInfo? {
@@ -282,7 +475,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     }
 
     /**
-     * Extracts common type information from a schema
+     * Extracts common type information from a schema node into a structured format.
      */
     private fun extractSchemaTypeInfo(schema: JsonNode?): SchemaTypeInfo {
         if (schema == null) {
@@ -298,32 +491,35 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     }
 
     /**
-     * Checks if a schema represents an InputFile type
+     * Checks if a schema represents an InputFile type or a union containing InputFile.
+     *
+     * Checks for direct $ref to InputFile, oneOf array containing InputFile, or allOf array containing InputFile.
      */
     private fun isInputFileType(ref: String?, oneOf: JsonNode?, allOf: JsonNode? = null): Boolean {
-        val isInputFile = ref?.substringAfterLast("/") == "InputFile"
+        val isInputFile = ref?.substringAfterLast("/") == INPUT_FILE_TYPE
         val canBeInputFile = oneOf != null && oneOf.any {
-            it.get($$"$ref")?.asText()?.substringAfterLast("/") == "InputFile"
+            it.get($$"$ref")?.asText()?.substringAfterLast("/") == INPUT_FILE_TYPE
         }
         val isInputFileViaAllOf = allOf != null && allOf.any {
-            it.get($$"$ref")?.asText()?.substringAfterLast("/") == "InputFile"
+            it.get($$"$ref")?.asText()?.substringAfterLast("/") == INPUT_FILE_TYPE
         }
         return isInputFile || canBeInputFile || isInputFileViaAllOf
     }
 
     /**
-     * Determines the type name for a oneOf schema.
-     * Tries to find a common parent type in allSchemas, otherwise falls back to primitive type detection.
-     * 
-     * @param oneOf The oneOf JSON node
-     * @param context Optional context string for logging (e.g., "ClassName.propertyName")
+     * Determines the appropriate Kotlin type name for a oneOf union schema.
+     *
+     * Strategy:
+     * 1. Check if this is a ReplyMarkup union → return ReplyMarkup interface
+     * 2. Try to find a parent type in allSchemas that has a oneOf containing these refs
+     * 3. Fallback to determining the largest primitive type for basic type unions
      */
     private fun determineOneOfType(oneOf: JsonNode, context: String? = null): TypeName {
         val refs = oneOf.mapNotNull { it.get($$"$ref")?.asText()?.substringAfterLast("/") }
 
         // Check if this is a ReplyMarkup oneOf
         if (isReplyMarkupOneOf(refs)) {
-            return ClassName("com.hiczp.telegram.bot.api.model", "ReplyMarkup")
+            return ClassName(MODEL_PACKAGE, REPLY_MARKUP_INTERFACE)
         }
 
         // Try to find a common parent type in allSchemas
@@ -331,7 +527,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         if (refs.isNotEmpty()) {
             val parentType = findParentTypeForOneOf(refs)
             if (parentType != null) {
-                return ClassName("com.hiczp.telegram.bot.api.model", parentType)
+                return ClassName(MODEL_PACKAGE, parentType)
             }
         }
 
@@ -340,7 +536,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     }
 
     /**
-     * Find a parent type in allSchemas that has a oneOf containing exactly the given refs.
+     * Finds a parent type in allSchemas that has a oneOf containing all the given refs.
      */
     private fun findParentTypeForOneOf(refs: List<String>): String? {
         val refsSet = refs.toSet()
@@ -359,7 +555,10 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     }
 
     /**
-     * Creates a property builder with @SerialName annotation and KDoc if needed
+     * Creates a property builder with snake_case to camelCase conversion.
+     *
+     * Adds @SerialName annotation if the camelCase name differs from the original snake_case name.
+     * Also adds KDoc documentation if a description is provided.
      */
     private fun createPropertyBuilder(
         propName: String,
@@ -387,7 +586,9 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     }
 
     /**
-     * Creates a parameter builder with a default value if not required
+     * Creates a constructor parameter builder with optional default value.
+     *
+     * Non-required parameters get a default value of `null`.
      */
     private fun createParameterBuilder(
         propName: String,
@@ -403,7 +604,9 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     }
 
     /**
-     * Creates and configures a property with its parameter for a data class
+     * Creates and adds a property with its constructor parameter to a data class.
+     *
+     * This overload determines the property type from the schema.
      */
     private fun addPropertyWithParameter(
         classBuilder: TypeSpec.Builder,
@@ -426,7 +629,9 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     }
 
     /**
-     * Creates and configures a property with its parameter for a data class (with custom type determination)
+     * Creates and adds a property with its constructor parameter to a data class.
+     *
+     * This overload accepts an already-determined property type.
      */
     private fun addPropertyWithParameter(
         classBuilder: TypeSpec.Builder,
@@ -446,8 +651,8 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     }
 
     private fun generateReplyMarkupInterface(outputDir: File) {
-        val packageName = "com.hiczp.telegram.bot.api.model"
-        val className = "ReplyMarkup"
+        val packageName = MODEL_PACKAGE
+        val className = REPLY_MARKUP_INTERFACE
 
         val fileSpec = createFileSpec(packageName, className, "Sealed interface for reply markup types")
 
@@ -467,13 +672,13 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
     private fun generateModels(swagger: JsonNode, outputDir: File) {
         val schemas = swagger.get("components")?.get("schemas") ?: return
-        val modelPackage = "com.hiczp.telegram.bot.api.model"
+        val modelPackage = MODEL_PACKAGE
 
         schemas.fields().forEach { (schemaName, schemaNode) ->
             if (schemaName in processedSchemas) return@forEach
 
             // Skip InputFile - it's hardcoded as String
-            if (schemaName == "InputFile") {
+            if (schemaName == INPUT_FILE_TYPE) {
                 processedSchemas.add(schemaName)
                 return@forEach
             }
@@ -516,7 +721,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                 }
             }
 
-            // First, check if schema has explicit discriminator definition
+            // First, check if the schema has an explicit discriminator definition
             val discriminatorResult = extractDiscriminatorFromSchema(schema, unionMembers)
             val fallbackDiscriminatorInfo =
                 if (discriminatorResult == null) findDiscriminatorInfo(unionMembers) else null
@@ -612,6 +817,33 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                         )
                     }
 
+                    // For Form classes, check for additionalProperties with binary format (dynamic file attachments)
+                    if (isFormClass) {
+                        val additionalProperties = schema.get("additionalProperties")
+                        val hasBinaryAdditionalProperties = additionalProperties != null &&
+                                additionalProperties.get("type")?.asText() == "string" &&
+                                additionalProperties.get("format")?.asText() == "binary"
+
+                        if (hasBinaryAdditionalProperties) {
+                            val attachmentsType = LIST.parameterizedBy(
+                                ClassName("io.ktor.client.request.forms", "FormPart")
+                                    .parameterizedBy(ClassName("io.ktor.client.request.forms", "ChannelProvider"))
+                            ).copy(nullable = true)
+
+                            val attachmentsDescription = additionalProperties.get("description")?.asText()
+                                ?: "Additional file attachments referenced via attach://<file_attach_name> in media fields"
+
+                            addPropertyWithParameter(
+                                classBuilder,
+                                constructorBuilder,
+                                "attachments",
+                                attachmentsType,
+                                attachmentsDescription,
+                                false // not required
+                            )
+                        }
+                    }
+
                     classBuilder.primaryConstructor(constructorBuilder.build())
                     fileSpec.addType(classBuilder.build())
                 }
@@ -645,7 +877,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     private fun shouldUseLargestSubclass(parentName: String, unionMembers: List<String>): Boolean {
         // Special handling for MaybeInaccessibleMessage: use Message as a deserialization type
         // but keep InaccessibleMessage as a separate serializable class
-        if (parentName == "MaybeInaccessibleMessage") return true
+        if (parentName == MAYBE_INACCESSIBLE_MESSAGE_TYPE) return true
 
         val memberSchemas = unionMembers.mapNotNull { allSchemas[it] }
         if (memberSchemas.size != unionMembers.size) return false
@@ -683,7 +915,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     )
 
     /**
-     * Extract discriminator info from OpenAPI discriminator field in schema.
+     * Extract discriminator info from the OpenAPI discriminator field in the schema.
      * 
      * Returns a DiscriminatorExtractionResult that includes:
      * - The discriminator info (property name and member values)
@@ -790,7 +1022,6 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         // Extract from description patterns like: always "value" or must be "value"
         val description = field.get("description")?.asText() ?: return null
 
-        @Suppress("GrazieInspection")
         // Pattern: always "value" or Type of ..., always "value"
         val alwaysPattern = """always\s+"([^"]+)"""".toRegex()
         val match = alwaysPattern.find(description)
@@ -906,7 +1137,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
         // Add IncomingUpdate interface if this class is used in Update's optional fields
         if (isUpdateFieldType(className)) {
-            classBuilder.addSuperinterface(ClassName("com.hiczp.telegram.bot.api.type", "IncomingUpdate"))
+            classBuilder.addSuperinterface(ClassName(TYPE_PACKAGE, INCOMING_UPDATE_INTERFACE))
         }
 
         val constructorBuilder = FunSpec.constructorBuilder()
@@ -1020,7 +1251,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
         // Add IncomingUpdate interface if this class is used in Update's optional fields
         if (isUpdateFieldType(className)) {
-            classBuilder.addSuperinterface(ClassName("com.hiczp.telegram.bot.api.type", "IncomingUpdate"))
+            classBuilder.addSuperinterface(ClassName(TYPE_PACKAGE, INCOMING_UPDATE_INTERFACE))
         }
 
         val constructorBuilder = FunSpec.constructorBuilder()
@@ -1029,7 +1260,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         val discriminatorFieldName = discriminatorInfo.fieldName
         val discriminatorCamelName = snakeToCamelCase(discriminatorFieldName)
 
-        // Add discriminator property with default value
+        // Add the discriminator property with a default value
         val discriminatorProperty = PropertySpec.builder(discriminatorCamelName, STRING)
             .initializer(discriminatorCamelName)
         if (discriminatorCamelName != discriminatorFieldName) {
@@ -1128,7 +1359,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
         // Add IncomingUpdate interface if this class is used in Update's optional fields
         if (isUpdateFieldType(className)) {
-            classBuilder.addSuperinterface(ClassName("com.hiczp.telegram.bot.api.type", "IncomingUpdate"))
+            classBuilder.addSuperinterface(ClassName(TYPE_PACKAGE, INCOMING_UPDATE_INTERFACE))
         }
 
         val constructorBuilder = FunSpec.constructorBuilder()
@@ -1269,9 +1500,9 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
      */
     private fun resolveTypeName(typeName: String): TypeName {
         return when (typeName) {
-            "MaybeInaccessibleMessage" -> ClassName("com.hiczp.telegram.bot.api.model", "Message")
-            "InputFile" -> STRING  // InputFile is hardcoded to String, no class generated
-            else -> ClassName("com.hiczp.telegram.bot.api.model", typeName)
+            MAYBE_INACCESSIBLE_MESSAGE_TYPE -> ClassName(MODEL_PACKAGE, MESSAGE_TYPE)
+            INPUT_FILE_TYPE -> STRING  // InputFile is hardcoded to String, no class generated
+            else -> ClassName(MODEL_PACKAGE, typeName)
         }
     }
 
@@ -1339,7 +1570,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     }
 
     private fun generateApiInterface(swagger: JsonNode, outputDir: File) {
-        val packageName = "com.hiczp.telegram.bot.api"
+        val packageName = BASE_PACKAGE
         val className = "TelegramBotApi"
 
         val fileSpec = createFileSpec(packageName, className)
@@ -1589,7 +1820,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         } else if (schema.get("type")?.asText() == "object") {
             // Generate a request body class for inline object schema
             val className = generateRequestBodyClass(operationId, schema, outputDir)
-            ClassName("com.hiczp.telegram.bot.api.model", className)
+            ClassName(MODEL_PACKAGE, className)
         } else {
             // Fallback to determinePropertyType for other cases
             determinePropertyType(schema, context = "$operationId.body")
@@ -1617,7 +1848,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         val className = operationId.replaceFirstChar { it.uppercase() } + if (isMultipart) "Form" else "Request"
 
         // Generate the request body class in the appropriate package
-        val packageName = if (isMultipart) "com.hiczp.telegram.bot.api.form" else "com.hiczp.telegram.bot.api.model"
+        val packageName = if (isMultipart) FORM_PACKAGE else MODEL_PACKAGE
         generateRegularClass(packageName, className, schema, outputDir)
 
         // Mark as processed
@@ -1637,12 +1868,18 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
         // Generate the class name from operation ID: sendPhoto -> SendPhotoForm
         val className = operationId.replaceFirstChar { it.uppercase() } + "Form"
-        val packageName = "com.hiczp.telegram.bot.api.form"
+        val packageName = FORM_PACKAGE
 
         val fileSpec = createFileSpec(packageName, className)
 
         val properties = schema.get("properties")
         val required = schema.get("required")?.map { it.asText() }?.toSet() ?: emptySet()
+
+        // Check for additionalProperties with binary format (dynamic file attachments)
+        val additionalProperties = schema.get("additionalProperties")
+        val hasBinaryAdditionalProperties = additionalProperties != null &&
+                additionalProperties.get("type")?.asText() == "string" &&
+                additionalProperties.get("format")?.asText() == "binary"
 
         if (properties != null && properties.isObject && properties.fields().hasNext()) {
             val classBuilder = TypeSpec.classBuilder(className)
@@ -1663,6 +1900,26 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                     propType,
                     propDescription,
                     isRequired
+                )
+            }
+
+            // Add attachments field if additionalProperties has binary format
+            if (hasBinaryAdditionalProperties) {
+                val attachmentsType = LIST.parameterizedBy(
+                    ClassName("io.ktor.client.request.forms", "FormPart")
+                        .parameterizedBy(ClassName("io.ktor.client.request.forms", "ChannelProvider"))
+                ).copy(nullable = true)
+
+                val attachmentsDescription = additionalProperties.get("description")?.asText()
+                    ?: "Additional file attachments referenced via attach://<file_attach_name> in media fields"
+
+                addPropertyWithParameter(
+                    classBuilder,
+                    constructorBuilder,
+                    "attachments",
+                    attachmentsType,
+                    attachmentsDescription,
+                    false // not required
                 )
             }
 
@@ -1706,12 +1963,12 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             // Extract the result type
             val resultProperty = properties.get("result")
             val resultType = determinePropertyType(resultProperty, context = "$operationId.response.result")
-            return ClassName("com.hiczp.telegram.bot.api.type", "TelegramResponse").parameterizedBy(resultType)
+            return ClassName(TYPE_PACKAGE, TELEGRAM_RESPONSE_TYPE).parameterizedBy(resultType)
         }
 
         // Fallback to the schema type directly wrapped in TelegramResponse
         val schemaType = determinePropertyType(schema, context = "$operationId.response")
-        return ClassName("com.hiczp.telegram.bot.api.type", "TelegramResponse").parameterizedBy(schemaType)
+        return ClassName(TYPE_PACKAGE, TELEGRAM_RESPONSE_TYPE).parameterizedBy(schemaType)
     }
 
     private fun generateOperationId(method: String, path: String): String {
@@ -1787,7 +2044,21 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         val fileSpec = createFileSpec(
             "$packageName.form",
             "Forms",
-            "Extension functions for multipart operations"
+            """
+                    Extension functions for Telegram Bot API multipart operations.
+    
+                    This file provides three types of convenient functions for operations that require
+                    multipart form data with file uploads:
+                    
+                    1. **Scatter functions**: Accept individual parameters as named arguments
+                       Example: `api.sendPhoto(chatId = 123, photo = fileChannel)`
+                    
+                    2. **Bridge functions**: Accept String file refs and convert to FormPart
+                       Example: `api.sendPhoto(chatId = 123, photo = "fileId")`
+                    
+                    3. **Form functions**: Accept pre-constructed form wrapper classes
+                       Example: `api.sendPhoto(form = SendPhotoForm(...))`
+                   """.trimIndent()
         )
         // Add `@file:Suppress` annotation to suppress duplicate code warnings
         fileSpec.addAnnotation(
@@ -1852,7 +2123,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
         val functionBuilder = FunSpec.builder(operationId)
             .addModifiers(KModifier.SUSPEND)
-            .receiver(ClassName("com.hiczp.telegram.bot.api", interfaceName))
+            .receiver(ClassName(BASE_PACKAGE, interfaceName))
             .returns(returnType)
 
         // Add parameters for each property
@@ -1867,6 +2138,24 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                 paramBuilder.defaultValue("null")
             }
             functionBuilder.addParameter(paramBuilder.build())
+        }
+
+        // Check for additionalProperties with binary format (dynamic file attachments)
+        val additionalProperties = schema.get("additionalProperties")
+        val hasBinaryAdditionalProperties = additionalProperties != null &&
+                additionalProperties.get("type")?.asText() == "string" &&
+                additionalProperties.get("format")?.asText() == "binary"
+
+        if (hasBinaryAdditionalProperties) {
+            val attachmentsType = LIST.parameterizedBy(
+                ClassName("io.ktor.client.request.forms", "FormPart")
+                    .parameterizedBy(ClassName("io.ktor.client.request.forms", "ChannelProvider"))
+            ).copy(nullable = true)
+
+            val attachmentsParam = ParameterSpec.builder("attachments", attachmentsType)
+                .defaultValue("null")
+                .build()
+            functionBuilder.addParameter(attachmentsParam)
         }
 
         // Build the function body - construct MultiPartFormDataContent and call the interface method
@@ -1909,7 +2198,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                     }
                 } else {
                     // Primitive or complex type
-                    addFormAppend(codeBuilder, propName, camelName, propSchema)
+                    appendRequiredFormData(codeBuilder, propName, camelName, propSchema)
                 }
             } else {
                 // Optional parameter - check for null
@@ -1934,10 +2223,15 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                     }
                 } else {
                     codeBuilder.beginControlFlow("%L?.let", camelName)
-                    addFormAppendForLet(codeBuilder, propName, propSchema)
+                    appendOptionalFormData(codeBuilder, propName, propSchema)
                     codeBuilder.endControlFlow()
                 }
             }
+        }
+
+        // Append attachments if this form has binary additionalProperties
+        if (hasBinaryAdditionalProperties) {
+            codeBuilder.addStatement("attachments?.forEach { append(it) }")
         }
 
         codeBuilder.unindent()
@@ -1952,7 +2246,11 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     /**
      * Add a form append statement for a required parameter using FormBuilder.append(key, value)
      */
-    private fun addFormAppend(
+    /**
+     * Appends a required form data field to the multipart form data content.
+     * Handles primitive types and complex objects with proper serialization.
+     */
+    private fun appendRequiredFormData(
         codeBuilder: CodeBlock.Builder,
         propName: String,
         camelName: String,
@@ -1979,7 +2277,11 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     /**
      * Add a form append statement inside a let block (uses 'it' instead of the variable name)
      */
-    private fun addFormAppendForLet(codeBuilder: CodeBlock.Builder, propName: String, propSchema: JsonNode) {
+    /**
+     * Appends an optional form data field to the multipart form data content.
+     * Wraps the field in a `?.let { }` block for null safety.
+     */
+    private fun appendOptionalFormData(codeBuilder: CodeBlock.Builder, propName: String, propSchema: JsonNode) {
         val resolvedType = determinePropertyType(propSchema, forMultipart = true, context = null)
         when (resolvedType) {
             STRING -> codeBuilder.addStatement("append(%S, it)", propName)
@@ -2028,7 +2330,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             }
         }
 
-        // If no file parameters, don't generate bridge function
+        // If no file parameters, don't generate the bridge function
         if (!hasFileParameters) {
             return null
         }
@@ -2168,8 +2470,8 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
         val functionBuilder = FunSpec.builder(operationId)
             .addModifiers(KModifier.SUSPEND)
-            .receiver(ClassName("com.hiczp.telegram.bot.api", interfaceName))
-            .addParameter("form", ClassName("com.hiczp.telegram.bot.api.form", formClassName))
+            .receiver(ClassName(BASE_PACKAGE, interfaceName))
+            .addParameter("form", ClassName(FORM_PACKAGE, formClassName))
             .returns(returnType)
 
         // Build the function call - call the scattered parameter extension function
@@ -2181,6 +2483,16 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         properties?.fields()?.forEach { (propName, _) ->
             val camelName = snakeToCamelCase(propName)
             paramsList.add("$camelName = form.$camelName")
+        }
+
+        // Check for additionalProperties with binary format (dynamic file attachments)
+        val additionalProperties = schema.get("additionalProperties")
+        val hasBinaryAdditionalProperties = additionalProperties != null &&
+                additionalProperties.get("type")?.asText() == "string" &&
+                additionalProperties.get("format")?.asText() == "binary"
+
+        if (hasBinaryAdditionalProperties) {
+            paramsList.add("attachments = form.attachments")
         }
 
         paramsList.forEachIndexed { index, param ->

@@ -8,7 +8,6 @@
 
 package com.hiczp.telegram.bot.api
 
-import com.hiczp.telegram.bot.api.model.AddStickerToSetRequest
 import com.hiczp.telegram.bot.api.model.AnswerCallbackQueryRequest
 import com.hiczp.telegram.bot.api.model.AnswerInlineQueryRequest
 import com.hiczp.telegram.bot.api.model.AnswerPreCheckoutQueryRequest
@@ -37,7 +36,6 @@ import com.hiczp.telegram.bot.api.model.CreateChatInviteLinkRequest
 import com.hiczp.telegram.bot.api.model.CreateChatSubscriptionInviteLinkRequest
 import com.hiczp.telegram.bot.api.model.CreateForumTopicRequest
 import com.hiczp.telegram.bot.api.model.CreateInvoiceLinkRequest
-import com.hiczp.telegram.bot.api.model.CreateNewStickerSetRequest
 import com.hiczp.telegram.bot.api.model.DeclineChatJoinRequestRequest
 import com.hiczp.telegram.bot.api.model.DeclineSuggestedPostRequest
 import com.hiczp.telegram.bot.api.model.DeleteBusinessMessagesRequest
@@ -60,7 +58,6 @@ import com.hiczp.telegram.bot.api.model.EditMessageChecklistRequest
 import com.hiczp.telegram.bot.api.model.EditMessageLiveLocationRequest
 import com.hiczp.telegram.bot.api.model.EditMessageReplyMarkupRequest
 import com.hiczp.telegram.bot.api.model.EditMessageTextRequest
-import com.hiczp.telegram.bot.api.model.EditStoryRequest
 import com.hiczp.telegram.bot.api.model.EditUserStarSubscriptionRequest
 import com.hiczp.telegram.bot.api.model.ExportChatInviteLinkRequest
 import com.hiczp.telegram.bot.api.model.File
@@ -78,7 +75,6 @@ import com.hiczp.telegram.bot.api.model.MessageId
 import com.hiczp.telegram.bot.api.model.OwnedGifts
 import com.hiczp.telegram.bot.api.model.PinChatMessageRequest
 import com.hiczp.telegram.bot.api.model.Poll
-import com.hiczp.telegram.bot.api.model.PostStoryRequest
 import com.hiczp.telegram.bot.api.model.PreparedInlineMessage
 import com.hiczp.telegram.bot.api.model.PromoteChatMemberRequest
 import com.hiczp.telegram.bot.api.model.ReadBusinessMessageRequest
@@ -88,7 +84,6 @@ import com.hiczp.telegram.bot.api.model.RemoveChatVerificationRequest
 import com.hiczp.telegram.bot.api.model.RemoveUserVerificationRequest
 import com.hiczp.telegram.bot.api.model.ReopenForumTopicRequest
 import com.hiczp.telegram.bot.api.model.ReopenGeneralForumTopicRequest
-import com.hiczp.telegram.bot.api.model.ReplaceStickerInSetRequest
 import com.hiczp.telegram.bot.api.model.RepostStoryRequest
 import com.hiczp.telegram.bot.api.model.RestrictChatMemberRequest
 import com.hiczp.telegram.bot.api.model.RevokeChatInviteLinkRequest
@@ -103,14 +98,12 @@ import com.hiczp.telegram.bot.api.model.SendInvoiceRequest
 import com.hiczp.telegram.bot.api.model.SendLocationRequest
 import com.hiczp.telegram.bot.api.model.SendMessageDraftRequest
 import com.hiczp.telegram.bot.api.model.SendMessageRequest
-import com.hiczp.telegram.bot.api.model.SendPaidMediaRequest
 import com.hiczp.telegram.bot.api.model.SendPollRequest
 import com.hiczp.telegram.bot.api.model.SendVenueRequest
 import com.hiczp.telegram.bot.api.model.SentWebAppMessage
 import com.hiczp.telegram.bot.api.model.SetBusinessAccountBioRequest
 import com.hiczp.telegram.bot.api.model.SetBusinessAccountGiftSettingsRequest
 import com.hiczp.telegram.bot.api.model.SetBusinessAccountNameRequest
-import com.hiczp.telegram.bot.api.model.SetBusinessAccountProfilePhotoRequest
 import com.hiczp.telegram.bot.api.model.SetBusinessAccountUsernameRequest
 import com.hiczp.telegram.bot.api.model.SetChatAdministratorCustomTitleRequest
 import com.hiczp.telegram.bot.api.model.SetChatDescriptionRequest
@@ -125,7 +118,6 @@ import com.hiczp.telegram.bot.api.model.SetMyCommandsRequest
 import com.hiczp.telegram.bot.api.model.SetMyDefaultAdministratorRightsRequest
 import com.hiczp.telegram.bot.api.model.SetMyDescriptionRequest
 import com.hiczp.telegram.bot.api.model.SetMyNameRequest
-import com.hiczp.telegram.bot.api.model.SetMyProfilePhotoRequest
 import com.hiczp.telegram.bot.api.model.SetMyShortDescriptionRequest
 import com.hiczp.telegram.bot.api.model.SetPassportDataErrorsRequest
 import com.hiczp.telegram.bot.api.model.SetStickerEmojiListRequest
@@ -304,7 +296,7 @@ public interface TelegramBotApi {
      * Use this method to send paid media. On success, the sent Message is returned.
      */
     @POST("sendPaidMedia")
-    public suspend fun sendPaidMedia(@Body body: SendPaidMediaRequest): TelegramResponse<Message>
+    public suspend fun sendPaidMedia(@Body formData: MultiPartFormDataContent): TelegramResponse<Message>
 
     /**
      * Use this method to send a group of photos, videos, documents or audios as an album. Documents and audio files can be only grouped in an album with messages of the same type. On success, an array of Message objects that were sent is returned.
@@ -770,7 +762,7 @@ public interface TelegramBotApi {
      * Changes the profile photo of the bot. Returns True on success.
      */
     @POST("setMyProfilePhoto")
-    public suspend fun setMyProfilePhoto(@Body body: SetMyProfilePhotoRequest): TelegramResponse<Boolean>
+    public suspend fun setMyProfilePhoto(@Body formData: MultiPartFormDataContent): TelegramResponse<Boolean>
 
     /**
      * Removes the profile photo of the bot. Requires no parameters. Returns True on success.
@@ -882,7 +874,7 @@ public interface TelegramBotApi {
      * Changes the profile photo of a managed business account. Requires the can_edit_profile_photo business bot right. Returns True on success.
      */
     @POST("setBusinessAccountProfilePhoto")
-    public suspend fun setBusinessAccountProfilePhoto(@Body body: SetBusinessAccountProfilePhotoRequest): TelegramResponse<Boolean>
+    public suspend fun setBusinessAccountProfilePhoto(@Body formData: MultiPartFormDataContent): TelegramResponse<Boolean>
 
     /**
      * Removes the current profile photo of a managed business account. Requires the can_edit_profile_photo business bot right. Returns True on success.
@@ -1018,7 +1010,7 @@ public interface TelegramBotApi {
      * Posts a story on behalf of a managed business account. Requires the can_manage_stories business bot right. Returns Story on success.
      */
     @POST("postStory")
-    public suspend fun postStory(@Body body: PostStoryRequest): TelegramResponse<Story>
+    public suspend fun postStory(@Body formData: MultiPartFormDataContent): TelegramResponse<Story>
 
     /**
      * Reposts a story on behalf of a business account from another business account. Both business accounts must be managed by the same bot, and the story on the source account must have been posted (or reposted) by the bot. Requires the can_manage_stories business bot right for both business accounts. Returns Story on success.
@@ -1030,7 +1022,7 @@ public interface TelegramBotApi {
      * Edits a story previously posted by the bot on behalf of a managed business account. Requires the can_manage_stories business bot right. Returns Story on success.
      */
     @POST("editStory")
-    public suspend fun editStory(@Body body: EditStoryRequest): TelegramResponse<Story>
+    public suspend fun editStory(@Body formData: MultiPartFormDataContent): TelegramResponse<Story>
 
     /**
      * Deletes a story previously posted by the bot on behalf of a managed business account. Requires the can_manage_stories business bot right. Returns True on success.
@@ -1142,13 +1134,13 @@ public interface TelegramBotApi {
      * Use this method to create a new sticker set owned by a user. The bot will be able to edit the sticker set thus created. Returns True on success.
      */
     @POST("createNewStickerSet")
-    public suspend fun createNewStickerSet(@Body body: CreateNewStickerSetRequest): TelegramResponse<Boolean>
+    public suspend fun createNewStickerSet(@Body formData: MultiPartFormDataContent): TelegramResponse<Boolean>
 
     /**
      * Use this method to add a new sticker to a set created by the bot. Emoji sticker sets can have up to 200 stickers. Other sticker sets can have up to 120 stickers. Returns True on success.
      */
     @POST("addStickerToSet")
-    public suspend fun addStickerToSet(@Body body: AddStickerToSetRequest): TelegramResponse<Boolean>
+    public suspend fun addStickerToSet(@Body formData: MultiPartFormDataContent): TelegramResponse<Boolean>
 
     /**
      * Use this method to move a sticker in a set created by the bot to a specific position. Returns True on success.
@@ -1166,7 +1158,7 @@ public interface TelegramBotApi {
      * Use this method to replace an existing sticker in a sticker set with a new one. The method is equivalent to calling deleteStickerFromSet, then addStickerToSet, then setStickerPositionInSet. Returns True on success.
      */
     @POST("replaceStickerInSet")
-    public suspend fun replaceStickerInSet(@Body body: ReplaceStickerInSetRequest): TelegramResponse<Boolean>
+    public suspend fun replaceStickerInSet(@Body formData: MultiPartFormDataContent): TelegramResponse<Boolean>
 
     /**
      * Use this method to change the list of emoji assigned to a regular or custom emoji sticker. The sticker must belong to a sticker set created by the bot. Returns True on success.

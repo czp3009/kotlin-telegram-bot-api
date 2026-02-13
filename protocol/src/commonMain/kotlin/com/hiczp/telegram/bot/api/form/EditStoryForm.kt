@@ -1,14 +1,17 @@
 // Auto-generated from Swagger specification, do not modify this file manually
-package com.hiczp.telegram.bot.api.model
+package com.hiczp.telegram.bot.api.form
 
+import com.hiczp.telegram.bot.api.model.InputStoryContent
+import com.hiczp.telegram.bot.api.model.MessageEntity
+import com.hiczp.telegram.bot.api.model.StoryArea
+import io.ktor.client.request.forms.ChannelProvider
+import io.ktor.client.request.forms.FormPart
 import kotlin.Long
 import kotlin.String
 import kotlin.collections.List
 import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 
-@Serializable
-public data class EditStoryRequest(
+public data class EditStoryForm(
     /**
      * Unique identifier of the business connection
      */
@@ -41,4 +44,8 @@ public data class EditStoryRequest(
      * A JSON-serialized list of clickable areas to be shown on the story
      */
     public val areas: List<StoryArea>? = null,
+    /**
+     * Additional file attachments referenced via attach://<file_attach_name> in media fields
+     */
+    public val attachments: List<FormPart<ChannelProvider>>? = null,
 )

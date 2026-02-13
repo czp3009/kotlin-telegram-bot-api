@@ -1,4 +1,16 @@
-// Auto-generated from Swagger specification, do not modify this file manuallyExtension functions for multipart operations
+// Auto-generated from Swagger specification, do not modify this file manuallyExtension functions for Telegram Bot API multipart operations.
+//
+// This file provides three types of convenient functions for operations that require
+// multipart form data with file uploads:
+//
+// 1. **Scatter functions**: Accept individual parameters as named arguments
+//    Example: `api.sendPhoto(chatId = 123, photo = fileChannel)`
+//
+// 2. **Bridge functions**: Accept String file refs and convert to FormPart
+//    Example: `api.sendPhoto(chatId = 123, photo = "fileId")`
+//
+// 3. **Form functions**: Accept pre-constructed form wrapper classes
+//    Example: `api.sendPhoto(form = SendPhotoForm(...))`
 @file:Suppress(
     "RedundantVisibilityModifier",
     "unused",
@@ -11,10 +23,16 @@ import com.hiczp.telegram.bot.api.TelegramBotApi
 import com.hiczp.telegram.bot.api.model.File
 import com.hiczp.telegram.bot.api.model.InlineKeyboardMarkup
 import com.hiczp.telegram.bot.api.model.InputMedia
+import com.hiczp.telegram.bot.api.model.InputPaidMedia
+import com.hiczp.telegram.bot.api.model.InputProfilePhoto
+import com.hiczp.telegram.bot.api.model.InputSticker
+import com.hiczp.telegram.bot.api.model.InputStoryContent
 import com.hiczp.telegram.bot.api.model.Message
 import com.hiczp.telegram.bot.api.model.MessageEntity
 import com.hiczp.telegram.bot.api.model.ReplyMarkup
 import com.hiczp.telegram.bot.api.model.ReplyParameters
+import com.hiczp.telegram.bot.api.model.Story
+import com.hiczp.telegram.bot.api.model.StoryArea
 import com.hiczp.telegram.bot.api.model.SuggestedPostParameters
 import com.hiczp.telegram.bot.api.type.TelegramResponse
 import io.ktor.client.request.forms.ChannelProvider
@@ -1049,6 +1067,98 @@ public suspend fun TelegramBotApi.sendVideoNote(form: SendVideoNoteForm): Telegr
     replyMarkup = form.replyMarkup
 )
 
+public suspend fun TelegramBotApi.sendPaidMedia(
+    businessConnectionId: String? = null,
+    chatId: String,
+    messageThreadId: Long? = null,
+    directMessagesTopicId: Long? = null,
+    starCount: Long,
+    media: List<InputPaidMedia>,
+    payload: String? = null,
+    caption: String? = null,
+    parseMode: String? = null,
+    captionEntities: List<MessageEntity>? = null,
+    showCaptionAboveMedia: Boolean? = null,
+    disableNotification: Boolean? = null,
+    protectContent: Boolean? = null,
+    allowPaidBroadcast: Boolean? = null,
+    suggestedPostParameters: SuggestedPostParameters? = null,
+    replyParameters: ReplyParameters? = null,
+    replyMarkup: ReplyMarkup? = null,
+    attachments: List<FormPart<ChannelProvider>>? = null,
+): TelegramResponse<Message> {
+    val formData = MultiPartFormDataContent(formData {
+        businessConnectionId?.let {
+            append("business_connection_id", it)
+        }
+        append("chat_id", chatId)
+        messageThreadId?.let {
+            append("message_thread_id", it.toString())
+        }
+        directMessagesTopicId?.let {
+            append("direct_messages_topic_id", it.toString())
+        }
+        append("star_count", starCount.toString())
+        append("media", Json.encodeToString(media))
+        payload?.let {
+            append("payload", it)
+        }
+        caption?.let {
+            append("caption", it)
+        }
+        parseMode?.let {
+            append("parse_mode", it)
+        }
+        captionEntities?.let {
+            append("caption_entities", Json.encodeToString(it))
+        }
+        showCaptionAboveMedia?.let {
+            append("show_caption_above_media", it.toString())
+        }
+        disableNotification?.let {
+            append("disable_notification", it.toString())
+        }
+        protectContent?.let {
+            append("protect_content", it.toString())
+        }
+        allowPaidBroadcast?.let {
+            append("allow_paid_broadcast", it.toString())
+        }
+        suggestedPostParameters?.let {
+            append("suggested_post_parameters", Json.encodeToString(it))
+        }
+        replyParameters?.let {
+            append("reply_parameters", Json.encodeToString(it))
+        }
+        replyMarkup?.let {
+            append("reply_markup", Json.encodeToString(it))
+        }
+        attachments?.forEach { append(it) }
+    })
+    return sendPaidMedia(formData)
+}
+
+public suspend fun TelegramBotApi.sendPaidMedia(form: SendPaidMediaForm): TelegramResponse<Message> = sendPaidMedia(
+    businessConnectionId = form.businessConnectionId,
+    chatId = form.chatId,
+    messageThreadId = form.messageThreadId,
+    directMessagesTopicId = form.directMessagesTopicId,
+    starCount = form.starCount,
+    media = form.media,
+    payload = form.payload,
+    caption = form.caption,
+    parseMode = form.parseMode,
+    captionEntities = form.captionEntities,
+    showCaptionAboveMedia = form.showCaptionAboveMedia,
+    disableNotification = form.disableNotification,
+    protectContent = form.protectContent,
+    allowPaidBroadcast = form.allowPaidBroadcast,
+    suggestedPostParameters = form.suggestedPostParameters,
+    replyParameters = form.replyParameters,
+    replyMarkup = form.replyMarkup,
+    attachments = form.attachments
+)
+
 public suspend fun TelegramBotApi.sendMediaGroup(
     businessConnectionId: String? = null,
     chatId: String,
@@ -1060,6 +1170,7 @@ public suspend fun TelegramBotApi.sendMediaGroup(
     allowPaidBroadcast: Boolean? = null,
     messageEffectId: String? = null,
     replyParameters: ReplyParameters? = null,
+    attachments: List<FormPart<ChannelProvider>>? = null,
 ): TelegramResponse<List<Message>> {
     val formData = MultiPartFormDataContent(formData {
         businessConnectionId?.let {
@@ -1088,6 +1199,7 @@ public suspend fun TelegramBotApi.sendMediaGroup(
         replyParameters?.let {
             append("reply_parameters", Json.encodeToString(it))
         }
+        attachments?.forEach { append(it) }
     })
     return sendMediaGroup(formData)
 }
@@ -1102,7 +1214,8 @@ public suspend fun TelegramBotApi.sendMediaGroup(form: SendMediaGroupForm): Tele
     protectContent = form.protectContent,
     allowPaidBroadcast = form.allowPaidBroadcast,
     messageEffectId = form.messageEffectId,
-    replyParameters = form.replyParameters
+    replyParameters = form.replyParameters,
+    attachments = form.attachments
 )
 
 public suspend fun TelegramBotApi.setChatPhoto(chatId: String, photo: FormPart<ChannelProvider>): TelegramResponse<Boolean> {
@@ -1123,6 +1236,137 @@ public suspend fun TelegramBotApi.setChatPhoto(form: SetChatPhotoForm): Telegram
     photo = form.photo
 )
 
+public suspend fun TelegramBotApi.setMyProfilePhoto(photo: InputProfilePhoto, attachments: List<FormPart<ChannelProvider>>? = null): TelegramResponse<Boolean> {
+    val formData = MultiPartFormDataContent(formData {
+        append("photo", Json.encodeToString(photo))
+        attachments?.forEach { append(it) }
+    })
+    return setMyProfilePhoto(formData)
+}
+
+public suspend fun TelegramBotApi.setMyProfilePhoto(form: SetMyProfilePhotoForm): TelegramResponse<Boolean> = setMyProfilePhoto(
+    photo = form.photo,
+    attachments = form.attachments
+)
+
+public suspend fun TelegramBotApi.setBusinessAccountProfilePhoto(
+    businessConnectionId: String,
+    photo: InputProfilePhoto,
+    isPublic: Boolean? = null,
+    attachments: List<FormPart<ChannelProvider>>? = null,
+): TelegramResponse<Boolean> {
+    val formData = MultiPartFormDataContent(formData {
+        append("business_connection_id", businessConnectionId)
+        append("photo", Json.encodeToString(photo))
+        isPublic?.let {
+            append("is_public", it.toString())
+        }
+        attachments?.forEach { append(it) }
+    })
+    return setBusinessAccountProfilePhoto(formData)
+}
+
+public suspend fun TelegramBotApi.setBusinessAccountProfilePhoto(form: SetBusinessAccountProfilePhotoForm): TelegramResponse<Boolean> = setBusinessAccountProfilePhoto(
+    businessConnectionId = form.businessConnectionId,
+    photo = form.photo,
+    isPublic = form.isPublic,
+    attachments = form.attachments
+)
+
+public suspend fun TelegramBotApi.postStory(
+    businessConnectionId: String,
+    content: InputStoryContent,
+    activePeriod: Long,
+    caption: String? = null,
+    parseMode: String? = null,
+    captionEntities: List<MessageEntity>? = null,
+    areas: List<StoryArea>? = null,
+    postToChatPage: Boolean? = null,
+    protectContent: Boolean? = null,
+    attachments: List<FormPart<ChannelProvider>>? = null,
+): TelegramResponse<Story> {
+    val formData = MultiPartFormDataContent(formData {
+        append("business_connection_id", businessConnectionId)
+        append("content", Json.encodeToString(content))
+        append("active_period", activePeriod.toString())
+        caption?.let {
+            append("caption", it)
+        }
+        parseMode?.let {
+            append("parse_mode", it)
+        }
+        captionEntities?.let {
+            append("caption_entities", Json.encodeToString(it))
+        }
+        areas?.let {
+            append("areas", Json.encodeToString(it))
+        }
+        postToChatPage?.let {
+            append("post_to_chat_page", it.toString())
+        }
+        protectContent?.let {
+            append("protect_content", it.toString())
+        }
+        attachments?.forEach { append(it) }
+    })
+    return postStory(formData)
+}
+
+public suspend fun TelegramBotApi.postStory(form: PostStoryForm): TelegramResponse<Story> = postStory(
+    businessConnectionId = form.businessConnectionId,
+    content = form.content,
+    activePeriod = form.activePeriod,
+    caption = form.caption,
+    parseMode = form.parseMode,
+    captionEntities = form.captionEntities,
+    areas = form.areas,
+    postToChatPage = form.postToChatPage,
+    protectContent = form.protectContent,
+    attachments = form.attachments
+)
+
+public suspend fun TelegramBotApi.editStory(
+    businessConnectionId: String,
+    storyId: Long,
+    content: InputStoryContent,
+    caption: String? = null,
+    parseMode: String? = null,
+    captionEntities: List<MessageEntity>? = null,
+    areas: List<StoryArea>? = null,
+    attachments: List<FormPart<ChannelProvider>>? = null,
+): TelegramResponse<Story> {
+    val formData = MultiPartFormDataContent(formData {
+        append("business_connection_id", businessConnectionId)
+        append("story_id", storyId.toString())
+        append("content", Json.encodeToString(content))
+        caption?.let {
+            append("caption", it)
+        }
+        parseMode?.let {
+            append("parse_mode", it)
+        }
+        captionEntities?.let {
+            append("caption_entities", Json.encodeToString(it))
+        }
+        areas?.let {
+            append("areas", Json.encodeToString(it))
+        }
+        attachments?.forEach { append(it) }
+    })
+    return editStory(formData)
+}
+
+public suspend fun TelegramBotApi.editStory(form: EditStoryForm): TelegramResponse<Story> = editStory(
+    businessConnectionId = form.businessConnectionId,
+    storyId = form.storyId,
+    content = form.content,
+    caption = form.caption,
+    parseMode = form.parseMode,
+    captionEntities = form.captionEntities,
+    areas = form.areas,
+    attachments = form.attachments
+)
+
 public suspend fun TelegramBotApi.editMessageMedia(
     businessConnectionId: String? = null,
     chatId: String? = null,
@@ -1130,6 +1374,7 @@ public suspend fun TelegramBotApi.editMessageMedia(
     inlineMessageId: String? = null,
     media: InputMedia,
     replyMarkup: InlineKeyboardMarkup? = null,
+    attachments: List<FormPart<ChannelProvider>>? = null,
 ): TelegramResponse<Boolean> {
     val formData = MultiPartFormDataContent(formData {
         businessConnectionId?.let {
@@ -1148,6 +1393,7 @@ public suspend fun TelegramBotApi.editMessageMedia(
         replyMarkup?.let {
             append("reply_markup", Json.encodeToString(it))
         }
+        attachments?.forEach { append(it) }
     })
     return editMessageMedia(formData)
 }
@@ -1158,7 +1404,8 @@ public suspend fun TelegramBotApi.editMessageMedia(form: EditMessageMediaForm): 
     messageId = form.messageId,
     inlineMessageId = form.inlineMessageId,
     media = form.media,
-    replyMarkup = form.replyMarkup
+    replyMarkup = form.replyMarkup,
+    attachments = form.attachments
 )
 
 public suspend fun TelegramBotApi.sendSticker(
@@ -1289,6 +1536,88 @@ public suspend fun TelegramBotApi.uploadStickerFile(form: UploadStickerFileForm)
     userId = form.userId,
     sticker = form.sticker,
     stickerFormat = form.stickerFormat
+)
+
+public suspend fun TelegramBotApi.createNewStickerSet(
+    userId: Long,
+    name: String,
+    title: String,
+    stickers: List<InputSticker>,
+    stickerType: String? = null,
+    needsRepainting: Boolean? = null,
+    attachments: List<FormPart<ChannelProvider>>? = null,
+): TelegramResponse<Boolean> {
+    val formData = MultiPartFormDataContent(formData {
+        append("user_id", userId.toString())
+        append("name", name)
+        append("title", title)
+        append("stickers", Json.encodeToString(stickers))
+        stickerType?.let {
+            append("sticker_type", it)
+        }
+        needsRepainting?.let {
+            append("needs_repainting", it.toString())
+        }
+        attachments?.forEach { append(it) }
+    })
+    return createNewStickerSet(formData)
+}
+
+public suspend fun TelegramBotApi.createNewStickerSet(form: CreateNewStickerSetForm): TelegramResponse<Boolean> = createNewStickerSet(
+    userId = form.userId,
+    name = form.name,
+    title = form.title,
+    stickers = form.stickers,
+    stickerType = form.stickerType,
+    needsRepainting = form.needsRepainting,
+    attachments = form.attachments
+)
+
+public suspend fun TelegramBotApi.addStickerToSet(
+    userId: Long,
+    name: String,
+    sticker: InputSticker,
+    attachments: List<FormPart<ChannelProvider>>? = null,
+): TelegramResponse<Boolean> {
+    val formData = MultiPartFormDataContent(formData {
+        append("user_id", userId.toString())
+        append("name", name)
+        append("sticker", Json.encodeToString(sticker))
+        attachments?.forEach { append(it) }
+    })
+    return addStickerToSet(formData)
+}
+
+public suspend fun TelegramBotApi.addStickerToSet(form: AddStickerToSetForm): TelegramResponse<Boolean> = addStickerToSet(
+    userId = form.userId,
+    name = form.name,
+    sticker = form.sticker,
+    attachments = form.attachments
+)
+
+public suspend fun TelegramBotApi.replaceStickerInSet(
+    userId: Long,
+    name: String,
+    oldSticker: String,
+    sticker: InputSticker,
+    attachments: List<FormPart<ChannelProvider>>? = null,
+): TelegramResponse<Boolean> {
+    val formData = MultiPartFormDataContent(formData {
+        append("user_id", userId.toString())
+        append("name", name)
+        append("old_sticker", oldSticker)
+        append("sticker", Json.encodeToString(sticker))
+        attachments?.forEach { append(it) }
+    })
+    return replaceStickerInSet(formData)
+}
+
+public suspend fun TelegramBotApi.replaceStickerInSet(form: ReplaceStickerInSetForm): TelegramResponse<Boolean> = replaceStickerInSet(
+    userId = form.userId,
+    name = form.name,
+    oldSticker = form.oldSticker,
+    sticker = form.sticker,
+    attachments = form.attachments
 )
 
 public suspend fun TelegramBotApi.setStickerSetThumbnail(
