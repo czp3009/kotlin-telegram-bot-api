@@ -24,6 +24,9 @@ Windows).
 ./gradlew jvmTest         # JVM tests
 ./gradlew allTests        # All platform tests
 
+# Run a single test (JVM)
+./gradlew jvmTest --tests "com.hiczp.telegram.bot.api.TelegramBotApiTest.getUpdates"
+
 # Clean build
 ./gradlew clean
 
@@ -31,6 +34,16 @@ Windows).
 ./gradlew downloadSwagger
 ./gradlew generateKtorfitInterfaces
 ```
+
+## Running Integration Tests
+
+Integration tests require environment variables to be set:
+
+- `BOT_TOKEN`: Telegram bot token
+- `TEST_CHAT_ID`: Chat ID to use for sending test messages
+
+These tests interact with the live Telegram API and are useful for validating API changes but require
+a real bot token and test chat.
 
 ## Architecture
 
@@ -60,12 +73,18 @@ The project uses a sophisticated code generation workflow to stay in sync with T
 protocol/src/commonMain/kotlin/com/hiczp/telegram/bot/api/
 ├── TelegramBotApi.kt          # Auto-generated API interface
 ├── TelegramBotApiExtensions.kt   # Extension functions
-├── model/                      # Telegram API models
-├── form/                       # Multipart form classes
-├── type/                       # Core types
+├── model/                      # Telegram API models (auto-generated)
+├── form/                       # Multipart form classes (auto-generated)
+├── type/                       # Core types (handwritten)
 │   ├── TelegramResponse.kt       # Response wrapper with error handling
+│   ├── InputFile.kt              # File upload handling
 │   └── IncomingUpdate.kt        # Interface for update types used in polymorphic handling
-└── extension/                   # Additional extensions
+├── extension/                   # Additional extensions (handwritten)
+│   └── Messages.kt             # Message deletion helpers
+├── plugin/                     # Ktor client plugins
+│   └── TelegramFileDownloadPlugin.kt  # File download URL transformation
+└── exception/                   # Error handling
+    └── TelegramErrorResponseException.kt
 ```
 
 ### Special Type Handling
@@ -81,16 +100,49 @@ The code generator handles several complex patterns from the OpenAPI spec:
 ### Build Configuration
 
 - **JVM Toolchain**: Java 21
-- **KSP** (Kotlin Symbol Processing): Used for KtorFit compiler plugin
+- **KSP** (Kotlin Symbol Processing): Used for KtorFit compiler plugin (only for test source sets)
 - **Dependencies**: Defined in `gradle/libs.versions.toml` using version catalogs
 - **Multiplatform Targets**: Supports JVM, JS, WASM, and native targets across Apple, Linux, Windows, and Android
   platforms
+- **BuildSrc**: Contains custom Gradle tasks for code generation (DownloadTelegramBotApiSwaggerTask,
+  GenerateKtorfitInterfacesTask)
 
 ### Testing
 
 - Tests use kotlinx-coroutines-test
-- Platform-specific HTTP clients: CIO for JVM/desktop native, JS for web targets
+- Platform-specific HTTP clients: CIO/Curl for JVM/desktop native, JS for web targets
 - Common tests shared across all platforms in `commonTest` source set
+- `desktopNativeTest` and `otherNativeTest` test source sets provide platform-specific configurations
+
+### File Upload Handling
+
+The library provides a flexible `InputFile` type that supports multiple upload scenarios:
+
+- **File reference**: Use existing `file_id` or URL (sent as string in multipart form)
+- **File content**: Upload new file content via `ChannelProvider` with optional filename and content type
+- **Extension**: `InputFile.toFormPart(multipartName)` converts to Ktor's `FormPart<ChannelProvider>`
+
+For multi-part uploads with dynamic attachments (e.g., `sendMediaGroup`), form classes include an `attachments`
+parameter that accepts a list of `FormPart<ChannelProvider>` for files referenced via `attach://<name>`.
+
+### File Download
+
+The `TelegramFileDownloadPlugin` automatically transforms file download URLs:
+
+- Methods annotated with `@TelegramFileDownload` (like `downloadFile`) automatically modify the request path
+- The plugin inserts `/file` between the bot token and file path: `https://api.telegram.org/bot<token>/file/<file_path>`
+- Returns `HttpStatement` for streaming or processing downloaded content
+
+### Error Handling
+
+`TelegramResponse<T>` wraps all API responses with convenient methods:
+
+- `getOrThrow()`: Returns result or throws `TelegramErrorResponseException`
+- `exceptionOrNull()`: Returns exception if response is an error, null otherwise
+- `onSuccess/onError`: Callback-based error handling
+- `fold()`: Functional pattern for success/error branches
+- `toResult()`: Converts to Kotlin `Result<T>`
+- `isRetryable` extension property: True for rate limiting (429) and server errors (5xx)
 
 ### Important Notes
 
