@@ -5,6 +5,7 @@ import com.hiczp.telegram.bot.api.extension.deleteMessages
 import com.hiczp.telegram.bot.api.extension.toFormPart
 import com.hiczp.telegram.bot.api.form.sendMediaGroup
 import com.hiczp.telegram.bot.api.form.sendPhoto
+import com.hiczp.telegram.bot.api.form.sendSticker
 import com.hiczp.telegram.bot.api.model.InputMediaPhoto
 import de.jensklingenberg.ktorfit.Ktorfit
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -80,7 +81,8 @@ class TelegramBotApiTest {
         checkNotNull(fileId) { "No fileId returned from telegram server" }
         val message2 = telegramBotApi.sendPhoto(
             chatId = message.chat.id.toString(),
-            photo = fileId
+            photo = fileId,
+            caption = "test",
         ).getOrThrow()
         telegramBotApi.deleteMessage(message2)
     }
@@ -99,5 +101,16 @@ class TelegramBotApiTest {
             ),
         ).getOrThrow()
         telegramBotApi.deleteMessages(messages)
+    }
+
+    @Test
+    fun sendSticker() = runTest {
+        @Suppress("SpellCheckingInspection")
+        val sticker = telegramBotApi.getStickerSet("pipagck").getOrThrow().stickers.first()
+        val message = telegramBotApi.sendSticker(
+            chatId = testChatId,
+            sticker = sticker.fileId,
+        ).getOrThrow()
+        telegramBotApi.deleteMessage(message)
     }
 }
