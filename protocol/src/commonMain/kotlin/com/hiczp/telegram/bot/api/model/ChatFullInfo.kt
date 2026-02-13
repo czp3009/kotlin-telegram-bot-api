@@ -1,0 +1,260 @@
+// Auto-generated from Swagger specification, do not modify this file manually
+package com.hiczp.telegram.bot.api.model
+
+import kotlin.Boolean
+import kotlin.Long
+import kotlin.String
+import kotlin.collections.List
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+/**
+ * This object contains full information about a chat.
+ */
+@Serializable
+public data class ChatFullInfo(
+    /**
+     * Unique identifier for this chat. This number may have more than 32 significant bits and some programming languages may have difficulty/silent defects in interpreting it. But it has at most 52 significant bits, so a signed 64-bit integer or double-precision float type are safe for storing this identifier.
+     */
+    public val id: Long,
+    /**
+     * Type of the chat, can be either “private”, “group”, “supergroup” or “channel”
+     */
+    public val type: String,
+    /**
+     * *Optional*. Title, for supergroups, channels and group chats
+     */
+    public val title: String? = null,
+    /**
+     * *Optional*. Username, for private chats, supergroups and channels if available
+     */
+    public val username: String? = null,
+    /**
+     * *Optional*. First name of the other party in a private chat
+     */
+    @SerialName("first_name")
+    public val firstName: String? = null,
+    /**
+     * *Optional*. Last name of the other party in a private chat
+     */
+    @SerialName("last_name")
+    public val lastName: String? = null,
+    /**
+     * *Optional*. *True*, if the supergroup chat is a forum (has [topics](https://telegram.org/blog/topics-in-groups-collectible-usernames#topics-in-groups) enabled)
+     */
+    @SerialName("is_forum")
+    public val isForum: Boolean? = null,
+    /**
+     * *Optional*. *True*, if the chat is the direct messages chat of a channel
+     */
+    @SerialName("is_direct_messages")
+    public val isDirectMessages: Boolean? = null,
+    /**
+     * Identifier of the accent color for the chat name and backgrounds of the chat photo, reply header, and link preview. See [accent colors](https://core.telegram.org/bots/api#accent-colors) for more details.
+     */
+    @SerialName("accent_color_id")
+    public val accentColorId: Long,
+    /**
+     * The maximum number of reactions that can be set on a message in the chat
+     */
+    @SerialName("max_reaction_count")
+    public val maxReactionCount: Long,
+    /**
+     * *Optional*. Chat photo
+     */
+    public val photo: ChatPhoto? = null,
+    /**
+     * *Optional*. If non-empty, the list of all [active chat usernames](https://telegram.org/blog/topics-in-groups-collectible-usernames#collectible-usernames); for private chats, supergroups and channels
+     */
+    @SerialName("active_usernames")
+    public val activeUsernames: List<String>? = null,
+    /**
+     * *Optional*. For private chats, the date of birth of the user
+     */
+    public val birthdate: Birthdate? = null,
+    /**
+     * *Optional*. For private chats with business accounts, the intro of the business
+     */
+    @SerialName("business_intro")
+    public val businessIntro: BusinessIntro? = null,
+    /**
+     * *Optional*. For private chats with business accounts, the location of the business
+     */
+    @SerialName("business_location")
+    public val businessLocation: BusinessLocation? = null,
+    /**
+     * *Optional*. For private chats with business accounts, the opening hours of the business
+     */
+    @SerialName("business_opening_hours")
+    public val businessOpeningHours: BusinessOpeningHours? = null,
+    /**
+     * *Optional*. For private chats, the personal channel of the user
+     */
+    @SerialName("personal_chat")
+    public val personalChat: Chat? = null,
+    /**
+     * *Optional*. Information about the corresponding channel chat; for direct messages chats only
+     */
+    @SerialName("parent_chat")
+    public val parentChat: Chat? = null,
+    /**
+     * *Optional*. List of available reactions allowed in the chat. If omitted, then all [emoji reactions](https://core.telegram.org/bots/api#reactiontypeemoji) are allowed.
+     */
+    @SerialName("available_reactions")
+    public val availableReactions: List<ReactionType>? = null,
+    /**
+     * *Optional*. Custom emoji identifier of the emoji chosen by the chat for the reply header and link preview background
+     */
+    @SerialName("background_custom_emoji_id")
+    public val backgroundCustomEmojiId: String? = null,
+    /**
+     * *Optional*. Identifier of the accent color for the chat's profile background. See [profile accent colors](https://core.telegram.org/bots/api#profile-accent-colors) for more details.
+     */
+    @SerialName("profile_accent_color_id")
+    public val profileAccentColorId: Long? = null,
+    /**
+     * *Optional*. Custom emoji identifier of the emoji chosen by the chat for its profile background
+     */
+    @SerialName("profile_background_custom_emoji_id")
+    public val profileBackgroundCustomEmojiId: String? = null,
+    /**
+     * *Optional*. Custom emoji identifier of the emoji status of the chat or the other party in a private chat
+     */
+    @SerialName("emoji_status_custom_emoji_id")
+    public val emojiStatusCustomEmojiId: String? = null,
+    /**
+     * *Optional*. Expiration date of the emoji status of the chat or the other party in a private chat, in Unix time, if any
+     */
+    @SerialName("emoji_status_expiration_date")
+    public val emojiStatusExpirationDate: Long? = null,
+    /**
+     * *Optional*. Bio of the other party in a private chat
+     */
+    public val bio: String? = null,
+    /**
+     * *Optional*. *True*, if privacy settings of the other party in the private chat allows to use `tg://user?id=<user_id>` links only in chats with the user
+     */
+    @SerialName("has_private_forwards")
+    public val hasPrivateForwards: Boolean? = null,
+    /**
+     * *Optional*. *True*, if the privacy settings of the other party restrict sending voice and video note messages in the private chat
+     */
+    @SerialName("has_restricted_voice_and_video_messages")
+    public val hasRestrictedVoiceAndVideoMessages: Boolean? = null,
+    /**
+     * *Optional*. *True*, if users need to join the supergroup before they can send messages
+     */
+    @SerialName("join_to_send_messages")
+    public val joinToSendMessages: Boolean? = null,
+    /**
+     * *Optional*. *True*, if all users directly joining the supergroup without using an invite link need to be approved by supergroup administrators
+     */
+    @SerialName("join_by_request")
+    public val joinByRequest: Boolean? = null,
+    /**
+     * *Optional*. Description, for groups, supergroups and channel chats
+     */
+    public val description: String? = null,
+    /**
+     * *Optional*. Primary invite link, for groups, supergroups and channel chats
+     */
+    @SerialName("invite_link")
+    public val inviteLink: String? = null,
+    /**
+     * *Optional*. The most recent pinned message (by sending date)
+     */
+    @SerialName("pinned_message")
+    public val pinnedMessage: Message? = null,
+    /**
+     * *Optional*. Default chat member permissions, for groups and supergroups
+     */
+    public val permissions: ChatPermissions? = null,
+    /**
+     * Information about types of gifts that are accepted by the chat or by the corresponding user for private chats
+     */
+    @SerialName("accepted_gift_types")
+    public val acceptedGiftTypes: AcceptedGiftTypes,
+    /**
+     * *Optional*. *True*, if paid media messages can be sent or forwarded to the channel chat. The field is available only for channel chats.
+     */
+    @SerialName("can_send_paid_media")
+    public val canSendPaidMedia: Boolean? = null,
+    /**
+     * *Optional*. For supergroups, the minimum allowed delay between consecutive messages sent by each unprivileged user; in seconds
+     */
+    @SerialName("slow_mode_delay")
+    public val slowModeDelay: Long? = null,
+    /**
+     * *Optional*. For supergroups, the minimum number of boosts that a non-administrator user needs to add in order to ignore slow mode and chat permissions
+     */
+    @SerialName("unrestrict_boost_count")
+    public val unrestrictBoostCount: Long? = null,
+    /**
+     * *Optional*. The time after which all messages sent to the chat will be automatically deleted; in seconds
+     */
+    @SerialName("message_auto_delete_time")
+    public val messageAutoDeleteTime: Long? = null,
+    /**
+     * *Optional*. *True*, if aggressive anti-spam checks are enabled in the supergroup. The field is only available to chat administrators.
+     */
+    @SerialName("has_aggressive_anti_spam_enabled")
+    public val hasAggressiveAntiSpamEnabled: Boolean? = null,
+    /**
+     * *Optional*. *True*, if non-administrators can only get the list of bots and administrators in the chat
+     */
+    @SerialName("has_hidden_members")
+    public val hasHiddenMembers: Boolean? = null,
+    /**
+     * *Optional*. *True*, if messages from the chat can't be forwarded to other chats
+     */
+    @SerialName("has_protected_content")
+    public val hasProtectedContent: Boolean? = null,
+    /**
+     * *Optional*. *True*, if new chat members will have access to old messages; available only to chat administrators
+     */
+    @SerialName("has_visible_history")
+    public val hasVisibleHistory: Boolean? = null,
+    /**
+     * *Optional*. For supergroups, name of the group sticker set
+     */
+    @SerialName("sticker_set_name")
+    public val stickerSetName: String? = null,
+    /**
+     * *Optional*. *True*, if the bot can change the group sticker set
+     */
+    @SerialName("can_set_sticker_set")
+    public val canSetStickerSet: Boolean? = null,
+    /**
+     * *Optional*. For supergroups, the name of the group's custom emoji sticker set. Custom emoji from this set can be used by all users and bots in the group.
+     */
+    @SerialName("custom_emoji_sticker_set_name")
+    public val customEmojiStickerSetName: String? = null,
+    /**
+     * *Optional*. Unique identifier for the linked chat, i.e. the discussion group identifier for a channel and vice versa; for supergroups and channel chats. This identifier may be greater than 32 bits and some programming languages may have difficulty/silent defects in interpreting it. But it is smaller than 52 bits, so a signed 64 bit integer or double-precision float type are safe for storing this identifier.
+     */
+    @SerialName("linked_chat_id")
+    public val linkedChatId: Long? = null,
+    /**
+     * *Optional*. For supergroups, the location to which the supergroup is connected
+     */
+    public val location: ChatLocation? = null,
+    /**
+     * *Optional*. For private chats, the rating of the user if any
+     */
+    public val rating: UserRating? = null,
+    /**
+     * *Optional*. For private chats, the first audio added to the profile of the user
+     */
+    @SerialName("first_profile_audio")
+    public val firstProfileAudio: Audio? = null,
+    /**
+     * *Optional*. The color scheme based on a unique gift that must be used for the chat's name, message replies and link previews
+     */
+    @SerialName("unique_gift_colors")
+    public val uniqueGiftColors: UniqueGiftColors? = null,
+    /**
+     * *Optional*. The number of Telegram Stars a general user have to pay to send a message to the chat
+     */
+    @SerialName("paid_message_star_count")
+    public val paidMessageStarCount: Long? = null,
+)

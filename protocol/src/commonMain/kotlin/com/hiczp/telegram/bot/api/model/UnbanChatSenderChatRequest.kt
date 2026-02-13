@@ -1,0 +1,21 @@
+// Auto-generated from Swagger specification, do not modify this file manually
+package com.hiczp.telegram.bot.api.model
+
+import kotlin.Long
+import kotlin.String
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+@Serializable
+public data class UnbanChatSenderChatRequest(
+    /**
+     * Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+     */
+    @SerialName("chat_id")
+    public val chatId: String,
+    /**
+     * Unique identifier of the target sender chat
+     */
+    @SerialName("sender_chat_id")
+    public val senderChatId: Long,
+)
