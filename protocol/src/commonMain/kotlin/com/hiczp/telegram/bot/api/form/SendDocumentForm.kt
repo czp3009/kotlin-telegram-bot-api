@@ -6,6 +6,7 @@ import com.hiczp.telegram.bot.api.model.ReplyMarkup
 import com.hiczp.telegram.bot.api.model.ReplyParameters
 import com.hiczp.telegram.bot.api.model.SuggestedPostParameters
 import io.ktor.client.request.forms.ChannelProvider
+import io.ktor.client.request.forms.FormPart
 import kotlin.Boolean
 import kotlin.Long
 import kotlin.String
@@ -36,11 +37,11 @@ public data class SendDocumentForm(
     /**
      * File to send. Pass a file_id as String to send a file that exists on the Telegram servers (recommended), pass an HTTP URL as a String for Telegram to get a file from the Internet, or upload a new one using multipart/form-data. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files)
      */
-    public val document: ChannelProvider,
+    public val document: FormPart<ChannelProvider>,
     /**
      * Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side. The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using multipart/form-data. Thumbnails can't be reused and can be only uploaded as a new file, so you can pass “attach://<file_attach_name>” if the thumbnail was uploaded using multipart/form-data under <file_attach_name>. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files)
      */
-    public val thumbnail: ChannelProvider? = null,
+    public val thumbnail: FormPart<ChannelProvider>? = null,
     /**
      * Document caption (may also be used when resending documents by *file_id*), 0-1024 characters after entities parsing
      */

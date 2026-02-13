@@ -4,4 +4,6 @@ import io.ktor.client.engine.*
 
 expect fun getBotToken(): String?
 
+expect fun getTestChatId(): String?
+
 expect fun createKtorEngine(): HttpClientEngine

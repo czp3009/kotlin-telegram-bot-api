@@ -30,7 +30,6 @@ import com.hiczp.telegram.bot.api.model.ChatInviteLink
 import com.hiczp.telegram.bot.api.model.ChatMember
 import com.hiczp.telegram.bot.api.model.CloseForumTopicRequest
 import com.hiczp.telegram.bot.api.model.CloseGeneralForumTopicRequest
-import com.hiczp.telegram.bot.api.model.CloseRequest
 import com.hiczp.telegram.bot.api.model.ConvertGiftToStarsRequest
 import com.hiczp.telegram.bot.api.model.CopyMessageRequest
 import com.hiczp.telegram.bot.api.model.CopyMessagesRequest
@@ -73,7 +72,6 @@ import com.hiczp.telegram.bot.api.model.GiftPremiumSubscriptionRequest
 import com.hiczp.telegram.bot.api.model.Gifts
 import com.hiczp.telegram.bot.api.model.HideGeneralForumTopicRequest
 import com.hiczp.telegram.bot.api.model.LeaveChatRequest
-import com.hiczp.telegram.bot.api.model.LogOutRequest
 import com.hiczp.telegram.bot.api.model.MenuButton
 import com.hiczp.telegram.bot.api.model.Message
 import com.hiczp.telegram.bot.api.model.MessageId
@@ -127,6 +125,7 @@ import com.hiczp.telegram.bot.api.model.SetMyCommandsRequest
 import com.hiczp.telegram.bot.api.model.SetMyDefaultAdministratorRightsRequest
 import com.hiczp.telegram.bot.api.model.SetMyDescriptionRequest
 import com.hiczp.telegram.bot.api.model.SetMyNameRequest
+import com.hiczp.telegram.bot.api.model.SetMyProfilePhotoRequest
 import com.hiczp.telegram.bot.api.model.SetMyShortDescriptionRequest
 import com.hiczp.telegram.bot.api.model.SetPassportDataErrorsRequest
 import com.hiczp.telegram.bot.api.model.SetStickerEmojiListRequest
@@ -155,6 +154,7 @@ import com.hiczp.telegram.bot.api.model.Update
 import com.hiczp.telegram.bot.api.model.UpgradeGiftRequest
 import com.hiczp.telegram.bot.api.model.User
 import com.hiczp.telegram.bot.api.model.UserChatBoosts
+import com.hiczp.telegram.bot.api.model.UserProfileAudios
 import com.hiczp.telegram.bot.api.model.UserProfilePhotos
 import com.hiczp.telegram.bot.api.model.VerifyChatRequest
 import com.hiczp.telegram.bot.api.model.VerifyUserRequest
@@ -219,13 +219,13 @@ public interface TelegramBotApi {
      * Use this method to log out from the cloud Bot API server before launching the bot locally. You must log out the bot before running it locally, otherwise there is no guarantee that the bot will receive updates. After a successful call, you can immediately log in on a local server, but will not be able to log in back to the cloud Bot API server for 10 minutes. Returns True on success. Requires no parameters.
      */
     @POST("logOut")
-    public suspend fun logOut(@Body body: LogOutRequest): TelegramResponse<Boolean>
+    public suspend fun logOut(): TelegramResponse<Boolean>
 
     /**
      * Use this method to close the bot instance before moving it from one local server to another. You need to delete the webhook before calling this method to ensure that the bot isn't launched again after server restart. The method will return error 429 in the first 10 minutes after the bot is launched. Returns True on success. Requires no parameters.
      */
     @POST("close")
-    public suspend fun close(@Body body: CloseRequest): TelegramResponse<Boolean>
+    public suspend fun close(): TelegramResponse<Boolean>
 
     /**
      * Use this method to send text messages. On success, the sent Message is returned.
@@ -381,6 +381,20 @@ public interface TelegramBotApi {
         @Query("offset") offset: Long? = null,
         @Query("limit") limit: Long? = null,
     ): TelegramResponse<UserProfilePhotos>
+
+    /**
+     * Use this method to get a list of profile audios for a user. Returns a UserProfileAudios object.
+     *
+     * @param userId Unique identifier of the target user
+     * @param offset Sequential number of the first audio to be returned. By default, all audios are returned.
+     * @param limit Limits the number of audios to be retrieved. Values between 1-100 are accepted. Defaults to 100.
+     */
+    @GET("getUserProfileAudios")
+    public suspend fun getUserProfileAudios(
+        @Query("user_id") userId: Long,
+        @Query("offset") offset: Long? = null,
+        @Query("limit") limit: Long? = null,
+    ): TelegramResponse<UserProfileAudios>
 
     /**
      * Changes the emoji status for a given user that previously allowed the bot to manage their emoji status via the Mini App method requestEmojiStatusAccess. Returns True on success.
@@ -594,7 +608,7 @@ public interface TelegramBotApi {
     public suspend fun getForumTopicIconStickers(): TelegramResponse<List<Sticker>>
 
     /**
-     * Use this method to create a topic in a forum supergroup chat. The bot must be an administrator in the chat for this to work and must have the can_manage_topics administrator rights. Returns information about the created topic as a ForumTopic object.
+     * Use this method to create a topic in a forum supergroup chat or a private chat with a user. In the case of a supergroup chat the bot must be an administrator in the chat for this to work and must have the can_manage_topics administrator right. Returns information about the created topic as a ForumTopic object.
      */
     @POST("createForumTopic")
     public suspend fun createForumTopic(@Body body: CreateForumTopicRequest): TelegramResponse<ForumTopic>
@@ -751,6 +765,18 @@ public interface TelegramBotApi {
      */
     @GET("getMyShortDescription")
     public suspend fun getMyShortDescription(@Query("language_code") languageCode: String? = null): TelegramResponse<BotShortDescription>
+
+    /**
+     * Changes the profile photo of the bot. Returns True on success.
+     */
+    @POST("setMyProfilePhoto")
+    public suspend fun setMyProfilePhoto(@Body body: SetMyProfilePhotoRequest): TelegramResponse<Boolean>
+
+    /**
+     * Removes the profile photo of the bot. Requires no parameters. Returns True on success.
+     */
+    @POST("removeMyProfilePhoto")
+    public suspend fun removeMyProfilePhoto(): TelegramResponse<Boolean>
 
     /**
      * Use this method to change the bot's menu button in a private chat, or the default menu button. Returns True on success.

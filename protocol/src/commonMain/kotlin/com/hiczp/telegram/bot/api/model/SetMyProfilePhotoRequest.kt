@@ -4,4 +4,9 @@ package com.hiczp.telegram.bot.api.model
 import kotlinx.serialization.Serializable
 
 @Serializable
-public object CloseRequest
+public data class SetMyProfilePhotoRequest(
+    /**
+     * The new profile photo to set
+     */
+    public val photo: InputProfilePhoto,
+)

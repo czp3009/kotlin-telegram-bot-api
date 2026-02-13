@@ -80,4 +80,9 @@ public data class User(
      */
     @SerialName("has_topics_enabled")
     public val hasTopicsEnabled: Boolean? = null,
+    /**
+     * *Optional*. *True*, if the bot allows users to create and delete topics in private chats. Returned only in [getMe](https://core.telegram.org/bots/api#getme).
+     */
+    @SerialName("allows_users_to_create_topics")
+    public val allowsUsersToCreateTopics: Boolean? = null,
 )

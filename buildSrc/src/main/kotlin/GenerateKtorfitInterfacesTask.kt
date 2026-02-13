@@ -52,7 +52,6 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
         // Delete the API interface file
         File(apiDir, "TelegramBotApi.kt").delete()
-        File(apiDir, "TelegramBotApiExtensions.kt").delete()
 
         // Create directories
         modelDir.mkdirs()
@@ -472,6 +471,12 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
         schemas.fields().forEach { (schemaName, schemaNode) ->
             if (schemaName in processedSchemas) return@forEach
+
+            // Skip InputFile - it's hardcoded as String
+            if (schemaName == "InputFile") {
+                processedSchemas.add(schemaName)
+                return@forEach
+            }
 
             try {
                 generateModel(modelPackage, schemaName, schemaNode, outputDir)
@@ -1260,13 +1265,13 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     }
 
     /**
-     * Resolve a type name to a ClassName, handling special cases like MaybeInaccessibleMessage.
+     * Resolve a type name to a TypeName, handling special cases like MaybeInaccessibleMessage and InputFile.
      */
-    private fun resolveTypeName(typeName: String): ClassName {
-        return if (typeName == "MaybeInaccessibleMessage") {
-            ClassName("com.hiczp.telegram.bot.api.model", "Message")
-        } else {
-            ClassName("com.hiczp.telegram.bot.api.model", typeName)
+    private fun resolveTypeName(typeName: String): TypeName {
+        return when (typeName) {
+            "MaybeInaccessibleMessage" -> ClassName("com.hiczp.telegram.bot.api.model", "Message")
+            "InputFile" -> STRING  // InputFile is hardcoded to String, no class generated
+            else -> ClassName("com.hiczp.telegram.bot.api.model", typeName)
         }
     }
 
@@ -1478,7 +1483,30 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
      * For other types, delegates to the unified determinePropertyType function.
      */
     private fun convertToPartDataIfNeeded(schema: JsonNode, context: String? = null): TypeName {
-        return determinePropertyType(schema, forMultipart = true, context = context)
+        val typeInfo = extractSchemaTypeInfo(schema)
+
+        // Check if this is an InputFile type - return FormPart<ChannelProvider>
+        if (isInputFileType(typeInfo.ref, typeInfo.oneOf, typeInfo.allOf)) {
+            val formPartClass = ClassName("io.ktor.client.request.forms", "FormPart")
+            val channelProviderClass = ClassName("io.ktor.client.request.forms", "ChannelProvider")
+            return formPartClass.parameterizedBy(channelProviderClass)
+        }
+
+        // Check if this is an array of InputFile - return List<FormPart<ChannelProvider>>
+        if (typeInfo.type == "array") {
+            val items = schema.get("items")
+            if (items != null) {
+                val itemTypeInfo = extractSchemaTypeInfo(items)
+                if (isInputFileType(itemTypeInfo.ref, itemTypeInfo.oneOf, itemTypeInfo.allOf)) {
+                    val formPartClass = ClassName("io.ktor.client.request.forms", "FormPart")
+                    val channelProviderClass = ClassName("io.ktor.client.request.forms", "ChannelProvider")
+                    return LIST.parameterizedBy(formPartClass.parameterizedBy(channelProviderClass))
+                }
+            }
+        }
+
+        // For non-file types, use normal property type determination
+        return determinePropertyType(schema, forMultipart = false, context = context)
     }
 
     private fun addParameter(functionBuilder: FunSpec.Builder, param: JsonNode) {
@@ -1757,8 +1785,8 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     @Suppress("SameParameterValue")
     private fun generateMultipartExtensions(packageName: String, interfaceName: String, outputDir: File) {
         val fileSpec = createFileSpec(
-            packageName,
-            "${interfaceName}Extensions",
+            "$packageName.form",
+            "Forms",
             "Extension functions for multipart operations"
         )
         // Add `@file:Suppress` annotation to suppress duplicate code warnings
@@ -1784,7 +1812,18 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             )
             fileSpec.addFunction(scatteredExtensionFunction)
 
-            // 2. Generate Form-based extension function (calls the scattered parameters extension)
+            // 2. Generate bridge extension function (converts String to FormPart and calls the scattered extension)
+            val bridgeExtensionFunction = generateBridgeExtensionFunction(
+                interfaceName,
+                operationId,
+                info.schema,
+                info.returnType
+            )
+            if (bridgeExtensionFunction != null) {
+                fileSpec.addFunction(bridgeExtensionFunction)
+            }
+
+            // 3. Generate Form-based extension function (calls the scattered parameters extension)
             val formExtensionFunction = generateFormExtensionFunction(
                 interfaceName,
                 operationId,
@@ -1850,25 +1889,16 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             if (isRequired) {
                 // Required parameter - add directly
                 if (isInputFile) {
-                    // Use FormPart to add ChannelProvider with the multipart key from swagger
-                    codeBuilder.addStatement(
-                        "append(%T(%S, %L))",
-                        ClassName("io.ktor.client.request.forms", "FormPart"),
-                        propName,
-                        camelName
-                    )
+                    // Since FormPart is now the parameter type, append it directly
+                    codeBuilder.addStatement("append(%L)", camelName)
                 } else if (isArray) {
                     // Check if array items are InputFile
                     val items = propSchema.get("items")
                     val itemTypeInfo = extractSchemaTypeInfo(items)
                     val isInputFileArray = isInputFileType(itemTypeInfo.ref, itemTypeInfo.oneOf, itemTypeInfo.allOf)
                     if (isInputFileArray) {
-                        codeBuilder.addStatement(
-                            "%L.forEachIndexed { index, item -> append(%T(%S + index, item)) }",
-                            camelName,
-                            ClassName("io.ktor.client.request.forms", "FormPart"),
-                            propName
-                        )
+                        // Since the parameter is now List<FormPart>, append each FormPart directly
+                        codeBuilder.addStatement("%L.forEach { append(it) }", camelName)
                     } else {
                         codeBuilder.addStatement(
                             "append(%S, %T.encodeToString(%L))",
@@ -1884,23 +1914,15 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             } else {
                 // Optional parameter - check for null
                 if (isInputFile) {
-                    codeBuilder.addStatement(
-                        "%L?.let { append(%T(%S, it)) }",
-                        camelName,
-                        ClassName("io.ktor.client.request.forms", "FormPart"),
-                        propName
-                    )
+                    // Since FormPart is now the parameter type, append it directly if not null
+                    codeBuilder.addStatement("%L?.let { append(it) }", camelName)
                 } else if (isArray) {
                     val items = propSchema.get("items")
                     val itemTypeInfo = extractSchemaTypeInfo(items)
                     val isInputFileArray = isInputFileType(itemTypeInfo.ref, itemTypeInfo.oneOf, itemTypeInfo.allOf)
                     if (isInputFileArray) {
-                        codeBuilder.addStatement(
-                            "%L?.forEachIndexed { index, item -> append(%T(%S + index, item)) }",
-                            camelName,
-                            ClassName("io.ktor.client.request.forms", "FormPart"),
-                            propName
-                        )
+                        // Since the parameter is now List<FormPart>?, append each FormPart directly if not null
+                        codeBuilder.addStatement("%L?.forEach { append(it) }", camelName)
                     } else {
                         codeBuilder.beginControlFlow("%L?.let", camelName)
                         codeBuilder.addStatement(
@@ -1973,6 +1995,168 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     /**
      * Generate an extension function that accepts a Form data class and calls the scattered parameters extension.
      */
+
+    /**
+     * Generate a bridge extension function with String parameters that converts them to FormPart
+     * and calls the scattered parameters extension.
+     */
+    private fun generateBridgeExtensionFunction(
+        interfaceName: String,
+        operationId: String,
+        schema: JsonNode,
+        returnType: TypeName
+    ): FunSpec? {
+        val properties = schema.get("properties")
+        val required = schema.get("required")?.map { it.asText() }?.toSet() ?: emptySet()
+
+        // Check if there are any file parameters
+        var hasFileParameters = false
+        properties?.fields()?.forEach { (_, propSchema) ->
+            val typeInfo = extractSchemaTypeInfo(propSchema)
+            val isInputFile = isInputFileType(typeInfo.ref, typeInfo.oneOf, typeInfo.allOf)
+            if (isInputFile) {
+                hasFileParameters = true
+                return@forEach
+            }
+            if (typeInfo.type == "array") {
+                val items = propSchema.get("items")
+                val itemTypeInfo = extractSchemaTypeInfo(items)
+                if (isInputFileType(itemTypeInfo.ref, itemTypeInfo.oneOf, itemTypeInfo.allOf)) {
+                    hasFileParameters = true
+                    return@forEach
+                }
+            }
+        }
+
+        // If no file parameters, don't generate bridge function
+        if (!hasFileParameters) {
+            return null
+        }
+
+        val functionBuilder = FunSpec.builder(operationId)
+            .addModifiers(KModifier.SUSPEND)
+            .receiver(ClassName("com.hiczp.telegram.bot.api", interfaceName))
+            .returns(returnType)
+
+        // Collect parameter information
+        val params = mutableListOf<Triple<String, JsonNode, Boolean>>()
+        properties?.fields()?.forEach { (propName, propSchema) ->
+            params.add(Triple(propName, propSchema, required.contains(propName)))
+        }
+
+        // Add parameters for each property, replacing FormPart with String
+        params.forEach { (propName, propSchema, isRequired) ->
+            val camelName = snakeToCamelCase(propName)
+            val typeInfo = extractSchemaTypeInfo(propSchema)
+            val isInputFile = isInputFileType(typeInfo.ref, typeInfo.oneOf, typeInfo.allOf)
+            val isArray = typeInfo.type == "array"
+
+            val propType = if (isInputFile) {
+                // Replace FormPart<ChannelProvider> with String
+                STRING
+            } else if (isArray) {
+                val items = propSchema.get("items")
+                val itemTypeInfo = extractSchemaTypeInfo(items)
+                val isInputFileArray = isInputFileType(itemTypeInfo.ref, itemTypeInfo.oneOf, itemTypeInfo.allOf)
+                if (isInputFileArray) {
+                    // Replace List<FormPart<ChannelProvider>> with List<String>
+                    LIST.parameterizedBy(STRING)
+                } else {
+                    convertToPartDataIfNeeded(propSchema, "$operationId.$propName")
+                }
+            } else {
+                convertToPartDataIfNeeded(propSchema, "$operationId.$propName")
+            }
+
+            val finalType = if (isRequired) propType else propType.copy(nullable = true)
+            val paramBuilder = ParameterSpec.builder(camelName, finalType)
+            if (!isRequired) {
+                paramBuilder.defaultValue("null")
+            }
+            functionBuilder.addParameter(paramBuilder.build())
+        }
+
+        // Build the function body - convert String to FormPart and call the original extension
+        val codeBuilder = CodeBlock.builder()
+        codeBuilder.add("return %N(\n", operationId)
+        codeBuilder.indent()
+
+        val isFirst = mutableListOf(true)
+        params.forEach { (propName, propSchema, isRequired) ->
+            val camelName = snakeToCamelCase(propName)
+            val typeInfo = extractSchemaTypeInfo(propSchema)
+            val isInputFile = isInputFileType(typeInfo.ref, typeInfo.oneOf, typeInfo.allOf)
+            val isArray = typeInfo.type == "array"
+
+            if (!isFirst[0]) {
+                codeBuilder.add(",\n")
+            }
+            isFirst[0] = false
+
+            codeBuilder.add("%N = ", camelName)
+
+            if (isInputFile) {
+                // Convert String to FormPart<ChannelProvider>
+                if (isRequired) {
+                    codeBuilder.add(
+                        "%T(%S, %T { %T(%N) })",
+                        ClassName("io.ktor.client.request.forms", "FormPart"),
+                        propName,
+                        ClassName("io.ktor.client.request.forms", "ChannelProvider"),
+                        ClassName("io.ktor.utils.io", "ByteReadChannel"),
+                        camelName
+                    )
+                } else {
+                    codeBuilder.add(
+                        "%L?.let { %T(%S, %T { %T(it) }) }",
+                        camelName,
+                        ClassName("io.ktor.client.request.forms", "FormPart"),
+                        propName,
+                        ClassName("io.ktor.client.request.forms", "ChannelProvider"),
+                        ClassName("io.ktor.utils.io", "ByteReadChannel")
+                    )
+                }
+            } else if (isArray) {
+                val items = propSchema.get("items")
+                val itemTypeInfo = extractSchemaTypeInfo(items)
+                val isInputFileArray = isInputFileType(itemTypeInfo.ref, itemTypeInfo.oneOf, itemTypeInfo.allOf)
+                if (isInputFileArray) {
+                    // Convert List<String> to List<FormPart<ChannelProvider>>
+                    if (isRequired) {
+                        codeBuilder.add(
+                            "%L.map { %T(%S, %T { %T(it) }) }",
+                            camelName,
+                            ClassName("io.ktor.client.request.forms", "FormPart"),
+                            propName,
+                            ClassName("io.ktor.client.request.forms", "ChannelProvider"),
+                            ClassName("io.ktor.utils.io", "ByteReadChannel")
+                        )
+                    } else {
+                        codeBuilder.add(
+                            "%L?.map { %T(%S, %T { %T(it) }) }",
+                            camelName,
+                            ClassName("io.ktor.client.request.forms", "FormPart"),
+                            propName,
+                            ClassName("io.ktor.client.request.forms", "ChannelProvider"),
+                            ClassName("io.ktor.utils.io", "ByteReadChannel")
+                        )
+                    }
+                } else {
+                    codeBuilder.add("%L", camelName)
+                }
+            } else {
+                codeBuilder.add("%L", camelName)
+            }
+        }
+
+        codeBuilder.add("\n")
+        codeBuilder.unindent()
+        codeBuilder.add(")\n")
+        functionBuilder.addCode(codeBuilder.build())
+
+        return functionBuilder.build()
+    }
+
     private fun generateFormExtensionFunction(
         interfaceName: String,
         operationId: String,

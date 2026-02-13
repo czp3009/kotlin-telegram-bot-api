@@ -243,6 +243,11 @@ public data class ChatFullInfo(
      */
     public val rating: UserRating? = null,
     /**
+     * *Optional*. For private chats, the first audio added to the profile of the user
+     */
+    @SerialName("first_profile_audio")
+    public val firstProfileAudio: Audio? = null,
+    /**
      * *Optional*. The color scheme based on a unique gift that must be used for the chat's name, message replies and link previews
      */
     @SerialName("unique_gift_colors")

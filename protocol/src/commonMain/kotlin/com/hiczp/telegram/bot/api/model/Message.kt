@@ -263,6 +263,16 @@ public data class Message(
     @SerialName("left_chat_member")
     public val leftChatMember: User? = null,
     /**
+     * *Optional*. Service message: chat owner has left
+     */
+    @SerialName("chat_owner_left")
+    public val chatOwnerLeft: ChatOwnerLeft? = null,
+    /**
+     * *Optional*. Service message: chat owner has changed
+     */
+    @SerialName("chat_owner_changed")
+    public val chatOwnerChanged: ChatOwnerChanged? = null,
+    /**
      * *Optional*. A chat title was changed to this value
      */
     @SerialName("new_chat_title")

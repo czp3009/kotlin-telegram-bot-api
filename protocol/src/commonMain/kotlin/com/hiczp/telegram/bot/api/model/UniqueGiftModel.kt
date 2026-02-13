@@ -20,8 +20,12 @@ public data class UniqueGiftModel(
      */
     public val sticker: Sticker,
     /**
-     * The number of unique gifts that receive this model for every 1000 gifts upgraded
+     * The number of unique gifts that receive this model for every 1000 gift upgrades. Always 0 for crafted gifts.
      */
     @SerialName("rarity_per_mille")
     public val rarityPerMille: Long,
+    /**
+     * *Optional*. Rarity of the model if it is a crafted model. Currently, can be “uncommon”, “rare”, “epic”, or “legendary”.
+     */
+    public val rarity: String? = null,
 )

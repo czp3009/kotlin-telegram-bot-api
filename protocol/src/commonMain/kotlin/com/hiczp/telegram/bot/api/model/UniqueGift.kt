@@ -48,6 +48,11 @@ public data class UniqueGift(
     @SerialName("is_premium")
     public val isPremium: Boolean? = null,
     /**
+     * *Optional*. *True*, if the gift was used to craft another gift and isn't available anymore
+     */
+    @SerialName("is_burned")
+    public val isBurned: Boolean? = null,
+    /**
      * *Optional*. *True*, if the gift is assigned from the TON blockchain and can't be resold or transferred in Telegram
      */
     @SerialName("is_from_blockchain")
