@@ -89,6 +89,9 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         private const val MODEL_PACKAGE = "$BASE_PACKAGE.model"
         private const val FORM_PACKAGE = "$BASE_PACKAGE.form"
         private const val TYPE_PACKAGE = "$BASE_PACKAGE.type"
+        private const val PLUGIN_PACKAGE = "$BASE_PACKAGE.plugin"
+        private const val KTORFIT_HTTP_PACKAGE = "de.jensklingenberg.ktorfit.http"
+        private const val KTOR_STATEMENT_PACKAGE = "io.ktor.client.statement"
 
         // Type names
         private const val TELEGRAM_RESPONSE_TYPE = "TelegramResponse"
@@ -97,6 +100,13 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         private const val INPUT_FILE_TYPE = "InputFile"
         private const val MESSAGE_TYPE = "Message"
         private const val MAYBE_INACCESSIBLE_MESSAGE_TYPE = "MaybeInaccessibleMessage"
+        private const val TELEGRAM_FILE_DOWNLOAD_ANNOTATION = "TelegramFileDownload"
+        private const val HTTP_STATEMENT_TYPE = "HttpStatement"
+
+        // Ktorfit HTTP annotation names
+        private const val GET_ANNOTATION = "GET"
+        private const val STREAMING_ANNOTATION = "Streaming"
+        private const val PATH_ANNOTATION = "Path"
 
         // Content types
         private const val CONTENT_TYPE_JSON = "application/json"
@@ -1601,6 +1611,37 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                 }
             }
         }
+
+        // Add downloadFile method at the end
+        val downloadFileFunction = FunSpec.builder("downloadFile")
+            .addModifiers(KModifier.SUSPEND, KModifier.ABSTRACT)
+            .addAnnotation(
+                AnnotationSpec.builder(ClassName(PLUGIN_PACKAGE, TELEGRAM_FILE_DOWNLOAD_ANNOTATION))
+                    .build()
+            )
+            .addAnnotation(
+                AnnotationSpec.builder(ClassName(KTORFIT_HTTP_PACKAGE, GET_ANNOTATION))
+                    .addMember("%S", "{filePath}")
+                    .build()
+            )
+            .addAnnotation(
+                AnnotationSpec.builder(ClassName(KTORFIT_HTTP_PACKAGE, STREAMING_ANNOTATION))
+                    .build()
+            )
+            .addParameter(
+                ParameterSpec.builder("filePath", String::class)
+                    .addAnnotation(
+                        AnnotationSpec.builder(ClassName(KTORFIT_HTTP_PACKAGE, PATH_ANNOTATION))
+                            .addMember("%S", "filePath")
+                            .build()
+                    )
+                    .build()
+            )
+            .returns(ClassName(KTOR_STATEMENT_PACKAGE, HTTP_STATEMENT_TYPE))
+            .addKdoc("Downloads a file from Telegram servers.")
+            .build()
+        
+        interfaceBuilder.addFunction(downloadFileFunction)
 
         fileSpec.addType(interfaceBuilder.build())
         fileSpec.build().writeToWithUnixLineEndings(outputDir)

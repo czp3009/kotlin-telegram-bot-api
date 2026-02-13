@@ -7,12 +7,15 @@ import com.hiczp.telegram.bot.api.form.sendMediaGroup
 import com.hiczp.telegram.bot.api.form.sendPhoto
 import com.hiczp.telegram.bot.api.form.sendSticker
 import com.hiczp.telegram.bot.api.model.InputMediaPhoto
+import com.hiczp.telegram.bot.api.model.Sticker
+import com.hiczp.telegram.bot.api.plugin.TelegramFileDownloadPlugin
 import de.jensklingenberg.ktorfit.Ktorfit
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.util.*
@@ -38,6 +41,7 @@ class TelegramBotApiTest {
         val botToken = getBotToken()
         checkNotNull(botToken) { "Failed to get ${EnvVars.BOT_TOKEN}" }
         val httpClient = HttpClient(createKtorEngine()) {
+            install(TelegramFileDownloadPlugin)
             install(Logging) {
                 level = LogLevel.ALL
             }
@@ -105,12 +109,30 @@ class TelegramBotApiTest {
 
     @Test
     fun sendSticker() = runTest {
-        @Suppress("SpellCheckingInspection")
-        val sticker = telegramBotApi.getStickerSet("pipagck").getOrThrow().stickers.first()
         val message = telegramBotApi.sendSticker(
             chatId = testChatId,
-            sticker = sticker.fileId,
+            sticker = getTestSticker().fileId,
         ).getOrThrow()
         telegramBotApi.deleteMessage(message)
+    }
+
+    @Test
+    fun downloadFile() = runTest {
+        val file = telegramBotApi.getFile(getTestSticker().fileId).getOrThrow()
+        logger.info { "Sticker file: $file" }
+        checkNotNull(file.filePath) { "No filePath returned from telegram server" }
+        telegramBotApi.downloadFile(file.filePath).execute {
+            val body = it.bodyAsBytes()
+            logger.info { "Downloaded size: ${body.size}" }
+        }
+    }
+
+    private lateinit var testSticker: Sticker
+    private suspend fun getTestSticker(): Sticker {
+        if (!::testSticker.isInitialized) {
+            @Suppress("SpellCheckingInspection")
+            testSticker = telegramBotApi.getStickerSet("pipagck").getOrThrow().stickers.first()
+        }
+        return testSticker
     }
 }
