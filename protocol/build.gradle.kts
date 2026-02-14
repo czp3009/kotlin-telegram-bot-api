@@ -65,9 +65,9 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(libs.ktorfit.lib.light)
-            implementation(libs.kotlinx.serialization.json)
-            implementation(libs.ktor.http)
+            api(libs.ktorfit.lib.light)
+            api(libs.kotlinx.serialization.json)
+            api(libs.ktor.http)
         }
 
         commonTest.dependencies {

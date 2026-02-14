@@ -14,3 +14,4 @@ dependencyResolutionManagement {
 }
 
 include(":protocol")
+include(":protocol-sample")

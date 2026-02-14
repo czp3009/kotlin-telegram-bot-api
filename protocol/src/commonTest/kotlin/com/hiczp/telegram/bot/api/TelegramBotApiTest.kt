@@ -38,8 +38,6 @@ private val webpFilePath = Path("../resources/telegram.webp")
  */
 class TelegramBotApiTest {
     private val telegramBotApi by lazy {
-        val botToken = getBotToken()
-        checkNotNull(botToken) { "Failed to get ${EnvVars.BOT_TOKEN}" }
         val httpClient = HttpClient(createKtorEngine()) {
             install(TelegramFileDownloadPlugin)
             install(Logging) {
@@ -55,15 +53,14 @@ class TelegramBotApiTest {
             defaultRequest {
                 headers.appendIfNameAbsent(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             }
+            expectSuccess = true
         }
         Ktorfit.Builder().httpClient(httpClient)
-            .baseUrl("https://api.telegram.org/bot${botToken}/")
+            .baseUrl("https://api.telegram.org/bot${TestEnv.botToken}/")
             .build().createTelegramBotApi()
     }
 
-    private val testChatId by lazy {
-        checkNotNull(getTestChatId()) { "Failed to get ${EnvVars.TEST_CHAT_ID}" }
-    }
+    private val testChatId by lazy { TestEnv.testChatId }
 
     @Test
     fun getUpdates() = runTest {
