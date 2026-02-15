@@ -76,10 +76,6 @@ can theoretically be adapted to other HTTP client frameworks:
 **Important**: This project only provides API definitions and does not include a complete HTTP client implementation. It
 must be used in conjunction with Ktorfit or other HTTP frameworks.
 
-## Usage
-
-For complete usage examples, please refer to the [`protocol-sample`](../protocol-sample) subproject:
-
 ## Code Generation
 
 To regenerate API code from the latest specification:
