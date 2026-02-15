@@ -4,7 +4,13 @@ import com.hiczp.telegram.bot.api.model.ResponseParameters
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-//for avoidance to deserialization "result" if server returns success response
+/**
+ * Internal representation for deserializing Telegram API error responses.
+ *
+ * This type is used to avoid deserializing the `result` field when the server returns an error response.
+ * The regular [TelegramResponse] type always expects a `result` field to be present, but error responses
+ * from Telegram don't include this field.
+ */
 @Serializable
 internal data class TelegramErrorResponse(
     val ok: Boolean,

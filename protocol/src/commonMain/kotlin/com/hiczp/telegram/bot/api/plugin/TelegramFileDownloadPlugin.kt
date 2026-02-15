@@ -9,12 +9,6 @@ import io.ktor.client.plugins.api.*
  * When applied to a Ktorfit interface method, this annotation signals to [TelegramFileDownloadPlugin]
  * that the request URL should be modified to include the `/file` path segment for file downloads.
  *
- * ## Implementation Notes
- *
- * Ktorfit compiles annotations into the implementation class, making Ktor `attributes` accessible normally.
- * The retention is set to [AnnotationRetention.BINARY] (rather than RUNTIME) to avoid compilation warnings
- * on platforms that do not support reflection.
- *
  * @see TelegramFileDownloadPlugin
  */
 @Target(AnnotationTarget.FUNCTION)
@@ -63,12 +57,6 @@ annotation class TelegramFileDownload
  * The plugin assumes the base URL follows the standard Telegram Bot API format
  * (`https://api.telegram.org/bot<token>/`). Only when the base URL is correct can the plugin
  * properly construct the file download path.
- *
- * ## Implementation Details
- *
- * The plugin inspects the request's annotations (via Ktorfit's annotation support) during the
- * `onRequest` phase. If [TelegramFileDownload] is present, it modifies the URL path segments
- * in-place by inserting `"file"` at index 1 (after the bot token segment).
  *
  * @see TelegramFileDownload
  */

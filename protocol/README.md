@@ -54,15 +54,55 @@ In addition to auto-generated code, the project also provides handwritten utilit
   api.deleteMessages(message1, message2, message3)
   ```
 
-- **File Download Plugin** (`plugin/TelegramFileDownloadPlugin.kt`): Ktor client plugin that automatically transforms
-  file download URLs
-    - Converts `https://api.telegram.org/bot<token>/<file_path>` to
-    - `https://api.telegram.org/file/bot<token>/<file_path>`
+- **Long Polling Plugin** (`plugin/TelegramLongPollingPlugin.kt`): Ktor client plugin for `getUpdates` long polling
+  - Automatically configures 60-second timeout for `getUpdates` method
+  - Sets both `requestTimeoutMillis` and `socketTimeoutMillis` to prevent premature connection closure
+
+- **Server Error Plugin** (`plugin/TelegramServerErrorPlugin.kt`): Ktor client plugin for automatic error handling
+  - Converts API error responses to `TelegramErrorResponseException`
+  - Enables try-catch error handling paradigm
+  - **Important**: Do not use Ktor's `expectSuccess` option with this plugin
+  - Works with `HttpRequestRetry` plugin using `cause.isRetryable` for retry logic
+
+- **File Download Plugin** (`plugin/TelegramFileDownloadPlugin.kt`): Ktor client plugin for file downloads
+  - Methods annotated with `@TelegramFileDownload` automatically modify the request path
+  - Inserts `/file` segment: `https://api.telegram.org/bot<token>/<file_path>` →
+    `https://api.telegram.org/file/bot<token>/<file_path>`
 
 - **`InputFile`** (`type/InputFile.kt`): Flexible file upload type
     - Supports referencing existing files via `file_id` or URL
     - Supports uploading new file content via `ChannelProvider`
     - Provides `toFormPart()` extension function to convert to Ktor's `FormPart`
+
+### Ktor Client Setup
+
+The library's plugins are designed to work together. A typical production client setup:
+
+```kotlin
+val httpClient = HttpClient(CIO) {
+  install(TelegramLongPollingPlugin)      // For getUpdates long polling
+  install(TelegramServerErrorPlugin)      // Convert API errors to exceptions
+  install(HttpRequestRetry) {
+    retryOnExceptionIf { request, response, cause ->
+      cause is TelegramErrorResponseException && cause.isRetryable
+    }
+    delayMillis {
+      (cause as? TelegramErrorResponseException)?.parameters?.retryAfter?.times(1000) ?: 1_000
+    }
+  }
+}
+```
+
+**Important**: Do not use Ktor's `expectSuccess` option with `TelegramServerErrorPlugin`, as Telegram returns errors
+with HTTP 200 OK status codes.
+
+### Exception Handling
+
+`TelegramErrorResponseException` (`exception/TelegramErrorResponseException.kt`): Serializable exception type
+
+- Contains `description`, `errorCode`, and optional `parameters`
+- `isRetryable` extension property: True for rate limiting (429) and server errors (5xx)
+- Can be serialized for transmission to other microservices
 
 ### Framework-Agnostic Design
 

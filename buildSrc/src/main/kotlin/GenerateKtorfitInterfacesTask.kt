@@ -59,8 +59,8 @@ import java.io.File
  *   generates a sealed interface with `@JsonClassDiscriminator` and subclasses with `@SerialName`
  *
  * - **Incomplete discriminator mappings**: When discriminator mapping doesn't cover all oneOf members
- *   (e.g., InlineQueryResult with 20 members but 13 in mapping), generates a sealed interface and
- *   standalone classes with `@SerialName` annotations
+ *   (e.g., InlineQueryResult with 20 members but 13 in mapping), generates an empty sealed interface
+ *   and standalone classes (no inheritance) with `@SerialName` annotations and discriminator field
  *
  * - **Discriminator value extraction**: Attempts multiple strategies to find discriminator values:
  *   1. Explicit discriminator.mapping from OpenAPI spec
@@ -82,7 +82,6 @@ import java.io.File
  * - Preserves `type/` directory which contains handwritten code (`TelegramResponse`, `IncomingUpdate`)
  */
 abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
-
     companion object {
         // Package names
         private const val BASE_PACKAGE = "com.hiczp.telegram.bot.api"
@@ -2285,10 +2284,8 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     }
 
     /**
-     * Add a form append statement for a required parameter using FormBuilder.append(key, value)
-     */
-    /**
      * Appends a required form data field to the multipart form data content.
+     *
      * Handles primitive types and complex objects with proper serialization.
      */
     private fun appendRequiredFormData(
@@ -2316,10 +2313,8 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     }
 
     /**
-     * Add a form append statement inside a let block (uses 'it' instead of the variable name)
-     */
-    /**
      * Appends an optional form data field to the multipart form data content.
+     *
      * Wraps the field in a `?.let { }` block for null safety.
      */
     private fun appendOptionalFormData(codeBuilder: CodeBlock.Builder, propName: String, propSchema: JsonNode) {
@@ -2336,11 +2331,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     }
 
     /**
-     * Generate an extension function that accepts a Form data class and calls the scattered parameters extension.
-     */
-
-    /**
-     * Generate a bridge extension function with String parameters that converts them to FormPart
+     * Generates a bridge extension function with String parameters that converts them to FormPart
      * and calls the scattered parameters extension.
      */
     private fun generateBridgeExtensionFunction(
