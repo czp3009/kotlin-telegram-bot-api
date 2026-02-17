@@ -1,4 +1,4 @@
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 
 plugins {
@@ -63,6 +63,8 @@ kotlin {
         d8()
     }
 
+    val desktopNativeTargets = setOf("mingwX64", "linuxArm64", "linuxX64", "macosArm64", "macosX64")
+
     sourceSets {
         commonMain.dependencies {
             api(libs.ktorfit.lib.light)
@@ -86,10 +88,6 @@ kotlin {
             implementation(libs.ktor.client.cio)
         }
 
-        webTest.dependencies {
-            implementation(libs.ktor.client.js)
-        }
-
         val commonTest by getting
         val desktopNativeTest by creating {
             dependsOn(commonTest)
@@ -97,18 +95,18 @@ kotlin {
                 implementation(libs.ktor.client.curl)
             }
         }
-        val otherNativeTest by creating {
+        val otherTest by creating {
             dependsOn(commonTest)
         }
-        targets.withType<KotlinNativeTarget>().configureEach {
-            val testSourceSet = this.compilations.getByName("test").defaultSourceSet
-            if (testSourceSet.name.contains("linux") ||
-                testSourceSet.name.contains("macos") ||
-                testSourceSet.name.contains("mingw")
-            ) {
+
+        //only support running unit test on jvm and desktopNative
+        targets.configureEach {
+            val testCompilation = compilations.findByName("test") ?: return@configureEach
+            val testSourceSet = testCompilation.defaultSourceSet
+            if (platformType == KotlinPlatformType.native && name in desktopNativeTargets) {
                 testSourceSet.dependsOn(desktopNativeTest)
-            } else {
-                testSourceSet.dependsOn(otherNativeTest)
+            } else if (platformType != KotlinPlatformType.jvm) {
+                testSourceSet.dependsOn(otherTest)
             }
         }
     }

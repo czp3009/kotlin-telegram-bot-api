@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalForeignApi::class)
+
 package com.hiczp.telegram.bot.api
 
 import io.ktor.client.engine.*
@@ -7,7 +9,14 @@ import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.toKString
 import platform.posix.getenv
 
-@OptIn(ExperimentalForeignApi::class)
+actual fun getBotToken(): String? {
+    return getenv(EnvVars.BOT_TOKEN)?.toKString()
+}
+
+actual fun getTestChatId(): String? {
+    return getenv(EnvVars.TEST_CHAT_ID)?.toKString()
+}
+
 actual fun createKtorEngine(): HttpClientEngine {
     return Curl.create {
         val httpProxy = getenv(EnvVars.HTTPS_PROXY)?.toKString() ?: getenv(EnvVars.HTTP_PROXY)?.toKString()
