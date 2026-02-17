@@ -5,6 +5,9 @@ import com.hiczp.telegram.bot.api.model.ReplyMarkup
 import com.hiczp.telegram.bot.api.model.ReplyParameters
 import com.hiczp.telegram.bot.api.model.SuggestedPostParameters
 import com.hiczp.telegram.bot.api.type.InputFile
+import kotlin.Boolean
+import kotlin.Long
+import kotlin.String
 import kotlinx.serialization.SerialName
 
 public data class SendVideoNoteForm(

@@ -2,6 +2,8 @@
 package com.hiczp.telegram.bot.api.form
 
 import com.hiczp.telegram.bot.api.type.InputFile
+import kotlin.Long
+import kotlin.String
 import kotlinx.serialization.SerialName
 
 public data class UploadStickerFileForm(

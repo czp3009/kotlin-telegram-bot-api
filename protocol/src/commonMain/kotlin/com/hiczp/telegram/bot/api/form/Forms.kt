@@ -17,11 +17,32 @@
 package com.hiczp.telegram.bot.api.form
 
 import com.hiczp.telegram.bot.api.TelegramBotApi
-import com.hiczp.telegram.bot.api.model.*
+import com.hiczp.telegram.bot.api.model.File
+import com.hiczp.telegram.bot.api.model.InlineKeyboardMarkup
+import com.hiczp.telegram.bot.api.model.InputMedia
+import com.hiczp.telegram.bot.api.model.InputPaidMedia
+import com.hiczp.telegram.bot.api.model.InputProfilePhoto
+import com.hiczp.telegram.bot.api.model.InputSticker
+import com.hiczp.telegram.bot.api.model.InputStoryContent
+import com.hiczp.telegram.bot.api.model.Message
+import com.hiczp.telegram.bot.api.model.MessageEntity
+import com.hiczp.telegram.bot.api.model.ReplyMarkup
+import com.hiczp.telegram.bot.api.model.ReplyParameters
+import com.hiczp.telegram.bot.api.model.Story
+import com.hiczp.telegram.bot.api.model.StoryArea
+import com.hiczp.telegram.bot.api.model.SuggestedPostParameters
 import com.hiczp.telegram.bot.api.type.InputFile
 import com.hiczp.telegram.bot.api.type.TelegramResponse
 import com.hiczp.telegram.bot.api.type.toFormPart
-import io.ktor.client.request.forms.*
+import io.ktor.client.request.forms.ChannelProvider
+import io.ktor.client.request.forms.FormPart
+import io.ktor.client.request.forms.MultiPartFormDataContent
+import io.ktor.client.request.forms.formData
+import kotlin.Boolean
+import kotlin.Long
+import kotlin.String
+import kotlin.Suppress
+import kotlin.collections.List
 import kotlinx.serialization.json.Json
 
 /**
