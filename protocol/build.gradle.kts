@@ -85,6 +85,7 @@ kotlin {
             implementation(libs.logback.classic)
             implementation(libs.ktor.client.cio)
         }
+
         webTest.dependencies {
             implementation(libs.ktor.client.js)
         }

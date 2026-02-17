@@ -5,12 +5,7 @@ import com.hiczp.telegram.bot.api.model.MessageEntity
 import com.hiczp.telegram.bot.api.model.ReplyMarkup
 import com.hiczp.telegram.bot.api.model.ReplyParameters
 import com.hiczp.telegram.bot.api.model.SuggestedPostParameters
-import io.ktor.client.request.forms.ChannelProvider
-import io.ktor.client.request.forms.FormPart
-import kotlin.Boolean
-import kotlin.Long
-import kotlin.String
-import kotlin.collections.List
+import com.hiczp.telegram.bot.api.type.InputFile
 import kotlinx.serialization.SerialName
 
 public data class SendVoiceForm(
@@ -37,7 +32,7 @@ public data class SendVoiceForm(
     /**
      * Audio file to send. Pass a file_id as String to send a file that exists on the Telegram servers (recommended), pass an HTTP URL as a String for Telegram to get a file from the Internet, or upload a new one using multipart/form-data. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files)
      */
-    public val voice: FormPart<ChannelProvider>,
+    public val voice: InputFile,
     /**
      * Voice message caption, 0-1024 characters after entities parsing
      */

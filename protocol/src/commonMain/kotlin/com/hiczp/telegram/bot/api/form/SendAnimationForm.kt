@@ -5,12 +5,7 @@ import com.hiczp.telegram.bot.api.model.MessageEntity
 import com.hiczp.telegram.bot.api.model.ReplyMarkup
 import com.hiczp.telegram.bot.api.model.ReplyParameters
 import com.hiczp.telegram.bot.api.model.SuggestedPostParameters
-import io.ktor.client.request.forms.ChannelProvider
-import io.ktor.client.request.forms.FormPart
-import kotlin.Boolean
-import kotlin.Long
-import kotlin.String
-import kotlin.collections.List
+import com.hiczp.telegram.bot.api.type.InputFile
 import kotlinx.serialization.SerialName
 
 public data class SendAnimationForm(
@@ -37,7 +32,7 @@ public data class SendAnimationForm(
     /**
      * Animation to send. Pass a file_id as String to send an animation that exists on the Telegram servers (recommended), pass an HTTP URL as a String for Telegram to get an animation from the Internet, or upload a new animation using multipart/form-data. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files)
      */
-    public val animation: FormPart<ChannelProvider>,
+    public val animation: InputFile,
     /**
      * Duration of sent animation in seconds
      */
@@ -53,7 +48,7 @@ public data class SendAnimationForm(
     /**
      * Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side. The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using multipart/form-data. Thumbnails can't be reused and can be only uploaded as a new file, so you can pass “attach://<file_attach_name>” if the thumbnail was uploaded using multipart/form-data under <file_attach_name>. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files)
      */
-    public val thumbnail: FormPart<ChannelProvider>? = null,
+    public val thumbnail: InputFile? = null,
     /**
      * Animation caption (may also be used when resending animation by *file_id*), 0-1024 characters after entities parsing
      */

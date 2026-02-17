@@ -4,11 +4,7 @@ package com.hiczp.telegram.bot.api.form
 import com.hiczp.telegram.bot.api.model.ReplyMarkup
 import com.hiczp.telegram.bot.api.model.ReplyParameters
 import com.hiczp.telegram.bot.api.model.SuggestedPostParameters
-import io.ktor.client.request.forms.ChannelProvider
-import io.ktor.client.request.forms.FormPart
-import kotlin.Boolean
-import kotlin.Long
-import kotlin.String
+import com.hiczp.telegram.bot.api.type.InputFile
 import kotlinx.serialization.SerialName
 
 public data class SendStickerForm(
@@ -35,7 +31,7 @@ public data class SendStickerForm(
     /**
      * Sticker to send. Pass a file_id as String to send a file that exists on the Telegram servers (recommended), pass an HTTP URL as a String for Telegram to get a .WEBP sticker from the Internet, or upload a new .WEBP, .TGS, or .WEBM sticker using multipart/form-data. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files). Video and animated stickers can't be sent via an HTTP URL.
      */
-    public val sticker: FormPart<ChannelProvider>,
+    public val sticker: InputFile,
     /**
      * Emoji associated with the sticker; only for just uploaded stickers
      */

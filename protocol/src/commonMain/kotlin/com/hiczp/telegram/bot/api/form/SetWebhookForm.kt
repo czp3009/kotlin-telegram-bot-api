@@ -1,12 +1,7 @@
 // Auto-generated from Swagger specification, do not modify this file manually
 package com.hiczp.telegram.bot.api.form
 
-import io.ktor.client.request.forms.ChannelProvider
-import io.ktor.client.request.forms.FormPart
-import kotlin.Boolean
-import kotlin.Long
-import kotlin.String
-import kotlin.collections.List
+import com.hiczp.telegram.bot.api.type.InputFile
 import kotlinx.serialization.SerialName
 
 public data class SetWebhookForm(
@@ -17,7 +12,7 @@ public data class SetWebhookForm(
     /**
      * Upload your public key certificate so that the root certificate in use can be checked. See our [self-signed guide](https://core.telegram.org/bots/self-signed) for details.
      */
-    public val certificate: FormPart<ChannelProvider>? = null,
+    public val certificate: InputFile? = null,
     /**
      * The fixed IP address which will be used to send webhook requests instead of the IP address resolved through DNS
      */

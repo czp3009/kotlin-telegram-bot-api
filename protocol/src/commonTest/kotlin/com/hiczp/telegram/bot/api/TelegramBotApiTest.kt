@@ -5,6 +5,8 @@ import com.hiczp.telegram.bot.api.exception.isRetryable
 import com.hiczp.telegram.bot.api.extension.deleteMessage
 import com.hiczp.telegram.bot.api.extension.deleteMessages
 import com.hiczp.telegram.bot.api.extension.toFormPart
+import com.hiczp.telegram.bot.api.extension.toInputFile
+import com.hiczp.telegram.bot.api.form.sendDocument
 import com.hiczp.telegram.bot.api.form.sendMediaGroup
 import com.hiczp.telegram.bot.api.form.sendPhoto
 import com.hiczp.telegram.bot.api.form.sendSticker
@@ -13,6 +15,7 @@ import com.hiczp.telegram.bot.api.model.Sticker
 import com.hiczp.telegram.bot.api.plugin.TelegramFileDownloadPlugin
 import com.hiczp.telegram.bot.api.plugin.TelegramLongPollingPlugin
 import com.hiczp.telegram.bot.api.plugin.TelegramServerErrorPlugin
+import com.hiczp.telegram.bot.api.type.InputFile
 import de.jensklingenberg.ktorfit.Ktorfit
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*
@@ -28,13 +31,15 @@ import io.ktor.util.*
 import io.ktor.utils.io.*
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
+import kotlinx.io.buffered
 import kotlinx.io.files.Path
+import kotlinx.io.files.SystemFileSystem
 import kotlinx.serialization.json.Json
-import kotlin.test.Ignore
 import kotlin.test.Test
 
 private val logger = KotlinLogging.logger {}
 private val webpFilePath = Path("../resources/telegram.webp")
+private val txtFilePath = Path("../resources/telegram.txt")
 
 /**
  * Integration tests for Telegram Bot API.
@@ -94,11 +99,11 @@ class TelegramBotApiTest {
         telegramBotApi.getMe()
     }
 
-    @Ignore
-    @Test
-    fun close() = runTest {
-        telegramBotApi.close()
-    }
+//    @Ignore
+//    @Test
+//    fun close() = runTest {
+//        telegramBotApi.close()
+//    }
 
     @Test
     fun getUpdates() = runTest {
@@ -112,7 +117,7 @@ class TelegramBotApiTest {
         //upload a new photo
         val message = telegramBotApi.sendPhoto(
             chatId = testChatId,
-            photo = webpFilePath.toFormPart("photo", ContentType.Image.WEBP),
+            photo = webpFilePath.toInputFile(),
         ).getOrThrow()
         telegramBotApi.deleteMessage(message)
         //send photo by fileId
@@ -120,7 +125,7 @@ class TelegramBotApiTest {
         checkNotNull(fileId) { "No fileId returned from telegram server" }
         val message2 = telegramBotApi.sendPhoto(
             chatId = message.chat.id.toString(),
-            photo = fileId,
+            photo = InputFile.reference(fileId),
             caption = "test",
         ).getOrThrow()
         telegramBotApi.deleteMessage(message2)
@@ -135,8 +140,8 @@ class TelegramBotApiTest {
                 InputMediaPhoto(media = "attach://photo2"),
             ),
             attachments = listOf(
-                webpFilePath.toFormPart("photo1", ContentType.Image.WEBP),
-                webpFilePath.toFormPart("photo2", ContentType.Image.WEBP),
+                webpFilePath.toFormPart("photo1"),
+                webpFilePath.toFormPart("photo2"),
             ),
         ).getOrThrow()
         telegramBotApi.deleteMessages(messages)
@@ -144,11 +149,42 @@ class TelegramBotApiTest {
 
     @Test
     fun sendSticker() = runTest {
-        val message = telegramBotApi.sendSticker(
+        telegramBotApi.sendSticker(
             chatId = testChatId,
-            sticker = getTestSticker().fileId,
-        ).getOrThrow()
-        telegramBotApi.deleteMessage(message)
+            sticker = InputFile.reference(getTestSticker().fileId),
+        ).getOrThrow().let {
+            telegramBotApi.deleteMessage(it)
+        }
+    }
+
+    @Test
+    fun sendWebpDocument() = runTest {
+        telegramBotApi.sendDocument(
+            chatId = testChatId,
+            document = webpFilePath.toInputFile(),
+        ).getOrThrow().let {
+            telegramBotApi.deleteMessage(it)
+        }
+    }
+
+    @Test
+    fun sendTxtDocument() = runTest {
+        telegramBotApi.sendDocument(
+            chatId = testChatId,
+            document = txtFilePath.toInputFile(),
+        ).getOrThrow().let {
+            telegramBotApi.deleteMessage(it)
+        }
+    }
+
+    @Test
+    fun sendTxtDocumentWithoutFileName() = runTest {
+        telegramBotApi.sendDocument(
+            chatId = testChatId,
+            document = InputFile.binary { ByteReadChannel(SystemFileSystem.source(txtFilePath).buffered()) },
+        ).getOrThrow().let {
+            telegramBotApi.deleteMessage(it)
+        }
     }
 
     @Test

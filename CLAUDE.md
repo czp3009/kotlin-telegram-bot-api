@@ -2,194 +2,116 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Overview
+## Project scope
 
-This is a Kotlin Multiplatform library for the Telegram Bot API. It provides type-safe, auto-generated Kotlin bindings
-for Telegram's REST API, supporting JVM, JavaScript, WebAssembly, and native platforms (iOS, macOS, Android, Linux,
-Windows).
+`kotlin-telegram-bot-api` is a Kotlin Multiplatform Telegram Bot API client.
 
-## Build Commands
+- Root project includes one main module: `:protocol` (`settings.gradle.kts`).
+- Most Telegram API surface is generated from OpenAPI/Swagger.
+- Handwritten runtime behavior (error handling, plugins, upload abstractions) lives alongside generated code under
+  `protocol/src/commonMain/kotlin/com/hiczp/telegram/bot/api/`.
+
+## Commands you will use often
+
+Run from repository root.
 
 ```bash
-# Build all targets
+# Full build
 ./gradlew build
 
-# Build specific platform
-./gradlew jvmJar          # JVM version
-./gradlew jsJar           # JavaScript version
-./gradlew wasmJsJar       # WebAssembly version
+# Protocol module only
+./gradlew :protocol:build
 
-# Run tests
-./gradlew test            # Common tests
-./gradlew jvmTest         # JVM tests
-./gradlew allTests        # All platform tests
+# Tests
+./gradlew test
+./gradlew jvmTest
+./gradlew allTests
+./gradlew :protocol:jvmTest --tests "com.hiczp.telegram.bot.api.TelegramBotApiTest.getUpdates"
 
-# Run a single test (JVM)
-./gradlew jvmTest --tests "com.hiczp.telegram.bot.api.TelegramBotApiTest.getUpdates"
+# Platform artifacts
+./gradlew jvmJar
+./gradlew jsJar
+./gradlew wasmJsJar
 
-# Clean build
+# Clean
 ./gradlew clean
 
-# Regenerate API code from latest Telegram spec
+# Regenerate Telegram API code from latest spec
 ./gradlew downloadSwagger
 ./gradlew generateKtorfitInterfaces
 ```
 
-## Running Integration Tests
+Integration/live API tests require:
 
-Integration tests require environment variables to be set:
+- `BOT_TOKEN`
+- `TEST_CHAT_ID`
 
-- `BOT_TOKEN`: Telegram bot token
-- `TEST_CHAT_ID`: Chat ID to use for sending test messages
+## Architecture (big picture)
 
-These tests interact with the live Telegram API and are useful for validating API changes but require
-a real bot token and test chat.
+### 1) Codegen-first workflow
 
-## Architecture
+Code generation is central to this repository:
 
-### Code Generation Pipeline
+1. `DownloadTelegramBotApiSwaggerTask` downloads Telegram Bot API spec JSON.
+2. `GenerateKtorfitInterfacesTask` parses that spec and generates Kotlin sources.
+3. Kotlin compilations depend on generation (`protocol/build.gradle.kts` wires generation into compilation/KSP test
+   tasks).
 
-The project uses a sophisticated code generation workflow to stay in sync with Telegram's API:
+Generation logic lives in `buildSrc/src/main/kotlin/GenerateKtorfitInterfacesTask.kt`.
 
-1. **Download Phase** (`DownloadTelegramBotApiSwaggerTask`):
-    - Fetches the latest OpenAPI specification from GitHub releases (czp3009/telegram-bot-api-swagger)
-    - Stored in `build/generated/swagger/telegram-bot-api.json`
+### 2) Generated vs handwritten boundary
 
-2. **Generation Phase** (`GenerateKtorfitInterfacesTask`):
-    - Parses the OpenAPI spec using Jackson
-    - Generates Kotlin code using KotlinPoet
-    - Outputs to `protocol/src/commonMain/kotlin/com/hiczp/telegram/bot/api/`
+Under `protocol/src/commonMain/kotlin/com/hiczp/telegram/bot/api/`:
 
-### Key Generated Components
+- Generated (do not manually edit):
+  - `TelegramBotApi.kt`
+  - `model/*`
+  - `form/*`
+  - Files marked with `Auto-generated from Swagger specification...`
+- Handwritten and preserved:
+  - `type/*` (notably `InputFile`, `TelegramResponse`, `IncomingUpdate`)
+  - `plugin/*` (`TelegramLongPollingPlugin`, `TelegramServerErrorPlugin`, `TelegramFileDownloadPlugin`)
+  - `extension/*`
+  - `exception/*`
 
-- **`TelegramBotApi.kt`**: Main HTTP interface with KtorFit annotations (`@GET`, `@POST`, `@Body`, `@Query`)
-- **`model/`**: Data classes for Telegram entities (Message, User, Chat, etc.) with `@Serializable` annotations
-- **`form/`**: Specialized classes for multipart file uploads, converting InputFile to ChannelProvider
-- **`TelegramBotApiExtensions.kt`**: Helper extensions for the API
+When API schema changes are needed, regenerate instead of patching generated files.
 
-### Source Structure
+### 3) Request/response design
 
-```
-protocol/src/commonMain/kotlin/com/hiczp/telegram/bot/api/
-├── TelegramBotApi.kt               # Auto-generated API interface
-├── TelegramBotApiExtensions.kt     # Extension functions
-├── model/                          # Telegram API models (auto-generated)
-├── form/                           # Multipart form classes (auto-generated)
-├── type/                           # Core types (handwritten)
-│   ├── TelegramResponse.kt         # Response wrapper with error handling
-│   ├── TelegramErrorResponse.kt    # Internal error response deserialization
-│   ├── InputFile.kt                # File upload handling
-│   └── IncomingUpdate.kt           # Interface for update types used in polymorphic handling
-├── extension/                      # Additional extensions (handwritten)
-│   └── Messages.kt                 # Message deletion helpers
-├── plugin/                         # Ktor client plugins
-│   ├── TelegramFileDownloadPlugin.kt    # File download URL transformation
-│   ├── TelegramLongPollingPlugin.kt     # Long polling timeout configuration
-│   └── TelegramServerErrorPlugin.kt     # Server error to exception conversion
-└── exception/                      # Error handling
-    └── TelegramErrorResponseException.kt
-```
+- API interface uses Ktorfit annotations (`@GET`, `@POST`, `@Body`, `@Query`).
+- Calls return `TelegramResponse<T>` for explicit success/error handling.
+- Multipart endpoints use generated `*Form` wrappers and `Forms.kt` helper extensions.
+- `InputFile` is the upload abstraction used by multipart helpers.
 
-### Special Type Handling
+### 4) Runtime plugin model
 
-The code generator handles several complex patterns from the OpenAPI spec:
+The library expects Ktor plugins to provide production behavior:
 
-- **Sealed Interfaces**: Union types (oneOf) become sealed interfaces with `@JsonClassDiscriminator`
-- **ReplyMarkup**: All reply markup types implement the `ReplyMarkup` sealed interface
-- **IncomingUpdate**: Types used in Update's optional non-primitive fields implement `IncomingUpdate` for polymorphic
-  handling
-- **Field-Overlapping Unions**: Types like `MaybeInaccessibleMessage` use the largest subclass for deserialization
+- `TelegramLongPollingPlugin`: adjusts timeouts for `getUpdates`.
+- `TelegramServerErrorPlugin`: converts Telegram error payloads into exceptions.
+- `TelegramFileDownloadPlugin`: rewrites file download paths.
 
-### Build Configuration
+Important: Telegram can return error payloads with HTTP 200; avoid `expectSuccess` when relying on
+`TelegramServerErrorPlugin`.
 
-- **JVM Toolchain**: Java 21
-- **KSP** (Kotlin Symbol Processing): Used for KtorFit compiler plugin (only for test source sets)
-- **Dependencies**: Defined in `gradle/libs.versions.toml` using version catalogs
-- **Multiplatform Targets**: Supports JVM, JS, WASM, and native targets across Apple, Linux, Windows, and Android
-  platforms
-- **BuildSrc**: Contains custom Gradle tasks for code generation (DownloadTelegramBotApiSwaggerTask,
-  GenerateKtorfitInterfacesTask)
+## Multiplatform/testing layout notes
 
-### Testing
+From `protocol/build.gradle.kts`:
 
-- Tests use kotlinx-coroutines-test
-- Platform-specific HTTP clients: CIO/Curl for JVM/desktop native, JS for web targets
-- Common tests shared across all platforms in `commonTest` source set
-- `desktopNativeTest` and `otherNativeTest` test source sets provide platform-specific configurations
+- Toolchain: JVM 21.
+- Targets include JVM, JS, WASM, Apple, Linux, Windows, Android Native.
+- Test source sets split by runtime availability:
+  - `commonTest`
+  - `desktopNativeTest` (uses Curl client)
+  - `otherNativeTest`
+  - `jvmTest` (CIO + logback)
+  - `webTest` (JS client)
 
-### Ktor Client Setup
+Use JVM tests for quickest local verification unless task explicitly requires cross-platform coverage.
 
-The library's plugins are designed to work together. A typical production client setup:
+## Dependency/configuration pointers
 
-```kotlin
-val httpClient = HttpClient(CIO) {
-    install(TelegramLongPollingPlugin)      // For getUpdates long polling
-    install(TelegramServerErrorPlugin)      // Convert API errors to exceptions
-    install(HttpRequestRetry) {
-        retryOnExceptionIf { request, response, cause ->
-            cause is TelegramErrorResponseException && cause.isRetryable
-        }
-        delayMillis {
-            (cause as? TelegramErrorResponseException)?.parameters?.retryAfter?.times(1000) ?: 1_000
-        }
-    }
-}
-```
-
-**Important**: Do not use Ktor's `expectSuccess` option with `TelegramServerErrorPlugin`, as Telegram returns errors
-with HTTP 200 OK status codes.
-
-### File Upload Handling
-
-The library provides a flexible `InputFile` type that supports multiple upload scenarios:
-
-- **File reference**: Use existing `file_id` or URL (sent as string in multipart form)
-- **File content**: Upload new file content via `ChannelProvider` with optional filename and content type
-- **Extension**: `InputFile.toFormPart(multipartName)` converts to Ktor's `FormPart<ChannelProvider>`
-
-For multi-part uploads with dynamic attachments (e.g., `sendMediaGroup`), form classes include an `attachments`
-parameter that accepts a list of `FormPart<ChannelProvider>` for files referenced via `attach://<name>`.
-
-### Long Polling
-
-The `TelegramLongPollingPlugin` configures appropriate timeouts for long polling operations:
-
-- Automatically increases timeout to 60 seconds for `getUpdates` method
-- Sets both `requestTimeoutMillis` and `socketTimeoutMillis` to prevent premature connection closure
-- Only affects `getUpdates`; other API requests use default timeout settings
-
-### File Download
-
-The `TelegramFileDownloadPlugin` automatically transforms file download URLs:
-
-- Methods annotated with `@TelegramFileDownload` (like `downloadFile`) automatically modify the request path
-- The plugin inserts `/file` between the bot token and file path: `https://api.telegram.org/bot<token>/file/<file_path>`
-- Returns `HttpStatement` for streaming or processing downloaded content
-
-### Server Error Handling
-
-The `TelegramServerErrorPlugin` enables try-catch error handling by converting API errors to exceptions:
-
-- Automatically parses error responses and throws `TelegramErrorResponseException`
-- **Do not enable Ktor's `expectSuccess`** when using this plugin (Telegram returns errors with HTTP 200)
-- When combined with Ktor's `HttpRequestRetry` plugin, check `cause.isRetryable` for retry logic
-- Use `retryAfter` from error parameters for rate limiting (HTTP 429) delays
-
-### Error Handling
-
-`TelegramResponse<T>` wraps all API responses with convenient methods:
-
-- `getOrThrow()`: Returns result or throws `TelegramErrorResponseException`
-- `exceptionOrNull()`: Returns exception if response is an error, null otherwise
-- `onSuccess/onError`: Callback-based error handling
-- `fold()`: Functional pattern for success/error branches
-- `toResult()`: Converts to Kotlin `Result<T>`
-- `isRetryable` extension property: True for rate limiting (429) and server errors (5xx)
-
-### Important Notes
-
-- **Do not modify** files marked with `// Auto-generated from Swagger specification, do not modify this file manually`
-- Changes to the API should be made by regenerating from the OpenAPI spec, not by editing generated files
-- The `type/` directory contains handwritten code (e.g., `TelegramResponse.kt`, `IncomingUpdate.kt`,
-  `TelegramErrorResponse.kt`) that is preserved during regeneration
-- Rate limit handling: Use `isRetryable` extension property to identify retryable errors (HTTP 429 and 5xx)
+- Version catalog: `gradle/libs.versions.toml`.
+- Root build is minimal; most behavior is in `protocol/build.gradle.kts` and `buildSrc` custom tasks.
+- No Cursor rules (`.cursorrules`, `.cursor/rules`) or Copilot instructions (`.github/copilot-instructions.md`) were
+  found in this repository.
