@@ -1,9 +1,11 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.androidKotlinMultiplatformLibrary)
     alias(libs.plugins.ksp)
     alias(libs.plugins.ktorfit)
 }
@@ -49,6 +51,16 @@ kotlin {
 
     // JVM
     jvm()
+
+    // Android
+    androidLibrary {
+        namespace = "com.hiczp.telegram.bot.api"
+        compileSdk = 36
+        minSdk = 34
+        compilerOptions {
+            jvmTarget = JvmTarget.JVM_17
+        }
+    }
 
     // JS
     js {
