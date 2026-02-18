@@ -54,7 +54,7 @@ kotlin {
 
     // Android
     androidLibrary {
-        namespace = "com.hiczp.telegram.bot.api"
+        namespace = "com.hiczp.telegram.bot.protocol"
         compileSdk = 36
         minSdk = 34
         compilerOptions {

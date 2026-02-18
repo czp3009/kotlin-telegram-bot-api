@@ -95,7 +95,7 @@ import java.io.File
 abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     companion object {
         // Package names
-        private const val BASE_PACKAGE = "com.hiczp.telegram.bot.api"
+        private const val BASE_PACKAGE = "com.hiczp.telegram.bot.protocol"
         private const val MODEL_PACKAGE = "$BASE_PACKAGE.model"
         private const val FORM_PACKAGE = "$BASE_PACKAGE.form"
         private const val QUERY_PACKAGE = "$BASE_PACKAGE.query"
@@ -137,10 +137,10 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
      * Output directory for generated Kotlin code.
      *
      * Generated files are organized under this directory:
-     * - `com/hiczp/telegram/bot/api/model/` - Data model classes (100+ files)
-     * - `com/hiczp/telegram/bot/api/form/` - Form wrapper classes (*Form.kt) and Forms.kt extension functions
-     * - `com/hiczp/telegram/bot/api/query/Queries.kt` - Query extension functions for JSON-serialized GET parameters
-     * - `com/hiczp/telegram/bot/api/TelegramBotApi.kt` - Ktorfit HTTP interface
+     * - `com/hiczp/telegram/bot/protocol/model/` - Data model classes (100+ files)
+     * - `com/hiczp/telegram/bot/protocol/form/` - Form wrapper classes (*Form.kt) and Forms.kt extension functions
+     * - `com/hiczp/telegram/bot/protocol/query/Queries.kt` - Query extension functions for JSON-serialized GET parameters
+     * - `com/hiczp/telegram/bot/protocol/TelegramBotApi.kt` - Ktorfit HTTP interface
      *
      * The `type/` subdirectory is preserved as it contains handwritten code:
      * - `IncomingUpdate.kt` - Marker interface for Update field types
@@ -190,7 +190,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
      *
      * Generated files are written to the configured output directory:
      * ```
-     * com/hiczp/telegram/bot/api/
+     * com/hiczp/telegram/bot/protocol/
      * ├── TelegramBotApi.kt           # Ktorfit HTTP interface with all API methods
      * ├── form/                       # Form data wrapper classes for multipart uploads
      * │   ├── *Form.kt                # Wrapper classes with InputFile upload fields
@@ -233,7 +233,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         logger.lifecycle("Generating Ktorfit interfaces from ${swaggerFile.get().asFile.name}")
 
         // Clean output directory (except the type directory which contains handwritten TelegramResponse)
-        val apiDir = File(outputDirectory, "com/hiczp/telegram/bot/api")
+        val apiDir = File(outputDirectory, "com/hiczp/telegram/bot/protocol")
         val modelDir = File(apiDir, "model")
         val formDir = File(apiDir, "form")
         val queryDir = File(apiDir, "query")
@@ -2034,24 +2034,24 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
     private fun determineReturnType(operation: JsonNode, operationId: String): TypeName {
         val responses = operation.get("responses") ?: return ClassName(
-            "com.hiczp.telegram.bot.api.type",
-            "TelegramResponse"
+            TYPE_PACKAGE,
+            TELEGRAM_RESPONSE_TYPE
         ).parameterizedBy(BOOLEAN)
         val successResponse = responses.get("200") ?: responses.get("201") ?: return ClassName(
-            "com.hiczp.telegram.bot.api.type",
-            "TelegramResponse"
+            TYPE_PACKAGE,
+            TELEGRAM_RESPONSE_TYPE
         ).parameterizedBy(BOOLEAN)
         val content = successResponse.get("content") ?: return ClassName(
-            "com.hiczp.telegram.bot.api.type",
-            "TelegramResponse"
+            TYPE_PACKAGE,
+            TELEGRAM_RESPONSE_TYPE
         ).parameterizedBy(BOOLEAN)
         val jsonContent = content.get("application/json") ?: return ClassName(
-            "com.hiczp.telegram.bot.api.type",
-            "TelegramResponse"
+            TYPE_PACKAGE,
+            TELEGRAM_RESPONSE_TYPE
         ).parameterizedBy(BOOLEAN)
         val schema = jsonContent.get("schema") ?: return ClassName(
-            "com.hiczp.telegram.bot.api.type",
-            "TelegramResponse"
+            TYPE_PACKAGE,
+            TELEGRAM_RESPONSE_TYPE
         ).parameterizedBy(BOOLEAN)
 
         // Check if this is a Telegram API response wrapper (has "ok" and "result" properties)

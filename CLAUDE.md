@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Root project includes one main module: `:protocol` (`settings.gradle.kts`).
 - Most Telegram API surface is generated from OpenAPI/Swagger.
 - Handwritten runtime behavior (error handling, plugins, upload abstractions) lives alongside generated code under
-  `protocol/src/commonMain/kotlin/com/hiczp/telegram/bot/api/`.
+  `protocol/src/commonMain/kotlin/com/hiczp/telegram/bot/protocol/`.
 
 ## Commands you will use often
 
@@ -26,7 +26,7 @@ Run from repository root.
 ./gradlew test
 ./gradlew jvmTest
 ./gradlew allTests
-./gradlew :protocol:jvmTest --tests "com.hiczp.telegram.bot.api.TelegramBotApiTest.getUpdates"
+./gradlew :protocol:jvmTest --tests "com.hiczp.telegram.bot.protocol.TelegramBotApiTest.getUpdates"
 
 # Platform artifacts
 ./gradlew jvmJar
@@ -61,7 +61,7 @@ Generation logic lives in `buildSrc/src/main/kotlin/GenerateKtorfitInterfacesTas
 
 ### 2) Generated vs handwritten boundary
 
-Under `protocol/src/commonMain/kotlin/com/hiczp/telegram/bot/api/`:
+Under `protocol/src/commonMain/kotlin/com/hiczp/telegram/bot/protocol/`:
 
 - Generated (do not manually edit):
   - `TelegramBotApi.kt`
