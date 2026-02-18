@@ -2,6 +2,7 @@ rootProject.name = "kotlin-telegram-bot-api"
 
 pluginManagement {
     repositories {
+        gradlePluginPortal()
         mavenCentral()
         google()
     }

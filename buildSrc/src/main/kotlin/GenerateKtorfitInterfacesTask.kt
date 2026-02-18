@@ -20,7 +20,7 @@ import java.io.File
  *
  * ### Data Models (`model/` package)
  * Generates serializable data classes for all Telegram API entities (Message, User, Chat, etc.)
- * with proper type handling including:
+ * with proper type handling including
  * - Union types (oneOf) → sealed interfaces with `@JsonClassDiscriminator`
  * - Nested objects and arrays
  * - `@SerialName` annotations for snake_case to camelCase mapping
@@ -69,7 +69,7 @@ import java.io.File
  *   and standalone classes (no inheritance) with `@SerialName` annotations and discriminator field
  *
  * - **Discriminator value extraction**: Attempts multiple strategies to find discriminator values:
- *   1. Explicit discriminator.mapping from OpenAPI spec
+ *   1. Explicit discriminator. Mapping from OpenAPI spec
  *   2. Single-value enum fields in member schemas
  *   3. Description patterns: `always "value"`, `must be "value"`, `must be *value*`
  *   4. Fallback inference from class names (e.g., BackgroundFillSolid → "solid")
@@ -121,7 +121,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     /**
      * Input property for the OpenAPI/Swagger specification file.
      *
-     * This file defines the Telegram Bot API structure including all endpoints, request/response schemas,
+     * This file defines the Telegram Bot API structure, including all endpoints, request/response schemas,
      * and data models. The task parses this specification to generate corresponding Kotlin code.
      */
     @get:InputFile
@@ -164,7 +164,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     private val updateFieldTypes = mutableSetOf<String>() // Types used in Update's optional non-primitive fields
 
     /**
-     * Main entry point for code generation from the OpenAPI specification.
+     * The main entry point for code generation from the OpenAPI specification.
      *
      * This method orchestrates the entire code generation process:
      *
@@ -237,7 +237,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         formDir.mkdirs()
 
         // Store all schemas for reference
-        allSchemas = swagger.get("components")?.get("schemas")?.fields()?.asSequence()
+        allSchemas = swagger.get("components")?.get("schemas")?.properties()
             ?.associate { it.key to it.value } ?: emptyMap()
 
         // Collect all ReplyMarkup types from the swagger spec
@@ -279,8 +279,8 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     private fun collectReplyMarkupTypes(swagger: JsonNode) {
         val paths = swagger.get("paths") ?: return
 
-        paths.fields().forEach { (_, methods) ->
-            methods.fields().forEach { (_, operation) ->
+        paths.properties().forEach { (_, methods) ->
+            methods.properties().forEach { (_, operation) ->
                 // Check in the request body
                 val requestBody = operation.get("requestBody")
                 if (requestBody != null) {
@@ -316,7 +316,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         val properties = updateSchema.get("properties") ?: return
         val required = updateSchema.get("required")?.map { it.asText() }?.toSet() ?: emptySet()
 
-        properties.fields().forEach { (propName, propSchema) ->
+        properties.properties().forEach { (propName, propSchema) ->
             // Skip required fields (like update_id)
             if (propName in required) return@forEach
 
@@ -430,7 +430,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     /**
      * Adds KDoc documentation to a type builder if the description is present.
      *
-     * The description is sanitized to ensure valid KDoc format (escaping special characters, etc.).
+     * The description is sanitized to ensure a valid KDoc format (escaping special characters, etc.).
      */
     private fun TypeSpec.Builder.addKDocIfPresent(description: String?): TypeSpec.Builder {
         if (description != null) {
@@ -605,7 +605,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     }
 
     /**
-     * Creates a constructor parameter builder with optional default value.
+     * Creates a constructor parameter builder with an optional default value.
      *
      * Non-required parameters get a default value of `null`.
      */
@@ -693,7 +693,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         val schemas = swagger.get("components")?.get("schemas") ?: return
         val modelPackage = MODEL_PACKAGE
 
-        schemas.fields().forEach { (schemaName, schemaNode) ->
+        schemas.properties().forEach { (schemaName, schemaNode) ->
             if (schemaName in processedSchemas) return@forEach
 
             // Skip InputFile model generation - handled by handwritten sealed InputFile types
@@ -802,7 +802,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                 val properties = schema.get("properties")
 
                 // If no properties, generate a simple object instead of a data class
-                if (properties == null || !properties.isObject || !properties.fields().hasNext()) {
+                if (properties == null || !properties.isObject || properties.properties().isEmpty()) {
                     val objectBuilder = TypeSpec.objectBuilder(className)
                         .configureTypeBuilder(className, description, isFormClass)
 
@@ -815,7 +815,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                     val required = schema.get("required")?.map { it.asText() }?.toSet() ?: emptySet()
                     val constructorBuilder = FunSpec.constructorBuilder()
 
-                    properties.fields().forEach { (propName, propSchema) ->
+                    properties.properties().forEach { (propName, propSchema) ->
                         // For Form classes, map upload-related fields to InputFile (and List<InputFile> for arrays)
                         val context = "$className.$propName"
                         val propType = if (isFormClass) {
@@ -903,14 +903,14 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
         // Get all property names from all members
         val allPropertyNames = memberSchemas.flatMap { schema ->
-            schema.get("properties")?.fields()?.asSequence()?.map { it.key }?.toList() ?: emptyList()
+            schema.get("properties")?.properties()?.asSequence()?.map { it.key }?.toList() ?: emptyList()
         }.toSet()
 
         if (allPropertyNames.isEmpty()) return false
 
         // Check if properties overlap significantly (>70% overlap)
         val overlaps = memberSchemas.map { schema ->
-            val props = schema.get("properties")?.fields()?.asSequence()?.map { it.key }?.toSet() ?: emptySet()
+            val props = schema.get("properties")?.properties()?.asSequence()?.map { it.key }?.toSet() ?: emptySet()
             if (allPropertyNames.isEmpty()) 0.0 else props.intersect(allPropertyNames).size.toDouble() / allPropertyNames.size
         }
 
@@ -920,7 +920,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     private fun findLargestSubclass(unionMembers: List<String>): String? {
         return unionMembers.maxByOrNull { memberName ->
             val schema = allSchemas[memberName] ?: return@maxByOrNull 0
-            schema.get("properties")?.fields()?.asSequence()?.count() ?: 0
+            schema.get("properties")?.properties()?.count() ?: 0
         }
     }
 
@@ -956,7 +956,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
         // Build reverse mapping from explicit discriminator mapping: className -> discriminatorValue
         if (mapping != null && mapping.isObject) {
-            mapping.fields().forEach { (discriminatorValue, ref) ->
+            mapping.properties().forEach { (discriminatorValue, ref) ->
                 val className = ref.asText().substringAfterLast("/")
                 mappingCount++
                 if (className in unionMembers) {
@@ -1161,7 +1161,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
         val constructorBuilder = FunSpec.constructorBuilder()
 
-        info.properties.fields().forEach { (propName, propSchema) ->
+        info.properties.properties().forEach { (propName, propSchema) ->
             // Skip the discriminator field - @JsonClassDiscriminator handles it automatically
             if (propName == discriminatorInfo.fieldName) {
                 return@forEach
@@ -1299,7 +1299,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         )
 
         // Add other properties (skip the discriminator field since we already added it)
-        info.properties.fields().forEach { (propName, propSchema) ->
+        info.properties.properties().forEach { (propName, propSchema) ->
             if (propName == discriminatorFieldName) {
                 return@forEach
             }
@@ -1383,7 +1383,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
         val constructorBuilder = FunSpec.constructorBuilder()
 
-        info.properties.fields().forEach { (propName, propSchema) ->
+        info.properties.properties().forEach { (propName, propSchema) ->
             addPropertyWithParameter(
                 classBuilder,
                 constructorBuilder,
@@ -1608,8 +1608,8 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
         // Parse paths
         val paths = swagger.get("paths") ?: return
-        paths.fields().forEach { (path, methods) ->
-            methods.fields().forEach { (method, operation) ->
+        paths.properties().forEach { (path, methods) ->
+            methods.properties().forEach { (method, operation) ->
                 try {
                     val functions = generateFunction(path.trimStart('/'), method, operation, outputDir)
                     functions.forEach { function ->
@@ -1621,7 +1621,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             }
         }
 
-        // Add downloadFile method at the end
+        // Add the downloadFile method at the end
         val downloadFileFunction = FunSpec.builder("downloadFile")
             .addModifiers(KModifier.SUSPEND, KModifier.ABSTRACT)
             .addAnnotation(
@@ -1930,13 +1930,13 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                 additionalProperties.get("type")?.asText() == "string" &&
                 additionalProperties.get("format")?.asText() == "binary"
 
-        if (properties != null && properties.isObject && properties.fields().hasNext()) {
+        if (properties != null && properties.isObject && properties.properties().isNotEmpty()) {
             val classBuilder = TypeSpec.classBuilder(className)
                 .addModifiers(KModifier.DATA)
 
             val constructorBuilder = FunSpec.constructorBuilder()
 
-            properties.fields().forEach { (propName, propSchema) ->
+            properties.properties().forEach { (propName, propSchema) ->
                 val isRequired = required.contains(propName)
                 // For form classes, keep InputFile types as InputFile
                 val propType = convertToPartDataIfNeeded(propSchema, "$className.$propName")
@@ -1952,7 +1952,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                 )
             }
 
-            // Add attachments field if additionalProperties has binary format
+            // Add attachments field if additionalProperties has the binary format
             if (hasBinaryAdditionalProperties) {
                 val attachmentsType = LIST.parameterizedBy(
                     ClassName("io.ktor.client.request.forms", "FormPart")
@@ -2172,7 +2172,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         }
 
         // Add parameters for each property
-        properties?.fields()?.forEach { (propName, propSchema) ->
+        properties?.properties()?.forEach { (propName, propSchema) ->
             val camelName = snakeToCamelCase(propName)
             val isRequired = required.contains(propName)
             val propType = convertToPartDataIfNeeded(propSchema, "$operationId.$propName")
@@ -2223,7 +2223,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         codeBuilder.indent()
 
         // Add each parameter to the form data, skipping null values
-        properties?.fields()?.forEach { (propName, propSchema) ->
+        properties?.properties()?.forEach { (propName, propSchema) ->
             val camelName = snakeToCamelCase(propName)
             val isRequired = required.contains(propName)
             val typeInfo = extractSchemaTypeInfo(propSchema)
@@ -2395,7 +2395,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         codeBuilder.indent()
 
         val paramsList = mutableListOf<String>()
-        properties?.fields()?.forEach { (propName, _) ->
+        properties?.properties()?.forEach { (propName, _) ->
             val camelName = snakeToCamelCase(propName)
             paramsList.add("$camelName = form.$camelName")
         }

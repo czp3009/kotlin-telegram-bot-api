@@ -4,7 +4,7 @@ android-kmp-library-plugin = "9.0.1"
 kotlinx-coroutines = "1.10.2"
 kotlinx-serialization = "1.10.0"
 ksp = "2.3.5"
-kotlinLogging = "8.0.01"
+kotlin-logging = "8.0.01"
 jackson = "2.21.0"
 kotlinpoet = "2.2.0"
 ktor = "3.4.0"
@@ -15,7 +15,7 @@ logback-classic = "1.5.32"
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
-kotlinLogging = { module = "io.github.oshai:kotlin-logging", version.ref = "kotlinLogging" }
+kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "kotlin-logging" }
 jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
 kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet" }
 ktor-http = { module = "io.ktor:ktor-http", version.ref = "ktor" }
