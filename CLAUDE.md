@@ -67,6 +67,7 @@ Under `protocol/src/commonMain/kotlin/com/hiczp/telegram/bot/api/`:
   - `TelegramBotApi.kt`
   - `model/*`
   - `form/*`
+  - `query/*`
   - Files marked with `Auto-generated from Swagger specification...`
 - Handwritten and preserved:
   - `type/*` (notably `InputFile`, `TelegramResponse`, `IncomingUpdate`)
@@ -81,6 +82,8 @@ When API schema changes are needed, regenerate instead of patching generated fil
 - API interface uses Ktorfit annotations (`@GET`, `@POST`, `@Body`, `@Query`).
 - Calls return `TelegramResponse<T>` for explicit success/error handling.
 - Multipart endpoints use generated `*Form` wrappers and `Forms.kt` helper extensions.
+- Query-heavy GET endpoints additionally expose generated `query/Queries.kt` typed extensions that serialize
+  non-primitive query parameters before delegation.
 - `InputFile` is the upload abstraction used by multipart helpers.
 
 ### 4) Runtime plugin model

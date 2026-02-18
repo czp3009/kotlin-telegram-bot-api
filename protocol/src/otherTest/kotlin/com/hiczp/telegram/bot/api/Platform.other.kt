@@ -13,3 +13,7 @@ actual fun getTestChatId(): String? {
 actual fun createKtorEngine(): HttpClientEngine {
     TODO("Not yet implemented")
 }
+
+actual fun sleepMillis(millis: Long) {
+    TODO("Not yet implemented")
+}

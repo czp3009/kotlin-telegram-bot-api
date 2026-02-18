@@ -29,6 +29,12 @@ Code is generated from the
 - **API interface** (`TelegramBotApi.kt`)
     - Ktorfit-based interface (`@GET`, `@POST`, `@Body`, `@Query`)
     - All API calls return `TelegramResponse<T>` for unified success/error handling
+  - GET methods with non-primitive query parameters expose raw serialized `String`/`String?` signatures
+
+- **Query extensions** (`query/Queries.kt`)
+    - Auto-generated typed extension functions for query-heavy GET methods
+    - Serialize non-primitive query values (for example `List<String>`, `BotCommandScope`) via `Json.encodeToString`
+    - Keep call sites strongly typed while delegating to generated `TelegramBotApi` string-based query methods
 
 ### Handwritten Types and Utilities
 
@@ -130,6 +136,23 @@ attachments: List<FormPart<ChannelProvider>>?
 ```
 
 Use this when request payload fields reference dynamically attached files through `attach://<file_attach_name>`.
+
+### Query Extension Usage
+
+For GET methods that require JSON-serialized query parameters, prefer `query/Queries.kt` extensions:
+
+```kotlin
+api.getUpdates(
+    allowedUpdates = listOf("message", "callback_query")
+)
+
+api.getMyCommands(
+    scope = BotCommandScope.Default,
+    languageCode = "en"
+)
+```
+
+These extensions perform serialization and call the underlying generated `TelegramBotApi` methods.
 
 ## Ktor Client Setup
 

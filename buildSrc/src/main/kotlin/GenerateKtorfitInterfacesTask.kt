@@ -14,7 +14,7 @@ import java.io.File
  * Gradle task that generates Kotlin code from a Telegram Bot API OpenAPI/Swagger specification.
  *
  * This task produces type-safe, auto-generated Kotlin bindings for Telegram's REST API,
- * including data models, form classes, and Ktorfit interfaces for HTTP operations.
+ * including data models, form classes, query wrappers, and Ktorfit interfaces for HTTP operations.
  *
  * ## Generated Components
  *
@@ -40,6 +40,11 @@ import java.io.File
  * - accept form wrapper objects,
  * - convert `InputFile` values to multipart `FormPart<ChannelProvider>` via `toFormPart`, and
  * - call the corresponding API methods.
+ *
+ * ### Query Extensions (`query/` package)
+ * Generates `Queries.kt` with typed extension functions for GET operations whose query parameters
+ * require JSON serialization. These extensions keep call sites strongly typed while delegating to
+ * generated `TelegramBotApi` methods that accept serialized `String`/`String?` query values.
  *
  * ### Ktorfit Interface (`TelegramBotApi.kt`)
  * Generates the main `TelegramBotApi` interface with Ktorfit annotations:
@@ -93,6 +98,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         private const val BASE_PACKAGE = "com.hiczp.telegram.bot.api"
         private const val MODEL_PACKAGE = "$BASE_PACKAGE.model"
         private const val FORM_PACKAGE = "$BASE_PACKAGE.form"
+        private const val QUERY_PACKAGE = "$BASE_PACKAGE.query"
         private const val TYPE_PACKAGE = "$BASE_PACKAGE.type"
         private const val PLUGIN_PACKAGE = "$BASE_PACKAGE.plugin"
         private const val KTORFIT_HTTP_PACKAGE = "de.jensklingenberg.ktorfit.http"
@@ -133,6 +139,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
      * Generated files are organized under this directory:
      * - `com/hiczp/telegram/bot/api/model/` - Data model classes (100+ files)
      * - `com/hiczp/telegram/bot/api/form/` - Form wrapper classes (*Form.kt) and Forms.kt extension functions
+     * - `com/hiczp/telegram/bot/api/query/Queries.kt` - Query extension functions for JSON-serialized GET parameters
      * - `com/hiczp/telegram/bot/api/TelegramBotApi.kt` - Ktorfit HTTP interface
      *
      * The `type/` subdirectory is preserved as it contains handwritten code:
@@ -160,6 +167,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     )
 
     private val multipartOperations = mutableMapOf<String, MultipartOperationInfo>() // operationId -> info
+    private val queryStringOperations = mutableMapOf<String, JsonNode>() // operationId -> operation
     private val replyMarkupTypes = mutableSetOf<String>() // Collected ReplyMarkup types
     private val updateFieldTypes = mutableSetOf<String>() // Types used in Update's optional non-primitive fields
 
@@ -169,13 +177,14 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
      * This method orchestrates the entire code generation process:
      *
      * 1. **Parses the specification**: Reads the OpenAPI/Swagger JSON file using Jackson ObjectMapper
-     * 2. **Cleans output directories**: Deletes `model/`, `form/` directories and `TelegramBotApi.kt` file
+     * 2. **Cleans output directories**: Deletes `model/`, `form/`, `query/` directories and `TelegramBotApi.kt` file
      * 3. **Stores all schemas**: Caches all schema definitions for reference during generation
      * 4. **Collects ReplyMarkup types**: Scans all `reply_markup` fields to identify types for sealed interface
      * 5. **Collects IncomingUpdate types**: Identifies types used in `Update`'s optional non-primitive fields
      * 6. **Generates ReplyMarkup interface**: Creates sealed interface if any ReplyMarkup types were found
      * 7. **Generates data models**: Creates all data classes for API entities (excluding InputFile)
      * 8. **Generates API interface**: Creates the Ktorfit HTTP interface with all endpoints
+     * 9. **Generates query extensions**: Creates typed query helper extensions in `query/Queries.kt`
      *
      * ## Output Structure
      *
@@ -189,6 +198,8 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
      * ├── model/                      # Data model classes (100+ files)
      * │   ├── ReplyMarkup.kt          # Sealed interface with @JsonClassDiscriminator
      * │   └── *.kt                    # All other data classes and sealed interfaces
+     * ├── query/                      # Query extension functions for JSON-serialized GET params
+     * │   └── Queries.kt
      * └── type/                       # Handwritten code (preserved, not regenerated)
      *     ├── IncomingUpdate.kt       # Marker interface for Update field types
      *     ├── InputFile.kt            # Input file handling
@@ -208,6 +219,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
      * Before generating new code, the task cleans specific output locations:
      * - Deletes `model/` directory completely (all generated data classes)
      * - Deletes `form/` directory completely (all generated form classes)
+     * - Deletes `query/` directory completely (all generated query extension functions)
      * - Deletes `TelegramBotApi.kt` interface file
      * - **Preserves** `type/` directory which contains handwritten code
      *
@@ -224,10 +236,12 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         val apiDir = File(outputDirectory, "com/hiczp/telegram/bot/api")
         val modelDir = File(apiDir, "model")
         val formDir = File(apiDir, "form")
+        val queryDir = File(apiDir, "query")
 
-        // Delete model and form directories, but keep the type directory
+        // Delete model, form and query directories, but keep the type directory
         modelDir.deleteRecursively()
         formDir.deleteRecursively()
+        queryDir.deleteRecursively()
 
         // Delete the API interface file
         File(apiDir, "TelegramBotApi.kt").delete()
@@ -235,6 +249,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         // Create directories
         modelDir.mkdirs()
         formDir.mkdirs()
+        queryDir.mkdirs()
 
         // Store all schemas for reference
         allSchemas = swagger.get("components")?.get("schemas")?.properties()
@@ -258,6 +273,8 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
         // Generate API interface
         generateApiInterface(swagger, outputDirectory)
+
+        // Query extension functions are generated inside generateApiInterface()
 
         logger.lifecycle("Successfully generated Ktorfit interfaces to ${outputDirectory.absolutePath}")
     }
@@ -1659,6 +1676,11 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         if (multipartOperations.isNotEmpty()) {
             generateMultipartExtensions(packageName, className, outputDir)
         }
+
+        // Generate extension functions for GET query parameters that need JSON serialization
+        if (queryStringOperations.isNotEmpty()) {
+            generateQueryExtensions(outputDir)
+        }
     }
 
     /**
@@ -1700,7 +1722,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         val parameters = operation.get("parameters")
         if (parameters != null && parameters.isArray) {
             parameters.forEach { param ->
-                addParameter(functionBuilder, param)
+                addParameter(functionBuilder, param, operationId, operation, method)
             }
         }
 
@@ -1789,14 +1811,27 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         return determinePropertyType(schema, forMultipart = false, context = context)
     }
 
-    private fun addParameter(functionBuilder: FunSpec.Builder, param: JsonNode) {
+    private fun addParameter(
+        functionBuilder: FunSpec.Builder,
+        param: JsonNode,
+        operationId: String,
+        operation: JsonNode,
+        method: String
+    ) {
         val name = param.get("name")?.asText() ?: return
         val paramIn = param.get("in")?.asText() ?: return
         val required = param.get("required")?.asBoolean() ?: false
         val schema = param.get("schema")
         val description = param.get("description")?.asText()
 
-        val paramType = determinePropertyType(schema, context = "parameter.$name")
+        val rawParamType = determinePropertyType(schema, context = "parameter.$name")
+        val shouldConvertToStringQuery = shouldUseStringQueryType(paramIn, rawParamType) &&
+                shouldGenerateQueryExtension(operationId, operation, method)
+        if (shouldConvertToStringQuery) {
+            queryStringOperations[operationId] = operation
+        }
+
+        val paramType = if (shouldConvertToStringQuery) STRING else rawParamType
         val finalType = if (required) paramType else paramType.copy(nullable = true)
         val camelName = snakeToCamelCase(name)
 
@@ -1805,10 +1840,11 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         // Add annotation based on a parameter location
         when (paramIn) {
             "query" -> {
-                val annotation = AnnotationSpec.builder(ClassName("de.jensklingenberg.ktorfit.http", "Query"))
-                    .addMember("%S", name)
-                    .build()
-                paramBuilder.addAnnotation(annotation)
+                val queryAnnotationBuilder = AnnotationSpec.builder(ClassName("de.jensklingenberg.ktorfit.http", "Query"))
+                if (camelName != name) {
+                    queryAnnotationBuilder.addMember("%S", name)
+                }
+                paramBuilder.addAnnotation(queryAnnotationBuilder.build())
             }
 
             "path" -> {
@@ -1835,6 +1871,18 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         }
 
         functionBuilder.addParameter(paramBuilder.build())
+    }
+
+    private fun shouldUseStringQueryType(paramIn: String, paramType: TypeName): Boolean {
+        if (paramIn != "query") return false
+        return paramType !in setOf(STRING, BOOLEAN, INT, LONG, FLOAT, DOUBLE)
+    }
+
+    private fun shouldGenerateQueryExtension(operationId: String, operation: JsonNode, method: String): Boolean {
+        if (operationId in queryStringOperations) return true
+        if (method.uppercase() != "GET") return false
+        val requestBody = operation.get("requestBody")
+        return requestBody == null || requestBody.isNull
     }
 
     @Suppress("unused")
@@ -2083,6 +2131,114 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             .replace("\\", "\\\\")
             // Remove excessive whitespace
             .trim()
+    }
+
+    /**
+     * Generate extension functions for GET operations that include non-primitive query parameters.
+     *
+     * The generated extensions target `TelegramBotApi`, where the underlying interface methods
+     * use String/String? For such query parameters. Extensions in query/Queries.kt expose strongly
+     * typed parameters and serialize them with Json.encodeToString.
+     */
+    private fun generateQueryExtensions(outputDir: File) {
+        val fileSpec = createFileSpec(
+            QUERY_PACKAGE,
+            "Queries",
+            """
+                Extension functions for Telegram Bot API query operations.
+
+                This file provides typed query extension functions for methods whose query parameters
+                require JSON serialization before sending to Telegram API.
+            """.trimIndent()
+        )
+        fileSpec.addAnnotation(
+            AnnotationSpec.builder(ClassName("kotlin", "Suppress"))
+                .useSiteTarget(AnnotationSpec.UseSiteTarget.FILE)
+                .addMember("%S", "RedundantVisibilityModifier")
+                .addMember("%S", "unused")
+                .addMember("%S", "DuplicatedCode")
+                .build()
+        )
+
+        queryStringOperations.forEach { (operationId, operation) ->
+            val description = operation.get("description")?.asText()
+            val parameters = operation.get("parameters")
+            if (parameters == null || !parameters.isArray) return@forEach
+
+            val functionBuilder = FunSpec.builder(operationId)
+                .addModifiers(KModifier.SUSPEND)
+                .receiver(ClassName(BASE_PACKAGE, "TelegramBotApi"))
+
+            if (description != null) {
+                functionBuilder.addKdoc(sanitizeKDoc(description))
+            }
+
+            val callArguments = mutableListOf<String>()
+
+            parameters.forEach { param ->
+                val name = param.get("name")?.asText() ?: return@forEach
+                val paramIn = param.get("in")?.asText() ?: return@forEach
+                if (paramIn != "query") return@forEach
+
+                val required = param.get("required")?.asBoolean() ?: false
+                val schema = param.get("schema")
+                val rawType = determinePropertyType(schema, context = "query.extension.$operationId.$name")
+                val camelName = snakeToCamelCase(name)
+                val isConverted = shouldUseStringQueryType(paramIn, rawType)
+                val finalType = if (required) rawType else rawType.copy(nullable = true)
+
+                val paramBuilder = ParameterSpec.builder(camelName, finalType)
+                if (!required) {
+                    paramBuilder.defaultValue("null")
+                }
+                val paramDescription = param.get("description")?.asText()
+                if (paramDescription != null) {
+                    paramBuilder.addKdoc(sanitizeKDoc(paramDescription))
+                }
+                functionBuilder.addParameter(paramBuilder.build())
+
+                val callArgument = if (isConverted) {
+                    if (required) {
+                        "$camelName = %T.encodeToString($camelName)"
+                    } else {
+                        "$camelName = $camelName?.let { %T.encodeToString(it) }"
+                    }
+                } else {
+                    "$camelName = $camelName"
+                }
+                callArguments.add(callArgument)
+            }
+
+            val returnType = determineReturnType(operation, operationId)
+            functionBuilder.returns(returnType)
+
+            val codeBuilder = CodeBlock.builder()
+            if (callArguments.isEmpty()) {
+                codeBuilder.addStatement("return %N()", operationId)
+            } else {
+                codeBuilder.add("return %N(\n", operationId)
+                codeBuilder.indent()
+                callArguments.forEachIndexed { index, argumentTemplate ->
+                    if (argumentTemplate.contains("%T.encodeToString")) {
+                        codeBuilder.add(argumentTemplate, ClassName("kotlinx.serialization.json", "Json"))
+                    } else {
+                        codeBuilder.add(argumentTemplate)
+                    }
+                    if (index < callArguments.size - 1) {
+                        codeBuilder.add(",\n")
+                    } else {
+                        codeBuilder.add("\n")
+                    }
+                }
+                codeBuilder.unindent()
+                codeBuilder.add(")")
+            }
+            functionBuilder.addCode(codeBuilder.build())
+
+            fileSpec.addFunction(functionBuilder.build())
+        }
+
+        fileSpec.build().writeToWithUnixLineEndings(outputDir)
     }
 
     /**

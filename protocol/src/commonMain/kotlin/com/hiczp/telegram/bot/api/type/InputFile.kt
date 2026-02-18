@@ -112,14 +112,14 @@ fun InputFile.toFormPart(multipartName: String): FormPart<ChannelProvider> {
     return when (this) {
         is ReferenceInputFile -> FormPart(
             key = multipartName,
-            value = ChannelProvider { ByteReadChannel(reference) },
+            value = ChannelProvider(reference.length.toLong()) { ByteReadChannel(reference) },
         )
 
         is BinaryInputFile -> FormPart(
             key = multipartName,
             value = content,
             headers = headers {
-                append(HttpHeaders.ContentDisposition, "filename='${fileName ?: multipartName}'")
+                append(HttpHeaders.ContentDisposition, "filename=${(fileName ?: multipartName).quote()}")
                 contentType?.let { append(HttpHeaders.ContentType, it.toString()) }
             }
         )

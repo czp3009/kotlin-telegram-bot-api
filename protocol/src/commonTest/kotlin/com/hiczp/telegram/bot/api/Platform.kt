@@ -7,3 +7,5 @@ expect fun getBotToken(): String?
 expect fun getTestChatId(): String?
 
 expect fun createKtorEngine(): HttpClientEngine
+
+expect fun sleepMillis(millis: Long)

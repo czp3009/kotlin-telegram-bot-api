@@ -6,12 +6,8 @@ import com.hiczp.telegram.bot.api.extension.deleteMessage
 import com.hiczp.telegram.bot.api.extension.deleteMessages
 import com.hiczp.telegram.bot.api.extension.toFormPart
 import com.hiczp.telegram.bot.api.extension.toInputFile
-import com.hiczp.telegram.bot.api.form.sendDocument
-import com.hiczp.telegram.bot.api.form.sendMediaGroup
-import com.hiczp.telegram.bot.api.form.sendPhoto
-import com.hiczp.telegram.bot.api.form.sendSticker
-import com.hiczp.telegram.bot.api.model.InputMediaPhoto
-import com.hiczp.telegram.bot.api.model.Sticker
+import com.hiczp.telegram.bot.api.form.*
+import com.hiczp.telegram.bot.api.model.*
 import com.hiczp.telegram.bot.api.plugin.TelegramFileDownloadPlugin
 import com.hiczp.telegram.bot.api.plugin.TelegramLongPollingPlugin
 import com.hiczp.telegram.bot.api.plugin.TelegramServerErrorPlugin
@@ -35,10 +31,13 @@ import kotlinx.io.buffered
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
 import kotlinx.serialization.json.Json
-import kotlin.test.Test
+import kotlin.test.*
 
 private val logger = KotlinLogging.logger {}
 private val webpFilePath = Path("../resources/telegram.webp")
+private val jpgFilePath = Path("../resources/telegram.jpg")
+private val gifFilePath = Path("../resources/telegram.gif")
+private val mp4FilePath = Path("../resources/telegram.mp4")
 private val txtFilePath = Path("../resources/telegram.txt")
 
 /**
@@ -61,6 +60,7 @@ class TelegramBotApiTest {
                     prettyPrint = true
                     ignoreUnknownKeys = true
                     encodeDefaults = true
+                    explicitNulls = false
                 })
             }
             install(DefaultRequest) {
@@ -94,22 +94,85 @@ class TelegramBotApiTest {
 
     private val testChatId by lazy { TestEnv.testChatId }
 
+    @AfterTest
+    fun slowDown() {
+        sleepMillis(1_000)
+    }
+    
     @Test
     fun getMe() = runTest {
-        telegramBotApi.getMe()
+        val me = telegramBotApi.getMe().getOrThrow()
+        assertTrue(me.isBot)
     }
 
-//    @Ignore
-//    @Test
-//    fun close() = runTest {
-//        telegramBotApi.close()
-//    }
+    @Ignore
+    @Test
+    fun close() = runTest {
+        val isClosed = telegramBotApi.close().getOrThrow()
+        assertTrue(isClosed)
+    }
 
     @Test
     fun getUpdates() = runTest {
-        telegramBotApi.getUpdates().getOrThrow().let {
-            logger.info { it }
-        }
+        val updates = telegramBotApi.getUpdates().result
+        assertNotNull(updates)
+        logger.info { updates }
+    }
+
+    @Test
+    fun sendMessage() = runTest {
+        val message = telegramBotApi.sendMessage(
+            SendMessageRequest(
+                chatId = testChatId,
+                text = "Test message",
+            )
+        ).getOrThrow()
+        assertTrue(telegramBotApi.deleteMessage(message).getOrThrow())
+    }
+
+    @Test
+    fun sendChatAction() = runTest {
+        val sent = telegramBotApi.sendChatAction(
+            SendChatActionRequest(
+                chatId = testChatId,
+                action = "upload_photo",
+            )
+        ).getOrThrow()
+        assertTrue(sent)
+    }
+
+    @Test
+    fun getChat() = runTest {
+        val chat = telegramBotApi.getChat(testChatId).getOrThrow()
+        assertEquals(testChatId, chat.id.toString(), "Unexpected chat id")
+    }
+
+    @Test
+    fun setMyCommands() = runTest {
+        val command = BotCommand(command = "test", description = "test command")
+        val setResult = telegramBotApi.setMyCommands(
+            SetMyCommandsRequest(commands = listOf(command)),
+        ).getOrThrow()
+        assertTrue(setResult)
+        val commands = telegramBotApi.getMyCommands().getOrThrow()
+        assertTrue(commands.any { it.command == "test" }, "Expected /test in bot commands, actual: $commands")
+        val deleteResult = telegramBotApi.deleteMyCommands(
+            DeleteMyCommandsRequest(),
+        ).getOrThrow()
+        assertTrue(deleteResult)
+    }
+
+    //ignore due to can't roll back bot profile photo
+    @Ignore
+    @Test
+    fun setMyProfilePhoto() = runTest {
+        val result = telegramBotApi.setMyProfilePhoto(
+            photo = InputProfilePhotoStatic(photo = "attach://photo1"),
+            attachments = listOf(jpgFilePath.toFormPart("photo1")),
+        ).getOrThrow()
+        assertTrue(result)
+        //may cause BOT_FALLBACK_UNSUPPORTED
+        //telegramBotApi.removeMyProfilePhoto()
     }
 
     @Test
@@ -119,16 +182,17 @@ class TelegramBotApiTest {
             chatId = testChatId,
             photo = webpFilePath.toInputFile(),
         ).getOrThrow()
-        telegramBotApi.deleteMessage(message)
+        assertTrue(telegramBotApi.deleteMessage(message).getOrThrow())
+        sleepMillis(1_000)
         //send photo by fileId
         val fileId = message.photo?.minByOrNull { it.height * it.width }?.fileId
-        checkNotNull(fileId) { "No fileId returned from telegram server" }
+        assertNotNull(fileId, "No fileId returned from telegram server")
         val message2 = telegramBotApi.sendPhoto(
             chatId = message.chat.id.toString(),
             photo = InputFile.reference(fileId),
             caption = "test",
         ).getOrThrow()
-        telegramBotApi.deleteMessage(message2)
+        assertTrue(telegramBotApi.deleteMessage(message2).getOrThrow())
     }
 
     @Test
@@ -144,55 +208,69 @@ class TelegramBotApiTest {
                 webpFilePath.toFormPart("photo2"),
             ),
         ).getOrThrow()
-        telegramBotApi.deleteMessages(messages)
+        assertTrue(telegramBotApi.deleteMessages(messages).getOrThrow())
     }
 
     @Test
     fun sendSticker() = runTest {
-        telegramBotApi.sendSticker(
+        val message = telegramBotApi.sendSticker(
             chatId = testChatId,
             sticker = InputFile.reference(getTestSticker().fileId),
-        ).getOrThrow().let {
-            telegramBotApi.deleteMessage(it)
-        }
+        ).getOrThrow()
+        assertTrue(telegramBotApi.deleteMessage(message).getOrThrow())
     }
 
     @Test
     fun sendWebpDocument() = runTest {
-        telegramBotApi.sendDocument(
+        val message = telegramBotApi.sendDocument(
             chatId = testChatId,
             document = webpFilePath.toInputFile(),
-        ).getOrThrow().let {
-            telegramBotApi.deleteMessage(it)
-        }
+        ).getOrThrow()
+        assertTrue(telegramBotApi.deleteMessage(message).getOrThrow())
     }
 
     @Test
     fun sendTxtDocument() = runTest {
-        telegramBotApi.sendDocument(
+        val message = telegramBotApi.sendDocument(
             chatId = testChatId,
             document = txtFilePath.toInputFile(),
-        ).getOrThrow().let {
-            telegramBotApi.deleteMessage(it)
-        }
+        ).getOrThrow()
+        assertTrue(telegramBotApi.deleteMessage(message).getOrThrow())
     }
 
     @Test
     fun sendTxtDocumentWithoutFileName() = runTest {
-        telegramBotApi.sendDocument(
+        val message = telegramBotApi.sendDocument(
             chatId = testChatId,
             document = InputFile.binary { ByteReadChannel(SystemFileSystem.source(txtFilePath).buffered()) },
-        ).getOrThrow().let {
-            telegramBotApi.deleteMessage(it)
-        }
+        ).getOrThrow()
+        assertTrue(telegramBotApi.deleteMessage(message).getOrThrow())
+    }
+
+    @Test
+    fun sendAnimation() = runTest {
+        val message = telegramBotApi.sendAnimation(
+            chatId = testChatId,
+            animation = gifFilePath.toInputFile(),
+        ).getOrThrow()
+        assertTrue(telegramBotApi.deleteMessage(message).getOrThrow())
+    }
+
+    @Test
+    fun sendVideo() = runTest {
+        val message = telegramBotApi.sendVideo(
+            chatId = testChatId,
+            video = mp4FilePath.toInputFile(),
+        ).getOrThrow()
+        assertTrue(telegramBotApi.deleteMessage(message).getOrThrow())
     }
 
     @Test
     fun downloadFile() = runTest {
         val file = telegramBotApi.getFile(getTestSticker().fileId).getOrThrow()
         logger.info { "Sticker file: $file" }
-        checkNotNull(file.filePath) { "No filePath returned from telegram server" }
-        telegramBotApi.downloadFile(file.filePath).execute {
+        val filePath = assertNotNull(file.filePath, "No filePath returned from telegram server")
+        telegramBotApi.downloadFile(filePath).execute {
             val byteReadChannel = it.bodyAsChannel()
             var totalBytes = 0L
             val buffer = ByteArray(1024) // Define a buffer size for efficient reading
@@ -201,6 +279,7 @@ class TelegramBotApiTest {
                 totalBytes += bytesRead
             }
             logger.info { "Downloaded size: $totalBytes" }
+            assertTrue(totalBytes > 0, "Downloaded file should not be empty")
         }
     }
 

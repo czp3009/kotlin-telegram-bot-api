@@ -8,6 +8,7 @@ import io.ktor.http.*
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.toKString
 import platform.posix.getenv
+import platform.posix.usleep
 
 actual fun getBotToken(): String? {
     return getenv(EnvVars.BOT_TOKEN)?.toKString()
@@ -25,4 +26,8 @@ actual fun createKtorEngine(): HttpClientEngine {
         }
         sslVerify = false
     }
+}
+
+actual fun sleepMillis(millis: Long) {
+    usleep((millis * 1000).toUInt())
 }

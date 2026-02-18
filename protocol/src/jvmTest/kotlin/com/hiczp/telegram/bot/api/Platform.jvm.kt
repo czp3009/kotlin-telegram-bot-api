@@ -20,3 +20,7 @@ actual fun createKtorEngine(): HttpClientEngine {
         }
     }
 }
+
+actual fun sleepMillis(millis: Long) {
+    Thread.sleep(millis)
+}
