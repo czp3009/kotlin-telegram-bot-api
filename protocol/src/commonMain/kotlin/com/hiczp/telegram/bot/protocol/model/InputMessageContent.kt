@@ -1,6 +1,11 @@
 // Auto-generated from Swagger specification, do not modify this file manuallyWARNING: This sealed interface does not have a clear discriminator field
 package com.hiczp.telegram.bot.protocol.model
 
+import kotlin.Boolean
+import kotlin.Double
+import kotlin.Long
+import kotlin.String
+import kotlin.collections.List
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

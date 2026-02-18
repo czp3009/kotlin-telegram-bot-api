@@ -16,6 +16,10 @@ import com.hiczp.telegram.bot.protocol.model.BotCommandScope
 import com.hiczp.telegram.bot.protocol.model.Sticker
 import com.hiczp.telegram.bot.protocol.model.Update
 import com.hiczp.telegram.bot.protocol.type.TelegramResponse
+import kotlin.Long
+import kotlin.String
+import kotlin.Suppress
+import kotlin.collections.List
 import kotlinx.serialization.json.Json
 
 /**
@@ -45,10 +49,7 @@ public suspend fun TelegramBotApi.getUpdates(
  * @param scope A JSON-serialized object, describing scope of users. Defaults to [BotCommandScopeDefault](https://core.telegram.org/bots/api#botcommandscopedefault).
  * @param languageCode A two-letter ISO 639-1 language code or an empty string
  */
-public suspend fun TelegramBotApi.getMyCommands(
-    scope: BotCommandScope? = null,
-    languageCode: String? = null
-): TelegramResponse<List<BotCommand>> = getMyCommands(
+public suspend fun TelegramBotApi.getMyCommands(scope: BotCommandScope? = null, languageCode: String? = null): TelegramResponse<List<BotCommand>> = getMyCommands(
     scope = scope?.let { Json.encodeToString(it) },
     languageCode = languageCode
 )
@@ -58,7 +59,6 @@ public suspend fun TelegramBotApi.getMyCommands(
  *
  * @param customEmojiIds A JSON-serialized list of custom emoji identifiers. At most 200 custom emoji identifiers can be specified.
  */
-public suspend fun TelegramBotApi.getCustomEmojiStickers(customEmojiIds: List<String>): TelegramResponse<List<Sticker>> =
-    getCustomEmojiStickers(
-        customEmojiIds = Json.encodeToString(customEmojiIds)
-    )
+public suspend fun TelegramBotApi.getCustomEmojiStickers(customEmojiIds: List<String>): TelegramResponse<List<Sticker>> = getCustomEmojiStickers(
+    customEmojiIds = Json.encodeToString(customEmojiIds)
+)

@@ -1,6 +1,10 @@
 // Auto-generated from Swagger specification, do not modify this file manually
 package com.hiczp.telegram.bot.protocol.model
 
+import kotlin.Boolean
+import kotlin.Double
+import kotlin.Long
+import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

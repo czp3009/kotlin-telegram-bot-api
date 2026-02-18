@@ -2,7 +2,12 @@
 package com.hiczp.telegram.bot.protocol.form
 
 import com.hiczp.telegram.bot.protocol.model.InputSticker
-import io.ktor.client.request.forms.*
+import io.ktor.client.request.forms.ChannelProvider
+import io.ktor.client.request.forms.FormPart
+import kotlin.Boolean
+import kotlin.Long
+import kotlin.String
+import kotlin.collections.List
 import kotlinx.serialization.SerialName
 
 public data class CreateNewStickerSetForm(

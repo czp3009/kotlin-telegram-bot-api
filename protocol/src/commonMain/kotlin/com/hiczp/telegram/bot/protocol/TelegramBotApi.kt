@@ -8,12 +8,163 @@
 
 package com.hiczp.telegram.bot.protocol
 
-import com.hiczp.telegram.bot.protocol.model.*
+import com.hiczp.telegram.bot.protocol.model.AnswerCallbackQueryRequest
+import com.hiczp.telegram.bot.protocol.model.AnswerInlineQueryRequest
+import com.hiczp.telegram.bot.protocol.model.AnswerPreCheckoutQueryRequest
+import com.hiczp.telegram.bot.protocol.model.AnswerShippingQueryRequest
+import com.hiczp.telegram.bot.protocol.model.AnswerWebAppQueryRequest
+import com.hiczp.telegram.bot.protocol.model.ApproveChatJoinRequestRequest
+import com.hiczp.telegram.bot.protocol.model.ApproveSuggestedPostRequest
+import com.hiczp.telegram.bot.protocol.model.BanChatMemberRequest
+import com.hiczp.telegram.bot.protocol.model.BanChatSenderChatRequest
+import com.hiczp.telegram.bot.protocol.model.BotCommand
+import com.hiczp.telegram.bot.protocol.model.BotDescription
+import com.hiczp.telegram.bot.protocol.model.BotName
+import com.hiczp.telegram.bot.protocol.model.BotShortDescription
+import com.hiczp.telegram.bot.protocol.model.BusinessConnection
+import com.hiczp.telegram.bot.protocol.model.ChatAdministratorRights
+import com.hiczp.telegram.bot.protocol.model.ChatFullInfo
+import com.hiczp.telegram.bot.protocol.model.ChatInviteLink
+import com.hiczp.telegram.bot.protocol.model.ChatMember
+import com.hiczp.telegram.bot.protocol.model.CloseForumTopicRequest
+import com.hiczp.telegram.bot.protocol.model.CloseGeneralForumTopicRequest
+import com.hiczp.telegram.bot.protocol.model.ConvertGiftToStarsRequest
+import com.hiczp.telegram.bot.protocol.model.CopyMessageRequest
+import com.hiczp.telegram.bot.protocol.model.CopyMessagesRequest
+import com.hiczp.telegram.bot.protocol.model.CreateChatInviteLinkRequest
+import com.hiczp.telegram.bot.protocol.model.CreateChatSubscriptionInviteLinkRequest
+import com.hiczp.telegram.bot.protocol.model.CreateForumTopicRequest
+import com.hiczp.telegram.bot.protocol.model.CreateInvoiceLinkRequest
+import com.hiczp.telegram.bot.protocol.model.DeclineChatJoinRequestRequest
+import com.hiczp.telegram.bot.protocol.model.DeclineSuggestedPostRequest
+import com.hiczp.telegram.bot.protocol.model.DeleteBusinessMessagesRequest
+import com.hiczp.telegram.bot.protocol.model.DeleteChatPhotoRequest
+import com.hiczp.telegram.bot.protocol.model.DeleteChatStickerSetRequest
+import com.hiczp.telegram.bot.protocol.model.DeleteForumTopicRequest
+import com.hiczp.telegram.bot.protocol.model.DeleteMessageRequest
+import com.hiczp.telegram.bot.protocol.model.DeleteMessagesRequest
+import com.hiczp.telegram.bot.protocol.model.DeleteMyCommandsRequest
+import com.hiczp.telegram.bot.protocol.model.DeleteStickerFromSetRequest
+import com.hiczp.telegram.bot.protocol.model.DeleteStickerSetRequest
+import com.hiczp.telegram.bot.protocol.model.DeleteStoryRequest
+import com.hiczp.telegram.bot.protocol.model.DeleteWebhookRequest
+import com.hiczp.telegram.bot.protocol.model.EditChatInviteLinkRequest
+import com.hiczp.telegram.bot.protocol.model.EditChatSubscriptionInviteLinkRequest
+import com.hiczp.telegram.bot.protocol.model.EditForumTopicRequest
+import com.hiczp.telegram.bot.protocol.model.EditGeneralForumTopicRequest
+import com.hiczp.telegram.bot.protocol.model.EditMessageCaptionRequest
+import com.hiczp.telegram.bot.protocol.model.EditMessageChecklistRequest
+import com.hiczp.telegram.bot.protocol.model.EditMessageLiveLocationRequest
+import com.hiczp.telegram.bot.protocol.model.EditMessageReplyMarkupRequest
+import com.hiczp.telegram.bot.protocol.model.EditMessageTextRequest
+import com.hiczp.telegram.bot.protocol.model.EditUserStarSubscriptionRequest
+import com.hiczp.telegram.bot.protocol.model.ExportChatInviteLinkRequest
+import com.hiczp.telegram.bot.protocol.model.File
+import com.hiczp.telegram.bot.protocol.model.ForumTopic
+import com.hiczp.telegram.bot.protocol.model.ForwardMessageRequest
+import com.hiczp.telegram.bot.protocol.model.ForwardMessagesRequest
+import com.hiczp.telegram.bot.protocol.model.GameHighScore
+import com.hiczp.telegram.bot.protocol.model.GiftPremiumSubscriptionRequest
+import com.hiczp.telegram.bot.protocol.model.Gifts
+import com.hiczp.telegram.bot.protocol.model.HideGeneralForumTopicRequest
+import com.hiczp.telegram.bot.protocol.model.LeaveChatRequest
+import com.hiczp.telegram.bot.protocol.model.MenuButton
+import com.hiczp.telegram.bot.protocol.model.Message
+import com.hiczp.telegram.bot.protocol.model.MessageId
+import com.hiczp.telegram.bot.protocol.model.OwnedGifts
+import com.hiczp.telegram.bot.protocol.model.PinChatMessageRequest
+import com.hiczp.telegram.bot.protocol.model.Poll
+import com.hiczp.telegram.bot.protocol.model.PreparedInlineMessage
+import com.hiczp.telegram.bot.protocol.model.PromoteChatMemberRequest
+import com.hiczp.telegram.bot.protocol.model.ReadBusinessMessageRequest
+import com.hiczp.telegram.bot.protocol.model.RefundStarPaymentRequest
+import com.hiczp.telegram.bot.protocol.model.RemoveBusinessAccountProfilePhotoRequest
+import com.hiczp.telegram.bot.protocol.model.RemoveChatVerificationRequest
+import com.hiczp.telegram.bot.protocol.model.RemoveUserVerificationRequest
+import com.hiczp.telegram.bot.protocol.model.ReopenForumTopicRequest
+import com.hiczp.telegram.bot.protocol.model.ReopenGeneralForumTopicRequest
+import com.hiczp.telegram.bot.protocol.model.RepostStoryRequest
+import com.hiczp.telegram.bot.protocol.model.RestrictChatMemberRequest
+import com.hiczp.telegram.bot.protocol.model.RevokeChatInviteLinkRequest
+import com.hiczp.telegram.bot.protocol.model.SavePreparedInlineMessageRequest
+import com.hiczp.telegram.bot.protocol.model.SendChatActionRequest
+import com.hiczp.telegram.bot.protocol.model.SendChecklistRequest
+import com.hiczp.telegram.bot.protocol.model.SendContactRequest
+import com.hiczp.telegram.bot.protocol.model.SendDiceRequest
+import com.hiczp.telegram.bot.protocol.model.SendGameRequest
+import com.hiczp.telegram.bot.protocol.model.SendGiftRequest
+import com.hiczp.telegram.bot.protocol.model.SendInvoiceRequest
+import com.hiczp.telegram.bot.protocol.model.SendLocationRequest
+import com.hiczp.telegram.bot.protocol.model.SendMessageDraftRequest
+import com.hiczp.telegram.bot.protocol.model.SendMessageRequest
+import com.hiczp.telegram.bot.protocol.model.SendPollRequest
+import com.hiczp.telegram.bot.protocol.model.SendVenueRequest
+import com.hiczp.telegram.bot.protocol.model.SentWebAppMessage
+import com.hiczp.telegram.bot.protocol.model.SetBusinessAccountBioRequest
+import com.hiczp.telegram.bot.protocol.model.SetBusinessAccountGiftSettingsRequest
+import com.hiczp.telegram.bot.protocol.model.SetBusinessAccountNameRequest
+import com.hiczp.telegram.bot.protocol.model.SetBusinessAccountUsernameRequest
+import com.hiczp.telegram.bot.protocol.model.SetChatAdministratorCustomTitleRequest
+import com.hiczp.telegram.bot.protocol.model.SetChatDescriptionRequest
+import com.hiczp.telegram.bot.protocol.model.SetChatMenuButtonRequest
+import com.hiczp.telegram.bot.protocol.model.SetChatPermissionsRequest
+import com.hiczp.telegram.bot.protocol.model.SetChatStickerSetRequest
+import com.hiczp.telegram.bot.protocol.model.SetChatTitleRequest
+import com.hiczp.telegram.bot.protocol.model.SetCustomEmojiStickerSetThumbnailRequest
+import com.hiczp.telegram.bot.protocol.model.SetGameScoreRequest
+import com.hiczp.telegram.bot.protocol.model.SetMessageReactionRequest
+import com.hiczp.telegram.bot.protocol.model.SetMyCommandsRequest
+import com.hiczp.telegram.bot.protocol.model.SetMyDefaultAdministratorRightsRequest
+import com.hiczp.telegram.bot.protocol.model.SetMyDescriptionRequest
+import com.hiczp.telegram.bot.protocol.model.SetMyNameRequest
+import com.hiczp.telegram.bot.protocol.model.SetMyShortDescriptionRequest
+import com.hiczp.telegram.bot.protocol.model.SetPassportDataErrorsRequest
+import com.hiczp.telegram.bot.protocol.model.SetStickerEmojiListRequest
+import com.hiczp.telegram.bot.protocol.model.SetStickerKeywordsRequest
+import com.hiczp.telegram.bot.protocol.model.SetStickerMaskPositionRequest
+import com.hiczp.telegram.bot.protocol.model.SetStickerPositionInSetRequest
+import com.hiczp.telegram.bot.protocol.model.SetStickerSetTitleRequest
+import com.hiczp.telegram.bot.protocol.model.SetUserEmojiStatusRequest
+import com.hiczp.telegram.bot.protocol.model.StarAmount
+import com.hiczp.telegram.bot.protocol.model.StarTransactions
+import com.hiczp.telegram.bot.protocol.model.Sticker
+import com.hiczp.telegram.bot.protocol.model.StickerSet
+import com.hiczp.telegram.bot.protocol.model.StopMessageLiveLocationRequest
+import com.hiczp.telegram.bot.protocol.model.StopPollRequest
+import com.hiczp.telegram.bot.protocol.model.Story
+import com.hiczp.telegram.bot.protocol.model.TransferBusinessAccountStarsRequest
+import com.hiczp.telegram.bot.protocol.model.TransferGiftRequest
+import com.hiczp.telegram.bot.protocol.model.UnbanChatMemberRequest
+import com.hiczp.telegram.bot.protocol.model.UnbanChatSenderChatRequest
+import com.hiczp.telegram.bot.protocol.model.UnhideGeneralForumTopicRequest
+import com.hiczp.telegram.bot.protocol.model.UnpinAllChatMessagesRequest
+import com.hiczp.telegram.bot.protocol.model.UnpinAllForumTopicMessagesRequest
+import com.hiczp.telegram.bot.protocol.model.UnpinAllGeneralForumTopicMessagesRequest
+import com.hiczp.telegram.bot.protocol.model.UnpinChatMessageRequest
+import com.hiczp.telegram.bot.protocol.model.Update
+import com.hiczp.telegram.bot.protocol.model.UpgradeGiftRequest
+import com.hiczp.telegram.bot.protocol.model.User
+import com.hiczp.telegram.bot.protocol.model.UserChatBoosts
+import com.hiczp.telegram.bot.protocol.model.UserProfileAudios
+import com.hiczp.telegram.bot.protocol.model.UserProfilePhotos
+import com.hiczp.telegram.bot.protocol.model.VerifyChatRequest
+import com.hiczp.telegram.bot.protocol.model.VerifyUserRequest
+import com.hiczp.telegram.bot.protocol.model.WebhookInfo
 import com.hiczp.telegram.bot.protocol.plugin.TelegramFileDownload
 import com.hiczp.telegram.bot.protocol.type.TelegramResponse
-import de.jensklingenberg.ktorfit.http.*
-import io.ktor.client.request.forms.*
-import io.ktor.client.statement.*
+import de.jensklingenberg.ktorfit.http.Body
+import de.jensklingenberg.ktorfit.http.GET
+import de.jensklingenberg.ktorfit.http.POST
+import de.jensklingenberg.ktorfit.http.Path
+import de.jensklingenberg.ktorfit.http.Query
+import de.jensklingenberg.ktorfit.http.Streaming
+import io.ktor.client.request.forms.MultiPartFormDataContent
+import io.ktor.client.statement.HttpStatement
+import kotlin.Boolean
+import kotlin.Long
+import kotlin.String
+import kotlin.Suppress
+import kotlin.collections.List
 
 public interface TelegramBotApi {
     /**
@@ -566,10 +717,7 @@ public interface TelegramBotApi {
      * @param languageCode A two-letter ISO 639-1 language code or an empty string
      */
     @GET("getMyCommands")
-    public suspend fun getMyCommands(
-        @Query scope: String? = null,
-        @Query("language_code") languageCode: String? = null
-    ): TelegramResponse<List<BotCommand>>
+    public suspend fun getMyCommands(@Query scope: String? = null, @Query("language_code") languageCode: String? = null): TelegramResponse<List<BotCommand>>
 
     /**
      * Use this method to change the bot's name. Returns True on success.
@@ -1112,10 +1260,7 @@ public interface TelegramBotApi {
      * @param limit The maximum number of transactions to be retrieved. Values between 1-100 are accepted. Defaults to 100.
      */
     @GET("getStarTransactions")
-    public suspend fun getStarTransactions(
-        @Query offset: Long? = null,
-        @Query limit: Long? = null
-    ): TelegramResponse<StarTransactions>
+    public suspend fun getStarTransactions(@Query offset: Long? = null, @Query limit: Long? = null): TelegramResponse<StarTransactions>
 
     /**
      * Refunds a successful payment in Telegram Stars. Returns True on success.

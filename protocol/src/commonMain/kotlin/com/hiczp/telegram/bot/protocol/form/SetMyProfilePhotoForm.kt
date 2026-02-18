@@ -2,7 +2,9 @@
 package com.hiczp.telegram.bot.protocol.form
 
 import com.hiczp.telegram.bot.protocol.model.InputProfilePhoto
-import io.ktor.client.request.forms.*
+import io.ktor.client.request.forms.ChannelProvider
+import io.ktor.client.request.forms.FormPart
+import kotlin.collections.List
 
 public data class SetMyProfilePhotoForm(
     /**

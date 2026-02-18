@@ -2,6 +2,8 @@
 package com.hiczp.telegram.bot.protocol.model
 
 import com.hiczp.telegram.bot.protocol.type.IncomingUpdate
+import kotlin.Long
+import kotlin.collections.List
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

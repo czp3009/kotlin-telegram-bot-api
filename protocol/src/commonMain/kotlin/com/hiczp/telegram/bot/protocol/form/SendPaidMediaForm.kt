@@ -1,8 +1,17 @@
 // Auto-generated from Swagger specification, do not modify this file manually
 package com.hiczp.telegram.bot.protocol.form
 
-import com.hiczp.telegram.bot.protocol.model.*
-import io.ktor.client.request.forms.*
+import com.hiczp.telegram.bot.protocol.model.InputPaidMedia
+import com.hiczp.telegram.bot.protocol.model.MessageEntity
+import com.hiczp.telegram.bot.protocol.model.ReplyMarkup
+import com.hiczp.telegram.bot.protocol.model.ReplyParameters
+import com.hiczp.telegram.bot.protocol.model.SuggestedPostParameters
+import io.ktor.client.request.forms.ChannelProvider
+import io.ktor.client.request.forms.FormPart
+import kotlin.Boolean
+import kotlin.Long
+import kotlin.String
+import kotlin.collections.List
 import kotlinx.serialization.SerialName
 
 public data class SendPaidMediaForm(
