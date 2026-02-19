@@ -1,7 +1,24 @@
 // Auto-generated from the Update model, do not modify this file manually
 package com.hiczp.telegram.bot.client.event
 
-import com.hiczp.telegram.bot.protocol.model.*
+import com.hiczp.telegram.bot.protocol.model.BusinessConnection
+import com.hiczp.telegram.bot.protocol.model.BusinessMessagesDeleted
+import com.hiczp.telegram.bot.protocol.model.CallbackQuery
+import com.hiczp.telegram.bot.protocol.model.ChatBoostRemoved
+import com.hiczp.telegram.bot.protocol.model.ChatBoostUpdated
+import com.hiczp.telegram.bot.protocol.model.ChatJoinRequest
+import com.hiczp.telegram.bot.protocol.model.ChatMemberUpdated
+import com.hiczp.telegram.bot.protocol.model.ChosenInlineResult
+import com.hiczp.telegram.bot.protocol.model.InlineQuery
+import com.hiczp.telegram.bot.protocol.model.Message
+import com.hiczp.telegram.bot.protocol.model.MessageReactionCountUpdated
+import com.hiczp.telegram.bot.protocol.model.MessageReactionUpdated
+import com.hiczp.telegram.bot.protocol.model.PaidMediaPurchased
+import com.hiczp.telegram.bot.protocol.model.Poll
+import com.hiczp.telegram.bot.protocol.model.PollAnswer
+import com.hiczp.telegram.bot.protocol.model.PreCheckoutQuery
+import com.hiczp.telegram.bot.protocol.model.ShippingQuery
+import kotlin.Long
 
 public sealed interface TelegramBotEvent {
     public val updateId: Long
