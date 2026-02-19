@@ -1,5 +1,6 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -104,4 +105,14 @@ kotlin {
             }
         }
     }
+}
+
+val generateTelegramBotEvent by tasks.registering(GenerateTelegramBotEventTask::class) {
+    protocolSourceDir.set(project(":protocol").layout.projectDirectory.dir("src/commonMain/kotlin"))
+    outputDir.set(layout.projectDirectory.dir("src/commonMain/kotlin"))
+    dependsOn(project(":protocol").tasks.named("generateKtorfitInterfaces"))
+}
+
+tasks.withType<KotlinCompilationTask<*>>().configureEach {
+    dependsOn(generateTelegramBotEvent)
 }

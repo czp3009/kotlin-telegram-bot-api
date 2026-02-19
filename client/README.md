@@ -13,6 +13,7 @@ the [protocol](../protocol) module.
 - **Flexible Error Handling**: Configurable error response handling modes
 - **Long Polling Optimization**: Pre-installed long polling plugin
 - **File Download Support**: Built-in file download URL rewriting
+- **Type-Safe Events**: Auto-generated `TelegramBotEvent` sealed interface for handling updates
 
 ## Quick Start
 
@@ -129,6 +130,41 @@ client.sendPhoto(
     chatId = ChatId.from(123456789L),
     photo = InputFile.reference("https://example.com/photo.jpg")
 )
+```
+
+## Event Handling
+
+The client module provides a type-safe event system for handling incoming Telegram updates. Event classes are
+auto-generated from the `Update` model.
+
+### TelegramBotEvent Sealed Interface
+
+All events implement the `TelegramBotEvent` sealed interface, which provides a common `updateId` property:
+
+```kotlin
+sealed interface TelegramBotEvent {
+    val updateId: Long
+}
+```
+
+### Converting Updates to Events
+
+Use the `toTelegramBotEvent()` extension function to convert an `Update` to the appropriate event type:
+
+```kotlin
+import com.hiczp.telegram.bot.client.event.*
+
+val updates = client.getUpdates().getOrThrow()
+for (update in updates) {
+    val event = update.toTelegramBotEvent()
+    when (event) {
+        is MessageEvent -> handleMessage(event.message)
+        is EditedMessageEvent -> handleEditedMessage(event.editedMessage)
+        is CallbackQueryEvent -> handleCallbackQuery(event.callbackQuery)
+        is InlineQueryEvent -> handleInlineQuery(event.inlineQuery)
+        // ... handle other event types
+    }
+}
 ```
 
 ## Long Polling
