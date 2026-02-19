@@ -63,6 +63,9 @@ import java.io.File
  * - **IncomingUpdate types**: Types used in `Update`'s optional non-primitive fields
  *   implement `IncomingUpdate` interface for polymorphic update handling
  *
+ * - **Update container annotation**: The generated `Update` model is annotated with
+ *   `IncomingUpdateContainer` for incoming update container specific processing
+ *
  * - **Field-overlapping unions**: For unions like `MaybeInaccessibleMessage` where subclasses
  *   share >70% of properties, the largest subclass (e.g., `Message`) is used for deserialization
  *
@@ -90,7 +93,7 @@ import java.io.File
  * Before generation, the task cleans specific output directories:
  * - Deletes `model/` and `form/` directories completely
  * - Deletes `TelegramBotApi.kt` interface file
- * - Preserves `type/` directory which contains handwritten code (`TelegramResponse`, `IncomingUpdate`)
+ * - Preserves `type/` directory which contains handwritten code (`TelegramResponse`, `IncomingUpdate`, `IncomingUpdateContainer`)
  */
 abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     companion object {
@@ -108,6 +111,8 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         private const val TELEGRAM_RESPONSE_TYPE = "TelegramResponse"
         private const val REPLY_MARKUP_INTERFACE = "ReplyMarkup"
         private const val INCOMING_UPDATE_INTERFACE = "IncomingUpdate"
+        private const val INCOMING_UPDATE_CONTAINER_ANNOTATION = "IncomingUpdateContainer"
+        private const val UPDATE_TYPE = "Update"
         private const val INPUT_FILE_TYPE = "InputFile"
         private const val MESSAGE_TYPE = "Message"
         private const val MAYBE_INACCESSIBLE_MESSAGE_TYPE = "MaybeInaccessibleMessage"
@@ -144,6 +149,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
      *
      * The `type/` subdirectory is preserved as it contains handwritten code:
      * - `IncomingUpdate.kt` - Marker interface for Update field types
+     * - `IncomingUpdateContainer.kt` - Annotation for generated Update container model
      * - `InputFile.kt` - Input file handling
      * - `TelegramResponse.kt` - Response wrapper with error handling
      */
@@ -202,6 +208,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
      * │   └── Queries.kt
      * └── type/                       # Handwritten code (preserved, not regenerated)
      *     ├── IncomingUpdate.kt       # Marker interface for Update field types
+     *     ├── IncomingUpdateContainer.kt # Annotation for generated Update container model
      *     ├── InputFile.kt            # Input file handling
      *     └── TelegramResponse.kt     # Response wrapper with error handling
      * ```
@@ -329,7 +336,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
      * for polymorphic handling when deserializing Update objects.
      */
     private fun collectUpdateFieldTypes() {
-        val updateSchema = allSchemas["Update"] ?: return
+        val updateSchema = allSchemas[UPDATE_TYPE] ?: return
         val properties = updateSchema.get("properties") ?: return
         val required = updateSchema.get("required")?.map { it.asText() }?.toSet() ?: emptySet()
 
@@ -445,6 +452,19 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     }
 
     /**
+     * Adds the `IncomingUpdateContainer` annotation for the generated `Update` type.
+     */
+    private fun TypeSpec.Builder.addIncomingUpdateContainerAnnotationIfNeeded(className: String): TypeSpec.Builder {
+        if (className == UPDATE_TYPE) {
+            addAnnotation(
+                AnnotationSpec.builder(ClassName(TYPE_PACKAGE, INCOMING_UPDATE_CONTAINER_ANNOTATION))
+                    .build()
+            )
+        }
+        return this
+    }
+
+    /**
      * Adds KDoc documentation to a type builder if the description is present.
      *
      * The description is sanitized to ensure a valid KDoc format (escaping special characters, etc.).
@@ -463,6 +483,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
      * - @Serializable annotation (unless it's a Form class)
      * - ReplyMarkup interface inheritance (if applicable)
      * - IncomingUpdate interface inheritance (if applicable)
+     * - IncomingUpdateContainer annotation for `Update` (if applicable)
      * - KDoc documentation (if description is present)
      */
     private fun TypeSpec.Builder.configureTypeBuilder(
@@ -474,6 +495,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             .addSerializableAnnotationIfNeeded(isFormClass)
             .addReplyMarkupInterfaceIfNeeded(className)
             .addIncomingUpdateInterfaceIfNeeded(className)
+            .addIncomingUpdateContainerAnnotationIfNeeded(className)
             .addKDocIfPresent(description)
     }
 

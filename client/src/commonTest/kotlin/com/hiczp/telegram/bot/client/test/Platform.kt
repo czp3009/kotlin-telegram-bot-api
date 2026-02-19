@@ -1,11 +1,7 @@
-package com.hiczp.telegram.bot.protocol
+package com.hiczp.telegram.bot.client.test
 
 import io.ktor.client.engine.*
 
 expect fun getBotToken(): String?
 
-expect fun getTestChatId(): String?
-
 expect fun createKtorEngine(): HttpClientEngine
-
-expect fun sleepMillis(millis: Long)

@@ -1,4 +1,4 @@
-package com.hiczp.telegram.bot.protocol
+package com.hiczp.telegram.bot.protocol.test
 
 /**
  * Test environment configuration providing lazy-loaded test credentials.

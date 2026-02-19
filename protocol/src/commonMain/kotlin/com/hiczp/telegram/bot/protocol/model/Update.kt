@@ -1,7 +1,7 @@
 // Auto-generated from Swagger specification, do not modify this file manually
 package com.hiczp.telegram.bot.protocol.model
 
-import kotlin.Long
+import com.hiczp.telegram.bot.protocol.type.IncomingUpdateContainer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -9,6 +9,7 @@ import kotlinx.serialization.Serializable
  * This object represents an incoming update. At most one of the optional parameters can be present in any given update.
  */
 @Serializable
+@IncomingUpdateContainer
 public data class Update(
     /**
      * The update's unique identifier. Update identifiers start from a certain positive number and increase sequentially. This identifier becomes especially handy if you're using [webhooks](https://core.telegram.org/bots/api#setwebhook), since it allows you to ignore repeated updates or to restore the correct update sequence, should they get out of order. If there are no new updates for at least a week, then identifier of the next update will be chosen randomly instead of sequentially.

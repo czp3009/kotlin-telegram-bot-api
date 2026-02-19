@@ -1,4 +1,4 @@
-package com.hiczp.telegram.bot.protocol.extension
+package com.hiczp.telegram.bot.protocol.test.extension
 
 import com.hiczp.telegram.bot.protocol.type.BinaryInputFile
 import com.hiczp.telegram.bot.protocol.type.toFormPart

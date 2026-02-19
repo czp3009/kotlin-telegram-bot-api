@@ -1,5 +1,6 @@
-package com.hiczp.telegram.bot.protocol.exception
+package com.hiczp.telegram.bot.protocol.test.exception
 
+import com.hiczp.telegram.bot.protocol.exception.TelegramErrorResponseException
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
@@ -10,7 +11,7 @@ import kotlin.test.assertFailsWith
 private val logger = KotlinLogging.logger {}
 
 /**
- * Unit tests for [TelegramErrorResponseException]
+ * Unit tests for [com.hiczp.telegram.bot.protocol.exception.TelegramErrorResponseException]
  */
 class TelegramErrorResponseExceptionTest {
     private val json = Json

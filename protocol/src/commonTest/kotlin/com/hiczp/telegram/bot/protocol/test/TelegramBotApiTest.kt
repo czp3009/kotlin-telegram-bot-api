@@ -1,16 +1,17 @@
-package com.hiczp.telegram.bot.protocol
+package com.hiczp.telegram.bot.protocol.test
 
+import com.hiczp.telegram.bot.protocol.createTelegramBotApi
 import com.hiczp.telegram.bot.protocol.exception.TelegramErrorResponseException
 import com.hiczp.telegram.bot.protocol.exception.isRetryable
 import com.hiczp.telegram.bot.protocol.extension.deleteMessage
 import com.hiczp.telegram.bot.protocol.extension.deleteMessages
-import com.hiczp.telegram.bot.protocol.extension.toFormPart
-import com.hiczp.telegram.bot.protocol.extension.toInputFile
 import com.hiczp.telegram.bot.protocol.form.*
 import com.hiczp.telegram.bot.protocol.model.*
 import com.hiczp.telegram.bot.protocol.plugin.TelegramFileDownloadPlugin
 import com.hiczp.telegram.bot.protocol.plugin.TelegramLongPollingPlugin
 import com.hiczp.telegram.bot.protocol.plugin.TelegramServerErrorPlugin
+import com.hiczp.telegram.bot.protocol.test.extension.toFormPart
+import com.hiczp.telegram.bot.protocol.test.extension.toInputFile
 import com.hiczp.telegram.bot.protocol.type.InputFile
 import de.jensklingenberg.ktorfit.Ktorfit
 import io.github.oshai.kotlinlogging.KotlinLogging

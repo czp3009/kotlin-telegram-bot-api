@@ -17,6 +17,8 @@ Code is generated from the
     - `@Serializable` support via kotlinx.serialization
     - `@SerialName` mapping for snake_case API fields
     - Union handling with sealed interfaces where applicable
+  - Generated `Update` is annotated with `@IncomingUpdateContainer`
+  - Optional non-primitive fields inside `Update` implement `IncomingUpdate`
 
 - **Multipart form wrappers and extensions** (`form/`)
     - `*Form.kt`: wrapper classes for multipart operations
@@ -55,7 +57,7 @@ Code is generated from the
 - **Message extensions** (`extension/Messages.kt`)
   ```kotlin
   if (message.isInaccessible) {
-      // handle inaccessible message
+      handleInaccessibleMessage(message)
   }
 
   api.deleteMessage(message)
@@ -129,11 +131,7 @@ api.sendVideo(form)
 
 ### Dynamic multipart attachments (`attach://...`)
 
-Some multipart form wrappers include:
-
-```kotlin
-attachments: List<FormPart<ChannelProvider>>?
-```
+Some multipart form wrappers include an `attachments: List<FormPart<ChannelProvider>>?` property.
 
 Use this when request payload fields reference dynamically attached files through `attach://<file_attach_name>`.
 

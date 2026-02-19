@@ -1,4 +1,4 @@
-package com.hiczp.telegram.bot.protocol
+package com.hiczp.telegram.bot.protocol.test
 
 object EnvVars {
     const val BOT_TOKEN = "BOT_TOKEN"

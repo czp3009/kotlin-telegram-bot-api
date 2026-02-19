@@ -1,4 +1,4 @@
-package com.hiczp.telegram.bot.protocol
+package com.hiczp.telegram.bot.client.test
 
 import io.ktor.client.engine.*
 import io.ktor.client.engine.cio.*
@@ -8,10 +8,6 @@ actual fun getBotToken(): String? {
     return System.getenv(EnvVars.BOT_TOKEN)
 }
 
-actual fun getTestChatId(): String? {
-    return System.getenv(EnvVars.TEST_CHAT_ID)
-}
-
 actual fun createKtorEngine(): HttpClientEngine {
     return CIO.create {
         val httpProxy = System.getenv(EnvVars.HTTPS_PROXY) ?: System.getenv(EnvVars.HTTP_PROXY)
@@ -19,8 +15,4 @@ actual fun createKtorEngine(): HttpClientEngine {
             proxy = ProxyBuilder.http(Url(httpProxy))
         }
     }
-}
-
-actual fun sleepMillis(millis: Long) {
-    Thread.sleep(millis)
 }

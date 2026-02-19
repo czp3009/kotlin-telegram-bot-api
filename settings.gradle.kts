@@ -17,3 +17,4 @@ dependencyResolutionManagement {
 }
 
 include(":protocol")
+include(":client")
