@@ -5,8 +5,11 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 
@@ -15,6 +18,9 @@ import java.io.File
  *
  * This task produces type-safe, auto-generated Kotlin bindings for Telegram's REST API,
  * including data models, form classes, query wrappers, and Ktorfit interfaces for HTTP operations.
+ *
+ * This task is cacheable - outputs are stored in and retrieved from the Gradle build cache
+ * when the input Swagger file hasn't changed.
  *
  * ## Generated Components
  *
@@ -95,6 +101,7 @@ import java.io.File
  * - Deletes `TelegramBotApi.kt` interface file
  * - Preserves `type/` directory which contains handwritten code (`TelegramResponse`, `InputFile`)
  */
+@CacheableTask
 abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     companion object {
         // Package names
@@ -137,6 +144,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
      * and data models. The task parses this specification to generate corresponding Kotlin code.
      */
     @get:InputFile
+    @get:PathSensitive(PathSensitivity.ABSOLUTE)
     abstract val swaggerFile: RegularFileProperty
 
     /**

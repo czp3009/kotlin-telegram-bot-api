@@ -3,6 +3,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
@@ -24,6 +25,7 @@ import javax.inject.Inject
  *
  * @constructor Injects the ProjectLayout to provide file system access for the output file configuration.
  */
+@CacheableTask
 abstract class DownloadTelegramBotApiSwaggerTask @Inject constructor(
     layout: ProjectLayout
 ) : DefaultTask() {
