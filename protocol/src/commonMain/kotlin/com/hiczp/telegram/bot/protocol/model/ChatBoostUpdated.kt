@@ -1,7 +1,7 @@
 // Auto-generated from Swagger specification, do not modify this file manually
 package com.hiczp.telegram.bot.protocol.model
 
-import com.hiczp.telegram.bot.protocol.type.IncomingUpdate
+import com.hiczp.telegram.bot.protocol.`annotation`.IncomingUpdate
 import kotlinx.serialization.Serializable
 
 /**

@@ -93,7 +93,7 @@ import java.io.File
  * Before generation, the task cleans specific output directories:
  * - Deletes `model/` and `form/` directories completely
  * - Deletes `TelegramBotApi.kt` interface file
- * - Preserves `type/` directory which contains handwritten code (`TelegramResponse`, `IncomingUpdate`, `IncomingUpdateContainer`)
+ * - Preserves `type/` directory which contains handwritten code (`TelegramResponse`, `InputFile`)
  */
 abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     companion object {
@@ -103,6 +103,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         private const val FORM_PACKAGE = "$BASE_PACKAGE.form"
         private const val QUERY_PACKAGE = "$BASE_PACKAGE.query"
         private const val TYPE_PACKAGE = "$BASE_PACKAGE.type"
+        private const val ANNOTATION_PACKAGE = "$BASE_PACKAGE.annotation"
         private const val PLUGIN_PACKAGE = "$BASE_PACKAGE.plugin"
         private const val KTORFIT_HTTP_PACKAGE = "de.jensklingenberg.ktorfit.http"
         private const val KTOR_STATEMENT_PACKAGE = "io.ktor.client.statement"
@@ -148,10 +149,10 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
      * - `com/hiczp/telegram/bot/protocol/TelegramBotApi.kt` - Ktorfit HTTP interface
      *
      * The `type/` subdirectory is preserved as it contains handwritten code:
-     * - `IncomingUpdate.kt` - Marker interface for Update field types
-     * - `IncomingUpdateContainer.kt` - Annotation for generated Update container model
      * - `InputFile.kt` - Input file handling
      * - `TelegramResponse.kt` - Response wrapper with error handling
+     *
+     * Note: `IncomingUpdate` and `IncomingUpdateContainer` are defined in the separate `:protocol-annotation` module.
      */
     @get:OutputDirectory
     abstract val outputDir: DirectoryProperty
@@ -207,11 +208,11 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
      * ├── query/                      # Query extension functions for JSON-serialized GET params
      * │   └── Queries.kt
      * └── type/                       # Handwritten code (preserved, not regenerated)
-     *     ├── IncomingUpdate.kt       # Marker interface for Update field types
-     *     ├── IncomingUpdateContainer.kt # Annotation for generated Update container model
      *     ├── InputFile.kt            # Input file handling
      *     └── TelegramResponse.kt     # Response wrapper with error handling
      * ```
+     *
+     * Note: `IncomingUpdate` and `IncomingUpdateContainer` are defined in the separate `:protocol-annotation` module.
      *
      * ## Type Collection Strategy
      *
@@ -446,7 +447,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
      */
     private fun TypeSpec.Builder.addIncomingUpdateInterfaceIfNeeded(className: String): TypeSpec.Builder {
         if (isUpdateFieldType(className)) {
-            addSuperinterface(ClassName(TYPE_PACKAGE, INCOMING_UPDATE_INTERFACE))
+            addSuperinterface(ClassName(ANNOTATION_PACKAGE, INCOMING_UPDATE_INTERFACE))
         }
         return this
     }
@@ -457,7 +458,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     private fun TypeSpec.Builder.addIncomingUpdateContainerAnnotationIfNeeded(className: String): TypeSpec.Builder {
         if (className == UPDATE_TYPE) {
             addAnnotation(
-                AnnotationSpec.builder(ClassName(TYPE_PACKAGE, INCOMING_UPDATE_CONTAINER_ANNOTATION))
+                AnnotationSpec.builder(ClassName(ANNOTATION_PACKAGE, INCOMING_UPDATE_CONTAINER_ANNOTATION))
                     .build()
             )
         }
@@ -1195,7 +1196,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
         // Add IncomingUpdate interface if this class is used in Update's optional fields
         if (isUpdateFieldType(className)) {
-            classBuilder.addSuperinterface(ClassName(TYPE_PACKAGE, INCOMING_UPDATE_INTERFACE))
+            classBuilder.addSuperinterface(ClassName(ANNOTATION_PACKAGE, INCOMING_UPDATE_INTERFACE))
         }
 
         val constructorBuilder = FunSpec.constructorBuilder()
@@ -1309,7 +1310,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
         // Add IncomingUpdate interface if this class is used in Update's optional fields
         if (isUpdateFieldType(className)) {
-            classBuilder.addSuperinterface(ClassName(TYPE_PACKAGE, INCOMING_UPDATE_INTERFACE))
+            classBuilder.addSuperinterface(ClassName(ANNOTATION_PACKAGE, INCOMING_UPDATE_INTERFACE))
         }
 
         val constructorBuilder = FunSpec.constructorBuilder()
@@ -1417,7 +1418,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
         // Add IncomingUpdate interface if this class is used in Update's optional fields
         if (isUpdateFieldType(className)) {
-            classBuilder.addSuperinterface(ClassName(TYPE_PACKAGE, INCOMING_UPDATE_INTERFACE))
+            classBuilder.addSuperinterface(ClassName(ANNOTATION_PACKAGE, INCOMING_UPDATE_INTERFACE))
         }
 
         val constructorBuilder = FunSpec.constructorBuilder()

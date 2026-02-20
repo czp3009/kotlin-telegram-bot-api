@@ -17,8 +17,8 @@ Code is generated from the
     - `@Serializable` support via kotlinx.serialization
     - `@SerialName` mapping for snake_case API fields
     - Union handling with sealed interfaces where applicable
-  - Generated `Update` is annotated with `@IncomingUpdateContainer`
-  - Optional non-primitive fields inside `Update` implement `IncomingUpdate`
+  - Generated `Update` is annotated with `@IncomingUpdateContainer` (from `:protocol-annotation` module)
+  - Optional non-primitive fields inside `Update` implement `IncomingUpdate` (from `:protocol-annotation` module)
 
 - **Multipart form wrappers and extensions** (`form/`)
     - `*Form.kt`: wrapper classes for multipart operations

@@ -1,76 +1,14 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import com.hiczp.telegram.bot.buildScript.configureAllTargets
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
+    alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.androidKotlinMultiplatformLibrary)
 }
 
-@Suppress("OPT_IN_USAGE")
 kotlin {
-    jvmToolchain(21)
-
-    applyDefaultHierarchyTemplate()
-
-    // Windows
-    mingwX64()
-
-    // Linux
-    linuxArm64()
-    linuxX64()
-
-    // macOS
-    macosArm64()
-    macosX64()
-
-    // iOS
-    iosSimulatorArm64()
-    iosArm64()
-    iosX64()
-
-    // watchOS
-    watchosSimulatorArm64()
-    watchosArm32()
-    watchosArm64()
-    watchosX64()
-
-    // tvOS
-    tvosSimulatorArm64()
-    tvosArm64()
-    tvosX64()
-
-    // Android Native
-    androidNativeArm32()
-    androidNativeArm64()
-    androidNativeX64()
-    androidNativeX86()
-
-    // JVM
-    jvm()
-
-    // Android
-    androidLibrary {
-        namespace = "com.hiczp.telegram.bot.client"
-        compileSdk = 36
-        minSdk = 34
-        compilerOptions {
-            jvmTarget = JvmTarget.JVM_17
-        }
-    }
-
-    // JS
-    js {
-        browser()
-        nodejs()
-    }
-
-    // WASM
-    wasmJs {
-        browser()
-        nodejs()
-        d8()
-    }
+    configureAllTargets("com.hiczp.telegram.bot.client")
 
     sourceSets {
         commonMain.dependencies {
@@ -105,14 +43,4 @@ kotlin {
             }
         }
     }
-}
-
-val generateTelegramBotEvent by tasks.registering(GenerateTelegramBotEventTask::class) {
-    protocolSourceDir.set(project(":protocol").layout.projectDirectory.dir("src/commonMain/kotlin"))
-    outputDir.set(layout.projectDirectory.dir("src/commonMain/kotlin"))
-    dependsOn(project(":protocol").tasks.named("generateKtorfitInterfaces"))
-}
-
-tasks.withType<KotlinCompilationTask<*>>().configureEach {
-    dependsOn(generateTelegramBotEvent)
 }

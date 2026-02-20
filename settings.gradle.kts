@@ -16,5 +16,8 @@ dependencyResolutionManagement {
     }
 }
 
+include(":protocol-annotation")
 include(":protocol")
+include(":protocol-update-codegen")
 include(":client")
+include(":application")

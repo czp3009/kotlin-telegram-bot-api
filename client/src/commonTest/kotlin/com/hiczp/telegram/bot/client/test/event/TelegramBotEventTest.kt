@@ -1,8 +1,8 @@
 package com.hiczp.telegram.bot.client.test.event
 
-import com.hiczp.telegram.bot.client.event.MessageEvent
-import com.hiczp.telegram.bot.client.event.toTelegramBotEvent
 import com.hiczp.telegram.bot.protocol.constant.ChatType
+import com.hiczp.telegram.bot.protocol.event.MessageEvent
+import com.hiczp.telegram.bot.protocol.event.toTelegramBotEvent
 import com.hiczp.telegram.bot.protocol.model.Chat
 import com.hiczp.telegram.bot.protocol.model.Message
 import com.hiczp.telegram.bot.protocol.model.Update
