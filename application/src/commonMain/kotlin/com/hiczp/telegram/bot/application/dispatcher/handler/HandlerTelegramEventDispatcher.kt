@@ -13,8 +13,8 @@ private val logger = KotlinLogging.logger {}
  * until one consumes the event. If no handler consumes the event, it is logged
  * as an unhandled event (dead letter).
  *
- * @param handlers A [Sequence] of handler functions. Each handler receives a [TelegramBotEvent]
- *                 and returns `true` if the event was consumed, `false` otherwise.
+ * This implements the Chain of Responsibility pattern, where each handler can decide
+ * whether to handle an event or pass it to the next handler in the chain.
  *
  * Example usage:
  * ```kotlin
@@ -28,11 +28,14 @@ private val logger = KotlinLogging.logger {}
  *         }
  *     }
  * }
- * val dispatcher = TelegramEventHandlerDispatcher(handlers)
+ * val dispatcher = HandlerTelegramEventDispatcher(handlers)
  * ```
+ *
+ * @param handlers A [Sequence] of handler functions. Each handler receives a [TelegramBotEvent]
+ *                 and returns `true` if the event was consumed, `false` otherwise.
  */
-open class TelegramEventHandlerDispatcher(
-    private val handlers: Sequence<(suspend (TelegramBotEvent) -> Boolean)>
+open class HandlerTelegramEventDispatcher(
+    private val handlers: Sequence<suspend (TelegramBotEvent) -> Boolean>
 ) : TelegramEventDispatcher {
     /**
      * Dispatch an event by attempting to handle it with each registered handler.

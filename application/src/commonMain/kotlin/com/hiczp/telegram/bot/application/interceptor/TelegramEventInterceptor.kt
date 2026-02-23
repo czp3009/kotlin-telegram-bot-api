@@ -6,11 +6,15 @@ import com.hiczp.telegram.bot.protocol.event.TelegramBotEvent
  * Base processor interface for handling Telegram events.
  *
  * Both interceptor wrappers and the final dispatcher implement this interface,
- * allowing them to be chained together in a pipeline.
+ * allowing them to be chained together in a pipeline. This enables the "onion model"
+ * where each layer can process the event before and after the inner layers.
  */
 interface TelegramEventProcessor {
     /**
      * Process a Telegram event.
+     *
+     * Implementations should handle the event or delegate to the next processor
+     * in the chain by calling `process` on the receiver context.
      *
      * @param event The event to process.
      */

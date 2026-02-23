@@ -12,14 +12,12 @@ plugins {
 kotlin {
     configureAllTargets("com.hiczp.telegram.bot.protocol")
 
-    val desktopNativeTargets = setOf("mingwX64", "linuxArm64", "linuxX64", "macosArm64", "macosX64")
-
     sourceSets {
         commonMain.dependencies {
             api(project(":protocol-annotation"))
             api(libs.ktorfit.lib.light)
             api(libs.kotlinx.serialization.json)
-            api(libs.ktor.http)
+            api(libs.ktor.client.core)
         }
 
         commonTest.dependencies {
@@ -49,6 +47,7 @@ kotlin {
         }
 
         //only support running unit test on jvm and desktopNative
+        val desktopNativeTargets = setOf("mingwX64", "linuxArm64", "linuxX64", "macosArm64", "macosX64")
         targets.configureEach {
             val testCompilation = compilations.findByName("test") ?: return@configureEach
             val testSourceSet = testCompilation.defaultSourceSet
