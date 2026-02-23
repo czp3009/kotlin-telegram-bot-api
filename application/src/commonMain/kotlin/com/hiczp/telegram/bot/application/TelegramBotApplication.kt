@@ -159,6 +159,7 @@ class TelegramBotApplication(
 
         state.value = State.STOPPED
         appScope.cancel()
+        appScope.coroutineContext[Job]?.join()
         logger.debug { "Bot exited" }
     }
 
