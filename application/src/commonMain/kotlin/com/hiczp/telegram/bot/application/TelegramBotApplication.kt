@@ -4,7 +4,9 @@ import com.hiczp.telegram.bot.application.dispatcher.TelegramEventDispatcher
 import com.hiczp.telegram.bot.application.exception.TelegramBotShuttingDownException
 import com.hiczp.telegram.bot.application.interceptor.TelegramEventInterceptor
 import com.hiczp.telegram.bot.application.pipeline.TelegramEventPipeline
+import com.hiczp.telegram.bot.application.updatesource.LongPollingTelegramUpdateSource
 import com.hiczp.telegram.bot.application.updatesource.TelegramUpdateSource
+import com.hiczp.telegram.bot.client.TelegramBotClient
 import com.hiczp.telegram.bot.protocol.event.toTelegramBotEvent
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.atomicfu.atomic
@@ -53,13 +55,19 @@ private val logger = KotlinLogging.logger {}
  * @param eventDispatcher The dispatcher that handles the final event routing to business logic.
  */
 class TelegramBotApplication(
+    client: TelegramBotClient,
     private val updateSource: TelegramUpdateSource,
-    interceptors: List<TelegramEventInterceptor> = emptyList(),
+    interceptors: List<TelegramEventInterceptor>,
     eventDispatcher: TelegramEventDispatcher,
 ) {
-    private val pipeline = TelegramEventPipeline(interceptors, eventDispatcher)
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val mainJobDeferred = CompletableDeferred<Job>()
+    private val pipeline = TelegramEventPipeline(
+        client = client,
+        applicationScope = appScope,
+        interceptors = interceptors,
+        dispatcher = eventDispatcher,
+    )
 
     private val state = atomic(State.NEW)
 
@@ -155,4 +163,20 @@ class TelegramBotApplication(
     }
 
     private enum class State { NEW, RUNNING, STOPPING, STOPPED }
+
+    companion object {
+        fun longPolling(
+            botToken: String,
+            eventDispatcher: TelegramEventDispatcher,
+            interceptors: List<TelegramEventInterceptor> = emptyList(),
+        ): TelegramBotApplication {
+            val client = TelegramBotClient(botToken)
+            return TelegramBotApplication(
+                client = client,
+                updateSource = LongPollingTelegramUpdateSource(client),
+                interceptors = interceptors,
+                eventDispatcher = eventDispatcher,
+            )
+        }
+    }
 }

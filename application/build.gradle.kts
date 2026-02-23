@@ -13,7 +13,6 @@ kotlin {
             api(project(":client"))
             implementation(libs.kotlin.logging)
             implementation(libs.kotlinx.atomicfu)
-            implementation(libs.kotlinx.datetime)
         }
 
         commonTest.dependencies {
@@ -28,7 +27,7 @@ kotlin {
         }
 
         mingwTest.dependencies {
-            implementation(libs.ktor.client.curl)
+            implementation(libs.ktor.client.winhttp)
         }
 
         linuxTest.dependencies {

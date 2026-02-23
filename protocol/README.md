@@ -98,7 +98,7 @@ Factory methods:
 
 ```kotlin
 api.sendPhoto(
-    chatId = ChatId.from(123456789L),
+  chatId = "123456789",
     photo = InputFile.reference("AgACAgQAAxkBA...")
 )
 ```
@@ -107,7 +107,7 @@ api.sendPhoto(
 
 ```kotlin
 api.sendDocument(
-    chatId = ChatId.from(123456789L),
+  chatId = "123456789",
     document = InputFile.binary(
         fileName = "report.pdf",
         contentType = ContentType.Application.Pdf
@@ -121,7 +121,7 @@ api.sendDocument(
 
 ```kotlin
 val form = SendVideoForm(
-    chatId = ChatId.from(123456789L),
+  chatId = "123456789",
     video = InputFile.reference("https://example.com/video.mp4"),
     caption = "demo"
 )
@@ -197,6 +197,10 @@ Generated files contain:
 ```
 
 Do not edit generated files manually; update generation inputs and regenerate instead.
+
+## Supported Platforms
+
+JVM, Android, JS, WASM, Linux, macOS, Windows, iOS, watchOS, tvOS, Android Native.
 
 ## Related Links
 

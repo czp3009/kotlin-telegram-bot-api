@@ -1,15 +1,20 @@
 package com.hiczp.telegram.bot.application.pipeline
 
+import com.hiczp.telegram.bot.application.context.DefaultTelegramBotEventContext
+import com.hiczp.telegram.bot.application.context.TelegramBotEventContext
 import com.hiczp.telegram.bot.application.dispatcher.TelegramEventDispatcher
 import com.hiczp.telegram.bot.application.interceptor.TelegramEventInterceptor
 import com.hiczp.telegram.bot.application.interceptor.TelegramEventProcessor
+import com.hiczp.telegram.bot.client.TelegramBotClient
 import com.hiczp.telegram.bot.protocol.event.TelegramBotEvent
+import io.ktor.util.*
+import kotlinx.coroutines.CoroutineScope
 
 private class DispatcherTelegramEventProcessor(
     private val dispatcher: TelegramEventDispatcher
 ) : TelegramEventProcessor {
-    override suspend fun process(event: TelegramBotEvent) {
-        dispatcher.dispatch(event)
+    override suspend fun process(context: TelegramBotEventContext) {
+        dispatcher.dispatch(context)
     }
 }
 
@@ -17,8 +22,8 @@ private class InterceptedTelegramEventProcessor(
     private val interceptor: TelegramEventInterceptor,
     private val nextProcessor: TelegramEventProcessor,
 ) : TelegramEventProcessor {
-    override suspend fun process(event: TelegramBotEvent) {
-        interceptor.invoke(nextProcessor, event)
+    override suspend fun process(context: TelegramBotEventContext) {
+        interceptor(nextProcessor, context)
     }
 }
 
@@ -36,20 +41,23 @@ private class InterceptedTelegramEventProcessor(
  *
  * Example usage:
  * ```kotlin
- * val interceptors = listOf<TelegramEventInterceptor> { event ->
- *     println("Before processing: ${event.updateId}")
- *     this.process(event)
- *     println("After processing: ${event.updateId}")
+ * val interceptors = listOf<TelegramEventInterceptor> { context ->
+ *     println("Before processing: ${context.event.updateId}")
+ *     this.process(context)
+ *     println("After processing: ${context.event.updateId}")
  * }
  *
- * val pipeline = TelegramEventPipeline(interceptors, eventDispatcher)
+ * val pipeline = TelegramEventPipeline(client, interceptors, eventDispatcher)
  * pipeline(event)
  * ```
  *
+ * @param client The Telegram bot client.
  * @param interceptors List of interceptors to apply, in order from outermost to innermost.
  * @param dispatcher The final dispatcher that handles event routing to business logic.
  */
 internal class TelegramEventPipeline(
+    private val client: TelegramBotClient,
+    private val applicationScope: CoroutineScope,
     interceptors: List<TelegramEventInterceptor>,
     dispatcher: TelegramEventDispatcher,
 ) {
@@ -64,8 +72,18 @@ internal class TelegramEventPipeline(
      *
      * This starts execution from the outermost interceptor and proceeds
      * inward through each layer until reaching the dispatcher.
+     *
+     * A new [TelegramBotEventContext] is created for each event execution.
+     *
+     * @param event The event to process.
      */
     suspend fun execute(event: TelegramBotEvent) {
-        pipeline.process(event)
+        val context = DefaultTelegramBotEventContext(
+            client = client,
+            event = event,
+            applicationScope = applicationScope,
+            attributes = Attributes(concurrent = true),
+        )
+        pipeline.process(context)
     }
 }

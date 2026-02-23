@@ -22,7 +22,6 @@ import com.hiczp.telegram.bot.client.TelegramBotClient
 import io.ktor.client.engine.cio.*
 
 val client = TelegramBotClient(
-    ktorEngine = CIO.create(),
     botToken = "123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"
 )
 
@@ -32,7 +31,7 @@ println("Bot username: @${me.username}")
 
 // Send a message
 client.sendMessage(
-    chatId = ChatId.from(123456789L),
+    chatId = "123456789",
     text = "Hello from Kotlin!"
 )
 ```
@@ -43,8 +42,8 @@ client.sendMessage(
 
 | Parameter                 | Type                             | Default                      | Description                          |
 |---------------------------|----------------------------------|------------------------------|--------------------------------------|
-| `ktorEngine`              | `HttpClientEngine`               | Required                     | The Ktor engine for network requests |
 | `botToken`                | `String`                         | Required                     | Bot token from BotFather             |
+| `httpClientEngine`        | `HttpClientEngine?`              | `null`                       | The Ktor engine for network requests |
 | `baseUrl`                 | `String`                         | `"https://api.telegram.org"` | API base URL (for local bot servers) |
 | `useTestEnvironment`      | `Boolean`                        | `false`                      | Use Telegram's test environment      |
 | `throwOnErrorResponse`    | `Boolean`                        | `true`                       | Throw exception on error responses   |
@@ -54,8 +53,8 @@ client.sendMessage(
 
 ```kotlin
 val client = TelegramBotClient(
-    ktorEngine = CIO.create(),
     botToken = System.getenv("BOT_TOKEN"),
+    httpClientEngine = CIO.create(),
     baseUrl = "https://my-local-bot-server.example.com",
     useTestEnvironment = true,
     throwOnErrorResponse = false,
@@ -113,13 +112,13 @@ import com.hiczp.telegram.bot.protocol.type.InputFile
 
 // Reference existing file by file_id
 client.sendPhoto(
-    chatId = ChatId.from(123456789L),
+    chatId = "123456789",
     photo = InputFile.reference("AgACAgQAAxkBA...")
 )
 
 // Upload binary content
 client.sendDocument(
-    chatId = ChatId.from(123456789L),
+    chatId = "123456789",
     document = InputFile.binary(fileName = "report.pdf") {
         ByteReadChannel(pdfBytes)
     }
@@ -127,7 +126,7 @@ client.sendDocument(
 
 // Upload from URL
 client.sendPhoto(
-    chatId = ChatId.from(123456789L),
+    chatId = "123456789",
     photo = InputFile.reference("https://example.com/photo.jpg")
 )
 ```
@@ -152,7 +151,7 @@ sealed interface TelegramBotEvent {
 Use the `toTelegramBotEvent()` extension function to convert an `Update` to the appropriate event type:
 
 ```kotlin
-import com.hiczp.telegram.bot.client.event.*
+import com.hiczp.telegram.bot.protocol.event.*
 
 val updates = client.getUpdates().getOrThrow()
 for (update in updates) {
@@ -189,8 +188,8 @@ Choose the appropriate engine for your platform:
 import io.ktor.client.engine.cio.*
 
 TelegramBotClient(
-    ktorEngine = CIO.create(),
-    botToken = "YOUR_TOKEN"
+    botToken = "YOUR_TOKEN",
+    httpClientEngine = CIO.create()
 )
 ```
 
@@ -200,8 +199,8 @@ TelegramBotClient(
 import io.ktor.client.engine.android.*
 
 TelegramBotClient(
-    ktorEngine = Android.create(),
-    botToken = "YOUR_TOKEN"
+    botToken = "YOUR_TOKEN",
+    httpClientEngine = Android.create()
 )
 ```
 
@@ -211,8 +210,8 @@ TelegramBotClient(
 import io.ktor.client.engine.darwin.*
 
 TelegramBotClient(
-    ktorEngine = Darwin.create(),
-    botToken = "YOUR_TOKEN"
+    botToken = "YOUR_TOKEN",
+    httpClientEngine = Darwin.create()
 )
 ```
 
@@ -222,8 +221,8 @@ TelegramBotClient(
 import io.ktor.client.engine.curl.*
 
 TelegramBotClient(
-    ktorEngine = Curl.create(),
-    botToken = "YOUR_TOKEN"
+    botToken = "YOUR_TOKEN",
+    httpClientEngine = Curl.create()
 )
 ```
 
@@ -233,14 +232,21 @@ TelegramBotClient(
 import io.ktor.client.engine.js.*
 
 TelegramBotClient(
-    ktorEngine = Js.create(),
-    botToken = "YOUR_TOKEN"
+    botToken = "YOUR_TOKEN",
+    httpClientEngine = Js.create()
 )
 ```
+
+## Supported Platforms
+
+JVM, Android, JS, WASM, Linux, macOS, Windows, iOS, watchOS, tvOS, Android Native.
+
+Tests only run on JVM and desktop native targets (Linux, macOS, Windows).
 
 ## Related Links
 
 - [Protocol Module](../protocol) - Core API definitions
+- [Application Module](../application) - Bot application framework
 - [Telegram Bot API Documentation](https://core.telegram.org/bots/api)
 - [Ktor Documentation](https://ktor.io/docs/client.html)
 - [Ktorfit](https://github.com/Foso/Ktorfit)

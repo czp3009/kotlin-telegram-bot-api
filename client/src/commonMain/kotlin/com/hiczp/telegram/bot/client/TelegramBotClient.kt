@@ -25,7 +25,7 @@ import kotlin.random.Random
  * A high-level Telegram Bot API client that wraps [TelegramBotApi] with sensible defaults.
  *
  * This client provides:
- * - Automatic JSON serialization/derialization using kotlinx.serialization
+ * - Automatic JSON serialization/deserialization using kotlinx.serialization
  * - Built-in retry logic for transient failures and rate limiting
  * - Support for Telegram's test environment
  * - Configurable error handling modes
@@ -35,19 +35,16 @@ import kotlin.random.Random
  * Example usage:
  * ```kotlin
  * val client = TelegramBotClient(
- *     ktorEngine = CIO.create(),
  *     botToken = "123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"
  * )
  *
- * val response = client.getMe()
- * if (response.ok) {
- *     println("Bot username: ${response.result.username}")
- * }
+ * val result = client.getMe().getOrThrow()
+ * println("Bot username: ${result.username}")
  * ```
  *
- * @param ktorEngine The Ktor [HttpClientEngine] to use for network requests.
- *   Choose an engine appropriate for your platform (e.g., CIO for JVM, Darwin for iOS).
  * @param botToken The Telegram bot token obtained from BotFather.
+ * @param httpClientEngine The Ktor [HttpClientEngine] to use for network requests.
+ *   Choose an engine appropriate for your platform (e.g., CIO for JVM, Darwin for iOS).
  * @param baseUrl The base URL for the Telegram Bot API. Defaults to "https://api.telegram.org".
  *   Can be customized for local bot server.
  * @param useTestEnvironment Whether to use Telegram's test environment.
@@ -62,15 +59,15 @@ import kotlin.random.Random
  * @see TelegramErrorResponseException
  */
 class TelegramBotClient(
-    ktorEngine: HttpClientEngine,
     botToken: String,
+    httpClientEngine: HttpClientEngine? = null,
     baseUrl: String = "https://api.telegram.org",
     useTestEnvironment: Boolean = false,
     throwOnErrorResponse: Boolean = true,
     additionalConfiguration: HttpClientConfig<*>.() -> Unit = {},
 ) : TelegramBotApi by buildTelegramBotApi(
-    ktorEngine,
     botToken,
+    httpClientEngine,
     baseUrl,
     useTestEnvironment,
     throwOnErrorResponse,
@@ -78,18 +75,18 @@ class TelegramBotClient(
 ) {
     companion object {
         private fun buildTelegramBotApi(
-            ktorEngine: HttpClientEngine,
             botToken: String,
+            httpClientEngine: HttpClientEngine?,
             baseUrl: String,
-            useTestEnvironment: Boolean = false,
-            throwOnErrorResponse: Boolean = true,
+            useTestEnvironment: Boolean,
+            throwOnErrorResponse: Boolean,
             additionalConfiguration: HttpClientConfig<*>.() -> Unit,
         ): TelegramBotApi {
             val baseUrl = URLBuilder(baseUrl).apply {
                 appendPathSegments("bot${botToken}/")
                 if (useTestEnvironment) appendPathSegments("test/")
             }.buildString()
-            val httpClient = HttpClient(ktorEngine) {
+            val config: HttpClientConfig<*>.() -> Unit = {
                 install(ContentNegotiation) {
                     json(Json(DefaultJson) {
                         ignoreUnknownKeys = true
@@ -134,6 +131,11 @@ class TelegramBotClient(
                 install(TelegramLongPollingPlugin)
                 install(TelegramFileDownloadPlugin)
                 additionalConfiguration()
+            }
+            val httpClient = if (httpClientEngine == null) {
+                HttpClient(config)
+            } else {
+                HttpClient(httpClientEngine, config)
             }
             return Ktorfit.Builder().httpClient(httpClient)
                 .baseUrl(baseUrl)

@@ -1,6 +1,6 @@
 package com.hiczp.telegram.bot.application.interceptor
 
-import com.hiczp.telegram.bot.protocol.event.TelegramBotEvent
+import com.hiczp.telegram.bot.application.context.TelegramBotEventContext
 
 /**
  * Base processor interface for handling Telegram events.
@@ -14,11 +14,11 @@ interface TelegramEventProcessor {
      * Process a Telegram event.
      *
      * Implementations should handle the event or delegate to the next processor
-     * in the chain by calling `process` on the receiver context.
+     * in the chain by calling `this.process(context)` to pass control to the next layer.
      *
-     * @param event The event to process.
+     * @param context The bot context containing client, event, and attributes.
      */
-    suspend fun process(event: TelegramBotEvent)
+    suspend fun process(context: TelegramBotEventContext)
 }
 
 /**
@@ -26,15 +26,15 @@ interface TelegramEventProcessor {
  *
  * Inspired by Ktor's interceptor pattern, this is a suspend function with a receiver
  * that allows intercepting event processing. Inside the interceptor body, call
- * `this.process(event)` to pass control to the next layer in the pipeline.
+ * `this.process(context)` to pass control to the next layer in the pipeline.
  *
  * Example usage:
  * ```kotlin
- * val loggingInterceptor: TelegramEventInterceptor = { event ->
- *     println("Received event: ${event.updateId}")
- *     this.process(event) // Pass to next layer
- *     println("Finished processing event: ${event.updateId}")
+ * val loggingInterceptor: TelegramEventInterceptor = { context ->
+ *     println("Received event: ${context.event.updateId}")
+ *     this.process(context) // Pass to next layer
+ *     println("Finished processing event: ${context.event.updateId}")
  * }
  * ```
  */
-typealias TelegramEventInterceptor = suspend TelegramEventProcessor.(TelegramBotEvent) -> Unit
+typealias TelegramEventInterceptor = suspend TelegramEventProcessor.(TelegramBotEventContext) -> Unit

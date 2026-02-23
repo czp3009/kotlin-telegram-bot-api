@@ -1,9 +1,6 @@
 package com.hiczp.telegram.bot.application.dispatcher
 
-import com.hiczp.telegram.bot.protocol.event.TelegramBotEvent
-import io.github.oshai.kotlinlogging.KotlinLogging
-
-private val logger = KotlinLogging.logger {}
+import com.hiczp.telegram.bot.application.context.TelegramBotEventContext
 
 /**
  * A simple dispatcher implementation that delegates event handling to a lambda function.
@@ -13,8 +10,8 @@ private val logger = KotlinLogging.logger {}
  *
  * Example usage:
  * ```kotlin
- * val dispatcher = SimpleTelegramEventDispatcher { event ->
- *     println("Received event: ${event.updateId}")
+ * val dispatcher = SimpleTelegramEventDispatcher { context ->
+ *     println("Received event: ${context.event.updateId}")
  *     // Handle the event...
  * }
  * ```
@@ -22,14 +19,14 @@ private val logger = KotlinLogging.logger {}
  * @param action The suspend function to invoke for each event.
  */
 open class SimpleTelegramEventDispatcher(
-    private val action: suspend (TelegramBotEvent) -> Unit
+    private val action: suspend (TelegramBotEventContext) -> Unit
 ) : TelegramEventDispatcher {
     /**
      * Dispatch an event by invoking the configured [action] function.
      *
-     * @param event The event to dispatch.
+     * @param context The bot context containing client, event, and attributes.
      */
-    override suspend fun dispatch(event: TelegramBotEvent) {
-        action(event)
+    override suspend fun dispatch(context: TelegramBotEventContext) {
+        action(context)
     }
 }

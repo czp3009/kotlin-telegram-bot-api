@@ -1,4 +1,4 @@
-# protocol-update-codegen
+# Protocol Update Codegen
 
 KSP (Kotlin Symbol Processing) processor that generates event classes from Telegram Bot API update containers.
 
@@ -59,3 +59,14 @@ fun Update.toTelegramBotEvent(): TelegramBotEvent {
 
 This processor is automatically applied to projects that depend on `protocol-annotation` and have this KSP processor in
 their processor classpath. No manual configuration required.
+
+## Supported Platforms
+
+JVM only (KSP processors run on JVM).
+
+## Related Modules
+
+- `:protocol-annotation` - Provides the `@IncomingUpdateContainer` annotation
+- `:protocol` - Contains the generated `Update` class
+- `:client` - Uses generated events for type-safe update handling
+- `:application` - Uses generated events in the event dispatching system

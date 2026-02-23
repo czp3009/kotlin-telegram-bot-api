@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with this codebase.
 
 ## Project Overview
 
@@ -16,10 +16,12 @@ Telegram Bot API OpenAPI specification using Ktorfit.
 # Build a specific module
 ./gradlew :protocol:build
 ./gradlew :client:build
+./gradlew :application:build
 
 # Run tests (JVM only - tests only run on JVM and desktop native targets)
 ./gradlew :protocol:jvmTest
 ./gradlew :client:jvmTest
+./gradlew :application:jvmTest
 
 # Run a specific test class
 ./gradlew :protocol:jvmTest --tests "com.hiczp.telegram.bot.protocol.test.TelegramBotApiTest"
@@ -46,8 +48,6 @@ The `type/` directory contains handwritten code and is preserved during regenera
 
 - `TelegramResponse.kt` - Response wrapper with success/error handling
 - `InputFile.kt` - File upload sealed type
-- `IncomingUpdate.kt` - Marker interface for Update field types
-- `IncomingUpdateContainer.kt` - Annotation for Update container
 
 ## Architecture
 
@@ -55,19 +55,21 @@ The `type/` directory contains handwritten code and is preserved during regenera
 
 ```
 kotlin-telegram-bot-api/
-├── protocol/           # Core protocol definitions (Kotlin Multiplatform)
-│   ├── model/         # Auto-generated data classes (Message, User, Chat, etc.)
-│   ├── form/          # Auto-generated multipart form wrappers and extension functions
-│   ├── query/         # Auto-generated query extension functions for JSON-serialized GET params
-│   ├── type/          # Handwritten types (TelegramResponse, InputFile, etc.)
-│   ├── plugin/        # Handwritten Ktor client plugins
-│   ├── exception/     # Handwritten exception types
-│   ├── extension/     # Handwritten extension functions
-│   └── TelegramBotApi.kt  # Auto-generated Ktorfit interface
-├── client/            # High-level client wrapper
+├── protocol-annotation/   # Annotations for KSP code generation (IncomingUpdate, IncomingUpdateContainer)
+├── protocol/              # Core protocol definitions (Kotlin Multiplatform)
+│   ├── model/            # Auto-generated data classes (Message, User, Chat, etc.)
+│   ├── form/             # Auto-generated multipart form wrappers and extension functions
+│   ├── query/            # Auto-generated query extension functions for JSON-serialized GET params
+│   ├── type/             # Handwritten types (TelegramResponse, InputFile, etc.)
+│   ├── plugin/           # Handwritten Ktor client plugins (long polling, error handling, file download)
+│   ├── exception/        # Handwritten exception types
+│   ├── extension/        # Handwritten extension functions
+│   └── TelegramBotApi.kt # Auto-generated Ktorfit interface
+├── protocol-update-codegen/ # KSP processor that generates TelegramBotEvent sealed interface from Update model
+├── client/                # High-level client wrapper
 │   └── TelegramBotClient.kt
-└── buildSrc/          # Gradle tasks for code generation
-    └── GenerateKtorfitInterfacesTask.kt
+└── application/           # Bot application framework with lifecycle management
+    └── TelegramBotApplication.kt
 ```
 
 ### Key Dependencies
@@ -75,6 +77,7 @@ kotlin-telegram-bot-api/
 - **Ktorfit**: HTTP client interface generation (like Retrofit for Ktor)
 - **kotlinx.serialization**: JSON serialization
 - **Ktor**: HTTP client engine
+- **KSP**: Kotlin Symbol Processing for code generation
 
 ### Protocol Module (`:protocol`)
 
@@ -95,6 +98,23 @@ High-level wrapper that:
 - Adds retry logic for transient failures and rate limiting
 - Supports Telegram test environment
 - Installs custom plugins (long polling, error handling, file download)
+
+### Application Module (`:application`)
+
+Bot application framework providing:
+
+- **Lifecycle management**: Start/stop with graceful shutdown
+- **Update processing**: Consumes updates from `TelegramUpdateSource` (e.g., long polling)
+- **Interceptor pipeline**: "Onion model" middleware pattern for cross-cutting concerns
+- **Event dispatching**: Routes events to business logic handlers
+
+Key components:
+
+- `TelegramBotApplication` - Main orchestrator handling lifecycle and update processing
+- `TelegramUpdateSource` - Interface for update sources (long polling, webhook, mock)
+- `TelegramEventInterceptor` - Middleware function type for request interception
+- `TelegramEventDispatcher` - Routes events to handlers
+- `TelegramBotContext` - Request-scoped context with client and attributes
 
 ### Response Handling
 
@@ -126,6 +146,6 @@ api.sendDocument(
 
 ### Supported Platforms
 
-Both modules target: JVM, Android, JS, WASM, Linux, macOS, Windows, iOS, watchOS, tvOS.
+All modules target: JVM, Android, JS, WASM, Linux, macOS, Windows, iOS, watchOS, tvOS, Android Native.
 
 Tests only run on JVM and desktop native targets (Linux, macOS, Windows).

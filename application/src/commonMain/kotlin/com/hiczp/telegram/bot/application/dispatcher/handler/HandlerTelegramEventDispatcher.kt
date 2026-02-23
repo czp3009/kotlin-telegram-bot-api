@@ -1,7 +1,7 @@
 package com.hiczp.telegram.bot.application.dispatcher.handler
 
+import com.hiczp.telegram.bot.application.context.TelegramBotEventContext
 import com.hiczp.telegram.bot.application.dispatcher.TelegramEventDispatcher
-import com.hiczp.telegram.bot.protocol.event.TelegramBotEvent
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 private val logger = KotlinLogging.logger {}
@@ -19,8 +19,8 @@ private val logger = KotlinLogging.logger {}
  * Example usage:
  * ```kotlin
  * val handlers = sequence {
- *     yield { event ->
- *         if (event is MessageEvent && event.message.text == "/start") {
+ *     yield { context ->
+ *         if (context.event is MessageEvent && context.event.message.text == "/start") {
  *             // Handle /start command
  *             true // Consumed
  *         } else {
@@ -31,11 +31,11 @@ private val logger = KotlinLogging.logger {}
  * val dispatcher = HandlerTelegramEventDispatcher(handlers)
  * ```
  *
- * @param handlers A [Sequence] of handler functions. Each handler receives a [TelegramBotEvent]
+ * @param handlers A [Sequence] of handler functions. Each handler receives a [TelegramBotEventContext]
  *                 and returns `true` if the event was consumed, `false` otherwise.
  */
 open class HandlerTelegramEventDispatcher(
-    private val handlers: Sequence<suspend (TelegramBotEvent) -> Boolean>
+    private val handlers: Sequence<suspend (TelegramBotEventContext) -> Boolean>
 ) : TelegramEventDispatcher {
     /**
      * Dispatch an event by attempting to handle it with each registered handler.
@@ -44,23 +44,23 @@ open class HandlerTelegramEventDispatcher(
      * is considered consumed and no further handlers are invoked.
      * If no handler consumes the event, it is passed to [deadLetter].
      *
-     * @param event The event to dispatch.
+     * @param context The bot context containing client, event, and attributes.
      */
-    override suspend fun dispatch(event: TelegramBotEvent) {
+    override suspend fun dispatch(context: TelegramBotEventContext) {
         for (handler in handlers) {
-            if (handler(event)) {
+            if (handler(context)) {
                 return
             }
         }
-        deadLetter(event)
+        deadLetter(context)
     }
 
     /**
      * Handle the event that was not consumed by any handler.
      *
-     * @param event The unhandled event.
+     * @param context The bot context containing the unhandled event.
      */
-    suspend fun deadLetter(event: TelegramBotEvent) {
-        logger.debug { "Unhandled event: $event" }
+    open suspend fun deadLetter(context: TelegramBotEventContext) {
+        logger.warn { "Unhandled event: ${context.event}" }
     }
 }

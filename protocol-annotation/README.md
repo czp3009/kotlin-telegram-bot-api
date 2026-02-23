@@ -56,6 +56,10 @@ Where `Message`, `CallbackQuery`, etc. implement `IncomingUpdate`:
 data class Message(/* ... */) : IncomingUpdate
 ```
 
+## Supported Platforms
+
+JVM, Android, JS, WASM, Linux, macOS, Windows, iOS, watchOS, tvOS, Android Native.
+
 ## Related Modules
 
 - `:protocol` - Contains the generated `Update` class and other API models

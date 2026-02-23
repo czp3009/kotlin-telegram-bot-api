@@ -18,14 +18,14 @@ class TelegramBotClientTest {
     }
     private val defaultClient by lazy {
         TelegramBotClient(
-            ktorEngine = engine,
+            httpClientEngine = engine,
             botToken = botToken,
             additionalConfiguration = additionalConfiguration,
         )
     }
     private val notThrowClient by lazy {
         TelegramBotClient(
-            ktorEngine = engine,
+            httpClientEngine = engine,
             botToken = botToken,
             throwOnErrorResponse = false,
             additionalConfiguration = additionalConfiguration,
