@@ -18,9 +18,9 @@ import kotlinx.coroutines.CoroutineScope
  * @property applicationScope The application's coroutine scope for launching concurrent tasks.
  * @property attributes Type-safe attribute storage for sharing data between interceptors and handlers.
  */
-interface TelegramBotEventContext {
+interface TelegramBotEventContext<out T : TelegramBotEvent> {
     val client: TelegramBotClient
-    val event: TelegramBotEvent
+    val event: T
     val applicationScope: CoroutineScope
     val attributes: Attributes
 }
@@ -28,9 +28,43 @@ interface TelegramBotEventContext {
 /**
  * Default implementation of [TelegramBotEventContext].
  */
-class DefaultTelegramBotEventContext(
+class DefaultTelegramBotEventContext<out T : TelegramBotEvent>(
     override val client: TelegramBotClient,
-    override val event: TelegramBotEvent,
+    override val event: T,
     override val applicationScope: CoroutineScope,
     override val attributes: Attributes = Attributes(concurrent = true),
-) : TelegramBotEventContext
+) : TelegramBotEventContext<T>
+
+/**
+ * Attempts to cast this context to a more specific event type.
+ *
+ * This function checks if the underlying event is of the specified type [T].
+ * If the type matches, it returns a new context with the typed event.
+ * If the type doesn't match, it returns null.
+ *
+ * The new context preserves the original client, scope, and attributes.
+ *
+ * Example usage:
+ * ```kotlin
+ * val messageContext = context.castOrNull<MessageEvent>()
+ * if (messageContext != null) {
+ *     // Handle message event with type-safe access
+ *     val text = messageContext.event.message.text
+ * }
+ * ```
+ *
+ * @param T The specific event type to cast to.
+ * @return A typed context if the event is of type [T], or null otherwise.
+ */
+inline fun <reified T : TelegramBotEvent> TelegramBotEventContext<*>.castOrNull(): TelegramBotEventContext<T>? {
+    val currentEvent = this.event
+    if (currentEvent is T) {
+        return DefaultTelegramBotEventContext(
+            client = this.client,
+            event = currentEvent,
+            applicationScope = this.applicationScope,
+            attributes = this.attributes,
+        )
+    }
+    return null
+}

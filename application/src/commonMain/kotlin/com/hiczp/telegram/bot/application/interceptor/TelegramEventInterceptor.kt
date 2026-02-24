@@ -1,6 +1,7 @@
 package com.hiczp.telegram.bot.application.interceptor
 
 import com.hiczp.telegram.bot.application.context.TelegramBotEventContext
+import com.hiczp.telegram.bot.protocol.event.TelegramBotEvent
 
 /**
  * Base processor interface for handling Telegram events.
@@ -18,7 +19,7 @@ interface TelegramEventProcessor {
      *
      * @param context The bot context containing client, event, and attributes.
      */
-    suspend fun process(context: TelegramBotEventContext)
+    suspend fun process(context: TelegramBotEventContext<TelegramBotEvent>)
 }
 
 /**
@@ -37,4 +38,4 @@ interface TelegramEventProcessor {
  * }
  * ```
  */
-typealias TelegramEventInterceptor = suspend TelegramEventProcessor.(TelegramBotEventContext) -> Unit
+typealias TelegramEventInterceptor = suspend TelegramEventProcessor.(TelegramBotEventContext<TelegramBotEvent>) -> Unit

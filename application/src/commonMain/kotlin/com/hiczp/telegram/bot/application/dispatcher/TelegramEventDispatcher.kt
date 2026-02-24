@@ -1,6 +1,7 @@
 package com.hiczp.telegram.bot.application.dispatcher
 
 import com.hiczp.telegram.bot.application.context.TelegramBotEventContext
+import com.hiczp.telegram.bot.protocol.event.TelegramBotEvent
 
 /**
  * Interface for the innermost layer of the event processing pipeline.
@@ -17,5 +18,5 @@ interface TelegramEventDispatcher {
      *
      * @param context The bot context containing client, event, and attributes.
      */
-    suspend fun dispatch(context: TelegramBotEventContext)
+    suspend fun dispatch(context: TelegramBotEventContext<TelegramBotEvent>)
 }

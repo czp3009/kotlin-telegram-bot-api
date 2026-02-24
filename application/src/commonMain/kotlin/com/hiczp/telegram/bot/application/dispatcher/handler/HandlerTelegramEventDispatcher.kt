@@ -2,6 +2,7 @@ package com.hiczp.telegram.bot.application.dispatcher.handler
 
 import com.hiczp.telegram.bot.application.context.TelegramBotEventContext
 import com.hiczp.telegram.bot.application.dispatcher.TelegramEventDispatcher
+import com.hiczp.telegram.bot.protocol.event.TelegramBotEvent
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 private val logger = KotlinLogging.logger {}
@@ -35,7 +36,7 @@ private val logger = KotlinLogging.logger {}
  *                 and returns `true` if the event was consumed, `false` otherwise.
  */
 open class HandlerTelegramEventDispatcher(
-    private val handlers: Sequence<suspend (TelegramBotEventContext) -> Boolean>
+    private val handlers: Sequence<suspend (TelegramBotEventContext<TelegramBotEvent>) -> Boolean>
 ) : TelegramEventDispatcher {
     /**
      * Dispatch an event by attempting to handle it with each registered handler.
@@ -46,7 +47,7 @@ open class HandlerTelegramEventDispatcher(
      *
      * @param context The bot context containing client, event, and attributes.
      */
-    override suspend fun dispatch(context: TelegramBotEventContext) {
+    override suspend fun dispatch(context: TelegramBotEventContext<TelegramBotEvent>) {
         for (handler in handlers) {
             if (handler(context)) {
                 return
@@ -60,7 +61,7 @@ open class HandlerTelegramEventDispatcher(
      *
      * @param context The bot context containing the unhandled event.
      */
-    open suspend fun deadLetter(context: TelegramBotEventContext) {
+    open suspend fun deadLetter(context: TelegramBotEventContext<TelegramBotEvent>) {
         logger.warn { "Unhandled event: ${context.event}" }
     }
 }

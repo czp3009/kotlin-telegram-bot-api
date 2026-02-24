@@ -13,7 +13,7 @@ import kotlinx.coroutines.CoroutineScope
 private class DispatcherTelegramEventProcessor(
     private val dispatcher: TelegramEventDispatcher
 ) : TelegramEventProcessor {
-    override suspend fun process(context: TelegramBotEventContext) {
+    override suspend fun process(context: TelegramBotEventContext<TelegramBotEvent>) {
         dispatcher.dispatch(context)
     }
 }
@@ -22,7 +22,7 @@ private class InterceptedTelegramEventProcessor(
     private val interceptor: TelegramEventInterceptor,
     private val nextProcessor: TelegramEventProcessor,
 ) : TelegramEventProcessor {
-    override suspend fun process(context: TelegramBotEventContext) {
+    override suspend fun process(context: TelegramBotEventContext<TelegramBotEvent>) {
         interceptor(nextProcessor, context)
     }
 }

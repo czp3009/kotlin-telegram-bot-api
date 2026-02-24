@@ -1,6 +1,7 @@
 package com.hiczp.telegram.bot.application.dispatcher
 
 import com.hiczp.telegram.bot.application.context.TelegramBotEventContext
+import com.hiczp.telegram.bot.protocol.event.TelegramBotEvent
 
 /**
  * A simple dispatcher implementation that delegates event handling to a lambda function.
@@ -19,14 +20,14 @@ import com.hiczp.telegram.bot.application.context.TelegramBotEventContext
  * @param action The suspend function to invoke for each event.
  */
 open class SimpleTelegramEventDispatcher(
-    private val action: suspend (TelegramBotEventContext) -> Unit
+    private val action: suspend (TelegramBotEventContext<TelegramBotEvent>) -> Unit
 ) : TelegramEventDispatcher {
     /**
      * Dispatch an event by invoking the configured [action] function.
      *
      * @param context The bot context containing client, event, and attributes.
      */
-    override suspend fun dispatch(context: TelegramBotEventContext) {
+    override suspend fun dispatch(context: TelegramBotEventContext<TelegramBotEvent>) {
         action(context)
     }
 }
