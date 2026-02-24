@@ -57,7 +57,7 @@ The `type/` directory contains handwritten code and is preserved during regenera
 kotlin-telegram-bot-api/
 ├── protocol-annotation/   # Annotations for KSP code generation (IncomingUpdate, IncomingUpdateContainer)
 ├── protocol/              # Core protocol definitions (Kotlin Multiplatform)
-│   ├── model/            # Auto-generated data classes (Message, User, Chat, etc.)
+│   ├── model/            # Auto-generated data classes (Message, User, Chat, etc.) and JSON body extensions
 │   ├── form/             # Auto-generated multipart form wrappers and extension functions
 │   ├── query/            # Auto-generated query extension functions for JSON-serialized GET params
 │   ├── type/             # Handwritten types (TelegramResponse, InputFile, etc.)
@@ -88,6 +88,36 @@ The core module containing:
 - Sealed interfaces for union types (`ReplyMarkup`, `BackgroundFill`, etc.)
 - Multipart form wrappers for file uploads
 - Query extensions for JSON-serialized GET parameters
+- JSON body extensions for parameter-scattered API calls (in `model/Queries.kt`)
+
+### Extension Functions
+
+The protocol module generates several types of extension functions for convenient API usage:
+
+#### Forms Extensions (`form/Forms.kt`)
+
+For multipart form data requests (file uploads), extension functions accept scattered parameters
+including `InputFile` types, convert them to multipart `FormPart`, and call the API methods.
+
+#### Query Extensions (`query/Queries.kt`)
+
+For GET operations whose query parameters require JSON serialization, extension functions
+keep call sites strongly typed while delegating to generated methods.
+
+#### JSON Body Extensions (`model/Queries.kt`)
+
+For POST operations with JSON request bodies, extension functions accept individual parameters
+matching the Request class fields instead of requiring a pre-constructed Request object:
+
+```kotlin
+// Instead of constructing Request objects:
+api.sendMessage(SendMessageRequest(chatId = "123", text = "Hello"))
+
+// Use scattered parameters directly:
+api.sendMessage(chatId = "123", text = "Hello")
+```
+
+This provides a more ergonomic API with named parameters and default values.
 
 ### Client Module (`:client`)
 

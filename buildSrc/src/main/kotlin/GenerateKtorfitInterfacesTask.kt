@@ -5,12 +5,7 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.tasks.CacheableTask
-import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 import java.io.File
 
 /**
@@ -51,6 +46,18 @@ import java.io.File
  * Generates `Queries.kt` with typed extension functions for GET operations whose query parameters
  * require JSON serialization. These extensions keep call sites strongly typed while delegating to
  * generated `TelegramBotApi` methods that accept serialized `String`/`String?` query values.
+ *
+ * ### JSON Body Extensions (`model/` package)
+ * Generates `Queries.kt` with scatter extension functions for POST operations that accept JSON
+ * request bodies (using `@Body` annotation). These functions accept individual parameters matching
+ * the Request class fields, construct the Request object internally, and call the original method.
+ * This allows users to call API methods with named parameters instead of constructing Request objects manually.
+ *
+ * Example:
+ * ```kotlin
+ * // Instead of: api.sendMessage(SendMessageRequest(chatId = "123", text = "Hello"))
+ * // You can use: api.sendMessage(chatId = "123", text = "Hello")
+ * ```
  *
  * ### Ktorfit Interface (`TelegramBotApi.kt`)
  * Generates the main `TelegramBotApi` interface with Ktorfit annotations:
@@ -151,7 +158,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
      * Output directory for generated Kotlin code.
      *
      * Generated files are organized under this directory:
-     * - `com/hiczp/telegram/bot/protocol/model/` - Data model classes (100+ files)
+     * - `com/hiczp/telegram/bot/protocol/model/` - Data model classes (100+ files) and JSON body scatter extensions (Queries.kt)
      * - `com/hiczp/telegram/bot/protocol/form/` - Form wrapper classes (*Form.kt) and Forms.kt extension functions
      * - `com/hiczp/telegram/bot/protocol/query/Queries.kt` - Query extension functions for JSON-serialized GET parameters
      * - `com/hiczp/telegram/bot/protocol/TelegramBotApi.kt` - Ktorfit HTTP interface
@@ -181,8 +188,24 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         val description: String?
     )
 
+    /**
+     * Information about a JSON body operation for scatter extension generation.
+     *
+     * @property requestClassName The name of the Request class (e.g., "SendMessageRequest")
+     * @property requestSchema The schema of the request body (for generating the parameter list)
+     * @property returnType The return type of the operation
+     * @property description The operation description for KDoc
+     */
+    private data class JsonBodyOperationInfo(
+        val requestClassName: String,
+        val requestSchema: JsonNode,
+        val returnType: TypeName,
+        val description: String?
+    )
+
     private val multipartOperations = mutableMapOf<String, MultipartOperationInfo>() // operationId -> info
     private val queryStringOperations = mutableMapOf<String, JsonNode>() // operationId -> operation
+    private val jsonBodyOperations = mutableMapOf<String, JsonBodyOperationInfo>() // operationId -> info
     private val replyMarkupTypes = mutableSetOf<String>() // Collected ReplyMarkup types
     private val updateFieldTypes = mutableSetOf<String>() // Types used in Update's optional non-primitive fields
 
@@ -200,6 +223,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
      * 7. **Generates data models**: Creates all data classes for API entities (excluding InputFile)
      * 8. **Generates API interface**: Creates the Ktorfit HTTP interface with all endpoints
      * 9. **Generates query extensions**: Creates typed query helper extensions in `query/Queries.kt`
+     * 10. **Generates JSON body extensions**: Creates scatter extension functions in `model/Queries.kt`
      *
      * ## Output Structure
      *
@@ -211,6 +235,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
      * │   ├── *Form.kt                # Wrapper classes with InputFile upload fields
      * │   └── Forms.kt                # Multipart extension functions (scatter + form overloads)
      * ├── model/                      # Data model classes (100+ files)
+     * │   ├── Queries.kt              # Scatter extensions for JSON body operations
      * │   ├── ReplyMarkup.kt          # Sealed interface with @JsonClassDiscriminator
      * │   └── *.kt                    # All other data classes and sealed interfaces
      * ├── query/                      # Query extension functions for JSON-serialized GET params
@@ -1712,6 +1737,11 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         if (queryStringOperations.isNotEmpty()) {
             generateQueryExtensions(outputDir)
         }
+
+        // Generate scatter extension functions for JSON body operations
+        if (jsonBodyOperations.isNotEmpty()) {
+            generateJsonBodyExtensions(outputDir)
+        }
     }
 
     /**
@@ -1807,6 +1837,33 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
         if (requestBody != null) {
             addBodyParameter(functionBuilder, requestBody, operationId, returnType, outputDir)
+
+            // Track JSON body operations for scatter extension generation
+            // This excludes multipart operations (already handled above) and operations without JSON content
+            if (jsonContent != null) {
+                val schema = jsonContent.get("schema")
+                if (schema != null) {
+                    // Determine the request class name
+                    val requestClassName = schema.get($$"$ref")?.asText()
+                        ?.substringAfterLast("/")
+                        ?: if (schema.get("type")?.asText() == "object") {
+                            // Inline object schema - class name is generated as operationId + "Request"
+                            operationId.replaceFirstChar { it.uppercase() } + "Request"
+                        } else {
+                            // Other types (should be rare for request bodies)
+                            null
+                        }
+
+                    if (requestClassName != null) {
+                        jsonBodyOperations[operationId] = JsonBodyOperationInfo(
+                            requestClassName = requestClassName,
+                            requestSchema = schema,
+                            returnType = returnType,
+                            description = description
+                        )
+                    }
+                }
+            }
         }
 
         return listOf(functionBuilder.build())
@@ -2608,6 +2665,156 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
         codeBuilder.unindent()
         codeBuilder.add(")")
+
+        functionBuilder.addCode(codeBuilder.build())
+
+        return functionBuilder.build()
+    }
+
+    /**
+     * Generate scatter extension functions for JSON body operations.
+     *
+     * These extension functions accept individual parameters (scattered from the Request class fields)
+     * and build the Request object internally before calling the original method.
+     *
+     * For example, for `sendMessage(@Body body: SendMessageRequest)`:
+     * ```kotlin
+     * public suspend fun TelegramBotApi.sendMessage(
+     *     chatId: String,
+     *     text: String,
+     *     parseMode: String? = null,
+     *     // ... other parameters from SendMessageRequest
+     * ): TelegramResponse<Message> {
+     *     val request = SendMessageRequest(
+     *         chatId = chatId,
+     *         text = text,
+     *         parseMode = parseMode,
+     *         // ... other parameters
+     *     )
+     *     return sendMessage(request)
+     * }
+     * ```
+     *
+     * This allows users to call API methods with named parameters instead of constructing Request objects manually.
+     */
+    private fun generateJsonBodyExtensions(outputDir: File) {
+        val fileSpec = createFileSpec(
+            MODEL_PACKAGE,
+            "Queries",
+            """
+                    Scatter extension functions for Telegram Bot API JSON body operations.
+                    
+                    This file provides typed extension functions for methods that accept JSON request bodies,
+                    allowing users to pass individual parameters instead of constructing Request objects manually.
+                    
+                    Example:
+                    ```kotlin
+                    // Instead of:
+                    api.sendMessage(SendMessageRequest(chatId = "123", text = "Hello"))
+                    
+                    // You can use:
+                    api.sendMessage(chatId = "123", text = "Hello")
+                    ```
+                    
+                    These functions are auto-generated and should not be edited manually.
+                   """.trimIndent()
+        )
+        // Add `@file:Suppress` annotation to suppress duplicate code warnings
+        fileSpec.addAnnotation(
+            AnnotationSpec.builder(ClassName("kotlin", "Suppress"))
+                .useSiteTarget(AnnotationSpec.UseSiteTarget.FILE)
+                .addMember("%S", "RedundantVisibilityModifier")
+                .addMember("%S", "unused")
+                .addMember("%S", "DuplicatedCode")
+                .build()
+        )
+
+        jsonBodyOperations.forEach { (operationId, info) ->
+            val requestClassName = info.requestClassName
+            val requestSchema = info.requestSchema
+
+            val scatterFunction = generateJsonBodyScatterFunction(
+                operationId = operationId,
+                requestClassName = requestClassName,
+                requestSchema = requestSchema,
+                returnType = info.returnType,
+                description = info.description
+            )
+            fileSpec.addFunction(scatterFunction)
+        }
+
+        fileSpec.build().writeToWithUnixLineEndings(outputDir)
+    }
+
+    /**
+     * Generate a scatter extension function for a JSON body operation.
+     *
+     * The function accepts individual parameters matching the Request class fields,
+     * constructs the Request object internally, and calls the original method.
+     */
+    private fun generateJsonBodyScatterFunction(
+        operationId: String,
+        requestClassName: String,
+        requestSchema: JsonNode,
+        returnType: TypeName,
+        description: String?
+    ): FunSpec {
+        val properties = requestSchema.get("properties")
+        val required = requestSchema.get("required")?.map { it.asText() }?.toSet() ?: emptySet()
+
+        val functionBuilder = FunSpec.builder(operationId)
+            .addModifiers(KModifier.SUSPEND)
+            .receiver(ClassName(BASE_PACKAGE, "TelegramBotApi"))
+            .returns(returnType)
+
+        if (description != null) {
+            functionBuilder.addKdoc(sanitizeKDoc(description))
+        }
+
+        // Track parameter names and their expressions for the request constructor call
+        val constructorArgs = mutableListOf<String>()
+
+        // Add parameters for each property of the Request class
+        properties?.properties()?.forEach { (propName, propSchema) ->
+            val camelName = snakeToCamelCase(propName)
+            val isRequired = required.contains(propName)
+            val propType = determinePropertyType(propSchema, context = "$requestClassName.$propName")
+            val finalType = if (isRequired) propType else propType.copy(nullable = true)
+
+            val paramBuilder = ParameterSpec.builder(camelName, finalType)
+            if (!isRequired) {
+                paramBuilder.defaultValue("null")
+            }
+
+            // Add KDoc from the property description
+            val propDescription = propSchema.get("description")?.asText()
+            if (propDescription != null) {
+                paramBuilder.addKdoc(sanitizeKDoc(propDescription))
+            }
+
+            functionBuilder.addParameter(paramBuilder.build())
+
+            // Add to the constructor argument list
+            constructorArgs.add("$camelName = $camelName")
+        }
+
+        // Build the function body - construct the Request object and call the original method
+        val codeBuilder = CodeBlock.builder()
+        codeBuilder.addStatement("val request = %T(", ClassName(MODEL_PACKAGE, requestClassName))
+        codeBuilder.indent()
+
+        constructorArgs.forEachIndexed { index, arg ->
+            codeBuilder.add(arg)
+            if (index < constructorArgs.size - 1) {
+                codeBuilder.add(",\n")
+            } else {
+                codeBuilder.add("\n")
+            }
+        }
+
+        codeBuilder.unindent()
+        codeBuilder.addStatement(")")
+        codeBuilder.addStatement("return %N(request)", operationId)
 
         functionBuilder.addCode(codeBuilder.build())
 

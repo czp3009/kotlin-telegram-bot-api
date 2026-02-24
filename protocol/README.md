@@ -38,6 +38,11 @@ Code is generated from the
     - Serialize non-primitive query values (for example `List<String>`, `BotCommandScope`) via `Json.encodeToString`
     - Keep call sites strongly typed while delegating to generated `TelegramBotApi` string-based query methods
 
+- **JSON body extensions** (`model/Queries.kt`)
+  - Auto-generated scatter extension functions for POST methods with JSON request bodies
+  - Accept individual parameters matching Request class fields instead of requiring pre-constructed Request objects
+  - Provide ergonomic API with named parameters and default values
+
 ### Handwritten Types and Utilities
 
 - **`TelegramResponse<T>`** (`type/TelegramResponse.kt`)
@@ -151,6 +156,25 @@ api.getMyCommands(
 ```
 
 These extensions perform serialization and call the underlying generated `TelegramBotApi` methods.
+
+### JSON Body Extension Usage
+
+For POST methods with JSON request bodies, `model/Queries.kt` extensions allow calling with scattered parameters:
+
+```kotlin
+// Instead of constructing Request objects:
+api.sendMessage(SendMessageRequest(chatId = "123456789", text = "Hello"))
+
+// Use scattered parameters directly:
+api.sendMessage(
+  chatId = "123456789",
+  text = "Hello",
+  parseMode = ParseMode.Markdown,
+  disableNotification = true
+)
+```
+
+These extensions construct the Request object internally and call the underlying `TelegramBotApi` method.
 
 ## Ktor Client Setup
 
