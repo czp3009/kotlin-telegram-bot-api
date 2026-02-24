@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with this codebase.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
@@ -143,6 +143,27 @@ api.sendDocument(
     document = InputFile.binary(fileName = "file.pdf") { ByteReadChannel(bytes) }
 )
 ```
+
+### Interceptor Pattern (Application Module)
+
+The application module uses an "onion model" interceptor pattern. Interceptors wrap around the event processing
+pipeline,
+allowing pre/post processing:
+
+```kotlin
+val loggingInterceptor: TelegramEventInterceptor = { context ->
+    println("Before: ${context.event.updateId}")
+    this.process(context)  // Pass to next layer
+    println("After: ${context.event.updateId}")
+}
+```
+
+The `TelegramBotEventContext` provides access to:
+
+- `client` - TelegramBotClient for API calls
+- `event` - The TelegramBotEvent being processed
+- `applicationScope` - Coroutine scope for launching concurrent tasks
+- `attributes` - Type-safe storage for sharing data between interceptors
 
 ### Supported Platforms
 
