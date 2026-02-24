@@ -23,6 +23,12 @@ package com.hiczp.telegram.bot.protocol.model
 
 import com.hiczp.telegram.bot.protocol.TelegramBotApi
 import com.hiczp.telegram.bot.protocol.type.TelegramResponse
+import kotlin.Boolean
+import kotlin.Double
+import kotlin.Long
+import kotlin.String
+import kotlin.Suppress
+import kotlin.collections.List
 
 /**
  * Use this method to remove webhook integration if you decide to switch back to getUpdates. Returns True on success.
@@ -1026,10 +1032,7 @@ public suspend fun TelegramBotApi.editChatSubscriptionInviteLink(
  * @param chatId Unique identifier of the target chat or username of the target channel (in the format `@channelusername`)
  * @param inviteLink The invite link to revoke
  */
-public suspend fun TelegramBotApi.revokeChatInviteLink(
-    chatId: String,
-    inviteLink: String
-): TelegramResponse<ChatInviteLink> {
+public suspend fun TelegramBotApi.revokeChatInviteLink(chatId: String, inviteLink: String): TelegramResponse<ChatInviteLink> {
     val request = RevokeChatInviteLinkRequest(
         chatId = chatId,
         inviteLink = inviteLink
@@ -1097,10 +1100,7 @@ public suspend fun TelegramBotApi.setChatTitle(chatId: String, title: String): T
  * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
  * @param description New chat description, 0-255 characters
  */
-public suspend fun TelegramBotApi.setChatDescription(
-    chatId: String,
-    description: String? = null
-): TelegramResponse<Boolean> {
+public suspend fun TelegramBotApi.setChatDescription(chatId: String, description: String? = null): TelegramResponse<Boolean> {
     val request = SetChatDescriptionRequest(
         chatId = chatId,
         description = description
@@ -1295,10 +1295,7 @@ public suspend fun TelegramBotApi.deleteForumTopic(chatId: String, messageThread
  * @param chatId Unique identifier for the target chat or username of the target supergroup (in the format `@supergroupusername`)
  * @param messageThreadId Unique identifier for the target message thread of the forum topic
  */
-public suspend fun TelegramBotApi.unpinAllForumTopicMessages(
-    chatId: String,
-    messageThreadId: Long
-): TelegramResponse<Boolean> {
+public suspend fun TelegramBotApi.unpinAllForumTopicMessages(chatId: String, messageThreadId: Long): TelegramResponse<Boolean> {
     val request = UnpinAllForumTopicMessagesRequest(
         chatId = chatId,
         messageThreadId = messageThreadId
@@ -1433,10 +1430,7 @@ public suspend fun TelegramBotApi.setMyCommands(
  * @param scope A JSON-serialized object, describing scope of users for which the commands are relevant. Defaults to [BotCommandScopeDefault](https://core.telegram.org/bots/api#botcommandscopedefault).
  * @param languageCode A two-letter ISO 639-1 language code. If empty, commands will be applied to all users from the given scope, for whose language there are no dedicated commands
  */
-public suspend fun TelegramBotApi.deleteMyCommands(
-    scope: BotCommandScope? = null,
-    languageCode: String? = null
-): TelegramResponse<Boolean> {
+public suspend fun TelegramBotApi.deleteMyCommands(scope: BotCommandScope? = null, languageCode: String? = null): TelegramResponse<Boolean> {
     val request = DeleteMyCommandsRequest(
         scope = scope,
         languageCode = languageCode
@@ -1450,10 +1444,7 @@ public suspend fun TelegramBotApi.deleteMyCommands(
  * @param name New bot name; 0-64 characters. Pass an empty string to remove the dedicated name for the given language.
  * @param languageCode A two-letter ISO 639-1 language code. If empty, the name will be shown to all users for whose language there is no dedicated name.
  */
-public suspend fun TelegramBotApi.setMyName(
-    name: String? = null,
-    languageCode: String? = null
-): TelegramResponse<Boolean> {
+public suspend fun TelegramBotApi.setMyName(name: String? = null, languageCode: String? = null): TelegramResponse<Boolean> {
     val request = SetMyNameRequest(
         name = name,
         languageCode = languageCode
@@ -1467,10 +1458,7 @@ public suspend fun TelegramBotApi.setMyName(
  * @param description New bot description; 0-512 characters. Pass an empty string to remove the dedicated description for the given language.
  * @param languageCode A two-letter ISO 639-1 language code. If empty, the description will be applied to all users for whose language there is no dedicated description.
  */
-public suspend fun TelegramBotApi.setMyDescription(
-    description: String? = null,
-    languageCode: String? = null
-): TelegramResponse<Boolean> {
+public suspend fun TelegramBotApi.setMyDescription(description: String? = null, languageCode: String? = null): TelegramResponse<Boolean> {
     val request = SetMyDescriptionRequest(
         description = description,
         languageCode = languageCode
@@ -1484,10 +1472,7 @@ public suspend fun TelegramBotApi.setMyDescription(
  * @param shortDescription New short description for the bot; 0-120 characters. Pass an empty string to remove the dedicated short description for the given language.
  * @param languageCode A two-letter ISO 639-1 language code. If empty, the short description will be applied to all users for whose language there is no dedicated short description.
  */
-public suspend fun TelegramBotApi.setMyShortDescription(
-    shortDescription: String? = null,
-    languageCode: String? = null
-): TelegramResponse<Boolean> {
+public suspend fun TelegramBotApi.setMyShortDescription(shortDescription: String? = null, languageCode: String? = null): TelegramResponse<Boolean> {
     val request = SetMyShortDescriptionRequest(
         shortDescription = shortDescription,
         languageCode = languageCode
@@ -1501,10 +1486,7 @@ public suspend fun TelegramBotApi.setMyShortDescription(
  * @param chatId Unique identifier for the target private chat. If not specified, default bot's menu button will be changed
  * @param menuButton A JSON-serialized object for the bot's new menu button. Defaults to [MenuButtonDefault](https://core.telegram.org/bots/api#menubuttondefault)
  */
-public suspend fun TelegramBotApi.setChatMenuButton(
-    chatId: Long? = null,
-    menuButton: MenuButton? = null
-): TelegramResponse<Boolean> {
+public suspend fun TelegramBotApi.setChatMenuButton(chatId: Long? = null, menuButton: MenuButton? = null): TelegramResponse<Boolean> {
     val request = SetChatMenuButtonRequest(
         chatId = chatId,
         menuButton = menuButton
@@ -1518,10 +1500,7 @@ public suspend fun TelegramBotApi.setChatMenuButton(
  * @param rights A JSON-serialized object describing new default administrator rights. If not specified, the default administrator rights will be cleared.
  * @param forChannels Pass *True* to change the default administrator rights of the bot in channels. Otherwise, the default administrator rights of the bot for groups and supergroups will be changed.
  */
-public suspend fun TelegramBotApi.setMyDefaultAdministratorRights(
-    rights: ChatAdministratorRights? = null,
-    forChannels: Boolean? = null
-): TelegramResponse<Boolean> {
+public suspend fun TelegramBotApi.setMyDefaultAdministratorRights(rights: ChatAdministratorRights? = null, forChannels: Boolean? = null): TelegramResponse<Boolean> {
     val request = SetMyDefaultAdministratorRightsRequest(
         rights = rights,
         forChannels = forChannels
@@ -1596,10 +1575,7 @@ public suspend fun TelegramBotApi.giftPremiumSubscription(
  * @param userId Unique identifier of the target user
  * @param customDescription Custom description for the verification; 0-70 characters. Must be empty if the organization isn't allowed to provide a custom verification description.
  */
-public suspend fun TelegramBotApi.verifyUser(
-    userId: Long,
-    customDescription: String? = null
-): TelegramResponse<Boolean> {
+public suspend fun TelegramBotApi.verifyUser(userId: Long, customDescription: String? = null): TelegramResponse<Boolean> {
     val request = VerifyUserRequest(
         userId = userId,
         customDescription = customDescription
@@ -1613,10 +1589,7 @@ public suspend fun TelegramBotApi.verifyUser(
  * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`). Channel direct messages chats can't be verified.
  * @param customDescription Custom description for the verification; 0-70 characters. Must be empty if the organization isn't allowed to provide a custom verification description.
  */
-public suspend fun TelegramBotApi.verifyChat(
-    chatId: String,
-    customDescription: String? = null
-): TelegramResponse<Boolean> {
+public suspend fun TelegramBotApi.verifyChat(chatId: String, customDescription: String? = null): TelegramResponse<Boolean> {
     val request = VerifyChatRequest(
         chatId = chatId,
         customDescription = customDescription
@@ -1674,10 +1647,7 @@ public suspend fun TelegramBotApi.readBusinessMessage(
  * @param businessConnectionId Unique identifier of the business connection on behalf of which to delete the messages
  * @param messageIds A JSON-serialized list of 1-100 identifiers of messages to delete. All messages must be from the same chat. See [deleteMessage](https://core.telegram.org/bots/api#deletemessage) for limitations on which messages can be deleted
  */
-public suspend fun TelegramBotApi.deleteBusinessMessages(
-    businessConnectionId: String,
-    messageIds: List<Long>
-): TelegramResponse<Boolean> {
+public suspend fun TelegramBotApi.deleteBusinessMessages(businessConnectionId: String, messageIds: List<Long>): TelegramResponse<Boolean> {
     val request = DeleteBusinessMessagesRequest(
         businessConnectionId = businessConnectionId,
         messageIds = messageIds
@@ -1711,10 +1681,7 @@ public suspend fun TelegramBotApi.setBusinessAccountName(
  * @param businessConnectionId Unique identifier of the business connection
  * @param username The new value of the username for the business account; 0-32 characters
  */
-public suspend fun TelegramBotApi.setBusinessAccountUsername(
-    businessConnectionId: String,
-    username: String? = null
-): TelegramResponse<Boolean> {
+public suspend fun TelegramBotApi.setBusinessAccountUsername(businessConnectionId: String, username: String? = null): TelegramResponse<Boolean> {
     val request = SetBusinessAccountUsernameRequest(
         businessConnectionId = businessConnectionId,
         username = username
@@ -1728,10 +1695,7 @@ public suspend fun TelegramBotApi.setBusinessAccountUsername(
  * @param businessConnectionId Unique identifier of the business connection
  * @param bio The new value of the bio for the business account; 0-140 characters
  */
-public suspend fun TelegramBotApi.setBusinessAccountBio(
-    businessConnectionId: String,
-    bio: String? = null
-): TelegramResponse<Boolean> {
+public suspend fun TelegramBotApi.setBusinessAccountBio(businessConnectionId: String, bio: String? = null): TelegramResponse<Boolean> {
     val request = SetBusinessAccountBioRequest(
         businessConnectionId = businessConnectionId,
         bio = bio
@@ -1745,10 +1709,7 @@ public suspend fun TelegramBotApi.setBusinessAccountBio(
  * @param businessConnectionId Unique identifier of the business connection
  * @param isPublic Pass *True* to remove the public photo, which is visible even if the main photo is hidden by the business account's privacy settings. After the main photo is removed, the previous profile photo (if present) becomes the main photo.
  */
-public suspend fun TelegramBotApi.removeBusinessAccountProfilePhoto(
-    businessConnectionId: String,
-    isPublic: Boolean? = null
-): TelegramResponse<Boolean> {
+public suspend fun TelegramBotApi.removeBusinessAccountProfilePhoto(businessConnectionId: String, isPublic: Boolean? = null): TelegramResponse<Boolean> {
     val request = RemoveBusinessAccountProfilePhotoRequest(
         businessConnectionId = businessConnectionId,
         isPublic = isPublic
@@ -1782,10 +1743,7 @@ public suspend fun TelegramBotApi.setBusinessAccountGiftSettings(
  * @param businessConnectionId Unique identifier of the business connection
  * @param starCount Number of Telegram Stars to transfer; 1-10000
  */
-public suspend fun TelegramBotApi.transferBusinessAccountStars(
-    businessConnectionId: String,
-    starCount: Long
-): TelegramResponse<Boolean> {
+public suspend fun TelegramBotApi.transferBusinessAccountStars(businessConnectionId: String, starCount: Long): TelegramResponse<Boolean> {
     val request = TransferBusinessAccountStarsRequest(
         businessConnectionId = businessConnectionId,
         starCount = starCount
@@ -1799,10 +1757,7 @@ public suspend fun TelegramBotApi.transferBusinessAccountStars(
  * @param businessConnectionId Unique identifier of the business connection
  * @param ownedGiftId Unique identifier of the regular gift that should be converted to Telegram Stars
  */
-public suspend fun TelegramBotApi.convertGiftToStars(
-    businessConnectionId: String,
-    ownedGiftId: String
-): TelegramResponse<Boolean> {
+public suspend fun TelegramBotApi.convertGiftToStars(businessConnectionId: String, ownedGiftId: String): TelegramResponse<Boolean> {
     val request = ConvertGiftToStarsRequest(
         businessConnectionId = businessConnectionId,
         ownedGiftId = ownedGiftId
@@ -2220,10 +2175,7 @@ public suspend fun TelegramBotApi.deleteStickerFromSet(sticker: String): Telegra
  * @param sticker File identifier of the sticker
  * @param emojiList A JSON-serialized list of 1-20 emoji associated with the sticker
  */
-public suspend fun TelegramBotApi.setStickerEmojiList(
-    sticker: String,
-    emojiList: List<String>
-): TelegramResponse<Boolean> {
+public suspend fun TelegramBotApi.setStickerEmojiList(sticker: String, emojiList: List<String>): TelegramResponse<Boolean> {
     val request = SetStickerEmojiListRequest(
         sticker = sticker,
         emojiList = emojiList
@@ -2237,10 +2189,7 @@ public suspend fun TelegramBotApi.setStickerEmojiList(
  * @param sticker File identifier of the sticker
  * @param keywords A JSON-serialized list of 0-20 search keywords for the sticker with total length of up to 64 characters
  */
-public suspend fun TelegramBotApi.setStickerKeywords(
-    sticker: String,
-    keywords: List<String>? = null
-): TelegramResponse<Boolean> {
+public suspend fun TelegramBotApi.setStickerKeywords(sticker: String, keywords: List<String>? = null): TelegramResponse<Boolean> {
     val request = SetStickerKeywordsRequest(
         sticker = sticker,
         keywords = keywords
@@ -2254,10 +2203,7 @@ public suspend fun TelegramBotApi.setStickerKeywords(
  * @param sticker File identifier of the sticker
  * @param maskPosition A JSON-serialized object with the position where the mask should be placed on faces. Omit the parameter to remove the mask position.
  */
-public suspend fun TelegramBotApi.setStickerMaskPosition(
-    sticker: String,
-    maskPosition: MaskPosition? = null
-): TelegramResponse<Boolean> {
+public suspend fun TelegramBotApi.setStickerMaskPosition(sticker: String, maskPosition: MaskPosition? = null): TelegramResponse<Boolean> {
     val request = SetStickerMaskPositionRequest(
         sticker = sticker,
         maskPosition = maskPosition
@@ -2285,10 +2231,7 @@ public suspend fun TelegramBotApi.setStickerSetTitle(name: String, title: String
  * @param name Sticker set name
  * @param customEmojiId Custom emoji identifier of a sticker from the sticker set; pass an empty string to drop the thumbnail and use the first sticker as the thumbnail.
  */
-public suspend fun TelegramBotApi.setCustomEmojiStickerSetThumbnail(
-    name: String,
-    customEmojiId: String? = null
-): TelegramResponse<Boolean> {
+public suspend fun TelegramBotApi.setCustomEmojiStickerSetThumbnail(name: String, customEmojiId: String? = null): TelegramResponse<Boolean> {
     val request = SetCustomEmojiStickerSetThumbnailRequest(
         name = name,
         customEmojiId = customEmojiId
@@ -2343,10 +2286,7 @@ public suspend fun TelegramBotApi.answerInlineQuery(
  * @param webAppQueryId Unique identifier for the query to be answered
  * @param result A JSON-serialized object describing the message to be sent
  */
-public suspend fun TelegramBotApi.answerWebAppQuery(
-    webAppQueryId: String,
-    result: InlineQueryResult
-): TelegramResponse<SentWebAppMessage> {
+public suspend fun TelegramBotApi.answerWebAppQuery(webAppQueryId: String, result: InlineQueryResult): TelegramResponse<SentWebAppMessage> {
     val request = AnswerWebAppQueryRequest(
         webAppQueryId = webAppQueryId,
         result = result
@@ -2613,10 +2553,7 @@ public suspend fun TelegramBotApi.answerPreCheckoutQuery(
  * @param userId Identifier of the user whose payment will be refunded
  * @param telegramPaymentChargeId Telegram payment identifier
  */
-public suspend fun TelegramBotApi.refundStarPayment(
-    userId: Long,
-    telegramPaymentChargeId: String
-): TelegramResponse<Boolean> {
+public suspend fun TelegramBotApi.refundStarPayment(userId: Long, telegramPaymentChargeId: String): TelegramResponse<Boolean> {
     val request = RefundStarPaymentRequest(
         userId = userId,
         telegramPaymentChargeId = telegramPaymentChargeId
@@ -2651,10 +2588,7 @@ public suspend fun TelegramBotApi.editUserStarSubscription(
  * @param userId User identifier
  * @param errors A JSON-serialized array describing the errors
  */
-public suspend fun TelegramBotApi.setPassportDataErrors(
-    userId: Long,
-    errors: List<PassportElementError>
-): TelegramResponse<Boolean> {
+public suspend fun TelegramBotApi.setPassportDataErrors(userId: Long, errors: List<PassportElementError>): TelegramResponse<Boolean> {
     val request = SetPassportDataErrorsRequest(
         userId = userId,
         errors = errors
