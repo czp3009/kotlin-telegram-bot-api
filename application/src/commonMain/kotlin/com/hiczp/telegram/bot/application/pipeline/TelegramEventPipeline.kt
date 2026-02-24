@@ -41,17 +41,19 @@ private class InterceptedTelegramEventProcessor(
  *
  * Example usage:
  * ```kotlin
- * val interceptors = listOf<TelegramEventInterceptor> { context ->
+ * val loggingInterceptor: TelegramEventInterceptor = { context ->
  *     println("Before processing: ${context.event.updateId}")
  *     this.process(context)
  *     println("After processing: ${context.event.updateId}")
  * }
+ * val interceptors = listOf(loggingInterceptor)
  *
- * val pipeline = TelegramEventPipeline(client, interceptors, eventDispatcher)
- * pipeline(event)
+ * val pipeline = TelegramEventPipeline(client, applicationScope, interceptors, eventDispatcher)
+ * pipeline.execute(event)
  * ```
  *
  * @param client The Telegram bot client.
+ * @param applicationScope The application's coroutine scope for launching concurrent tasks.
  * @param interceptors List of interceptors to apply, in order from outermost to innermost.
  * @param dispatcher The final dispatcher that handles event routing to business logic.
  */
