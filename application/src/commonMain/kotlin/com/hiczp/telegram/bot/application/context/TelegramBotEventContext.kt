@@ -39,10 +39,10 @@ class DefaultTelegramBotEventContext<out T : TelegramBotEvent>(
  * Attempts to cast this context to a more specific event type.
  *
  * This function checks if the underlying event is of the specified type [T].
- * If the type matches, it returns a new context with the typed event.
+ * If the type matches, it returns the same context instance cast to the typed variant.
  * If the type doesn't match, it returns null.
  *
- * The new context preserves the original client, scope, and attributes.
+ * Note: The returned context is the same instance as the receiver, just with a more specific type.
  *
  * Example usage:
  * ```kotlin
@@ -54,17 +54,13 @@ class DefaultTelegramBotEventContext<out T : TelegramBotEvent>(
  * ```
  *
  * @param T The specific event type to cast to.
- * @return A typed context if the event is of type [T], or null otherwise.
+ * @return The same context instance cast to [TelegramBotEventContext] with event type [T],
+ *         or null if the event is not of type [T].
  */
 inline fun <reified T : TelegramBotEvent> TelegramBotEventContext<*>.castOrNull(): TelegramBotEventContext<T>? {
-    val currentEvent = this.event
-    if (currentEvent is T) {
-        return DefaultTelegramBotEventContext(
-            client = this.client,
-            event = currentEvent,
-            applicationScope = this.applicationScope,
-            attributes = this.attributes,
-        )
+    if (this.event is T) {
+        @Suppress("UNCHECKED_CAST")
+        return this as TelegramBotEventContext<T>
     }
     return null
 }

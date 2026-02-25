@@ -42,6 +42,7 @@ open class MockUpdateSource(
 ) : TelegramUpdateSource {
     private val isRunning = atomic(false)
     private val currentRunJob = atomic<Job?>(null)
+    private val completionSignal = atomic<CompletableDeferred<Unit>?>(null)
 
     /**
      * Start consuming updates from the source channel.
@@ -58,6 +59,8 @@ open class MockUpdateSource(
         }
 
         logger.debug { "MockUpdateSource started" }
+        val signal = CompletableDeferred<Unit>()
+        completionSignal.value = signal
 
         try {
             coroutineScope {
@@ -83,6 +86,7 @@ open class MockUpdateSource(
             currentRunJob.value = null
             isRunning.value = false
             logger.debug { "MockUpdateSource stopped" }
+            signal.complete(Unit)
         }
     }
 
@@ -96,6 +100,7 @@ open class MockUpdateSource(
         if (isRunning.value) {
             logger.debug { "Received stop command, cancelling current run job..." }
             currentRunJob.value?.cancel()
+            completionSignal.value?.await()
         }
     }
 

@@ -2,7 +2,8 @@ package com.hiczp.telegram.bot.application.interceptor.builtin.conversation
 
 import com.hiczp.telegram.bot.application.context.TelegramBotEventContext
 import com.hiczp.telegram.bot.application.context.castOrNull
-import com.hiczp.telegram.bot.application.context.sessionKey
+import com.hiczp.telegram.bot.application.context.extractChatId
+import com.hiczp.telegram.bot.application.context.extractUserId
 import com.hiczp.telegram.bot.application.convention.Command
 import com.hiczp.telegram.bot.protocol.event.BusinessMessageEvent
 import com.hiczp.telegram.bot.protocol.event.MessageEvent
@@ -134,8 +135,17 @@ class ConversationScope(
  *
  * Note: [conversationInterceptor] must be installed in the application pipeline for this to work.
  *
+ * @param id The [ConversationId] for this conversation. Defaults to [ConversationId.userInChat].
  * @param timeout Optional duration after which the conversation times out. Defaults to no timeout.
- * @param capacity The capacity of the channel used for the conversation. Defaults to [Channel.BUFFERED].
+ * @param capacity The capacity of the channel used for the conversation. Defaults to [Channel.UNLIMITED].
+ *        - **[Channel.UNLIMITED]** (default): All matching events are buffered. Use with caution in high-traffic
+ *          scenarios, as unconsumed events can accumulate and potentially cause OOM.
+ *        - **Bounded (e.g., `Channel.BUFFERED` or a specific number)**: When the buffer is full, new events are
+ *          dropped and a warning is logged. This protects against memory issues but may lose events.
+ *        - **[Channel.RENDEZVOUS]** (capacity = 0): Events are only received when the conversation is actively
+ *          awaiting via [ConversationScope.awaitEvent] or similar methods. Any event sent while the conversation
+ *          is not waiting (e.g., during processing) is dropped. Use this when you only care about events
+ *          that arrive while actively listening.
  * @param interceptPredicate A function that determines which events should be intercepted for the conversation.
  *        Defaults to intercepting [MessageEvent] and [BusinessMessageEvent].
  * @param cancelPredicate A function that determines if an event should cancel the conversation.
@@ -147,8 +157,12 @@ class ConversationScope(
  * @throws IllegalStateException if the current event cannot provide a conversation session key.
  */
 fun <T : TelegramBotEvent> TelegramBotEventContext<T>.startConversation(
+    id: ConversationId = ConversationId.userInChat(
+        chatId = this.event.extractChatId() ?: error("No chatId"),
+        userId = this.event.extractUserId() ?: error("No userId"),
+    ),
     timeout: Duration? = null,
-    capacity: Int = Channel.BUFFERED,
+    capacity: Int = Channel.UNLIMITED,
     interceptPredicate: (TelegramBotEvent) -> Boolean = { event ->
         event is MessageEvent || event is BusinessMessageEvent
     },
@@ -161,14 +175,26 @@ fun <T : TelegramBotEvent> TelegramBotEventContext<T>.startConversation(
 ) {
     val manager = attributes.getOrNull(ConversationManagerKey)
         ?: error("ConversationInterceptor not installed")
-    val sessionKey = this.event.sessionKey
-        ?: error("Can't start conversation due to unsupported event type: ${this.event::class.simpleName}")
 
-    val record = manager.activeConversations.computeIfAbsent(sessionKey) {
-        ConversationRecord(
-            channel = Channel(capacity),
-            interceptPredicate = interceptPredicate,
-        )
+    // Use computeIfAbsent to simulate putIfAbsent behavior:
+    // - If the key doesn't exist, insert the new record and return it
+    // - If the key already exists, return the existing record
+    // - Check reference equality to determine if we inserted or found an existing entry
+    val newRecord = ConversationRecord(
+        channel = Channel(
+            capacity = capacity,
+            onUndeliveredElement = { eventContext ->
+                logger.warn { "Conversation $id ended but event was left unconsumed in the buffer. Dropped event: ${eventContext.event}" }
+            }
+        ),
+        interceptPredicate = interceptPredicate,
+    )
+    val record = manager.activeConversations.computeIfAbsent(id) {
+        newRecord
+    }
+    if (record !== newRecord) {
+        newRecord.close()
+        error("A conversation is already active for Conversation: $id. You must finish or cancel the existing conversation before starting a new one.")
     }
 
     applicationScope.launch {
@@ -189,7 +215,7 @@ fun <T : TelegramBotEvent> TelegramBotEventContext<T>.startConversation(
         } catch (e: Exception) {
             logger.error(e) { "Unhandled exception in Conversation FSM: ${e.message}" }
         } finally {
-            manager.activeConversations.remove(sessionKey)?.channel?.cancel()
+            manager.activeConversations.remove(id)?.close()
         }
     }
 }
