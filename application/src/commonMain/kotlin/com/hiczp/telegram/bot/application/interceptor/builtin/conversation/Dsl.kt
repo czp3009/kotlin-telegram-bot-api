@@ -1,10 +1,10 @@
 package com.hiczp.telegram.bot.application.interceptor.builtin.conversation
 
+import com.hiczp.telegram.bot.application.command.matchesCommand
 import com.hiczp.telegram.bot.application.context.TelegramBotEventContext
 import com.hiczp.telegram.bot.application.context.castOrNull
 import com.hiczp.telegram.bot.application.context.extractChatId
 import com.hiczp.telegram.bot.application.context.extractUserId
-import com.hiczp.telegram.bot.application.convention.Command
 import com.hiczp.telegram.bot.protocol.event.BusinessMessageEvent
 import com.hiczp.telegram.bot.protocol.event.MessageEvent
 import com.hiczp.telegram.bot.protocol.event.TelegramBotEvent
@@ -30,7 +30,7 @@ private val logger = KotlinLogging.logger("ConversationFSM")
  */
 class ConversationScope(
     private val channel: ReceiveChannel<TelegramBotEventContext<TelegramBotEvent>>,
-    private val cancelPredicate: (TelegramBotEvent) -> Boolean,
+    private val cancelPredicate: suspend (TelegramBotEventContext<TelegramBotEvent>) -> Boolean,
 ) {
     /**
      * Awaits the next event from the user.
@@ -40,7 +40,7 @@ class ConversationScope(
      */
     suspend fun awaitEvent(): TelegramBotEventContext<TelegramBotEvent> {
         val eventContext = channel.receive()
-        if (cancelPredicate(eventContext.event)) {
+        if (cancelPredicate(eventContext)) {
             throw ConversationCancelledException(eventContext)
         }
         return eventContext
@@ -149,7 +149,8 @@ class ConversationScope(
  * @param interceptPredicate A function that determines which events should be intercepted for the conversation.
  *        Defaults to intercepting [MessageEvent] and [BusinessMessageEvent].
  * @param cancelPredicate A function that determines if an event should cancel the conversation.
- *        Defaults to checking if the event is a message with text "/cancel".
+ *        Defaults to checking if the event is a message matching the "/cancel" command.
+ *        The default uses [matchesCommand], which recognizes both `/cancel` and `/cancel@bot_username` formats.
  * @param onTimeout Callback invoked when the conversation times out. Called with the original context.
  * @param onCancel Callback invoked when the conversation is cancelled. Called with the context that triggered cancellation.
  * @param block The conversation logic to execute within a [ConversationScope].
@@ -163,11 +164,14 @@ fun <T : TelegramBotEvent> TelegramBotEventContext<T>.startConversation(
     ),
     timeout: Duration? = null,
     capacity: Int = Channel.UNLIMITED,
-    interceptPredicate: (TelegramBotEvent) -> Boolean = { event ->
+    interceptPredicate: suspend (TelegramBotEventContext<TelegramBotEvent>) -> Boolean = { eventContext ->
+        val event = eventContext.event
         event is MessageEvent || event is BusinessMessageEvent
     },
-    cancelPredicate: (TelegramBotEvent) -> Boolean = { event ->
-        event is MessageEvent && event.message.text == Command("cancel")
+    cancelPredicate: suspend (TelegramBotEventContext<TelegramBotEvent>) -> Boolean = { eventContext ->
+        val event = eventContext.event
+        (event is MessageEvent && event.matchesCommand("cancel", eventContext.me().username))
+                || (event is BusinessMessageEvent && event.matchesCommand("cancel", eventContext.me().username))
     },
     onTimeout: suspend TelegramBotEventContext<T>.() -> Unit = {},
     onCancel: suspend TelegramBotEventContext<TelegramBotEvent>.() -> Unit = {},

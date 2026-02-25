@@ -50,11 +50,12 @@ value class ConversationId(val value: String) {
  * Holds the state for an active conversation.
  *
  * @property channel The channel that receives event contexts for this conversation.
- * @property interceptPredicate A function that determines which events should be routed to this conversation.
+ * @property interceptPredicate A suspending function that determines which event contexts should be routed to this conversation.
+ *         Receives the full [TelegramBotEventContext], allowing access to client, attributes, and other context data.
  */
 data class ConversationRecord(
     val channel: Channel<TelegramBotEventContext<TelegramBotEvent>>,
-    val interceptPredicate: (TelegramBotEvent) -> Boolean,
+    val interceptPredicate: suspend (TelegramBotEventContext<TelegramBotEvent>) -> Boolean,
 ) : AutoCloseable {
     override fun close() {
         channel.cancel()
@@ -139,7 +140,7 @@ fun conversationInterceptor(
     for (idExtractor in manager.idExtractors) {
         val conversationId = idExtractor(context.event) ?: continue
         val record = manager.activeConversations[conversationId]
-        if (record != null && record.interceptPredicate(context.event)) {
+        if (record != null && record.interceptPredicate(context)) {
             val result = record.channel.trySend(context)
             when {
                 result.isSuccess -> return@Interceptor

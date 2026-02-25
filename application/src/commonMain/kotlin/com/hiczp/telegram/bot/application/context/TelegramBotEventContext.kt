@@ -2,6 +2,7 @@ package com.hiczp.telegram.bot.application.context
 
 import com.hiczp.telegram.bot.client.TelegramBotClient
 import com.hiczp.telegram.bot.protocol.event.TelegramBotEvent
+import com.hiczp.telegram.bot.protocol.model.User
 import io.ktor.util.*
 import kotlinx.coroutines.CoroutineScope
 
@@ -17,12 +18,23 @@ import kotlinx.coroutines.CoroutineScope
  * @property event The Telegram event being processed.
  * @property applicationScope The application's coroutine scope for launching concurrent tasks.
  * @property attributes Type-safe attribute storage for sharing data between interceptors and handlers.
+ * @see me Retrieves the bot's own user information, useful for command parsing with username matching.
  */
 interface TelegramBotEventContext<out T : TelegramBotEvent> {
     val client: TelegramBotClient
     val event: T
     val applicationScope: CoroutineScope
     val attributes: Attributes
+
+    /**
+     * Retrieves the bot's own user information.
+     *
+     * This is useful for determining the bot's username when parsing commands
+     * that may include the bot's username (e.g., `/command@bot_username`).
+     *
+     * @return The [User] object representing the bot.
+     */
+    suspend fun me(): User
 }
 
 /**
@@ -33,7 +45,10 @@ class DefaultTelegramBotEventContext<out T : TelegramBotEvent>(
     override val event: T,
     override val applicationScope: CoroutineScope,
     override val attributes: Attributes = Attributes(concurrent = true),
-) : TelegramBotEventContext<T>
+    private val getMeFunc: suspend () -> User,
+) : TelegramBotEventContext<T> {
+    override suspend fun me() = getMeFunc()
+}
 
 /**
  * Attempts to cast this context to a more specific event type.

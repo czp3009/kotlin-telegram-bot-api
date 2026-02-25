@@ -9,6 +9,8 @@ import com.hiczp.telegram.bot.client.TelegramBotClient
 import com.hiczp.telegram.bot.protocol.event.TelegramBotEvent
 import io.ktor.util.*
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
 
 private class DispatcherTelegramEventProcessor(
     private val dispatcher: TelegramEventDispatcher
@@ -38,6 +40,7 @@ private class InterceptedTelegramEventProcessor(
  * Key features:
  * - Static assembly: Uses a simple for-loop to build the chain during initialization
  * - Clean stacktraces: No recursion or runtime closure wrapping
+ * - Lazy cached bot info: The bot's user information is fetched once on first access and cached
  *
  * Example usage:
  * ```kotlin
@@ -68,6 +71,9 @@ internal class TelegramEventPipeline(
     ) { interceptor, nextProcessor ->
         InterceptedTelegramEventProcessor(interceptor, nextProcessor)
     }
+    private val me = applicationScope.async(start = CoroutineStart.LAZY) {
+        client.getMe().getOrThrow()
+    }
 
     /**
      * Execute the pipeline for an event.
@@ -85,6 +91,7 @@ internal class TelegramEventPipeline(
             event = event,
             applicationScope = applicationScope,
             attributes = Attributes(concurrent = true),
+            getMeFunc = me::await,
         )
         pipeline.process(context)
     }
