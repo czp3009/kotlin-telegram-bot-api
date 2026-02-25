@@ -39,11 +39,11 @@ class ConversationScope(
      * @throws ConversationCancelledException if the received event matches the cancel predicate.
      */
     suspend fun awaitEvent(): TelegramBotEventContext<TelegramBotEvent> {
-        val eventContext = channel.receive()
-        if (cancelPredicate(eventContext)) {
-            throw ConversationCancelledException(eventContext)
+        val context = channel.receive()
+        if (cancelPredicate(context)) {
+            throw ConversationCancelledException(context)
         }
-        return eventContext
+        return context
     }
 
     /**
@@ -64,8 +64,8 @@ class ConversationScope(
      */
     suspend inline fun <reified T : TelegramBotEvent> await(): TelegramBotEventContext<T> {
         while (true) {
-            val eventContext = awaitEvent()
-            eventContext.castOrNull<T>()?.let { return it }
+            val context = awaitEvent()
+            context.castOrNull<T>()?.let { return it }
         }
     }
 
@@ -89,8 +89,8 @@ class ConversationScope(
      */
     suspend fun awaitTextMessage(): TelegramBotEventContext<MessageEvent> {
         while (true) {
-            val eventContext = awaitMessage()
-            if (eventContext.event.message.text != null) return eventContext
+            val context = awaitMessage()
+            if (context.event.message.text != null) return context
         }
     }
 
@@ -104,8 +104,8 @@ class ConversationScope(
      */
     suspend fun awaitCommand(): TelegramBotEventContext<MessageEvent> {
         while (true) {
-            val eventContext = awaitTextMessage()
-            if (eventContext.event.message.text!!.startsWith("/")) return eventContext
+            val context = awaitTextMessage()
+            if (context.event.message.text!!.startsWith("/")) return context
         }
     }
 }
@@ -147,12 +147,12 @@ class ConversationScope(
  *          is not waiting (e.g., during processing) is dropped. Use this when you only care about events
  *          that arrive while actively listening.
  * @param interceptPredicate A function that determines which events should be intercepted for the conversation.
- *        Defaults to intercepting [MessageEvent] and [BusinessMessageEvent].
+ *        Defaults to intercepting [MessageEvent].
  * @param cancelPredicate A function that determines if an event should cancel the conversation.
  *        Defaults to checking if the event is a message matching the "/cancel" command.
  *        The default uses [matchesCommand], which recognizes both `/cancel` and `/cancel@bot_username` formats.
  * @param onTimeout Callback invoked when the conversation times out. Called with the original context.
- * @param onCancel Callback invoked when the conversation is cancelled. Called with the context that triggered cancellation.
+ * @param onCancel Callback invoked when the conversation is canceled. Called with the context that triggered cancellation.
  * @param block The conversation logic to execute within a [ConversationScope].
  * @throws IllegalStateException if [conversationInterceptor] is not installed.
  * @throws IllegalStateException if the current event cannot provide a conversation session key.
@@ -164,14 +164,13 @@ fun <T : TelegramBotEvent> TelegramBotEventContext<T>.startConversation(
     ),
     timeout: Duration? = null,
     capacity: Int = Channel.UNLIMITED,
-    interceptPredicate: suspend (TelegramBotEventContext<TelegramBotEvent>) -> Boolean = { eventContext ->
-        val event = eventContext.event
+    interceptPredicate: suspend (TelegramBotEventContext<TelegramBotEvent>) -> Boolean = { context ->
+        val event = context.event
         event is MessageEvent || event is BusinessMessageEvent
     },
-    cancelPredicate: suspend (TelegramBotEventContext<TelegramBotEvent>) -> Boolean = { eventContext ->
-        val event = eventContext.event
-        (event is MessageEvent && event.matchesCommand("cancel", eventContext.me().username))
-                || (event is BusinessMessageEvent && event.matchesCommand("cancel", eventContext.me().username))
+    cancelPredicate: suspend (TelegramBotEventContext<TelegramBotEvent>) -> Boolean = { context ->
+        val event = context.event
+        event is MessageEvent && event.matchesCommand("cancel", context.me().username)
     },
     onTimeout: suspend TelegramBotEventContext<T>.() -> Unit = {},
     onCancel: suspend TelegramBotEventContext<TelegramBotEvent>.() -> Unit = {},
@@ -187,8 +186,8 @@ fun <T : TelegramBotEvent> TelegramBotEventContext<T>.startConversation(
     val newRecord = ConversationRecord(
         channel = Channel(
             capacity = capacity,
-            onUndeliveredElement = { eventContext ->
-                logger.warn { "Conversation $id ended but event was left unconsumed in the buffer. Dropped event: ${eventContext.event}" }
+            onUndeliveredElement = { context ->
+                logger.warn { "Conversation $id ended but event was left unconsumed in the buffer. Dropped event: ${context.event}" }
             }
         ),
         interceptPredicate = interceptPredicate,

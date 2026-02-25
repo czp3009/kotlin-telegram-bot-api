@@ -8,58 +8,61 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 private val logger = KotlinLogging.logger {}
 
 /**
- * A dispatcher implementation that routes events to registered handler functions.
+ * A dispatcher implementation that routes events through a tree of [RouteNode]s.
  *
- * This dispatcher receives a [Sequence] of handler functions and iterates through them
- * until one consumes the event. If no handler consumes the event, it is logged
- * as an unhandled event (dead letter).
- *
- * This implements the Chain of Responsibility pattern, where each handler can decide
- * whether to handle an event or pass it to the next handler in the chain.
+ * This dispatcher works with the routing DSL provided by [handling] to create
+ * a type-safe, hierarchical event handling system. Events are dispatched to
+ * the root node, which uses depth-first short-circuit evaluation to find a
+ * matching handler. If no handler consumes the event, it is passed to
+ * [deadLetter] for logging or custom handling.
  *
  * Example usage:
  * ```kotlin
- * val handlers = sequence {
- *     yield { context ->
- *         if (context.event is MessageEvent && context.event.message.text == "/start") {
- *             // Handle /start command
- *             true // Consumed
- *         } else {
- *             false // Not consumed, try next handler
+ * // Create dispatcher using the handling DSL
+ * val dispatcher = HandlerTelegramEventDispatcher(handling {
+ *     on<MessageEvent> {
+ *         command("start") { ctx ->
+ *             ctx.client.sendMessage(ctx.event.message.chat.id, "Welcome!")
  *         }
  *     }
+ * })
+ *
+ * // Or create the dispatcher from a pre-built root node
+ * val rootNode = handling {
+ *     command("help") { ctx -> /* ... */ }
  * }
- * val dispatcher = HandlerTelegramEventDispatcher(handlers)
+ * val dispatcher = HandlerTelegramEventDispatcher(rootNode)
  * ```
  *
- * @param handlers A [Sequence] of handler functions. Each handler receives a [TelegramBotEventContext]
- *                 and returns `true` if the event was consumed, `false` otherwise.
+ * @param rootNode The root [RouteNode] of the event routing tree, typically
+ *        created by the [handling] function.
  */
 open class HandlerTelegramEventDispatcher(
-    private val handlers: Sequence<suspend (TelegramBotEventContext<TelegramBotEvent>) -> Boolean>
+    private val rootNode: RouteNode
 ) : TelegramEventDispatcher {
     /**
-     * Dispatch an event by attempting to handle it with each registered handler.
+     * Dispatches an event through the routing tree.
      *
-     * Handlers are iterated lazily. If any handler returns `true`, the event
-     * is considered consumed and no further handlers are invoked.
-     * If no handler consumes the event, it is passed to [deadLetter].
+     * The event is passed to the root node, which attempts to match and handle it
+     * using depth-first traversal. If no route in the tree consumes the event,
+     * it is passed to [deadLetter].
      *
-     * @param context The bot context containing client, event, and attributes.
+     * @param context The event context to dispatch.
      */
     override suspend fun dispatch(context: TelegramBotEventContext<TelegramBotEvent>) {
-        for (handler in handlers) {
-            if (handler(context)) {
-                return
-            }
+        if (!rootNode.execute(context)) {
+            deadLetter(context)
         }
-        deadLetter(context)
     }
 
     /**
-     * Handle the event that was not consumed by any handler.
+     * Handles the event not consumed by any route in the tree.
      *
-     * @param context The bot context containing the unhandled event.
+     * By default, this method logs the unhandled event at WARN level.
+     * Subclasses can override this method to implement custom dead letter handling,
+     * such as sending a default response or metrics collection.
+     *
+     * @param context The event context containing the unhandled event.
      */
     open suspend fun deadLetter(context: TelegramBotEventContext<TelegramBotEvent>) {
         logger.warn { "Unhandled event: ${context.event}" }
