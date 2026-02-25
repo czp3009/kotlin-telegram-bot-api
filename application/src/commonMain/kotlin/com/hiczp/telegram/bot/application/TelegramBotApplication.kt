@@ -60,12 +60,12 @@ class TelegramBotApplication(
     interceptors: List<TelegramEventInterceptor>,
     eventDispatcher: TelegramEventDispatcher,
 ) {
-    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val mainJobDeferred = CompletableDeferred<Job>()
     private val shutdownJobDeferred = CompletableDeferred<Job>()
     private val pipeline = TelegramEventPipeline(
         client = client,
-        applicationScope = appScope,
+        applicationScope = applicationScope,
         interceptors = interceptors,
         dispatcher = eventDispatcher,
     )
@@ -86,7 +86,7 @@ class TelegramBotApplication(
 
         logger.debug { "Starting Telegram Bot Application..." }
 
-        val mainJob = appScope.launch {
+        val mainJob = applicationScope.launch {
             updateSource.start { update ->
                 // Shutdown interceptor: Reject new updates when the bot is stopping.
                 // Throwing a CancellationException subclass ensures it silently cancels 
@@ -135,7 +135,7 @@ class TelegramBotApplication(
         if (state.compareAndSet(State.RUNNING, State.STOPPING)) {
             logger.debug { "Received shutdown signal, starting graceful shutdown..." }
 
-            val shutdownJob = appScope.launch {
+            val shutdownJob = applicationScope.launch {
                 // Instantly cut off the source
                 runCatching { updateSource.stop() }.onFailure {
                     logger.error(it) { "Failed to cut off update source" }
@@ -162,7 +162,7 @@ class TelegramBotApplication(
                             logger.error(it) { "Failed to finalize update source" }
                         }
                         state.value = State.STOPPED
-                        appScope.cancel()
+                        applicationScope.cancel()
                         logger.debug { "Bot exited" }
                     }
                 }
@@ -174,7 +174,7 @@ class TelegramBotApplication(
         if (state.value == State.NEW) {
             return Job().apply { complete() }
         }
-        return appScope.launch {
+        return applicationScope.launch {
             shutdownJobDeferred.await().join()
         }
     }
