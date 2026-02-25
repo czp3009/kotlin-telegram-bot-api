@@ -64,7 +64,7 @@ open class MockUpdateSource(
 
         try {
             coroutineScope {
-                val job = launch {
+                val job = launch(start = CoroutineStart.LAZY) {
                     for (update in source) {
                         try {
                             consume(update)
@@ -81,6 +81,7 @@ open class MockUpdateSource(
                     }
                 }
                 currentRunJob.value = job
+                job.start()
             }
         } finally {
             currentRunJob.value = null

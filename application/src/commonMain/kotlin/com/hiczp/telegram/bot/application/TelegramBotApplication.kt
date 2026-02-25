@@ -62,6 +62,7 @@ class TelegramBotApplication(
 ) {
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val mainJobDeferred = CompletableDeferred<Job>()
+    private val shutdownJobDeferred = CompletableDeferred<Job>()
     private val pipeline = TelegramEventPipeline(
         client = client,
         applicationScope = appScope,
@@ -116,51 +117,66 @@ class TelegramBotApplication(
     /**
      * Stop the bot gracefully.
      *
-     * This method is idempotent - calling it multiple times has no additional effect.
+     * This method is idempotent:
+     * - If state is RUNNING, it starts the shutdown procedure and returns that shutdown [Job].
+     * - If state is STOPPING or STOPPED, it returns a [Job] that waits for the ongoing shutdown to finish.
+     * - If state is NEW, it is a no-op and returns an already completed [Job].
      *
-     * Shutdown process:
+     * Shutdown process (RUNNING only):
      * 1. Transition state to STOPPING
      * 2. Cut off the update source immediately
      * 3. Wait within [gracePeriod] for existing handlers to complete
      * 4. Force cancel if timeout
      * 5. Call [TelegramUpdateSource.onFinalize] for final cleanup
      *
-     * @param gracePeriod Maximum time to wait for graceful shutdown. Defaults to 10 seconds.
+     * @param gracePeriod Maximum time to wait for the graceful shutdown. Defaults to 10 seconds.
      */
-    suspend fun stop(gracePeriod: Duration = 10.seconds) {
-        if (!state.compareAndSet(State.RUNNING, State.STOPPING)) return
+    fun stop(gracePeriod: Duration = 10.seconds): Job {
+        if (state.compareAndSet(State.RUNNING, State.STOPPING)) {
+            logger.debug { "Received shutdown signal, starting graceful shutdown..." }
 
-        logger.debug { "Received shutdown signal, starting graceful shutdown..." }
+            val shutdownJob = appScope.launch {
+                // Instantly cut off the source
+                runCatching { updateSource.stop() }.onFailure {
+                    logger.error(it) { "Failed to cut off update source" }
+                }
 
-        // Instantly cut off the source
-        updateSource.stop()
+                // Wait safely in case start() is still initializing
+                val mainJob = mainJobDeferred.await()
+                logger.debug { "Waiting for existing tasks to complete (grace period: $gracePeriod)..." }
 
-        // Wait safely in case start() is still initializing
-        val mainJob = mainJobDeferred.await()
-        logger.debug { "Waiting for existing tasks to complete (grace period: $gracePeriod)..." }
-
-        // Implicit structured waiting
-        val finishedCleanly = withTimeoutOrNull(gracePeriod) {
-            mainJob.join()
-            true
+                try {
+                    withTimeout(gracePeriod) {
+                        mainJob.join()
+                    }
+                    logger.debug { "All in-progress tasks completed successfully" }
+                } catch (_: TimeoutCancellationException) {
+                    logger.warn { "Grace period timeout! Forcing termination..." }
+                } catch (e: CancellationException) {
+                    logger.warn { "Shutdown externally cancelled! Forcing immediate termination..." }
+                    throw e
+                } finally {
+                    withContext(NonCancellable) {
+                        mainJob.cancel()
+                        runCatching { updateSource.onFinalize() }.onFailure {
+                            logger.error(it) { "Failed to finalize update source" }
+                        }
+                        state.value = State.STOPPED
+                        appScope.cancel()
+                        logger.debug { "Bot exited" }
+                    }
+                }
+            }
+            shutdownJobDeferred.complete(shutdownJob)
+            return shutdownJob
         }
 
-        if (finishedCleanly == null) {
-            logger.warn { "Grace period timeout! Force terminating remaining coroutines..." }
-            mainJob.cancelAndJoin()
-        } else {
-            logger.debug { "All in-progress tasks completed successfully" }
+        if (state.value == State.NEW) {
+            return Job().apply { complete() }
         }
-
-        // Final cleanup and ACK
-        withContext(NonCancellable) {
-            updateSource.onFinalize()
+        return appScope.launch {
+            shutdownJobDeferred.await().join()
         }
-
-        state.value = State.STOPPED
-        appScope.cancel()
-        appScope.coroutineContext[Job]?.join()
-        logger.debug { "Bot exited" }
     }
 
     private enum class State { NEW, RUNNING, STOPPING, STOPPED }
