@@ -69,7 +69,14 @@ kotlin-telegram-bot-api/
 ├── client/                # High-level client wrapper
 │   └── TelegramBotClient.kt
 └── application/           # Bot application framework with lifecycle management
-    └── TelegramBotApplication.kt
+    ├── TelegramBotApplication.kt      # Main orchestrator
+    ├── updatesource/                  # Update sources (long polling, mock)
+    ├── interceptor/                   # Interceptor infrastructure and built-in interceptors
+    │   └── builtin/conversation/      # Conversation FSM support
+    ├── dispatcher/                    # Event dispatching
+    │   └── handler/                   # Handler DSL (handling {}, command(), etc.)
+    ├── context/                       # Event context and helper extensions
+    └── command/                       # Command parsing utilities
 ```
 
 ### Key Dependencies
@@ -89,6 +96,15 @@ The core module containing:
 - Multipart form wrappers for file uploads
 - Query extensions for JSON-serialized GET parameters
 - JSON body extensions for parameter-scattered API calls (in `model/Queries.kt`)
+
+#### Generated Events (`protocol-update-codegen`)
+
+The KSP processor generates `TelegramBotEvent` sealed interface from the `Update` model. Each optional non-primitive
+field in `Update` becomes an event subclass (e.g., `MessageEvent`, `CallbackQueryEvent`, `InlineQueryEvent`).
+
+Generated location: `protocol/build/generated/ksp/metadata/commonMain/kotlin/com/hiczp/telegram/bot/protocol/event/`
+
+Events use `@JsonClassDiscriminator("type")` for polymorphic deserialization via `Update.toTelegramBotEvent()`.
 
 ### Extension Functions
 
@@ -177,8 +193,7 @@ api.sendDocument(
 ### Interceptor Pattern (Application Module)
 
 The application module uses an "onion model" interceptor pattern. Interceptors wrap around the event processing
-pipeline,
-allowing pre/post processing:
+pipeline, allowing pre/post processing:
 
 ```kotlin
 val loggingInterceptor: TelegramEventInterceptor = { context ->
@@ -194,6 +209,70 @@ The `TelegramBotEventContext` provides access to:
 - `event` - The TelegramBotEvent being processed
 - `applicationScope` - Coroutine scope for launching concurrent tasks
 - `attributes` - Type-safe storage for sharing data between interceptors
+
+### Handler DSL (Application Module)
+
+The `HandlerTelegramEventDispatcher` provides a type-safe routing DSL for event handling:
+
+```kotlin
+val dispatcher = HandlerTelegramEventDispatcher(handling {
+    // Command handlers (supports /command and /command@bot_username formats)
+    command("start") { ctx ->
+        ctx.client.sendMessage(ctx.event.message.chat.id, "Welcome!")
+    }
+
+    // Event type filtering
+    on<MessageEvent> {
+        text("hello") { ctx -> /* exact text match */ }
+        regex(Regex("(?i)^hello")) { ctx -> /* regex match */ }
+    }
+
+    on<CallbackQueryEvent> {
+        callbackData("confirm") { ctx -> /* callback handling */ }
+    }
+
+    // Include routes from other modules
+    include(adminRoutes)
+})
+```
+
+### Conversations (Application Module)
+
+Multi-turn conversations are supported via the `conversationInterceptor` and `startConversation` DSL:
+
+```kotlin
+// Install the conversation interceptor
+val interceptors = listOf(conversationInterceptor)
+
+// In a handler, start a conversation
+command("survey") { ctx ->
+    startConversation(
+        timeout = 5.minutes,
+        onTimeout = { reply("Survey timed out.") },
+        onCancel = { reply("Survey cancelled.") }
+    ) {
+        val name = awaitTextMessage().event.message.text
+        reply("Hello, $name!")
+        val age = awaitTextMessage().event.message.text
+        reply("Thanks! You are $age years old.")
+    }
+}
+```
+
+### Quick Start (Application Module)
+
+Use the factory method for simple long-polling bots:
+
+```kotlin
+val app = TelegramBotApplication.longPolling(
+    botToken = "YOUR_TOKEN",
+    eventDispatcher = dispatcher,
+    interceptors = listOf(loggingInterceptor)
+)
+app.start()
+app.join()  // Suspend until stopped
+// app.stop(5.seconds) for graceful shutdown
+```
 
 ### Supported Platforms
 

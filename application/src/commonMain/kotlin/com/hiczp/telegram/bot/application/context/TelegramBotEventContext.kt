@@ -14,11 +14,11 @@ import kotlinx.coroutines.CoroutineScope
  *
  * A new context is created for each event execution in the pipeline.
  *
+ * @param T The type of Telegram event being processed.
  * @property client The Telegram bot client for making API calls.
  * @property event The Telegram event being processed.
  * @property applicationScope The application's coroutine scope for launching concurrent tasks.
  * @property attributes Type-safe attribute storage for sharing data between interceptors and handlers.
- * @see me Retrieves the bot's own user information, useful for command parsing with username matching.
  */
 interface TelegramBotEventContext<out T : TelegramBotEvent> {
     val client: TelegramBotClient

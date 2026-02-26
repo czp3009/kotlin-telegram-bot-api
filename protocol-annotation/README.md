@@ -2,7 +2,7 @@
 
 Kotlin Multiplatform annotation module for the Telegram Bot API.
 
-This module provides annotations and interfaces used by the code generation pipeline for handling Telegram updates.
+This module provides annotations and interfaces used by the code generation pipeline for Telegram update event handling.
 
 ## Components
 
@@ -19,8 +19,8 @@ interface IncomingUpdate
 
 ### IncomingUpdateContainer
 
-An annotation to mark a data class as an incoming update container. Classes annotated with this will be processed by the
-KSP processor (`:protocol-update-codegen`) to generate event classes.
+An annotation that marks a data class as an incoming update container. Classes annotated with this are processed by
+`:protocol-update-codegen` to generate event classes.
 
 ```kotlin
 @Target(AnnotationTarget.CLASS)
@@ -30,8 +30,9 @@ annotation class IncomingUpdateContainer
 
 ## Usage
 
-The `@IncomingUpdateContainer` annotation is automatically applied to the generated `Update` data class by the code
-generator (`GenerateKtorfitInterfacesTask`). The KSP processor then reads this annotation and generates:
+The `@IncomingUpdateContainer` annotation is automatically applied to the generated `Update` data class by the
+code generator in the `:protocol` module. The KSP processor (`:protocol-update-codegen`) then reads this annotation and
+generates:
 
 - Event classes for each update type
 - Sealed interface hierarchy for type-safe event handling
@@ -64,4 +65,5 @@ JVM, Android, JS, WASM, Linux, macOS, Windows, iOS, watchOS, tvOS, Android Nativ
 
 - `:protocol` - Contains the generated `Update` class and other API models
 - `:protocol-update-codegen` - KSP processor that generates event classes from `@IncomingUpdateContainer`
-- `:application` - High-level application framework using generated events
+- `:client` - High-level client wrapper using generated events
+- `:application` - Bot application framework using generated events for type-safe event handling

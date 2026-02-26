@@ -155,7 +155,7 @@ class ConversationScope(
  * @param onCancel Callback invoked when the conversation is canceled. Called with the context that triggered cancellation.
  * @param block The conversation logic to execute within a [ConversationScope].
  * @throws IllegalStateException if [conversationInterceptor] is not installed.
- * @throws IllegalStateException if the current event cannot provide a conversation session key.
+ * @throws IllegalStateException if the current event cannot provide chatId/userId for the default [ConversationId.userInChat].
  */
 fun <T : TelegramBotEvent> TelegramBotEventContext<T>.startConversation(
     id: ConversationId = ConversationId.userInChat(

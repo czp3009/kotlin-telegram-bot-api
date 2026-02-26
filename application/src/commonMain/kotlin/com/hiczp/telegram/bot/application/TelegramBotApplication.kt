@@ -44,12 +44,19 @@ private val logger = KotlinLogging.logger {}
  *
  * Example:
  * ```kotlin
- * val app = TelegramBotApplication(updateSource, interceptors, dispatcher)
+ * val client = TelegramBotClient("YOUR_TOKEN")
+ * val app = TelegramBotApplication(
+ *     client = client,
+ *     updateSource = LongPollingTelegramUpdateSource(client),
+ *     interceptors = listOf(loggingInterceptor),
+ *     eventDispatcher = eventDispatcher
+ * )
  * app.start()
  * // ... later ...
  * app.stop(5.seconds)
  * ```
  *
+ * @param client The Telegram bot client for API calls.
  * @param updateSource The source of Telegram updates.
  * @param interceptors List of interceptors to apply to each event, in order from outermost to innermost.
  * @param eventDispatcher The dispatcher that handles the final event routing to business logic.

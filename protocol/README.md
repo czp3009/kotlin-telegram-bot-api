@@ -3,7 +3,7 @@
 Kotlin Multiplatform protocol module for the Telegram Bot API.
 
 It provides type-safe API definitions generated from the Telegram Bot API OpenAPI specification, including models,
-API interfaces, multipart form wrappers, and multipart helper extensions.
+API interfaces, multipart form wrappers, and query/body helper extensions.
 
 ## Key Features
 
@@ -34,14 +34,14 @@ Code is generated from the
   - GET methods with non-primitive query parameters expose raw serialized `String`/`String?` signatures
 
 - **Query extensions** (`query/Queries.kt`)
-    - Auto-generated typed extension functions for query-heavy GET methods
+    - Auto-generated typed extensions for query-heavy GET methods
     - Serialize non-primitive query values (for example `List<String>`, `BotCommandScope`) via `Json.encodeToString`
     - Keep call sites strongly typed while delegating to generated `TelegramBotApi` string-based query methods
 
 - **JSON body extensions** (`model/Queries.kt`)
-  - Auto-generated scatter extension functions for POST methods with JSON request bodies
-  - Accept individual parameters matching Request class fields instead of requiring pre-constructed Request objects
-  - Provide ergonomic API with named parameters and default values
+    - Auto-generated scatter extensions for POST methods with JSON request bodies
+    - Accept individual parameters matching request class fields instead of requiring pre-constructed request objects
+    - Provide an ergonomic API with named parameters and default values
 
 ### Handwritten Types and Utilities
 
@@ -59,12 +59,14 @@ Code is generated from the
   )
   ```
 
-- **Message extensions** (`extension/Messages.kt`)
+- **Message extensions** (`extension/Messages.kt`) - Utilities for working with Message objects:
   ```kotlin
+  // Check if a message is inaccessible (e.g., auto-deleted or from a deleted channel)
   if (message.isInaccessible) {
       handleInaccessibleMessage(message)
   }
 
+  // Delete single or multiple messages
   api.deleteMessage(message)
   api.deleteMessages(message1, message2, message3)
   ```
@@ -99,7 +101,7 @@ Factory methods:
 
 ### Multipart Usage Examples
 
-#### 1) Reference an existing file (`file_id`) using scatter function
+#### 1) Reference an existing file (`file_id`) with a scatter function
 
 ```kotlin
 api.sendPhoto(
@@ -108,7 +110,7 @@ api.sendPhoto(
 )
 ```
 
-#### 2) Upload binary content using scatter function
+#### 2) Upload binary content with a scatter function
 
 ```kotlin
 api.sendDocument(
@@ -231,3 +233,5 @@ JVM, Android, JS, WASM, Linux, macOS, Windows, iOS, watchOS, tvOS, Android Nativ
 - [Telegram Bot API Official Documentation](https://core.telegram.org/bots/api)
 - [OpenAPI Specification Source](https://github.com/czp3009/telegram-bot-api-swagger)
 - [Ktorfit](https://github.com/Foso/Ktorfit)
+- [Client Module](../client) - High-level client wrapper
+- [Application Module](../application) - Bot application framework

@@ -2,7 +2,7 @@
 
 A high-level Kotlin Multiplatform client wrapper for the Telegram Bot API.
 
-It provides `TelegramBotClient` - a pre-configured client with sensible defaults, built on top of
+It provides `TelegramBotClient` — a pre-configured client with sensible defaults, built on top of
 the [protocol](../protocol) module.
 
 ## Key Features
@@ -11,9 +11,10 @@ the [protocol](../protocol) module.
 - **Automatic Retry**: Built-in retry for transient failures and rate limiting
 - **Test Environment Support**: Easy switch to Telegram's test environment
 - **Flexible Error Handling**: Configurable error response handling modes
-- **Long Polling Optimization**: Pre-installed long polling plugin
+- **Long Polling Optimization**: Ships with the long polling plugin pre-installed
 - **File Download Support**: Built-in file download URL rewriting
-- **Type-Safe Events**: Auto-generated `TelegramBotEvent` sealed interface for handling updates
+- **Type-Safe Events**: Uses the auto-generated `TelegramBotEvent` sealed interface from the [protocol](../protocol)
+  module
 
 ## Quick Start
 
@@ -133,7 +134,7 @@ client.sendPhoto(
 
 ## Event Handling
 
-The client module provides a type-safe event system for handling incoming Telegram updates. Event classes are
+The client module uses the type-safe event model from the protocol module. Event classes are
 auto-generated from the `Update` model.
 
 ### TelegramBotEvent Sealed Interface
@@ -180,7 +181,7 @@ client.getUpdates(
 
 ## Platform-Specific Engines
 
-Choose the appropriate engine for your platform:
+Choose an engine appropriate for your target platform. The examples below are common choices, not strict requirements:
 
 ### JVM
 
@@ -246,7 +247,7 @@ Tests only run on JVM and desktop native targets (Linux, macOS, Windows).
 ## Related Links
 
 - [Protocol Module](../protocol) - Core API definitions
-- [Application Module](../application) - Bot application framework
+- [Application Module](../application) - Bot application framework with lifecycle management
 - [Telegram Bot API Documentation](https://core.telegram.org/bots/api)
 - [Ktor Documentation](https://ktor.io/docs/client.html)
 - [Ktorfit](https://github.com/Foso/Ktorfit)
