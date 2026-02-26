@@ -75,11 +75,11 @@ open class LongPollingTelegramUpdateSource(
      */
     override suspend fun start(consume: suspend (Update) -> Unit) {
         check(isRunning.compareAndSet(expect = false, update = true)) {
-            "LongPollingTelegramUpdateSource can only be started once"
+            "${this::class.simpleName} can only be started once"
         }
         nextOffset = 0L
 
-        logger.debug { "LongPolling started (mode: $processingMode)" }
+        logger.debug { "${this::class.simpleName} started (mode: $processingMode)" }
         val updatesProcessor: suspend CoroutineScope.(List<Update>) -> Unit = when (processingMode) {
             ProcessingMode.SEQUENTIAL -> { updates ->
                 for (update in updates) {

@@ -23,7 +23,7 @@ private val logger = KotlinLogging.logger {}
  * Example usage:
  * ```kotlin
  * val channel = Channel<Update>(Channel.UNLIMITED)
- * val mockSource = MockUpdateSource(channel)
+ * val mockSource = MockTelegramUpdateSource(channel)
  *
  * // Cycle 1: Start and process
  * app.start()
@@ -37,7 +37,7 @@ private val logger = KotlinLogging.logger {}
  *
  * @param source The channel to receive updates from.
  */
-open class MockUpdateSource(
+open class MockTelegramUpdateSource(
     private val source: Channel<Update>,
 ) : TelegramUpdateSource {
     private val isRunning = atomic(false)
@@ -55,10 +55,10 @@ open class MockUpdateSource(
      */
     override suspend fun start(consume: suspend (Update) -> Unit) {
         check(isRunning.compareAndSet(expect = false, update = true)) {
-            "MockUpdateSource can only be started once per cycle. Stop it before starting again"
+            "${this::class.simpleName} can only be started once per cycle. Stop it before starting again"
         }
 
-        logger.debug { "MockUpdateSource started" }
+        logger.debug { "${this::class.simpleName} started" }
         val signal = CompletableDeferred<Unit>()
         completionSignal.value = signal
 
@@ -86,7 +86,7 @@ open class MockUpdateSource(
         } finally {
             currentRunJob.value = null
             isRunning.value = false
-            logger.debug { "MockUpdateSource stopped" }
+            logger.debug { "${this::class.simpleName} stopped" }
             signal.complete(Unit)
         }
     }
