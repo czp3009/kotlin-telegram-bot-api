@@ -1,6 +1,6 @@
 package com.hiczp.telegram.bot.application.context
 
-import com.hiczp.telegram.bot.client.TelegramBotClient
+import com.hiczp.telegram.bot.protocol.TelegramBotApi
 import com.hiczp.telegram.bot.protocol.event.TelegramBotEvent
 import com.hiczp.telegram.bot.protocol.model.User
 import io.ktor.util.*
@@ -21,7 +21,7 @@ import kotlinx.coroutines.CoroutineScope
  * @property attributes Type-safe attribute storage for sharing data between interceptors and handlers.
  */
 interface TelegramBotEventContext<out T : TelegramBotEvent> {
-    val client: TelegramBotClient
+    val client: TelegramBotApi
     val event: T
     val applicationScope: CoroutineScope
     val attributes: Attributes
@@ -41,13 +41,30 @@ interface TelegramBotEventContext<out T : TelegramBotEvent> {
  * Default implementation of [TelegramBotEventContext].
  */
 class DefaultTelegramBotEventContext<out T : TelegramBotEvent>(
-    override val client: TelegramBotClient,
+    override val client: TelegramBotApi,
     override val event: T,
     override val applicationScope: CoroutineScope,
     override val attributes: Attributes = Attributes(concurrent = true),
     private val getMeFunc: suspend () -> User,
 ) : TelegramBotEventContext<T> {
     override suspend fun me() = getMeFunc()
+}
+
+/**
+ * Implementation of [TelegramBotEventContext] with a user-provided bot [User].
+ *
+ * This implementation avoids network calls by using a [User] object provided at
+ * construction time, which is useful when the bot's user information is already
+ * known (e.g., fetched during startup or in testing scenarios).
+ */
+class ProvidedUserTelegramBotEventContext<out T : TelegramBotEvent>(
+    override val client: TelegramBotApi,
+    override val event: T,
+    override val applicationScope: CoroutineScope,
+    override val attributes: Attributes = Attributes(concurrent = true),
+    private val botUser: User,
+) : TelegramBotEventContext<T> {
+    override suspend fun me(): User = botUser
 }
 
 /**

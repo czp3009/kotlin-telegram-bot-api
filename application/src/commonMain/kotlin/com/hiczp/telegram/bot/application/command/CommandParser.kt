@@ -1,6 +1,24 @@
 package com.hiczp.telegram.bot.application.command
 
-object CommandPaser {
+/**
+ * Parser for Telegram bot commands.
+ *
+ * Parses commands in the format `/command[@username] [args]`, supporting:
+ * - Simple commands: `/start`
+ * - Commands with bot username: `/help@mybot`
+ * - Commands with arguments: `/search hello world`
+ * - Quoted arguments: `/echo "hello world"`
+ * - Escaped characters: `/echo \"quoted\"`
+ *
+ * @see ParsedCommand
+ */
+object CommandParser {
+    /**
+     * Parses a text string into a [ParsedCommand].
+     *
+     * @param text The text to parse, typically from a Telegram message.
+     * @return A [ParsedCommand] if the text is a valid command, or `null` if the text is null, blank, or doesn't start with `/`.
+     */
     fun parse(text: String?): ParsedCommand? {
         if (text.isNullOrBlank() || !text.startsWith("/")) return null
         val parts = text.trim().split(Regex("\\s+"), limit = 2)

@@ -5,7 +5,7 @@ import com.hiczp.telegram.bot.application.context.TelegramBotEventContext
 import com.hiczp.telegram.bot.application.dispatcher.TelegramEventDispatcher
 import com.hiczp.telegram.bot.application.interceptor.TelegramEventInterceptor
 import com.hiczp.telegram.bot.application.interceptor.TelegramEventProcessor
-import com.hiczp.telegram.bot.client.TelegramBotClient
+import com.hiczp.telegram.bot.protocol.TelegramBotApi
 import com.hiczp.telegram.bot.protocol.event.TelegramBotEvent
 import io.ktor.util.*
 import kotlinx.coroutines.CoroutineScope
@@ -61,7 +61,7 @@ private class InterceptedTelegramEventProcessor(
  * @param dispatcher The final dispatcher that handles event routing to business logic.
  */
 internal class TelegramEventPipeline(
-    private val client: TelegramBotClient,
+    private val client: TelegramBotApi,
     private val applicationScope: CoroutineScope,
     interceptors: List<TelegramEventInterceptor>,
     dispatcher: TelegramEventDispatcher,

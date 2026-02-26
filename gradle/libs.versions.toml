@@ -12,6 +12,7 @@ ktorfit = "2.7.2"
 logback-classic = "1.5.32"
 kotlinx-atomicfu = "0.31.0"
 kotlinx-datetime = "0.7.1"
+mockative = "3.0.1"
 
 [libraries]
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
@@ -43,6 +44,7 @@ ktorfit-lib = { module = "de.jensklingenberg.ktorfit:ktorfit-lib", version.ref =
 ktorfit-lib-light = { module = "de.jensklingenberg.ktorfit:ktorfit-lib-light", version.ref = "ktorfit" }
 ktorfit-ksp = { module = "de.jensklingenberg.ktorfit:ktorfit-ksp", version.ref = "ktorfit" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback-classic" }
+mockative = { module = "io.mockative:mockative", version.ref = "mockative" }
 
 [plugins]
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
@@ -51,3 +53,4 @@ kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", versio
 androidKotlinMultiplatformLibrary = { id = "com.android.kotlin.multiplatform.library", version.ref = "android-kmp-library-plugin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 ktorfit = { id = "de.jensklingenberg.ktorfit", version.ref = "ktorfit" }
+mockative = { id = "io.mockative", version.ref = "mockative" }

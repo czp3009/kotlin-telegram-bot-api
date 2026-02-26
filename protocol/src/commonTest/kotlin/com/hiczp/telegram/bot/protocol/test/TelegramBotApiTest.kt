@@ -51,6 +51,14 @@ private val txtFilePath = Path("../resources/telegram.txt")
  * Tests will fail with an exception if these environment variables are not set.
  */
 class TelegramBotApiTest {
+    private val botToken by lazy {
+        checkNotNull(getBotToken()) { "Failed to get ${EnvVars.BOT_TOKEN}" }
+    }
+
+    private val testChatId by lazy {
+        checkNotNull(getTestChatId()) { "Failed to get ${EnvVars.TEST_CHAT_ID}" }
+    }
+
     private val telegramBotApi by lazy {
         val httpClient = HttpClient(createKtorEngine()) {
             install(Logging) {
@@ -89,11 +97,9 @@ class TelegramBotApiTest {
             install(TelegramServerErrorPlugin)
         }
         Ktorfit.Builder().httpClient(httpClient)
-            .baseUrl("https://api.telegram.org/bot${TestEnv.botToken}/")
+            .baseUrl("https://api.telegram.org/bot${botToken}/")
             .build().createTelegramBotApi()
     }
-
-    private val testChatId by lazy { TestEnv.testChatId }
 
     @AfterTest
     fun slowDown() {

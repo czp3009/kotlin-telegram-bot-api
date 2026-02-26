@@ -2,7 +2,7 @@ package com.hiczp.telegram.bot.application.updatesource
 
 
 import com.hiczp.telegram.bot.application.exception.TelegramBotShuttingDownException
-import com.hiczp.telegram.bot.client.TelegramBotClient
+import com.hiczp.telegram.bot.protocol.TelegramBotApi
 import com.hiczp.telegram.bot.protocol.exception.TelegramErrorResponseException
 import com.hiczp.telegram.bot.protocol.model.Update
 import com.hiczp.telegram.bot.protocol.query.getUpdates
@@ -41,7 +41,7 @@ private val logger = KotlinLogging.logger {}
  * @throws IllegalArgumentException if [maxPendingUpdates] is specified and not positive.
  */
 open class LongPollingTelegramUpdateSource(
-    private val client: TelegramBotClient,
+    private val client: TelegramBotApi,
     private val allowedUpdates: List<String>? = null,
     private val processingMode: ProcessingMode = ProcessingMode.CONCURRENT,
     maxPendingUpdates: Int? = null,

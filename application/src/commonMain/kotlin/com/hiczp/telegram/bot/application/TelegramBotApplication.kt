@@ -7,6 +7,7 @@ import com.hiczp.telegram.bot.application.pipeline.TelegramEventPipeline
 import com.hiczp.telegram.bot.application.updatesource.LongPollingTelegramUpdateSource
 import com.hiczp.telegram.bot.application.updatesource.TelegramUpdateSource
 import com.hiczp.telegram.bot.client.TelegramBotClient
+import com.hiczp.telegram.bot.protocol.TelegramBotApi
 import com.hiczp.telegram.bot.protocol.event.toTelegramBotEvent
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.atomicfu.atomic
@@ -62,7 +63,7 @@ private val logger = KotlinLogging.logger {}
  * @param eventDispatcher The dispatcher that handles the final event routing to business logic.
  */
 class TelegramBotApplication(
-    client: TelegramBotClient,
+    client: TelegramBotApi,
     private val updateSource: TelegramUpdateSource,
     interceptors: List<TelegramEventInterceptor>,
     eventDispatcher: TelegramEventDispatcher,

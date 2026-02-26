@@ -1,14 +1,15 @@
-package com.hiczp.telegram.bot.application.command
+package com.hiczp.telegram.bot.application.test.command
 
+import com.hiczp.telegram.bot.application.command.CommandParser
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
-class CommandPaserTest {
+class CommandParserTest {
     @Test
     fun `parse simple command without arguments`() {
-        val result = CommandPaser.parse("/start")
+        val result = CommandParser.parse("/start")
 
         assertNotNull(result)
         assertEquals("start", result.command)
@@ -19,7 +20,7 @@ class CommandPaserTest {
 
     @Test
     fun `parse command with bot username and multiple arguments`() {
-        val result = CommandPaser.parse("/search@my_bot   kotlin   tutorial ")
+        val result = CommandParser.parse("/search@my_bot   kotlin   tutorial ")
 
         assertNotNull(result)
         assertEquals("search", result.command)
@@ -30,7 +31,7 @@ class CommandPaserTest {
 
     @Test
     fun `parse command with quoted argument containing space`() {
-        val result = CommandPaser.parse("/remind \"buy milk\" 18:00")
+        val result = CommandParser.parse("/remind \"buy milk\" 18:00")
 
         assertNotNull(result)
         assertEquals("remind", result.command)
@@ -41,7 +42,7 @@ class CommandPaserTest {
 
     @Test
     fun `parse command with escaped quotes inside quoted argument`() {
-        val result = CommandPaser.parse(
+        val result = CommandParser.parse(
             """
             /note "He said \"Hello\""
             """.trimIndent()
@@ -56,19 +57,19 @@ class CommandPaserTest {
 
     @Test
     fun `return null for null input`() {
-        val result = CommandPaser.parse(null)
+        val result = CommandParser.parse(null)
         assertNull(result)
     }
 
     @Test
     fun `return null for blank input`() {
-        val result = CommandPaser.parse("   ")
+        val result = CommandParser.parse("   ")
         assertNull(result)
     }
 
     @Test
     fun `return null for text not starting with slash`() {
-        val result = CommandPaser.parse("start")
+        val result = CommandParser.parse("start")
         assertNull(result)
     }
 }
