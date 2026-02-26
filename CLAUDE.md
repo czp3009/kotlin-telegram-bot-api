@@ -221,10 +221,15 @@ val dispatcher = HandlerTelegramEventDispatcher(handling {
         ctx.client.sendMessage(ctx.event.message.chat.id, "Welcome!")
     }
 
-    // Event type filtering
+    // Event type matching
     on<MessageEvent> {
         text("hello") { ctx -> /* exact text match */ }
         regex(Regex("(?i)^hello")) { ctx -> /* regex match */ }
+
+        // Conditional handler with whenMatch
+        whenMatch({ (it.event.message.text?.length ?: 0) > 10 }) { ctx ->
+            ctx.client.sendMessage(ctx.event.message.chat.id, "Long message!")
+        }
     }
 
     on<CallbackQueryEvent> {
@@ -233,7 +238,51 @@ val dispatcher = HandlerTelegramEventDispatcher(handling {
 
     // Include routes from other modules
     include(adminRoutes)
+
+    // Dead letter handler - catches all unhandled events
+    handle { ctx ->
+        println("Unhandled event: ${ctx.event.updateId}")
+    }
 })
+```
+
+#### Structured Concurrency in Handlers
+
+Handlers receive a `CoroutineScope` receiver, enabling structured concurrency. Any coroutines launched
+inside a handler will be awaited before the dispatch completes:
+
+```kotlin
+command("process") { ctx ->
+    // Launch concurrent operations
+    launch {
+        val result = slowOperation()
+        ctx.client.sendMessage(ctx.event.message.chat.id, "Result: $result")
+    }
+    launch {
+        anotherAsyncTask()
+    }
+    // dispatch waits for all launches to complete
+}
+```
+
+#### Dead Letter Handler
+
+A root-level `handle` acts as a fallback for all unhandled events, replacing the need for a separate
+dead letter mechanism:
+
+```kotlin
+handling {
+    command("start") { /* ... */ }
+    command("help") { /* ... */ }
+
+    // Catches all unhandled events (unknown commands, other event types, etc.)
+    handle { ctx ->
+        ctx.client.sendMessage(
+            ctx.event.extractChatId()!!,
+            "Unknown command. Type /help for available commands."
+        )
+    }
+}
 ```
 
 ### Conversations (Application Module)

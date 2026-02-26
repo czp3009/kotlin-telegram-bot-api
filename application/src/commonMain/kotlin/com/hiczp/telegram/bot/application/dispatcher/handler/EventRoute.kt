@@ -3,6 +3,7 @@ package com.hiczp.telegram.bot.application.dispatcher.handler
 import com.hiczp.telegram.bot.application.context.TelegramBotEventContext
 import com.hiczp.telegram.bot.application.context.castOrNull
 import com.hiczp.telegram.bot.protocol.event.TelegramBotEvent
+import kotlinx.coroutines.CoroutineScope
 
 /**
  * A typed routing node that defines event selection and handling logic.
@@ -71,9 +72,24 @@ class EventRoute<T : TelegramBotEvent>(
      *
      * Once a handler is invoked, the event is considered consumed and routing stops.
      *
-     * @param handler A suspending function that receives the event context.
+     * The handler receives a [CoroutineScope] as its receiver, enabling structured
+     * concurrency. Any coroutines launched inside the handler (using `launch` or `async`)
+     * will be awaited before the dispatch completes.
+     *
+     * Example:
+     * ```kotlin
+     * handling {
+     *     on<MessageEvent> {
+     *         handle { ctx ->
+     *             ctx.client.sendMessage(ctx.event.message.chat.id, "Hello!")
+     *         }
+     *     }
+     * }
+     * ```
+     *
+     * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
      */
-    fun handle(handler: suspend (TelegramBotEventContext<T>) -> Unit) {
+    fun handle(handler: suspend CoroutineScope.(TelegramBotEventContext<T>) -> Unit) {
         node.handler = { context ->
             @Suppress("UNCHECKED_CAST")
             handler(context as TelegramBotEventContext<T>)
@@ -83,7 +99,7 @@ class EventRoute<T : TelegramBotEvent>(
     /**
      * Creates a child route for a specific event subtype.
      *
-     * This is a convenience method that uses [castOrNull] to safely filter
+     * This is a convenience method that uses [castOrNull] to safely match
      * events by type. Events that are not of type [R] are not routed to
      * the child branch.
      *
@@ -92,8 +108,8 @@ class EventRoute<T : TelegramBotEvent>(
      * handling {
      *     // First cast to the target type
      *     on<MessageEvent> {
-     *         // Then filter by group
-     *         filter({ it.event.message.chat.id == -100123L }) {
+     *         // Then match by group
+     *         match({ it.event.message.chat.id == -100123L }) {
      *             command("admin") { ... }
      *             text("ping") { ... }
      *         }
@@ -110,9 +126,9 @@ class EventRoute<T : TelegramBotEvent>(
     ): EventRoute<R> = select({ it.castOrNull<R>() }, builder)
 
     /**
-     * Creates a child route for a specific event subtype with a predicate filter.
+     * Creates a child route for a specific event subtype with a predicate.
      *
-     * This is a convenience method that combines type casting and filtering in one step.
+     * This is a convenience method that combines type casting and matching in one step.
      * Events that are not of type [R] or do not satisfy the predicate are not routed
      * to the child branch.
      *
@@ -121,7 +137,7 @@ class EventRoute<T : TelegramBotEvent>(
      * Example usage:
      * ```kotlin
      * handling {
-     *     // Type casting + conditional filtering in one step!
+     *     // Type casting + conditional matching in one step!
      *     // Note: it.event is automatically inferred as MessageEvent
      *     on<MessageEvent>({ it.event.message.chat.id == -100123L }) {
      *         command("admin") { ... }
@@ -131,7 +147,7 @@ class EventRoute<T : TelegramBotEvent>(
      * ```
      *
      * @param R The specific event subtype to handle.
-     * @param predicate A suspending function that filters events based on custom conditions.
+     * @param predicate A suspending function that matches events based on custom conditions.
      * @param build A builder lambda for configuring the child route.
      * @return The created child [EventRoute].
      */
@@ -139,6 +155,6 @@ class EventRoute<T : TelegramBotEvent>(
         noinline predicate: suspend (TelegramBotEventContext<R>) -> Boolean,
         noinline build: EventRoute<R>.() -> Unit
     ): EventRoute<R> = on<R> {
-        filter(predicate, build)
+        match(predicate, build)
     }
 }

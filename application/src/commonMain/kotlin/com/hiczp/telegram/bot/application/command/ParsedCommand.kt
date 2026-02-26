@@ -54,12 +54,16 @@ fun ParsedCommand.matchesCommand(command: String, username: String? = null): Boo
     return commandMatched && usernameMatched
 }
 
+fun MessageEvent.parseCommand(): ParsedCommand? = CommandParser.parse(this.message.text)
+
 fun MessageEvent.matchesCommand(command: String, username: String? = null): Boolean {
-    val parsedCommand = CommandParser.parse(this.message.text) ?: return false
+    val parsedCommand = this.parseCommand() ?: return false
     return parsedCommand.matchesCommand(command, username)
 }
 
+fun BusinessMessageEvent.parseCommand(): ParsedCommand? = CommandParser.parse(this.businessMessage.text)
+
 fun BusinessMessageEvent.matchesCommand(command: String, username: String? = null): Boolean {
-    val parsedCommand = CommandParser.parse(this.businessMessage.text) ?: return false
+    val parsedCommand = this.parseCommand() ?: return false
     return parsedCommand.matchesCommand(command, username)
 }

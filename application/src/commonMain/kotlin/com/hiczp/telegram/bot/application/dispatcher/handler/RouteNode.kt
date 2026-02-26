@@ -1,6 +1,8 @@
 package com.hiczp.telegram.bot.application.dispatcher.handler
 
 import com.hiczp.telegram.bot.application.context.TelegramBotEventContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.coroutineScope
 
 /**
  * DSL marker annotation for the Telegram bot event routing DSL.
@@ -19,7 +21,7 @@ annotation class TelegramBotDsl
  * runtime efficiency.
  *
  * The matching algorithm:
- * First, the selector is applied to filter and transform the incoming context.
+ * First, the selector is applied to match and transform the incoming context.
  * If the selector returns null, this node does not match and returns false.
  * If the selector succeeds, child nodes are tried in order (depth-first).
  * If no child consumes the event, this node's handler is invoked if present.
@@ -37,8 +39,10 @@ class RouteNode(
 
     /**
      * The handler to invoke if no child node consumes the event.
+     * The handler receives a [CoroutineScope] as its receiver, allowing
+     * structured concurrency with `launch` and `async` inside the handler.
      */
-    var handler: (suspend (TelegramBotEventContext<*>) -> Unit)? = null
+    var handler: (suspend CoroutineScope.(TelegramBotEventContext<*>) -> Unit)? = null
 
     /**
      * Executes this node's matching logic against the given context.
@@ -47,7 +51,7 @@ class RouteNode(
      * @return true if the event was consumed by this node or a child, false otherwise.
      */
     suspend fun execute(context: TelegramBotEventContext<*>): Boolean {
-        // Selector filtering and type conversion
+        // Selector matching and type conversion
         val matchedContext = selector(context) ?: return false
 
         // Depth-first traversal of child nodes
@@ -58,7 +62,9 @@ class RouteNode(
         // Leaf node handling
         val currentHandler = handler
         if (currentHandler != null) {
-            currentHandler.invoke(matchedContext)
+            coroutineScope {
+                currentHandler.invoke(this, matchedContext)
+            }
             return true
         }
 

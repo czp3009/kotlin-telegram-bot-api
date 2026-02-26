@@ -13,25 +13,46 @@ private val logger = KotlinLogging.logger {}
  * This dispatcher works with the routing DSL provided by [handling] to create
  * a type-safe, hierarchical event handling system. Events are dispatched to
  * the root node, which uses depth-first short-circuit evaluation to find a
- * matching handler. If no handler consumes the event, it is passed to
- * [deadLetter] for logging or custom handling.
+ * matching handler.
+ *
+ * There are two ways to handle unmatched events:
+ *
+ * 1. **Dead letter handler in routing DSL** (recommended): Add a root-level `handle`
+ *    at the end of your routing configuration to catch all unhandled events:
+ *    ```kotlin
+ *    handling {
+ *        command("start") { /* ... */ }
+ *        // ... other routes ...
+ *        handle { ctx -> /* catches all unhandled events */ }
+ *    }
+ *    ```
+ *
+ * 2. **Override [deadLetter] method**: Subclass this dispatcher and override
+ *    the [deadLetter] method for custom handling when no route matches:
+ *    ```kotlin
+ *    class MyDispatcher(rootNode: RouteNode) : HandlerTelegramEventDispatcher(rootNode) {
+ *        override suspend fun deadLetter(context: TelegramBotEventContext<TelegramBotEvent>) {
+ *            // Custom handling, e.g., send to dead letter queue
+ *            myDeadLetterQueue.send(context.event)
+ *        }
+ *    }
+ *    ```
  *
  * Example usage:
  * ```kotlin
- * // Create dispatcher using the handling DSL
+ * // Create dispatcher using the handling DSL with dead letter handler
  * val dispatcher = HandlerTelegramEventDispatcher(handling {
  *     on<MessageEvent> {
  *         command("start") { ctx ->
  *             ctx.client.sendMessage(ctx.event.message.chat.id, "Welcome!")
  *         }
  *     }
+ *     
+ *     // Dead letter handler (recommended)
+ *     handle { ctx ->
+ *         ctx.client.sendMessage(ctx.event.extractChatId()!!, "Unknown command")
+ *     }
  * })
- *
- * // Or create the dispatcher from a pre-built root node
- * val rootNode = handling {
- *     command("help") { ctx -> /* ... */ }
- * }
- * val dispatcher = HandlerTelegramEventDispatcher(rootNode)
  * ```
  *
  * @param rootNode The root [RouteNode] of the event routing tree, typically
@@ -58,9 +79,18 @@ open class HandlerTelegramEventDispatcher(
     /**
      * Handles the event not consumed by any route in the tree.
      *
+     * This method is called when:
+     * - No handler in the routing tree matches the event
+     * - No root-level `handle` is configured as a fallback
+     *
      * By default, this method logs the unhandled event at WARN level.
      * Subclasses can override this method to implement custom dead letter handling,
-     * such as sending a default response or metrics collection.
+     * such as sending to a dead letter queue or metrics collection.
+     *
+     * **Note**: The recommended approach for most use cases is to use a root-level
+     * `handle` in the routing DSL instead of overriding this method, as it provides
+     * more flexibility and access to the full handler context (including [CoroutineScope]
+     * for structured concurrency).
      *
      * @param context The event context containing the unhandled event.
      */
