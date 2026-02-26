@@ -25,7 +25,6 @@ suspend fun TelegramBotEventContext<CallbackQueryEvent>.editMessageText(
     replyMarkup = inlineKeyboardMarkup,
 )
 
-
 suspend fun TelegramBotEventContext<CallbackQueryEvent>.editMessageCaption(
     caption: String,
     inlineKeyboardMarkup: InlineKeyboardMarkup? = null,
