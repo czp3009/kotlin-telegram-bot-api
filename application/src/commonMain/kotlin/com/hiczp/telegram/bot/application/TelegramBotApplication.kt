@@ -7,7 +7,6 @@ import com.hiczp.telegram.bot.application.pipeline.TelegramEventPipeline
 import com.hiczp.telegram.bot.application.updatesource.LongPollingTelegramUpdateSource
 import com.hiczp.telegram.bot.application.updatesource.TelegramUpdateSource
 import com.hiczp.telegram.bot.client.TelegramBotClient
-import com.hiczp.telegram.bot.protocol.TelegramBotApi
 import com.hiczp.telegram.bot.protocol.event.toTelegramBotEvent
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.atomicfu.atomic
@@ -57,18 +56,27 @@ private val logger = KotlinLogging.logger {}
  * app.stop(5.seconds)
  * ```
  *
+ * Resource Management:
+ * - You can create multiple [TelegramBotApplication] instances by reusing the same [TelegramBotClient].
+ * - Because of this, [TelegramBotApplication] does NOT close the [TelegramBotClient.httpClient] when stopped.
+ * - For some [io.ktor.client.engine.HttpClientEngine] implementations, you must explicitly close
+ *   [TelegramBotClient.httpClient] to release resources (e.g., threads, connections).
+ *
  * @param client The Telegram bot client for API calls.
  * @param updateSource The source of Telegram updates.
  * @param interceptors List of interceptors to apply to each event, in order from outermost to innermost.
  * @param eventDispatcher The dispatcher that handles the final event routing to business logic.
+ * @param coroutineDispatcher The [CoroutineDispatcher] for the application scope.
+ *   Defaults to `null`, which uses [Dispatchers.Default].
  */
 class TelegramBotApplication(
-    client: TelegramBotApi,
+    val client: TelegramBotClient,
     private val updateSource: TelegramUpdateSource,
     interceptors: List<TelegramEventInterceptor>,
     eventDispatcher: TelegramEventDispatcher,
+    coroutineDispatcher: CoroutineDispatcher? = null,
 ) {
-    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val applicationScope = CoroutineScope(SupervisorJob() + (coroutineDispatcher ?: Dispatchers.Default))
     private val mainJobDeferred = CompletableDeferred<Job>()
     private val shutdownJobDeferred = CompletableDeferred<Job>()
     private val pipeline = TelegramEventPipeline(
@@ -194,13 +202,15 @@ class TelegramBotApplication(
             botToken: String,
             eventDispatcher: TelegramEventDispatcher,
             interceptors: List<TelegramEventInterceptor> = emptyList(),
+            coroutineDispatcher: CoroutineDispatcher? = null,
         ): TelegramBotApplication {
-            val client = TelegramBotClient(botToken)
+            val client = TelegramBotClient(botToken, coroutineDispatcher = coroutineDispatcher)
             return TelegramBotApplication(
                 client = client,
                 updateSource = LongPollingTelegramUpdateSource(client),
                 interceptors = interceptors,
                 eventDispatcher = eventDispatcher,
+                coroutineDispatcher = coroutineDispatcher,
             )
         }
     }

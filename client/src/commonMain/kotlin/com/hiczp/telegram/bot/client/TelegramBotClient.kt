@@ -18,6 +18,7 @@ import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.util.*
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.serialization.json.Json
 import kotlin.random.Random
 
@@ -42,51 +43,55 @@ import kotlin.random.Random
  * println("Bot username: ${result.username}")
  * ```
  *
- * @param botToken The Telegram bot token obtained from BotFather.
- * @param httpClientEngine The Ktor [HttpClientEngine] to use for network requests.
- *   Choose an engine appropriate for your platform (e.g., CIO for JVM, Darwin for iOS).
- * @param baseUrl The base URL for the Telegram Bot API. Defaults to "https://api.telegram.org".
- *   Can be customized for local bot server.
- * @param useTestEnvironment Whether to use Telegram's test environment.
- *   See https://core.telegram.org/bots/features#creating-a-bot-in-the-test-environment
- * @param throwOnErrorResponse When `true` (default), throws [TelegramErrorResponseException]
- *   when the API returns an error response. When `false`, error responses are returned
- *   as normal [com.hiczp.telegram.bot.protocol.type.TelegramResponse] objects with `ok = false`.
- * @param additionalConfiguration Additional configuration block for the underlying [HttpClient].
- *   Use this to add custom plugins, interceptors, or modify default settings.
+ * Note: For some [HttpClientEngine] implementations, you may need to explicitly close the
+ * [httpClient] to release resources (e.g., threads, connections) when the client is no longer needed.
  *
  * @see TelegramBotApi
  * @see TelegramErrorResponseException
  */
-class TelegramBotClient(
-    botToken: String,
-    httpClientEngine: HttpClientEngine? = null,
-    baseUrl: String = "https://api.telegram.org",
-    useTestEnvironment: Boolean = false,
-    throwOnErrorResponse: Boolean = true,
-    additionalConfiguration: HttpClientConfig<*>.() -> Unit = {},
-) : TelegramBotApi by buildTelegramBotApi(
-    botToken,
-    httpClientEngine,
-    baseUrl,
-    useTestEnvironment,
-    throwOnErrorResponse,
-    additionalConfiguration
-) {
+class TelegramBotClient private constructor(
+    /** The underlying [HttpClient] used for network requests. */
+    val httpClient: HttpClient,
+    api: TelegramBotApi
+) : TelegramBotApi by api {
     companion object {
-        private fun buildTelegramBotApi(
+        /**
+         * Creates a new [TelegramBotClient] instance.
+         *
+         * @param botToken The Telegram bot token obtained from BotFather.
+         * @param httpClientEngine The Ktor [HttpClientEngine] to use for network requests.
+         *   Choose an engine appropriate for your platform (e.g., CIO for JVM, Darwin for iOS).
+         * @param baseUrl The base URL for the Telegram Bot API. Defaults to "https://api.telegram.org".
+         *   Can be customized for local bot server.
+         * @param useTestEnvironment Whether to use Telegram's test environment.
+         *   See https://core.telegram.org/bots/features#creating-a-bot-in-the-test-environment
+         * @param throwOnErrorResponse When `true` (default), throws [TelegramErrorResponseException]
+         *   when the API returns an error response. When `false`, error responses are returned
+         *   as normal [com.hiczp.telegram.bot.protocol.type.TelegramResponse] objects with `ok = false`.
+         * @param coroutineDispatcher The [CoroutineDispatcher] for coroutine execution.
+         *   Defaults to `null`.
+         * @param additionalConfiguration Additional configuration block for the underlying [HttpClient].
+         *   Use this to add custom plugins, interceptors, or modify default settings.
+         */
+        operator fun invoke(
             botToken: String,
-            httpClientEngine: HttpClientEngine?,
-            baseUrl: String,
-            useTestEnvironment: Boolean,
-            throwOnErrorResponse: Boolean,
-            additionalConfiguration: HttpClientConfig<*>.() -> Unit,
-        ): TelegramBotApi {
+            httpClientEngine: HttpClientEngine? = null,
+            baseUrl: String = "https://api.telegram.org",
+            useTestEnvironment: Boolean = false,
+            throwOnErrorResponse: Boolean = true,
+            coroutineDispatcher: CoroutineDispatcher? = null,
+            additionalConfiguration: HttpClientConfig<*>.() -> Unit = {},
+        ): TelegramBotClient {
             val baseUrl = URLBuilder(baseUrl).apply {
                 appendPathSegments("bot${botToken}/")
                 if (useTestEnvironment) appendPathSegments("test/")
             }.buildString()
             val config: HttpClientConfig<*>.() -> Unit = {
+                engine {
+                    if (coroutineDispatcher != null) {
+                        this.dispatcher = coroutineDispatcher
+                    }
+                }
                 install(ContentNegotiation) {
                     json(Json(DefaultJson) {
                         ignoreUnknownKeys = true
@@ -137,9 +142,10 @@ class TelegramBotClient(
             } else {
                 HttpClient(httpClientEngine, config)
             }
-            return Ktorfit.Builder().httpClient(httpClient)
+            val api = Ktorfit.Builder().httpClient(httpClient)
                 .baseUrl(baseUrl)
                 .build().createTelegramBotApi()
+            return TelegramBotClient(httpClient, api)
         }
     }
 }
