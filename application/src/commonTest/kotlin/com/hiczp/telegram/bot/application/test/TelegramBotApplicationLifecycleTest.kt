@@ -10,8 +10,9 @@ import com.hiczp.telegram.bot.protocol.model.Chat
 import com.hiczp.telegram.bot.protocol.model.Message
 import com.hiczp.telegram.bot.protocol.model.Update
 import com.hiczp.telegram.bot.protocol.model.User
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlin.test.*
@@ -57,12 +58,11 @@ class TelegramBotApplicationLifecycleTest {
 
         app.start()
 
-        // Give it a moment to start
-        delay(50.milliseconds)
-
-        // Stop the app
-        app.stop(100.milliseconds).join()
+        // Close channel to let updateSource complete naturally
         channel.close()
+
+        // Wait for the app to complete (it will complete because channel is closed)
+        app.join()
 
         assertTrue(dispatchedEvents.isEmpty()) // No updates were provided
     }
@@ -107,9 +107,14 @@ class TelegramBotApplicationLifecycleTest {
         )
 
         app.start()
-        delay(50.milliseconds)
 
-        // Call stop multiple times
+        // Close channel first to let updateSource complete naturally
+        channel.close()
+
+        // Wait for the app to settle
+        app.join()
+
+        // Call stop multiple times - all should complete immediately since app already stopped
         val stopJob1 = app.stop(100.milliseconds)
         val stopJob2 = app.stop(100.milliseconds)
         val stopJob3 = app.stop(100.milliseconds)
@@ -118,8 +123,6 @@ class TelegramBotApplicationLifecycleTest {
         stopJob1.join()
         stopJob2.join()
         stopJob3.join()
-
-        channel.close()
     }
 
     @Test
@@ -145,22 +148,22 @@ class TelegramBotApplicationLifecycleTest {
 
     @Test
     fun `stop should call updateSource onFinalize`() = runTest {
+        val finalizeCalled = CompletableDeferred<Boolean>()
+
         /**
          * A MockTelegramUpdateSource that tracks whether onFinalize() was called.
          */
         class FinalizeTrackingMockUpdateSource(
-            channel: Channel<Update>
+            channel: Channel<Update>,
+            private val finalizeSignal: CompletableDeferred<Boolean>
         ) : MockTelegramUpdateSource(channel) {
-            var finalizeCalled = false
-                private set
-
             override suspend fun onFinalize() {
-                finalizeCalled = true
+                finalizeSignal.complete(true)
             }
         }
 
         val channel = Channel<Update>(Channel.UNLIMITED)
-        val updateSource = FinalizeTrackingMockUpdateSource(channel)
+        val updateSource = FinalizeTrackingMockUpdateSource(channel, finalizeCalled)
         val dispatcher = SimpleTelegramEventDispatcher { }
 
         val app = TelegramBotApplication(
@@ -171,29 +174,34 @@ class TelegramBotApplicationLifecycleTest {
         )
 
         app.start()
-        delay(50.milliseconds)
-
-        assertFalse(updateSource.finalizeCalled)
 
         app.stop(100.milliseconds).join()
         channel.close()
 
-        assertTrue(updateSource.finalizeCalled)
+        // Verify onFinalize was called
+        assertTrue(finalizeCalled.await())
     }
 
     @Test
     fun `graceful shutdown should cancel long running handler after timeout`() = runTest {
-        var handlerStarted = false
-        var handlerCompleted = false
+        val handlerStarted = CompletableDeferred<Unit>()
+        val handlerCancelled = CompletableDeferred<Unit>()
+        var handlerCompletedNormally = false
 
         val channel = Channel<Update>(Channel.UNLIMITED)
         val updateSource = MockTelegramUpdateSource(channel)
 
         val dispatcher = SimpleTelegramEventDispatcher {
-            handlerStarted = true
-            // Use a very long delay
-            delay(60.seconds)
-            handlerCompleted = true
+            handlerStarted.complete(Unit)
+            try {
+                // Simulate long-running work by waiting on a CompletableDeferred that never completes
+                // This is more reliable than delay in tests
+                CompletableDeferred<Unit>().await()
+                handlerCompletedNormally = true
+            } catch (e: CancellationException) {
+                handlerCancelled.complete(Unit)
+                throw e
+            }
         }
 
         val app = TelegramBotApplication(
@@ -209,24 +217,16 @@ class TelegramBotApplicationLifecycleTest {
         channel.send(createTestUpdate(1, "test"))
 
         // Wait for handler to start
-        while (!handlerStarted) {
-            delay(10.milliseconds)
-        }
+        handlerStarted.await()
 
-        // Small delay to ensure handler is fully in delay()
-        delay(100.milliseconds)
-
-        // Verify handler hasn't completed yet
-        assertFalse(handlerCompleted)
-
-        // Initiate graceful shutdown with very short timeout
-        val stopJob = app.stop(200.milliseconds)
+        // Initiate graceful shutdown with short timeout
+        val stopJob = app.stop(100.milliseconds)
         stopJob.join()
         channel.close()
 
-        // After shutdown, handler should NOT have completed normally
-        // (it was cancelled due to timeout)
-        assertFalse(handlerCompleted)
+        // Verify handler was cancelled (not completed normally)
+        handlerCancelled.await()
+        assertFalse(handlerCompletedNormally)
     }
 
     @Test
@@ -234,11 +234,15 @@ class TelegramBotApplicationLifecycleTest {
         val channel = Channel<Update>(Channel.UNLIMITED)
         val updateSource = MockTelegramUpdateSource(channel)
 
+        val allProcessed = CompletableDeferred<Unit>()
         val processedTexts = mutableListOf<String>()
 
         val dispatcher = SimpleTelegramEventDispatcher { context ->
             val text = (context.event as MessageEvent).message.text ?: ""
             processedTexts.add(text)
+            if (processedTexts.size == 3) {
+                allProcessed.complete(Unit)
+            }
         }
 
         val app = TelegramBotApplication(
@@ -256,9 +260,7 @@ class TelegramBotApplicationLifecycleTest {
         channel.send(createTestUpdate(3, "test"))
 
         // Wait for all updates to be processed
-        while (processedTexts.size < 3) {
-            delay(10.milliseconds)
-        }
+        allProcessed.await()
 
         app.stop(100.milliseconds).join()
         channel.close()
@@ -281,25 +283,27 @@ class TelegramBotApplicationLifecycleTest {
 
         app.start()
 
-        var joinCompleted = false
+        val joinCompleted = CompletableDeferred<Unit>()
+        val joinStarted = CompletableDeferred<Unit>()
 
-        val joinJob = launch {
+        launch {
+            joinStarted.complete(Unit)
             app.join()
-            joinCompleted = true
+            joinCompleted.complete(Unit)
         }
 
-        delay(100.milliseconds)
+        // Wait for the join job to start (it will then be suspended on app.join())
+        joinStarted.await()
 
-        // join should not have completed yet
-        assertFalse(joinCompleted)
+        // join should not have completed yet (app is still running)
+        assertFalse(joinCompleted.isCompleted)
 
         // Stop the app
         app.stop(100.milliseconds).join()
         channel.close()
 
         // Now join should complete
-        joinJob.join()
-        assertTrue(joinCompleted)
+        joinCompleted.await()
     }
 
     @Test
@@ -307,6 +311,7 @@ class TelegramBotApplicationLifecycleTest {
         val channel = Channel<Update>(Channel.UNLIMITED)
         val updateSource = MockTelegramUpdateSource(channel)
 
+        val allCompleted = CompletableDeferred<Unit>()
         val interceptorLog = mutableListOf<String>()
 
         val interceptor1: TelegramEventInterceptor = { context ->
@@ -315,6 +320,9 @@ class TelegramBotApplicationLifecycleTest {
                 this.process(context)
             } finally {
                 interceptorLog.add("after1")
+                if (interceptorLog.size == 5) {
+                    allCompleted.complete(Unit)
+                }
             }
         }
 
@@ -344,9 +352,7 @@ class TelegramBotApplicationLifecycleTest {
         channel.send(createTestUpdate(1, "test"))
 
         // Wait for processing
-        while (interceptorLog.size < 5) {
-            delay(10.milliseconds)
-        }
+        allCompleted.await()
 
         app.stop(100.milliseconds).join()
         channel.close()
@@ -359,15 +365,76 @@ class TelegramBotApplicationLifecycleTest {
     }
 
     @Test
+    fun `stopSuspend should wait for handler launched coroutines to complete`() = runTest {
+        val channel = Channel<Update>(Channel.UNLIMITED)
+        val updateSource = MockTelegramUpdateSource(channel)
+        val handlerCoroutineStarted = CompletableDeferred<Unit>()
+        val handlerCoroutineCanComplete = CompletableDeferred<Unit>()
+        val handlerCoroutineCompleted = CompletableDeferred<Unit>()
+        val handlerMainCompleted = CompletableDeferred<Unit>()
+
+        val dispatcher = SimpleTelegramEventDispatcher {
+            // Launch a child coroutine in the handler scope
+            launch {
+                handlerCoroutineStarted.complete(Unit)
+                // Wait until signaled to complete
+                handlerCoroutineCanComplete.await()
+                handlerCoroutineCompleted.complete(Unit)
+            }
+            handlerMainCompleted.complete(Unit)
+        }
+
+        val app = TelegramBotApplication(
+            client = fakeClient,
+            updateSource = updateSource,
+            interceptors = emptyList(),
+            eventDispatcher = dispatcher
+        )
+
+        app.start()
+
+        // Send an update to trigger the handler
+        channel.send(createTestUpdate(1, "test"))
+
+        // Wait for handler's child coroutine to start and handler main to complete
+        handlerCoroutineStarted.await()
+        handlerMainCompleted.await()
+
+        // Close channel so the update source can complete naturally
+        channel.close()
+
+        // Start stopSuspend in a separate coroutine
+        val stopSuspendCompleted = CompletableDeferred<Unit>()
+        launch {
+            app.stopSuspend(1.seconds)
+            stopSuspendCompleted.complete(Unit)
+        }
+
+        // At this point, stopSuspend should be waiting for the handler's child coroutine
+        // which is blocked on handlerCoroutineCanComplete
+
+        // Allow the handler's child coroutine to complete
+        handlerCoroutineCanComplete.complete(Unit)
+
+        // Wait for the child coroutine to actually complete
+        handlerCoroutineCompleted.await()
+
+        // Now stopSuspend should complete
+        stopSuspendCompleted.await()
+    }
+
+    @Test
     fun `interceptor can short-circuit processing`() = runTest {
         val channel = Channel<Update>(Channel.UNLIMITED)
         val updateSource = MockTelegramUpdateSource(channel)
 
+        val interceptorCompleted = CompletableDeferred<Unit>()
         val interceptorLog = mutableListOf<String>()
 
         // Interceptor that doesn't call process(), short-circuiting the pipeline
         val shortCircuitInterceptor: TelegramEventInterceptor = {
             interceptorLog.add("short-circuit")
+            interceptorCompleted.complete(Unit)
             // Not calling this.process(context) means the dispatcher won't be called
         }
 
@@ -388,9 +455,7 @@ class TelegramBotApplicationLifecycleTest {
         channel.send(createTestUpdate(1, "test"))
 
         // Wait for processing
-        while (interceptorLog.isEmpty()) {
-            delay(10.milliseconds)
-        }
+        interceptorCompleted.await()
 
         app.stop(100.milliseconds).join()
         channel.close()

@@ -9,14 +9,13 @@ import com.hiczp.telegram.bot.protocol.event.InlineQueryEvent
 import com.hiczp.telegram.bot.protocol.event.MessageEvent
 import com.hiczp.telegram.bot.protocol.event.TelegramBotEvent
 import com.hiczp.telegram.bot.protocol.model.*
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import kotlin.test.*
 import kotlin.time.Clock
-import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Unit tests for the [handling] DSL routing functionality.
@@ -881,47 +880,41 @@ class HandlingTest {
 
     @Test
     fun `dispatch should wait for handler launch to complete`() = runTest {
-        val executionOrder = mutableListOf<String>()
+        val handlerMainCompleted = CompletableDeferred<Unit>()
+        val launchCompleted = CompletableDeferred<Unit>()
 
         val routeNode = handling {
             command("start") { _, _ ->
-                executionOrder.add("handler_start")
                 launch {
-                    executionOrder.add("launch_start")
-                    delay(50.milliseconds)
-                    executionOrder.add("launch_end")
+                    // Wait for main handler to complete first (controlled order)
+                    handlerMainCompleted.await()
+                    launchCompleted.complete(Unit)
                 }
-                executionOrder.add("handler_end")
+                handlerMainCompleted.complete(Unit)
             }
         }
 
         val context = createContext(createMessageEvent(text = "/start"))
-        routeNode.execute(context)
+        val result = routeNode.execute(context)
 
-        // Verify that launch completed before dispatch returned
-        assertEquals(
-            listOf("handler_start", "handler_end", "launch_start", "launch_end"),
-            executionOrder,
-            "dispatch should wait for all launched coroutines to complete"
-        )
+        assertTrue(result)
+        // If dispatch waits for launch, this should be completed
+        assertTrue(launchCompleted.isCompleted, "dispatch should wait for all launched coroutines to complete")
     }
 
     @Test
     fun `dispatch should wait for multiple launches to complete`() = runTest {
-        val results = mutableListOf<String>()
+        val results = mutableSetOf<String>()
 
         val routeNode = handling {
             command("start") { _, _ ->
                 launch {
-                    delay(30.milliseconds)
                     results.add("first")
                 }
                 launch {
-                    delay(10.milliseconds)
                     results.add("second")
                 }
                 launch {
-                    delay(20.milliseconds)
                     results.add("third")
                 }
             }
@@ -930,11 +923,11 @@ class HandlingTest {
         val context = createContext(createMessageEvent(text = "/start"))
         routeNode.execute(context)
 
-        // All launches should complete, though in different order due to delays
+        // All launches should complete - use Set to avoid ordering issues
         assertEquals(3, results.size, "all launches should complete")
-        assertTrue("second" in results, "second (shortest delay) should complete")
+        assertTrue("first" in results, "first should complete")
+        assertTrue("second" in results, "second should complete")
         assertTrue("third" in results, "third should complete")
-        assertTrue("first" in results, "first (longest delay) should complete")
     }
 
     @Test

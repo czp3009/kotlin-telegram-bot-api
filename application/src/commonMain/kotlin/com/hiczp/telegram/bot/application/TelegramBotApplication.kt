@@ -145,6 +145,10 @@ class TelegramBotApplication(
      * 4. Force cancel if timeout
      * 5. Call [TelegramUpdateSource.onFinalize] for final cleanup
      *
+     * The shutdown process is **irreversible** - once started, it will complete even if the returned
+     * [Job] is cancelled. Cancelling the returned [Job] only stops waiting for the shutdown to complete,
+     * not the shutdown itself.
+     *
      * @param gracePeriod Maximum time to wait for the graceful shutdown. Defaults to 10 seconds.
      */
     fun stop(gracePeriod: Duration = 10.seconds): Job {
@@ -152,35 +156,32 @@ class TelegramBotApplication(
             logger.debug { "Received shutdown signal, starting graceful shutdown..." }
 
             val shutdownJob = applicationScope.launch {
-                // Instantly cut off the source
-                runCatching { updateSource.stop() }.onFailure {
-                    logger.error(it) { "Failed to cut off update source" }
-                }
-
-                // Wait safely in case start() is still initializing
-                val mainJob = mainJobDeferred.await()
-                logger.debug { "Waiting for existing tasks to complete (grace period: $gracePeriod)..." }
-
-                try {
-                    withTimeout(gracePeriod) {
-                        mainJob.join()
+                withContext(NonCancellable) {
+                    // Instantly cut off the source
+                    runCatching { updateSource.stop() }.onFailure {
+                        logger.error(it) { "Failed to cut off update source" }
                     }
-                    logger.debug { "All in-progress tasks completed successfully" }
-                } catch (_: TimeoutCancellationException) {
-                    logger.warn { "Grace period timeout! Forcing termination..." }
-                } catch (e: CancellationException) {
-                    logger.warn { "Shutdown externally cancelled! Forcing immediate termination..." }
-                    throw e
-                } finally {
-                    withContext(NonCancellable) {
-                        mainJob.cancel()
-                        runCatching { updateSource.onFinalize() }.onFailure {
-                            logger.error(it) { "Failed to finalize update source" }
+
+                    // Wait safely in case start() is still initializing
+                    val mainJob = mainJobDeferred.await()
+                    logger.debug { "Waiting for existing tasks to complete (grace period: $gracePeriod)..." }
+
+                    try {
+                        withTimeout(gracePeriod) {
+                            mainJob.join()
                         }
-                        state.value = State.STOPPED
-                        applicationScope.cancel()
-                        logger.debug { "Bot exited" }
+                        logger.debug { "All in-progress tasks completed successfully" }
+                    } catch (_: TimeoutCancellationException) {
+                        logger.warn { "Grace period timeout! Forcing termination..." }
                     }
+
+                    mainJob.cancel()
+                    runCatching { updateSource.onFinalize() }.onFailure {
+                        logger.error(it) { "Failed to finalize update source" }
+                    }
+                    state.value = State.STOPPED
+                    applicationScope.cancel()
+                    logger.debug { "Bot exited" }
                 }
             }
             shutdownJobDeferred.complete(shutdownJob)
@@ -193,6 +194,48 @@ class TelegramBotApplication(
         return applicationScope.launch {
             shutdownJobDeferred.await().join()
         }
+    }
+
+    /**
+     * Suspends until the bot and all its child coroutines have completely stopped.
+     *
+     * This method combines [stop] with an additional wait on the [applicationScope]'s job,
+     * ensuring that not only the main update processing loop has terminated, but also
+     * all coroutines launched within the application scope have completed.
+     *
+     * **Warning**: This method may never return if user code has launched coroutines
+     * that do not properly respond to structured concurrency cancellation. Specifically:
+     *
+     * - Coroutines that catch [CancellationException] and continue running
+     * - Coroutines using `withContext(NonCancellable)` for indefinite operations
+     * - Coroutines blocked on non-interruptible I/O operations
+     * - Infinite loops that don't check `isActive` or call `ensureActive()`
+     *
+     * Example of problematic code in a handler:
+     * ```kotlin
+     * command("bad") { ctx, _ ->
+     *     launch {
+     *         while (true) {
+     *             // Missing isActive check - will never respond to cancellation
+     *             delay(1000)
+     *             println("Still running")
+     *         }
+     *     }
+     * }
+     * ```
+     *
+     * To ensure proper shutdown, user code should:
+     * - Avoid catching [CancellationException] unless re-throwing it
+     * - Use cancellable suspending functions (e.g., [delay], [withContext])
+     * - Check [isActive][CoroutineScope.isActive] in loops or use [ensureActive]
+     * - Only use `withContext(NonCancellable)` for short cleanup operations
+     *
+     * @param gracePeriod Maximum time to wait for the graceful shutdown. Defaults to 10 seconds.
+     * @see stop For a non-suspending version that returns a [Job].
+     */
+    suspend fun stopSuspend(gracePeriod: Duration = 10.seconds) {
+        stop(gracePeriod).join()
+        applicationScope.coroutineContext[Job]?.join()
     }
 
     private enum class State { NEW, RUNNING, STOPPING, STOPPED }
