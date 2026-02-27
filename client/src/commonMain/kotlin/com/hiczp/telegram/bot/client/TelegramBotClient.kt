@@ -121,7 +121,7 @@ class TelegramBotClient private constructor(
                     install(HttpRequestRetry) {
                         retryIf(maxRetries = 3) { _, response ->
                             val statusCode = response.status.value
-                            statusCode == 429 || statusCode in 500..599
+                            TelegramErrorResponseException.isRetryable(statusCode)
                         }
                         retryOnException(maxRetries = 3, retryOnTimeout = true)
                         //Telegram server always returns Retry-After header

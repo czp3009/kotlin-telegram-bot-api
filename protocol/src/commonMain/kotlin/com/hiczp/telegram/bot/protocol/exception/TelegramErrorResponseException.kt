@@ -15,6 +15,10 @@ data class TelegramErrorResponseException(
 ) : RuntimeException() {
     override val message: String
         get() = description
+
+    companion object {
+        fun isRetryable(errorCode: Int) = errorCode == 429 || errorCode in 500..599
+    }
 }
 
-val TelegramErrorResponseException.isRetryable get() = errorCode == 429 || errorCode in 500..599
+val TelegramErrorResponseException.isRetryable get() = TelegramErrorResponseException.isRetryable(errorCode)
