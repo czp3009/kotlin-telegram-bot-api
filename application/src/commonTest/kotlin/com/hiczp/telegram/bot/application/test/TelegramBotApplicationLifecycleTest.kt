@@ -149,21 +149,28 @@ class TelegramBotApplicationLifecycleTest {
     @Test
     fun `stop should call updateSource onFinalize`() = runTest {
         val finalizeCalled = CompletableDeferred<Boolean>()
+        val sourceStarted = CompletableDeferred<Unit>()
 
         /**
          * A MockTelegramUpdateSource that tracks whether onFinalize() was called.
          */
         class FinalizeTrackingMockUpdateSource(
             channel: Channel<Update>,
+            private val startedSignal: CompletableDeferred<Unit>,
             private val finalizeSignal: CompletableDeferred<Boolean>
         ) : MockTelegramUpdateSource(channel) {
+            override suspend fun start(consume: suspend (Update) -> Unit) {
+                startedSignal.complete(Unit)
+                super.start(consume)
+            }
+
             override suspend fun onFinalize() {
                 finalizeSignal.complete(true)
             }
         }
 
         val channel = Channel<Update>(Channel.UNLIMITED)
-        val updateSource = FinalizeTrackingMockUpdateSource(channel, finalizeCalled)
+        val updateSource = FinalizeTrackingMockUpdateSource(channel, sourceStarted, finalizeCalled)
         val dispatcher = SimpleTelegramEventDispatcher { }
 
         val app = TelegramBotApplication(
@@ -175,7 +182,11 @@ class TelegramBotApplicationLifecycleTest {
 
         app.start()
 
-        app.stop(100.milliseconds).join()
+        // Wait for the update source to actually start
+        sourceStarted.await()
+
+        // Use stopSuspend to ensure complete shutdown
+        app.stopSuspend(100.milliseconds)
         channel.close()
 
         // Verify onFinalize was called
@@ -262,8 +273,9 @@ class TelegramBotApplicationLifecycleTest {
         // Wait for all updates to be processed
         allProcessed.await()
 
-        app.stop(100.milliseconds).join()
+        // Close channel and use stopSuspend to ensure complete shutdown
         channel.close()
+        app.stopSuspend(100.milliseconds)
 
         assertEquals(listOf("hello", "world", "test"), processedTexts)
     }
@@ -354,8 +366,9 @@ class TelegramBotApplicationLifecycleTest {
         // Wait for processing
         allCompleted.await()
 
-        app.stop(100.milliseconds).join()
+        // Close channel and use stopSuspend to ensure complete shutdown
         channel.close()
+        app.stopSuspend(100.milliseconds)
 
         // Interceptors should be applied in onion model order
         assertEquals(
@@ -457,8 +470,9 @@ class TelegramBotApplicationLifecycleTest {
         // Wait for processing
         interceptorCompleted.await()
 
-        app.stop(100.milliseconds).join()
+        // Close channel and use stopSuspend to ensure complete shutdown
         channel.close()
+        app.stopSuspend(100.milliseconds)
 
         // Only the interceptor should have run, not the handler
         assertEquals(listOf("short-circuit"), interceptorLog)
