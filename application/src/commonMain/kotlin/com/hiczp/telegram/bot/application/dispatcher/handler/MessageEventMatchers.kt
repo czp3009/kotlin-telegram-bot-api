@@ -1,135 +1,12 @@
 package com.hiczp.telegram.bot.application.dispatcher.handler
 
+import com.hiczp.telegram.bot.application.command.ParsedCommand
 import com.hiczp.telegram.bot.application.command.matchesCommand
+import com.hiczp.telegram.bot.application.command.parseCommand
 import com.hiczp.telegram.bot.application.context.TelegramBotEventContext
-import com.hiczp.telegram.bot.protocol.constant.ChatType
-import com.hiczp.telegram.bot.protocol.event.CallbackQueryEvent
-import com.hiczp.telegram.bot.protocol.event.InlineQueryEvent
 import com.hiczp.telegram.bot.protocol.event.MessageEvent
 import com.hiczp.telegram.bot.protocol.event.TelegramBotEvent
 import kotlinx.coroutines.CoroutineScope
-
-/**
- * Top-level entry point for the routing DSL.
- *
- * Builds and returns a root [RouteNode] that can be used directly for unit testing
- * or passed to [HandlerTelegramEventDispatcher].
- *
- * Example usage:
- * ```kotlin
- * val rootNode = handling {
- *     on<MessageEvent> {
- *         command("start") { ctx ->
- *             ctx.client.sendMessage(ctx.event.message.chat.id, "Welcome!")
- *         }
- *     }
- *     on<CallbackQueryEvent> {
- *         callbackData("confirm") { ctx ->
- *             // Handle callback
- *         }
- *     }
- *     command("stop") { ctx -> ... }
- *     command("help") { ctx -> ... }
- * }
- *
- * // Use directly
- * rootNode.execute(context)
- *
- * // Or create a dispatcher
- * val dispatcher = HandlerTelegramEventDispatcher(rootNode)
- * ```
- *
- * @param build A builder lambda for configuring the root route.
- * @return The assembled root [RouteNode].
- */
-inline fun handling(
-    build: EventRoute<TelegramBotEvent>.() -> Unit
-): RouteNode {
-    val rootNode = RouteNode { it }
-    EventRoute<TelegramBotEvent>(rootNode).build()
-    return rootNode
-}
-
-/**
- * Mounts a pre-built [RouteNode] as a child of the current route.
- *
- * Similar to Ktor's routing include mechanism, this allows modularizing routes
- * across multiple files or modules. The included node becomes a direct child
- * and will be evaluated during event dispatching.
- *
- * Example usage:
- * ```kotlin
- * val adminRoutes = handling {
- *     command("admin") { ctx -> /* ... */ }
- * }
- *
- * handling {
- *     include(adminRoutes)
- *     command("start") { ctx -> /* ... */ }
- * }
- * ```
- *
- * @param other The [RouteNode] to include as a child of this route.
- */
-fun EventRoute<*>.include(other: RouteNode) {
-    this.node.children.add(other)
-}
-
-/**
- * Creates a child route that only accepts events matching a predicate.
- *
- * The predicate is evaluated for each event. If it returns true, the event
- * is routed to the child branch; otherwise, the event is not routed.
- *
- * Example usage:
- * ```kotlin
- * handling {
- *     on<MessageEvent> {
- *         match({ it.event.message.text?.startsWith("/") == true }) {
- *             handle { ctx -> println("Received command: ${ctx.event.message.text}") }
- *         }
- *     }
- * }
- * ```
- *
- * @param T The event type of the parent route.
- * @param predicate A suspending function that determines if the event should be routed.
- * @param build A builder lambda for configuring the child route.
- * @return The created child [EventRoute].
- */
-fun <T : TelegramBotEvent> EventRoute<T>.match(
-    predicate: suspend (TelegramBotEventContext<T>) -> Boolean,
-    build: EventRoute<T>.() -> Unit
-) = select({ if (predicate(it)) it else null }, build)
-
-/**
- * Creates a conditional handler that only executes when the predicate returns true.
- *
- * This is a convenience function that combines matching and handling in one step.
- * If the predicate returns true, the handler is invoked immediately; otherwise,
- * the event is not consumed and routing continues to sibling nodes.
- *
- * Example usage:
- * ```kotlin
- * handling {
- *     on<MessageEvent> {
- *         whenMatch({ it.event.message.text?.length ?: 0 > 10 }) { ctx ->
- *             ctx.client.sendMessage(ctx.event.message.chat.id, "Long message!")
- *         }
- *     }
- * }
- * ```
- *
- * @param T The event type of the parent route.
- * @param predicate A suspending function that determines if the event should be handled.
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
-fun <T : TelegramBotEvent> EventRoute<T>.whenMatch(
-    predicate: suspend (TelegramBotEventContext<T>) -> Boolean,
-    handler: suspend CoroutineScope.(TelegramBotEventContext<T>) -> Unit
-) = select({ if (predicate(it)) it else null }) {
-    handle(handler)
-}
 
 /**
  * Registers a handler for a specific bot command.
@@ -138,26 +15,39 @@ fun <T : TelegramBotEvent> EventRoute<T>.whenMatch(
  * The command matching supports both `/command` and `/command@bot_username` formats,
  * using the bot's username from the context.
  *
+ * The handler receives the [ParsedCommand] as a second parameter, providing access to
+ * the parsed command name, bot username (if specified), and arguments.
+ *
  * Example usage:
  * ```kotlin
  * handling {
  *     on<MessageEvent> {
- *         command("start") { ctx ->
+ *         command("start") { ctx, parsed ->
  *             ctx.client.sendMessage(ctx.event.message.chat.id, "Welcome!")
+ *         }
+ *         command("ban") { ctx, parsed ->
+ *             // For "/ban @user 7d", parsed.args = ["@user", "7d"]
+ *             val username = parsed.args.getOrNull(0)
+ *             val duration = parsed.args.getOrNull(1)
  *         }
  *     }
  * }
  * ```
  *
  * @param command The command name without the leading slash (e.g., "start" for "/start").
- * @param handler A suspending function with [CoroutineScope] receiver that handles the command.
+ * @param handler A suspending function with [CoroutineScope] receiver that handles the command,
+ *        receiving the [ParsedCommand] as a second parameter.
  */
 fun EventRoute<MessageEvent>.command(
     command: String,
-    handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
+    handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>, parsed: ParsedCommand) -> Unit
 ) {
-    select({ if (it.event.matchesCommand(command, it.me().username)) it else null }) {
-        handle(handler)
+    whenMatch({ ctx ->
+        val parsed = ctx.event.parseCommand()
+        parsed != null && parsed.matchesCommand(command, ctx.me().username)
+    }) { ctx ->
+        val parsed = ctx.event.parseCommand()!!
+        handler(this, ctx, parsed)
     }
 }
 
@@ -165,11 +55,12 @@ fun EventRoute<MessageEvent>.command(
  * Convenience extension that registers a command handler directly at the root level.
  *
  * @param command The command name without the leading slash.
- * @param handler A suspending function with [CoroutineScope] receiver that handles the command.
+ * @param handler A suspending function with [CoroutineScope] receiver that handles the command,
+ *        receiving the [ParsedCommand] as a second parameter.
  */
 fun EventRoute<TelegramBotEvent>.command(
     command: String,
-    handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
+    handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>, parsed: ParsedCommand) -> Unit
 ) = on<MessageEvent> { command(command, handler) }
 
 /**
@@ -217,6 +108,84 @@ fun EventRoute<TelegramBotEvent>.textRegex(
     pattern: Regex,
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) = on<MessageEvent> { textRegex(pattern, handler) }
+
+/**
+ * Registers a handler for messages that contain a specific substring.
+ *
+ * @param substring The substring to search for in the message text.
+ * @param ignoreCase Whether the search should be case-insensitive. Default is false.
+ * @param handler A suspending function with [CoroutineScope] receiver that handles the matching message.
+ */
+fun EventRoute<MessageEvent>.textContains(
+    substring: String,
+    ignoreCase: Boolean = false,
+    handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
+) {
+    select({ if (it.event.message.text?.contains(substring, ignoreCase) == true) it else null }) {
+        handle(handler)
+    }
+}
+
+/**
+ * Convenience extension that registers a text contains handler directly at the root level.
+ */
+fun EventRoute<TelegramBotEvent>.textContains(
+    substring: String,
+    ignoreCase: Boolean = false,
+    handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
+) = on<MessageEvent> { textContains(substring, ignoreCase, handler) }
+
+/**
+ * Registers a handler for messages whose text starts with a specific prefix.
+ *
+ * @param prefix The prefix to match at the start of the message text.
+ * @param ignoreCase Whether the comparison should be case-insensitive. Default is false.
+ * @param handler A suspending function with [CoroutineScope] receiver that handles the matching message.
+ */
+fun EventRoute<MessageEvent>.textStartsWith(
+    prefix: String,
+    ignoreCase: Boolean = false,
+    handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
+) {
+    select({ if (it.event.message.text?.startsWith(prefix, ignoreCase) == true) it else null }) {
+        handle(handler)
+    }
+}
+
+/**
+ * Convenience extension that registers a text starts with handler directly at the root level.
+ */
+fun EventRoute<TelegramBotEvent>.textStartsWith(
+    prefix: String,
+    ignoreCase: Boolean = false,
+    handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
+) = on<MessageEvent> { textStartsWith(prefix, ignoreCase, handler) }
+
+/**
+ * Registers a handler for messages whose text ends with a specific suffix.
+ *
+ * @param suffix The suffix to match at the end of the message text.
+ * @param ignoreCase Whether the comparison should be case-insensitive. Default is false.
+ * @param handler A suspending function with [CoroutineScope] receiver that handles the matching message.
+ */
+fun EventRoute<MessageEvent>.textEndsWith(
+    suffix: String,
+    ignoreCase: Boolean = false,
+    handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
+) {
+    select({ if (it.event.message.text?.endsWith(suffix, ignoreCase) == true) it else null }) {
+        handle(handler)
+    }
+}
+
+/**
+ * Convenience extension that registers a text ends with handler directly at the root level.
+ */
+fun EventRoute<TelegramBotEvent>.textEndsWith(
+    suffix: String,
+    ignoreCase: Boolean = false,
+    handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
+) = on<MessageEvent> { textEndsWith(suffix, ignoreCase, handler) }
 
 /**
  * Registers a handler for messages that contain a photo.
@@ -479,86 +448,6 @@ fun EventRoute<TelegramBotEvent>.dice(
 ) = on<MessageEvent> { dice(handler) }
 
 /**
- * Registers a handler for messages from private chats only.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the private chat message.
- */
-fun EventRoute<MessageEvent>.privateChat(
-    handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) {
-    select({ if (it.event.message.chat.type == ChatType.PRIVATE) it else null }) {
-        handle(handler)
-    }
-}
-
-/**
- * Convenience extension that registers a private chat handler directly at the root level.
- */
-fun EventRoute<TelegramBotEvent>.privateChat(
-    handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) = on<MessageEvent> { privateChat(handler) }
-
-/**
- * Registers a handler for messages from group chats only.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the group chat message.
- */
-fun EventRoute<MessageEvent>.groupChat(
-    handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) {
-    select({ if (it.event.message.chat.type == ChatType.GROUP) it else null }) {
-        handle(handler)
-    }
-}
-
-/**
- * Convenience extension that registers a group chat handler directly at the root level.
- */
-fun EventRoute<TelegramBotEvent>.groupChat(
-    handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) = on<MessageEvent> { groupChat(handler) }
-
-/**
- * Registers a handler for messages from supergroup chats only.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the supergroup chat message.
- */
-fun EventRoute<MessageEvent>.supergroupChat(
-    handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) {
-    select({ if (it.event.message.chat.type == ChatType.SUPERGROUP) it else null }) {
-        handle(handler)
-    }
-}
-
-/**
- * Convenience extension that registers a supergroup chat handler directly at the root level.
- */
-fun EventRoute<TelegramBotEvent>.supergroupChat(
-    handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) = on<MessageEvent> { supergroupChat(handler) }
-
-/**
- * Registers a handler for messages from channels only.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the channel message.
- */
-fun EventRoute<MessageEvent>.channel(
-    handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) {
-    select({ if (it.event.message.chat.type == ChatType.CHANNEL) it else null }) {
-        handle(handler)
-    }
-}
-
-/**
- * Convenience extension that registers a channel handler directly at the root level.
- */
-fun EventRoute<TelegramBotEvent>.channel(
-    handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) = on<MessageEvent> { channel(handler) }
-
-/**
  * Registers a handler for messages that are replies to another message.
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the reply message.
@@ -602,93 +491,199 @@ fun EventRoute<TelegramBotEvent>.replyTo(
 ) = on<MessageEvent> { replyTo(messageId, handler) }
 
 /**
- * Registers a handler for callback queries with specific data.
+ * Registers a handler for messages from a specific user.
  *
- * @param data The callback data string to match.
- * @param handler A suspending function with [CoroutineScope] receiver that handles the matching callback.
+ * @param userId The Telegram user ID to match.
+ * @param handler A suspending function with [CoroutineScope] receiver that handles the message.
  */
-fun EventRoute<CallbackQueryEvent>.callbackData(
-    data: String,
-    handler: suspend CoroutineScope.(TelegramBotEventContext<CallbackQueryEvent>) -> Unit
+fun EventRoute<MessageEvent>.fromUser(
+    userId: Long,
+    handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) {
-    select({ if (it.event.callbackQuery.data == data) it else null }) {
+    select({ if (it.event.message.from?.id == userId) it else null }) {
         handle(handler)
     }
 }
 
 /**
- * Convenience extension that registers a callback data handler directly at the root level.
+ * Convenience extension that registers a from user handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.callbackData(
-    data: String,
-    handler: suspend CoroutineScope.(TelegramBotEventContext<CallbackQueryEvent>) -> Unit
-) = on<CallbackQueryEvent> { callbackData(data, handler) }
+fun EventRoute<TelegramBotEvent>.fromUser(
+    userId: Long,
+    handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
+) = on<MessageEvent> { fromUser(userId, handler) }
 
 /**
- * Registers a handler for callback queries whose data matches a regular expression.
+ * Registers a handler for messages from any of the specified users.
  *
- * @param pattern The regular expression pattern to match against callback data.
- * @param handler A suspending function with [CoroutineScope] receiver that handles the matching callback.
+ * @param userIds The set of Telegram user IDs to match.
+ * @param handler A suspending function with [CoroutineScope] receiver that handles the message.
  */
-fun EventRoute<CallbackQueryEvent>.callbackDataRegex(
-    pattern: Regex,
-    handler: suspend CoroutineScope.(TelegramBotEventContext<CallbackQueryEvent>) -> Unit
+fun EventRoute<MessageEvent>.fromUsers(
+    userIds: Set<Long>,
+    handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) {
-    select({ if (it.event.callbackQuery.data?.matches(pattern) == true) it else null }) {
+    select({ if (it.event.message.from?.id in userIds) it else null }) {
         handle(handler)
     }
 }
 
 /**
- * Convenience extension that registers a callback data regex handler directly at the root level.
+ * Convenience extension that registers a from users handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.callbackDataRegex(
-    pattern: Regex,
-    handler: suspend CoroutineScope.(TelegramBotEventContext<CallbackQueryEvent>) -> Unit
-) = on<CallbackQueryEvent> { callbackDataRegex(pattern, handler) }
+fun EventRoute<TelegramBotEvent>.fromUsers(
+    userIds: Set<Long>,
+    handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
+) = on<MessageEvent> { fromUsers(userIds, handler) }
 
 /**
- * Registers a handler for inline queries with specific query text.
+ * Registers a handler for messages in a specific chat.
  *
- * @param query The query text to match.
- * @param handler A suspending function with [CoroutineScope] receiver that handles the matching inline query.
+ * @param chatId The Telegram chat ID to match.
+ * @param handler A suspending function with [CoroutineScope] receiver that handles the message.
  */
-fun EventRoute<InlineQueryEvent>.inlineQuery(
-    query: String,
-    handler: suspend CoroutineScope.(TelegramBotEventContext<InlineQueryEvent>) -> Unit
+fun EventRoute<MessageEvent>.inChat(
+    chatId: Long,
+    handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) {
-    select({ if (it.event.inlineQuery.query == query) it else null }) {
+    select({ if (it.event.message.chat.id == chatId) it else null }) {
         handle(handler)
     }
 }
 
 /**
- * Convenience extension that registers an inline query handler directly at the root level.
+ * Convenience extension that registers an in chat handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.inlineQuery(
-    query: String,
-    handler: suspend CoroutineScope.(TelegramBotEventContext<InlineQueryEvent>) -> Unit
-) = on<InlineQueryEvent> { inlineQuery(query, handler) }
+fun EventRoute<TelegramBotEvent>.inChat(
+    chatId: Long,
+    handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
+) = on<MessageEvent> { inChat(chatId, handler) }
 
 /**
- * Registers a handler for inline queries whose text matches a regular expression.
+ * Registers a handler for messages in any of the specified chats.
  *
- * @param pattern The regular expression pattern to match against query text.
- * @param handler A suspending function with [CoroutineScope] receiver that handles the matching inline query.
+ * @param chatIds The set of Telegram chat IDs to match.
+ * @param handler A suspending function with [CoroutineScope] receiver that handles the message.
  */
-fun EventRoute<InlineQueryEvent>.inlineQueryRegex(
-    pattern: Regex,
-    handler: suspend CoroutineScope.(TelegramBotEventContext<InlineQueryEvent>) -> Unit
+fun EventRoute<MessageEvent>.inChats(
+    chatIds: Set<Long>,
+    handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) {
-    select({ if (it.event.inlineQuery.query.matches(pattern)) it else null }) {
+    select({ if (it.event.message.chat.id in chatIds) it else null }) {
         handle(handler)
     }
 }
 
 /**
- * Convenience extension that registers an inline query regex handler directly at the root level.
+ * Convenience extension that registers an in chats handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.inlineQueryRegex(
-    pattern: Regex,
-    handler: suspend CoroutineScope.(TelegramBotEventContext<InlineQueryEvent>) -> Unit
-) = on<InlineQueryEvent> { inlineQueryRegex(pattern, handler) }
+fun EventRoute<TelegramBotEvent>.inChats(
+    chatIds: Set<Long>,
+    handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
+) = on<MessageEvent> { inChats(chatIds, handler) }
+
+/**
+ * Registers a handler for messages that are forwarded.
+ *
+ * @param handler A suspending function with [CoroutineScope] receiver that handles the forwarded message.
+ */
+fun EventRoute<MessageEvent>.forwarded(
+    handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
+) {
+    select({ if (it.event.message.forwardOrigin != null) it else null }) {
+        handle(handler)
+    }
+}
+
+/**
+ * Convenience extension that registers a forwarded handler directly at the root level.
+ */
+fun EventRoute<TelegramBotEvent>.forwarded(
+    handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
+) = on<MessageEvent> { forwarded(handler) }
+
+/**
+ * Registers a handler for messages forwarded from a specific chat.
+ *
+ * @param chatId The Telegram chat ID from which the message was forwarded.
+ * @param handler A suspending function with [CoroutineScope] receiver that handles the forwarded message.
+ */
+fun EventRoute<MessageEvent>.forwardedFromChat(
+    chatId: Long,
+    handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
+) {
+    select({ ctx ->
+        when (val origin = ctx.event.message.forwardOrigin) {
+            is com.hiczp.telegram.bot.protocol.model.MessageOriginChannel -> origin.chat.id
+            is com.hiczp.telegram.bot.protocol.model.MessageOriginChat -> origin.senderChat.id
+            is com.hiczp.telegram.bot.protocol.model.MessageOriginHiddenUser -> null
+            is com.hiczp.telegram.bot.protocol.model.MessageOriginUser -> null
+            null -> null
+        }?.let { if (it == chatId) ctx else null }
+    }) {
+        handle(handler)
+    }
+}
+
+/**
+ * Convenience extension that registers a forwarded from chat handler directly at the root level.
+ */
+fun EventRoute<TelegramBotEvent>.forwardedFromChat(
+    chatId: Long,
+    handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
+) = on<MessageEvent> { forwardedFromChat(chatId, handler) }
+
+/**
+ * Registers a handler for messages forwarded from a specific user.
+ *
+ * @param userId The Telegram user ID from which the message was forwarded.
+ * @param handler A suspending function with [CoroutineScope] receiver that handles the forwarded message.
+ */
+fun EventRoute<MessageEvent>.forwardedFromUser(
+    userId: Long,
+    handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
+) {
+    select({ ctx ->
+        val origin = ctx.event.message.forwardOrigin
+        if (origin is com.hiczp.telegram.bot.protocol.model.MessageOriginUser && origin.senderUser.id == userId) {
+            ctx
+        } else {
+            null
+        }
+    }) {
+        handle(handler)
+    }
+}
+
+/**
+ * Convenience extension that registers a forwarded from user handler directly at the root level.
+ */
+fun EventRoute<TelegramBotEvent>.forwardedFromUser(
+    userId: Long,
+    handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
+) = on<MessageEvent> { forwardedFromUser(userId, handler) }
+
+/**
+ * Registers a handler for messages that contain a dice with a specific emoji.
+ *
+ * Dice emojis include: "🎲", "🎯", "🏀", "⚽", "🎳", "🎰"
+ *
+ * @param emoji The dice emoji to match.
+ * @param handler A suspending function with [CoroutineScope] receiver that handles the dice message.
+ */
+fun EventRoute<MessageEvent>.dice(
+    emoji: String,
+    handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
+) {
+    select({ if (it.event.message.dice?.emoji == emoji) it else null }) {
+        handle(handler)
+    }
+}
+
+/**
+ * Convenience extension that registers a dice with emoji handler directly at the root level.
+ */
+fun EventRoute<TelegramBotEvent>.dice(
+    emoji: String,
+    handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
+) = on<MessageEvent> { dice(emoji, handler) }

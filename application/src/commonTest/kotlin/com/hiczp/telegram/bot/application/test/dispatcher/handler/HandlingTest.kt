@@ -106,7 +106,7 @@ class HandlingTest {
     @Test
     fun `command handler should match exact command`() = runTest {
         val routeNode = handling {
-            command("start") {
+            command("start") { _, _ ->
                 invokedHandlers.add("start")
             }
         }
@@ -121,7 +121,7 @@ class HandlingTest {
     @Test
     fun `command handler should match command with bot username`() = runTest {
         val routeNode = handling {
-            command("start") {
+            command("start") { _, _ ->
                 invokedHandlers.add("start")
             }
         }
@@ -136,7 +136,7 @@ class HandlingTest {
     @Test
     fun `command handler should not match command with different bot username`() = runTest {
         val routeNode = handling {
-            command("start") {
+            command("start") { _, _ ->
                 invokedHandlers.add("start")
             }
         }
@@ -151,7 +151,7 @@ class HandlingTest {
     @Test
     fun `command handler should not match different command`() = runTest {
         val routeNode = handling {
-            command("start") {
+            command("start") { _, _ ->
                 invokedHandlers.add("start")
             }
         }
@@ -166,7 +166,7 @@ class HandlingTest {
     @Test
     fun `command handler should be case insensitive`() = runTest {
         val routeNode = handling {
-            command("START") {
+            command("START") { _, _ ->
                 invokedHandlers.add("start")
             }
         }
@@ -181,13 +181,13 @@ class HandlingTest {
     @Test
     fun `multiple command handlers should route correctly`() = runTest {
         val routeNode = handling {
-            command("start") {
+            command("start") { _, _ ->
                 invokedHandlers.add("start")
             }
-            command("help") {
+            command("help") { _, _ ->
                 invokedHandlers.add("help")
             }
-            command("stop") {
+            command("stop") { _, _ ->
                 invokedHandlers.add("stop")
             }
         }
@@ -486,13 +486,13 @@ class HandlingTest {
     @Test
     fun `include should merge route nodes`() = runTest {
         val adminRoutes = handling {
-            command("admin") {
+            command("admin") { _, _ ->
                 invokedHandlers.add("admin")
             }
         }
 
         val mainRoutes = handling {
-            command("start") {
+            command("start") { _, _ ->
                 invokedHandlers.add("start")
             }
             include(adminRoutes)
@@ -517,7 +517,7 @@ class HandlingTest {
         // handle is invoked only when no child consumes the event
         val routeNode = handling {
             on<MessageEvent> {
-                command("start") {
+                command("start") { _, _ ->
                     invokedHandlers.add("start")
                 }
                 text("hello") {
@@ -551,7 +551,7 @@ class HandlingTest {
         val routeNode = handling {
             on<MessageEvent> {
                 handle { invokedHandlers.add("handle") }
-                command("start") {
+                command("start") { _, _ ->
                     invokedHandlers.add("start")
                 }
             }
@@ -634,7 +634,7 @@ class HandlingTest {
         val routeNode = handling {
             on<MessageEvent> {
                 match({ it.event.message.chat.id == 100L }) {
-                    command("admin") {
+                    command("admin") { _, _ ->
                         invokedHandlers.add("admin_chat_100")
                     }
                     text("ping") {
@@ -668,7 +668,7 @@ class HandlingTest {
     @Test
     fun `should return false when no handler matches`() = runTest {
         val routeNode = handling {
-            command("start") {
+            command("start") { _, _ ->
                 invokedHandlers.add("start")
             }
         }
@@ -684,7 +684,7 @@ class HandlingTest {
     fun `root level handle should act as dead letter handler`() = runTest {
         // handle at root level catches all unhandled events (dead letter mechanism)
         val routeNode = handling {
-            command("start") {
+            command("start") { _, _ ->
                 invokedHandlers.add("start")
             }
             text("hello") {
@@ -728,7 +728,7 @@ class HandlingTest {
     fun `root level handle with on blocks should act as dead letter handler`() = runTest {
         val routeNode = handling {
             on<MessageEvent> {
-                command("start") {
+                command("start") { _, _ ->
                     invokedHandlers.add("start")
                 }
             }
@@ -820,7 +820,7 @@ class HandlingTest {
     @Test
     fun `mixed event type handlers should route correctly`() = runTest {
         val routeNode = handling {
-            command("start") {
+            command("start") { _, _ ->
                 invokedHandlers.add("cmd_start")
             }
             text("hello") {
@@ -865,7 +865,7 @@ class HandlingTest {
         var launchExecuted = false
 
         val routeNode = handling {
-            command("start") {
+            command("start") { _, _ ->
                 launch {
                     launchExecuted = true
                 }
@@ -884,7 +884,7 @@ class HandlingTest {
         val executionOrder = mutableListOf<String>()
 
         val routeNode = handling {
-            command("start") {
+            command("start") { _, _ ->
                 executionOrder.add("handler_start")
                 launch {
                     executionOrder.add("launch_start")
@@ -911,7 +911,7 @@ class HandlingTest {
         val results = mutableListOf<String>()
 
         val routeNode = handling {
-            command("start") {
+            command("start") { _, _ ->
                 launch {
                     delay(30.milliseconds)
                     results.add("first")
@@ -942,7 +942,7 @@ class HandlingTest {
         var nestedScopeExecuted = false
 
         val routeNode = handling {
-            command("start") {
+            command("start") { _, _ ->
                 coroutineScope {
                     launch {
                         nestedScopeExecuted = true

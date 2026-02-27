@@ -212,28 +212,101 @@ The `TelegramBotEventContext` provides access to:
 
 ### Handler DSL (Application Module)
 
-The `HandlerTelegramEventDispatcher` provides a type-safe routing DSL for event handling:
+The `HandlerTelegramEventDispatcher` provides a type-safe routing DSL for event handling. The DSL is organized into
+specialized matcher files in `application/src/commonMain/kotlin/com/hiczp/telegram/bot/application/dispatcher/handler/`:
+
+- **Handling.kt** - Core DSL (`handling`, `match`, `whenMatch`, `include`, `select`)
+- **CompositeMatchers.kt** - Logic combinators (`allOf`, `anyOf`, `not`)
+- **MessageEventMatchers.kt** - Message handlers (`command`, `text`, `textRegex`, media types, etc.)
+- **CallbackQueryMatchers.kt** - Callback query handlers (`callbackData`, `callbackDataRegex`)
+- **InlineQueryMatchers.kt** - Inline query handlers (`inlineQuery`, `inlineQueryRegex`)
+- **ChatTypeMatchers.kt** - Chat type filters (`privateChat`, `groupChat`, `supergroupChat`, `channel`)
+- **EditedMessageMatchers.kt** - Edited message handlers
+- **ChatEventMatchers.kt** - Chat event handlers (joins, member updates)
+- **ServiceMessageMatchers.kt** - Service message handlers
+- **PollMatchers.kt** - Poll and reaction handlers
+- **PaymentMatchers.kt** - Payment event handlers
+
+Each matcher provides two variants: one for the specific event type scope (e.g., inside `on<MessageEvent>`) and one
+for the root level that auto-wraps with `on<EventType>`.
 
 ```kotlin
 val dispatcher = HandlerTelegramEventDispatcher(handling {
     // Command handlers (supports /command and /command@bot_username formats)
-    command("start") { ctx ->
+    // The parsed parameter provides access to command arguments
+    command("start") { ctx, parsed ->
         ctx.client.sendMessage(ctx.event.message.chat.id, "Welcome!")
+    }
+    command("ban") { ctx, parsed ->
+        // For "/ban @user 7d", parsed.args = ["@user", "7d"]
+        val username = parsed.args.getOrNull(0)
+        val duration = parsed.args.getOrNull(1)
     }
 
     // Event type matching
     on<MessageEvent> {
         text("hello") { ctx -> /* exact text match */ }
-        regex(Regex("(?i)^hello")) { ctx -> /* regex match */ }
+        textRegex(Regex("(?i)^hello")) { ctx -> /* regex match */ }
+        textContains("help", ignoreCase = true) { ctx -> /* substring match */ }
+        textStartsWith("/admin") { ctx -> /* prefix match */ }
+
+        // Media type handlers
+        photo { ctx -> /* photo message */ }
+        video { ctx -> /* video message */ }
+        document { ctx -> /* document message */ }
+        sticker { ctx -> /* sticker message */ }
+
+        // User/chat filters
+        fromUser(123456L) { ctx -> /* from specific user */ }
+        inChat(-100123456L) { ctx -> /* in specific chat */ }
+
+        // Reply detection
+        reply { ctx -> /* is a reply */ }
+        replyTo(messageId = 42L) { ctx -> /* reply to specific message */ }
+
+        // Forwarded messages
+        forwarded { ctx -> /* forwarded message */ }
+        forwardedFromChat(-100123L) { ctx -> /* forwarded from specific chat */ }
 
         // Conditional handler with whenMatch
         whenMatch({ (it.event.message.text?.length ?: 0) > 10 }) { ctx ->
             ctx.client.sendMessage(ctx.event.message.chat.id, "Long message!")
         }
+
+        // Composite matchers - combine predicates
+        allOf(
+            { it.event.message.text != null },
+            { it.event.message.chat.id == 100L }
+        ) {
+            handle { ctx -> println("Private text message in chat 100") }
+        }
+
+        anyOf(
+            { it.event.message.photo != null },
+            { it.event.message.video != null }
+        ) {
+            handle { ctx -> println("Photo or video") }
+        }
+
+        not({ it.event.message.text?.startsWith("/") == true }) {
+            handle { ctx -> println("Not a command") }
+        }
     }
+
+    // Chat type filters
+    privateChat { ctx -> /* private chat only */ }
+    groupChat { ctx -> /* group chat only */ }
+    supergroupChat { ctx -> /* supergroup only */ }
+    channel { ctx -> /* channel only */ }
 
     on<CallbackQueryEvent> {
         callbackData("confirm") { ctx -> /* callback handling */ }
+        callbackDataRegex(Regex("action_\\d+")) { ctx -> /* pattern match */ }
+    }
+
+    on<InlineQueryEvent> {
+        inlineQuery("search") { ctx -> /* exact query match */ }
+        inlineQueryStartsWith("find:") { ctx -> /* prefix match */ }
     }
 
     // Include routes from other modules
@@ -252,7 +325,7 @@ Handlers receive a `CoroutineScope` receiver, enabling structured concurrency. A
 inside a handler will be awaited before the dispatch completes:
 
 ```kotlin
-command("process") { ctx ->
+command("process") { ctx, _ ->
     // Launch concurrent operations
     launch {
         val result = slowOperation()
@@ -272,8 +345,8 @@ dead letter mechanism:
 
 ```kotlin
 handling {
-    command("start") { /* ... */ }
-    command("help") { /* ... */ }
+    command("start") { _, _ -> /* ... */ }
+    command("help") { _, _ -> /* ... */ }
 
     // Catches all unhandled events (unknown commands, other event types, etc.)
     handle { ctx ->
@@ -294,7 +367,7 @@ Multi-turn conversations are supported via the `conversationInterceptor` and `st
 val interceptors = listOf(conversationInterceptor)
 
 // In a handler, start a conversation
-command("survey") { ctx ->
+command("survey") { ctx, _ ->
     startConversation(
         timeout = 5.minutes,
         onTimeout = { reply("Survey timed out.") },
