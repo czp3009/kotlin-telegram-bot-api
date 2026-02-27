@@ -1,11 +1,17 @@
-package com.hiczp.telegram.bot.application.dispatcher.handler
+package com.hiczp.telegram.bot.application.dispatcher.handler.matcher
 
 import com.hiczp.telegram.bot.application.command.ParsedCommand
 import com.hiczp.telegram.bot.application.command.matchesCommand
 import com.hiczp.telegram.bot.application.command.parseCommand
 import com.hiczp.telegram.bot.application.context.TelegramBotEventContext
+import com.hiczp.telegram.bot.application.dispatcher.handler.EventRoute
+import com.hiczp.telegram.bot.application.dispatcher.handler.whenMatch
 import com.hiczp.telegram.bot.protocol.event.MessageEvent
 import com.hiczp.telegram.bot.protocol.event.TelegramBotEvent
+import com.hiczp.telegram.bot.protocol.model.MessageOriginChannel
+import com.hiczp.telegram.bot.protocol.model.MessageOriginChat
+import com.hiczp.telegram.bot.protocol.model.MessageOriginHiddenUser
+import com.hiczp.telegram.bot.protocol.model.MessageOriginUser
 import kotlinx.coroutines.CoroutineScope
 
 /**
@@ -614,10 +620,10 @@ fun EventRoute<MessageEvent>.forwardedFromChat(
 ) {
     select({ ctx ->
         when (val origin = ctx.event.message.forwardOrigin) {
-            is com.hiczp.telegram.bot.protocol.model.MessageOriginChannel -> origin.chat.id
-            is com.hiczp.telegram.bot.protocol.model.MessageOriginChat -> origin.senderChat.id
-            is com.hiczp.telegram.bot.protocol.model.MessageOriginHiddenUser -> null
-            is com.hiczp.telegram.bot.protocol.model.MessageOriginUser -> null
+            is MessageOriginChannel -> origin.chat.id
+            is MessageOriginChat -> origin.senderChat.id
+            is MessageOriginHiddenUser -> null
+            is MessageOriginUser -> null
             null -> null
         }?.let { if (it == chatId) ctx else null }
     }) {
@@ -645,7 +651,7 @@ fun EventRoute<MessageEvent>.forwardedFromUser(
 ) {
     select({ ctx ->
         val origin = ctx.event.message.forwardOrigin
-        if (origin is com.hiczp.telegram.bot.protocol.model.MessageOriginUser && origin.senderUser.id == userId) {
+        if (origin is MessageOriginUser && origin.senderUser.id == userId) {
             ctx
         } else {
             null

@@ -2,7 +2,11 @@ package com.hiczp.telegram.bot.application.test.dispatcher.handler
 
 import com.hiczp.telegram.bot.application.context.ProvidedUserTelegramBotEventContext
 import com.hiczp.telegram.bot.application.context.TelegramBotEventContext
-import com.hiczp.telegram.bot.application.dispatcher.handler.*
+import com.hiczp.telegram.bot.application.dispatcher.handler.handling
+import com.hiczp.telegram.bot.application.dispatcher.handler.include
+import com.hiczp.telegram.bot.application.dispatcher.handler.match
+import com.hiczp.telegram.bot.application.dispatcher.handler.matcher.*
+import com.hiczp.telegram.bot.application.dispatcher.handler.whenMatch
 import com.hiczp.telegram.bot.client.TelegramBotClient
 import com.hiczp.telegram.bot.protocol.event.CallbackQueryEvent
 import com.hiczp.telegram.bot.protocol.event.InlineQueryEvent

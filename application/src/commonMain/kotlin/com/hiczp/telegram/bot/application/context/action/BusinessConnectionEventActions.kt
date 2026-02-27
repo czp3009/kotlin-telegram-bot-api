@@ -1,5 +1,6 @@
-package com.hiczp.telegram.bot.application.context
+package com.hiczp.telegram.bot.application.context.action
 
+import com.hiczp.telegram.bot.application.context.TelegramBotEventContext
 import com.hiczp.telegram.bot.protocol.event.BusinessConnectionEvent
 import com.hiczp.telegram.bot.protocol.form.setBusinessAccountProfilePhoto
 import com.hiczp.telegram.bot.protocol.model.*

@@ -1,6 +1,8 @@
-package com.hiczp.telegram.bot.application.dispatcher.handler
+package com.hiczp.telegram.bot.application.dispatcher.handler.matcher
 
 import com.hiczp.telegram.bot.application.context.TelegramBotEventContext
+import com.hiczp.telegram.bot.application.dispatcher.handler.EventRoute
+import com.hiczp.telegram.bot.application.dispatcher.handler.match
 import com.hiczp.telegram.bot.protocol.event.TelegramBotEvent
 import kotlinx.coroutines.CoroutineScope
 
@@ -26,7 +28,7 @@ import kotlinx.coroutines.CoroutineScope
  * @param T The event type of the parent route.
  * @param predicates The predicates that must all be satisfied.
  * @param build A builder lambda for configuring the child route.
- * @return The created child [EventRoute].
+ * @return The created child [com.hiczp.telegram.bot.application.dispatcher.handler.EventRoute].
  */
 fun <T : TelegramBotEvent> EventRoute<T>.allOf(
     vararg predicates: suspend (TelegramBotEventContext<T>) -> Boolean,
