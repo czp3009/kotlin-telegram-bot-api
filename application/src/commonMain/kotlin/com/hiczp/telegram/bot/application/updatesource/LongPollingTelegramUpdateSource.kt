@@ -38,6 +38,8 @@ private val logger = KotlinLogging.logger {}
  *                          Must be positive if specified. Defaults(null) to no limit.
  * @param fastFail If `true`, exceptions during polling will be propagated. If `false` (default),
  *                 errors are logged and polling continues with retry.
+ * @param coroutineDispatcher The [CoroutineDispatcher] used for the internal fetch scope.
+ *                            Defaults to [Dispatchers.Default] if not specified.
  * @throws IllegalArgumentException if [maxPendingUpdates] is specified and not positive.
  */
 open class LongPollingTelegramUpdateSource(
@@ -46,13 +48,14 @@ open class LongPollingTelegramUpdateSource(
     private val processingMode: ProcessingMode = ProcessingMode.CONCURRENT,
     maxPendingUpdates: Int? = null,
     private val fastFail: Boolean = false,
+    coroutineDispatcher: CoroutineDispatcher? = null,
 ) : TelegramUpdateSource {
     init {
         require(maxPendingUpdates == null || maxPendingUpdates > 0) { "maxPendingUpdates must be positive" }
     }
 
     // Independent fetch scope for cutting off network IO at any time
-    private val fetchScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val fetchScope = CoroutineScope(SupervisorJob() + (coroutineDispatcher ?: Dispatchers.Default))
 
     // Semaphore for limiting concurrent update processing
     private val semaphore = maxPendingUpdates?.let { Semaphore(it) }

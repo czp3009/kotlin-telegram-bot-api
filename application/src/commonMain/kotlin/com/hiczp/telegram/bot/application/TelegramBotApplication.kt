@@ -207,7 +207,7 @@ class TelegramBotApplication(
             val client = TelegramBotClient(botToken, coroutineDispatcher = coroutineDispatcher)
             return TelegramBotApplication(
                 client = client,
-                updateSource = LongPollingTelegramUpdateSource(client),
+                updateSource = LongPollingTelegramUpdateSource(client, coroutineDispatcher = coroutineDispatcher),
                 interceptors = interceptors,
                 eventDispatcher = eventDispatcher,
                 coroutineDispatcher = coroutineDispatcher,
