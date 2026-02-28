@@ -232,15 +232,30 @@ for the root level that auto-wraps with `on<EventType>`.
 
 ```kotlin
 val dispatcher = HandlerTelegramEventDispatcher(handling {
-    // Command handlers (supports /command and /command@bot_username formats)
-    // The parsed parameter provides access to command arguments
-    command("start") { ctx, parsed ->
+    // Simple command handlers (supports /command and /command@bot_username formats)
+    commandEndpoint("start") { ctx ->
         ctx.client.sendMessage(ctx.event.message.chat.id, "Welcome!")
     }
-    command("ban") { ctx, parsed ->
-        // For "/ban @user 7d", parsed.args = ["@user", "7d"]
-        val username = parsed.args.getOrNull(0)
-        val duration = parsed.args.getOrNull(1)
+
+    // Command with typed arguments using BotArguments
+    class BanArgs : BotArguments("Ban a user") {
+        val username: String by requireArgument("User to ban")
+        val duration: String? by optionalArgument("Ban duration")
+    }
+    command("ban", ::BanArgs) { ctx ->
+        // ctx.arguments.username and ctx.arguments.duration are typed
+        val username = ctx.arguments.username
+        val duration = ctx.arguments.duration
+    }
+
+    // Command with subcommands
+    command("admin") {
+        handle { ctx -> /* Show admin help */ }
+        subCommandEndpoint("status") { ctx -> /* Show status */ }
+        subCommand("user") {
+            subCommandEndpoint("list") { ctx -> /* List users */ }
+            subCommandEndpoint("add") { ctx -> /* Add user */ }
+        }
     }
 
     // Event type matching
@@ -325,16 +340,18 @@ Handlers receive a `CoroutineScope` receiver, enabling structured concurrency. A
 inside a handler will be awaited before the dispatch completes:
 
 ```kotlin
-command("process") { ctx, _ ->
-    // Launch concurrent operations
-    launch {
-        val result = slowOperation()
-        ctx.client.sendMessage(ctx.event.message.chat.id, "Result: $result")
+command("process") {
+    handle { ctx ->
+        // Launch concurrent operations
+        launch {
+            val result = slowOperation()
+            ctx.client.sendMessage(ctx.event.message.chat.id, "Result: $result")
+        }
+        launch {
+            anotherAsyncTask()
+        }
+        // dispatch waits for all launches to complete
     }
-    launch {
-        anotherAsyncTask()
-    }
-    // dispatch waits for all launches to complete
 }
 ```
 
@@ -345,8 +362,8 @@ dead letter mechanism:
 
 ```kotlin
 handling {
-    command("start") { _, _ -> /* ... */ }
-    command("help") { _, _ -> /* ... */ }
+    command("start") { handle { /* ... */ } }
+    command("help") { handle { /* ... */ } }
 
     // Catches all unhandled events (unknown commands, other event types, etc.)
     handle { ctx ->
@@ -367,16 +384,18 @@ Multi-turn conversations are supported via the `conversationInterceptor` and `st
 val interceptors = listOf(conversationInterceptor)
 
 // In a handler, start a conversation
-command("survey") { ctx, _ ->
-    startConversation(
-        timeout = 5.minutes,
-        onTimeout = { reply("Survey timed out.") },
-        onCancel = { reply("Survey cancelled.") }
-    ) {
-        val name = awaitTextMessage().event.message.text
-        reply("Hello, $name!")
-        val age = awaitTextMessage().event.message.text
-        reply("Thanks! You are $age years old.")
+command("survey") {
+    handle {
+        startConversation(
+            timeout = 5.minutes,
+            onTimeout = { reply("Survey timed out.") },
+            onCancel = { reply("Survey cancelled.") }
+        ) {
+            val name = awaitTextMessage().event.message.text
+            reply("Hello, $name!")
+            val age = awaitTextMessage().event.message.text
+            reply("Thanks! You are $age years old.")
+        }
     }
 }
 ```

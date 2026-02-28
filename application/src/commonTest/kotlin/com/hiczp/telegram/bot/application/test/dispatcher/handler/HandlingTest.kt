@@ -2,20 +2,15 @@ package com.hiczp.telegram.bot.application.test.dispatcher.handler
 
 import com.hiczp.telegram.bot.application.context.ProvidedUserTelegramBotEventContext
 import com.hiczp.telegram.bot.application.context.TelegramBotEventContext
-import com.hiczp.telegram.bot.application.dispatcher.handler.handling
-import com.hiczp.telegram.bot.application.dispatcher.handler.include
-import com.hiczp.telegram.bot.application.dispatcher.handler.match
+import com.hiczp.telegram.bot.application.dispatcher.handler.*
 import com.hiczp.telegram.bot.application.dispatcher.handler.matcher.*
-import com.hiczp.telegram.bot.application.dispatcher.handler.whenMatch
 import com.hiczp.telegram.bot.client.TelegramBotClient
 import com.hiczp.telegram.bot.protocol.event.CallbackQueryEvent
 import com.hiczp.telegram.bot.protocol.event.InlineQueryEvent
 import com.hiczp.telegram.bot.protocol.event.MessageEvent
 import com.hiczp.telegram.bot.protocol.event.TelegramBotEvent
 import com.hiczp.telegram.bot.protocol.model.*
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import kotlin.test.*
@@ -109,9 +104,7 @@ class HandlingTest {
     @Test
     fun `command handler should match exact command`() = runTest {
         val routeNode = handling {
-            command("start") { _, _ ->
-                invokedHandlers.add("start")
-            }
+            commandEndpoint("start") { invokedHandlers.add("start") }
         }
 
         val context = createContext(createMessageEvent(text = "/start"))
@@ -124,9 +117,7 @@ class HandlingTest {
     @Test
     fun `command handler should match command with bot username`() = runTest {
         val routeNode = handling {
-            command("start") { _, _ ->
-                invokedHandlers.add("start")
-            }
+            commandEndpoint("start") { invokedHandlers.add("start") }
         }
 
         val context = createContext(createMessageEvent(text = "/start@test_bot"))
@@ -139,9 +130,7 @@ class HandlingTest {
     @Test
     fun `command handler should not match command with different bot username`() = runTest {
         val routeNode = handling {
-            command("start") { _, _ ->
-                invokedHandlers.add("start")
-            }
+            commandEndpoint("start") { invokedHandlers.add("start") }
         }
 
         val context = createContext(createMessageEvent(text = "/start@other_bot"))
@@ -154,9 +143,7 @@ class HandlingTest {
     @Test
     fun `command handler should not match different command`() = runTest {
         val routeNode = handling {
-            command("start") { _, _ ->
-                invokedHandlers.add("start")
-            }
+            commandEndpoint("start") { invokedHandlers.add("start") }
         }
 
         val context = createContext(createMessageEvent(text = "/help"))
@@ -169,9 +156,7 @@ class HandlingTest {
     @Test
     fun `command handler should be case insensitive`() = runTest {
         val routeNode = handling {
-            command("START") { _, _ ->
-                invokedHandlers.add("start")
-            }
+            commandEndpoint("START") { invokedHandlers.add("start") }
         }
 
         val context = createContext(createMessageEvent(text = "/start"))
@@ -184,15 +169,9 @@ class HandlingTest {
     @Test
     fun `multiple command handlers should route correctly`() = runTest {
         val routeNode = handling {
-            command("start") { _, _ ->
-                invokedHandlers.add("start")
-            }
-            command("help") { _, _ ->
-                invokedHandlers.add("help")
-            }
-            command("stop") { _, _ ->
-                invokedHandlers.add("stop")
-            }
+            commandEndpoint("start") { invokedHandlers.add("start") }
+            commandEndpoint("help") { invokedHandlers.add("help") }
+            commandEndpoint("stop") { invokedHandlers.add("stop") }
         }
 
         // Test /start
@@ -489,15 +468,11 @@ class HandlingTest {
     @Test
     fun `include should merge route nodes`() = runTest {
         val adminRoutes = handling {
-            command("admin") { _, _ ->
-                invokedHandlers.add("admin")
-            }
+            commandEndpoint("admin") { invokedHandlers.add("admin") }
         }
 
         val mainRoutes = handling {
-            command("start") { _, _ ->
-                invokedHandlers.add("start")
-            }
+            commandEndpoint("start") { invokedHandlers.add("start") }
             include(adminRoutes)
         }
 
@@ -520,9 +495,7 @@ class HandlingTest {
         // handle is invoked only when no child consumes the event
         val routeNode = handling {
             on<MessageEvent> {
-                command("start") { _, _ ->
-                    invokedHandlers.add("start")
-                }
+                commandEndpoint("start") { invokedHandlers.add("start") }
                 text("hello") {
                     invokedHandlers.add("hello")
                 }
@@ -554,9 +527,7 @@ class HandlingTest {
         val routeNode = handling {
             on<MessageEvent> {
                 handle { invokedHandlers.add("handle") }
-                command("start") { _, _ ->
-                    invokedHandlers.add("start")
-                }
+                commandEndpoint("start") { invokedHandlers.add("start") }
             }
         }
 
@@ -637,9 +608,7 @@ class HandlingTest {
         val routeNode = handling {
             on<MessageEvent> {
                 match({ it.event.message.chat.id == 100L }) {
-                    command("admin") { _, _ ->
-                        invokedHandlers.add("admin_chat_100")
-                    }
+                    commandEndpoint("admin") { invokedHandlers.add("admin_chat_100") }
                     text("ping") {
                         invokedHandlers.add("ping_chat_100")
                     }
@@ -671,9 +640,7 @@ class HandlingTest {
     @Test
     fun `should return false when no handler matches`() = runTest {
         val routeNode = handling {
-            command("start") { _, _ ->
-                invokedHandlers.add("start")
-            }
+            commandEndpoint("start") { invokedHandlers.add("start") }
         }
 
         val context = createContext(createMessageEvent(text = "random text"))
@@ -687,9 +654,7 @@ class HandlingTest {
     fun `root level handle should act as dead letter handler`() = runTest {
         // handle at root level catches all unhandled events (dead letter mechanism)
         val routeNode = handling {
-            command("start") { _, _ ->
-                invokedHandlers.add("start")
-            }
+            commandEndpoint("start") { invokedHandlers.add("start") }
             text("hello") {
                 invokedHandlers.add("hello")
             }
@@ -731,9 +696,7 @@ class HandlingTest {
     fun `root level handle with on blocks should act as dead letter handler`() = runTest {
         val routeNode = handling {
             on<MessageEvent> {
-                command("start") { _, _ ->
-                    invokedHandlers.add("start")
-                }
+                commandEndpoint("start") { invokedHandlers.add("start") }
             }
             on<CallbackQueryEvent> {
                 callbackData("confirm") {
@@ -823,9 +786,7 @@ class HandlingTest {
     @Test
     fun `mixed event type handlers should route correctly`() = runTest {
         val routeNode = handling {
-            command("start") { _, _ ->
-                invokedHandlers.add("cmd_start")
-            }
+            commandEndpoint("start") { invokedHandlers.add("cmd_start") }
             text("hello") {
                 invokedHandlers.add("txt_hello")
             }
@@ -868,7 +829,7 @@ class HandlingTest {
         var launchExecuted = false
 
         val routeNode = handling {
-            command("start") { _, _ ->
+            commandEndpoint("start") {
                 launch {
                     launchExecuted = true
                 }
@@ -888,7 +849,7 @@ class HandlingTest {
         val launchCompleted = CompletableDeferred<Unit>()
 
         val routeNode = handling {
-            command("start") { _, _ ->
+            commandEndpoint("start") {
                 launch {
                     // Wait for main handler to complete first (controlled order)
                     handlerMainCompleted.await()
@@ -911,7 +872,7 @@ class HandlingTest {
         val results = mutableSetOf<String>()
 
         val routeNode = handling {
-            command("start") { _, _ ->
+            commandEndpoint("start") {
                 launch {
                     results.add("first")
                 }
@@ -939,7 +900,7 @@ class HandlingTest {
         var nestedScopeExecuted = false
 
         val routeNode = handling {
-            command("start") { _, _ ->
+            commandEndpoint("start") {
                 coroutineScope {
                     launch {
                         nestedScopeExecuted = true
@@ -953,6 +914,114 @@ class HandlingTest {
 
         assertTrue(result)
         assertTrue(nestedScopeExecuted, "nested coroutineScope launch should be executed")
+    }
+
+    @Test
+    fun `launch should NOT execute in TestScope`() = runTest {
+        val testScopeContext = coroutineContext
+        var launchContext: kotlin.coroutines.CoroutineContext? = null
+
+        val routeNode = handling {
+            commandEndpoint("start") {
+                launch {
+                    launchContext = currentCoroutineContext()
+                }
+            }
+        }
+
+        val context = createContext(createMessageEvent(text = "/start"))
+        routeNode.execute(context)
+
+        assertNotNull(launchContext, "launch should have executed")
+        assertNotSame(
+            testScopeContext,
+            launchContext,
+            "launch should NOT execute in TestScope context"
+        )
+    }
+
+    @Test
+    fun `handler CoroutineScope should be different from TestScope`() = runTest {
+        val testScopeContext = coroutineContext
+        var handlerScopeContext: kotlin.coroutines.CoroutineContext? = null
+
+        val routeNode = handling {
+            commandEndpoint("start") {
+                handlerScopeContext = currentCoroutineContext()
+            }
+        }
+
+        val context = createContext(createMessageEvent(text = "/start"))
+        routeNode.execute(context)
+
+        assertNotNull(handlerScopeContext, "handler should have executed")
+        assertNotSame(
+            testScopeContext,
+            handlerScopeContext,
+            "handler CoroutineScope should NOT be TestScope"
+        )
+    }
+
+    @Test
+    fun `launch inside whenMatch should NOT execute in TestScope`() = runTest {
+        val testScopeContext = coroutineContext
+        var launchContext: kotlin.coroutines.CoroutineContext? = null
+
+        val routeNode = handling {
+            on<MessageEvent> {
+                whenMatch({ it.event.message.text?.contains("test") == true }) {
+                    launch {
+                        launchContext = currentCoroutineContext()
+                    }
+                }
+            }
+        }
+
+        val context = createContext(createMessageEvent(text = "test message"))
+        routeNode.execute(context)
+
+        assertNotNull(launchContext, "launch should have executed")
+        assertNotSame(
+            testScopeContext,
+            launchContext,
+            "launch inside whenMatch should NOT execute in TestScope context"
+        )
+    }
+
+    @Test
+    fun `multiple launches should all execute in child scope (not TestScope)`() = runTest {
+        val testScopeJob = coroutineContext[Job]
+        val launchJobs = mutableListOf<Job?>()
+
+        val routeNode = handling {
+            commandEndpoint("start") {
+                launch {
+                    launchJobs.add(currentCoroutineContext()[Job])
+                }
+                launch {
+                    launchJobs.add(currentCoroutineContext()[Job])
+                }
+                launch {
+                    launchJobs.add(currentCoroutineContext()[Job])
+                }
+            }
+        }
+
+        val context = createContext(createMessageEvent(text = "/start"))
+        routeNode.execute(context)
+
+        assertEquals(3, launchJobs.size, "all launches should have executed")
+
+        // All launch jobs should be different from the TestScope job
+        // This proves they are in a child scope, not directly in TestScope
+        launchJobs.forEach { job ->
+            assertNotNull(job, "launch should have a Job")
+            assertNotSame(
+                testScopeJob,
+                job,
+                "launch job should not be TestScope job"
+            )
+        }
     }
 
     // ==================== Callback Data Regex Tests ====================

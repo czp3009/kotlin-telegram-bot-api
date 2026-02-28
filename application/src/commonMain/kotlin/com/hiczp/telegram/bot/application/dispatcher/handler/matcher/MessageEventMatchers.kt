@@ -1,11 +1,7 @@
 package com.hiczp.telegram.bot.application.dispatcher.handler.matcher
 
-import com.hiczp.telegram.bot.application.command.ParsedCommand
-import com.hiczp.telegram.bot.application.command.matchesCommand
-import com.hiczp.telegram.bot.application.command.parseCommand
 import com.hiczp.telegram.bot.application.context.TelegramBotEventContext
 import com.hiczp.telegram.bot.application.dispatcher.handler.EventRoute
-import com.hiczp.telegram.bot.application.dispatcher.handler.whenMatch
 import com.hiczp.telegram.bot.protocol.event.MessageEvent
 import com.hiczp.telegram.bot.protocol.event.TelegramBotEvent
 import com.hiczp.telegram.bot.protocol.model.MessageOriginChannel
@@ -15,62 +11,7 @@ import com.hiczp.telegram.bot.protocol.model.MessageOriginUser
 import kotlinx.coroutines.CoroutineScope
 
 /**
- * Registers a handler for a specific bot command.
- *
- * This extension function must be called within a [MessageEvent] scope.
- * The command matching supports both `/command` and `/command@bot_username` formats,
- * using the bot's username from the context.
- *
- * The handler receives the [ParsedCommand] as a second parameter, providing access to
- * the parsed command name, bot username (if specified), and arguments.
- *
- * Example usage:
- * ```kotlin
- * handling {
- *     on<MessageEvent> {
- *         command("start") { ctx, parsed ->
- *             ctx.client.sendMessage(ctx.event.message.chat.id, "Welcome!")
- *         }
- *         command("ban") { ctx, parsed ->
- *             // For "/ban @user 7d", parsed.args = ["@user", "7d"]
- *             val username = parsed.args.getOrNull(0)
- *             val duration = parsed.args.getOrNull(1)
- *         }
- *     }
- * }
- * ```
- *
- * @param command The command name without the leading slash (e.g., "start" for "/start").
- * @param handler A suspending function with [CoroutineScope] receiver that handles the command,
- *        receiving the [ParsedCommand] as a second parameter.
- */
-fun EventRoute<MessageEvent>.command(
-    command: String,
-    handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>, parsed: ParsedCommand) -> Unit
-) {
-    whenMatch({ ctx ->
-        val parsed = ctx.event.parseCommand()
-        parsed != null && parsed.matchesCommand(command, ctx.me().username)
-    }) { ctx ->
-        val parsed = ctx.event.parseCommand()!!
-        handler(this, ctx, parsed)
-    }
-}
-
-/**
- * Convenience extension that registers a command handler directly at the root level.
- *
- * @param command The command name without the leading slash.
- * @param handler A suspending function with [CoroutineScope] receiver that handles the command,
- *        receiving the [ParsedCommand] as a second parameter.
- */
-fun EventRoute<TelegramBotEvent>.command(
-    command: String,
-    handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>, parsed: ParsedCommand) -> Unit
-) = on<MessageEvent> { command(command, handler) }
-
-/**
- * Registers a handler for messages with exact text match.
+ * Registers a handler for messages with the exact text match.
  *
  * @param exact The exact text string to match.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the matching message.

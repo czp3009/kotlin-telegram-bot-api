@@ -213,12 +213,14 @@ class TelegramBotApplication(
      *
      * Example of problematic code in a handler:
      * ```kotlin
-     * command("bad") { ctx, _ ->
-     *     launch {
-     *         while (true) {
-     *             // Missing isActive check - will never respond to cancellation
-     *             delay(1000)
-     *             println("Still running")
+     * on<MessageEvent> {
+     *     text("bad") {
+     *         launch {
+     *             while (true) {
+     *                 // Missing isActive check - will never respond to cancellation
+     *                 delay(1000)
+     *                 println("Still running")
+     *             }
      *         }
      *     }
      * }

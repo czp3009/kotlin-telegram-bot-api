@@ -42,6 +42,35 @@ suspend fun TelegramBotEventContext<MessageEvent>.sendPhoto(
     replyMarkup = replyMarkup,
 )
 
+suspend fun TelegramBotEventContext<MessageEvent>.replyPhoto(
+    photo: InputFile,
+    caption: String? = null,
+    parseMode: String? = null,
+    captionEntities: List<MessageEntity>? = null,
+    showCaptionAboveMedia: Boolean? = null,
+    hasSpoiler: Boolean? = null,
+    disableNotification: Boolean? = null,
+    protectContent: Boolean? = null,
+    allowPaidBroadcast: Boolean? = null,
+    messageEffectId: String? = null,
+    suggestedPostParameters: SuggestedPostParameters? = null,
+    replyMarkup: ReplyMarkup? = null,
+) = sendPhoto(
+    photo = photo,
+    caption = caption,
+    parseMode = parseMode,
+    captionEntities = captionEntities,
+    showCaptionAboveMedia = showCaptionAboveMedia,
+    hasSpoiler = hasSpoiler,
+    disableNotification = disableNotification,
+    protectContent = protectContent,
+    allowPaidBroadcast = allowPaidBroadcast,
+    messageEffectId = messageEffectId,
+    suggestedPostParameters = suggestedPostParameters,
+    replyParameters = ReplyParameters(messageId = event.message.messageId),
+    replyMarkup = replyMarkup,
+)
+
 suspend fun TelegramBotEventContext<MessageEvent>.sendAudio(
     audio: InputFile,
     caption: String? = null,
@@ -80,6 +109,39 @@ suspend fun TelegramBotEventContext<MessageEvent>.sendAudio(
     replyMarkup = replyMarkup,
 )
 
+suspend fun TelegramBotEventContext<MessageEvent>.replyAudio(
+    audio: InputFile,
+    caption: String? = null,
+    parseMode: String? = null,
+    captionEntities: List<MessageEntity>? = null,
+    duration: Long? = null,
+    performer: String? = null,
+    title: String? = null,
+    thumbnail: InputFile? = null,
+    disableNotification: Boolean? = null,
+    protectContent: Boolean? = null,
+    allowPaidBroadcast: Boolean? = null,
+    messageEffectId: String? = null,
+    suggestedPostParameters: SuggestedPostParameters? = null,
+    replyMarkup: ReplyMarkup? = null,
+) = sendAudio(
+    audio = audio,
+    caption = caption,
+    parseMode = parseMode,
+    captionEntities = captionEntities,
+    duration = duration,
+    performer = performer,
+    title = title,
+    thumbnail = thumbnail,
+    disableNotification = disableNotification,
+    protectContent = protectContent,
+    allowPaidBroadcast = allowPaidBroadcast,
+    messageEffectId = messageEffectId,
+    suggestedPostParameters = suggestedPostParameters,
+    replyParameters = ReplyParameters(messageId = event.message.messageId),
+    replyMarkup = replyMarkup,
+)
+
 suspend fun TelegramBotEventContext<MessageEvent>.sendDocument(
     document: InputFile,
     thumbnail: InputFile? = null,
@@ -111,6 +173,35 @@ suspend fun TelegramBotEventContext<MessageEvent>.sendDocument(
     messageEffectId = messageEffectId,
     suggestedPostParameters = suggestedPostParameters,
     replyParameters = replyParameters,
+    replyMarkup = replyMarkup,
+)
+
+suspend fun TelegramBotEventContext<MessageEvent>.replyDocument(
+    document: InputFile,
+    thumbnail: InputFile? = null,
+    caption: String? = null,
+    parseMode: String? = null,
+    captionEntities: List<MessageEntity>? = null,
+    disableContentTypeDetection: Boolean? = null,
+    disableNotification: Boolean? = null,
+    protectContent: Boolean? = null,
+    allowPaidBroadcast: Boolean? = null,
+    messageEffectId: String? = null,
+    suggestedPostParameters: SuggestedPostParameters? = null,
+    replyMarkup: ReplyMarkup? = null,
+) = sendDocument(
+    document = document,
+    thumbnail = thumbnail,
+    caption = caption,
+    parseMode = parseMode,
+    captionEntities = captionEntities,
+    disableContentTypeDetection = disableContentTypeDetection,
+    disableNotification = disableNotification,
+    protectContent = protectContent,
+    allowPaidBroadcast = allowPaidBroadcast,
+    messageEffectId = messageEffectId,
+    suggestedPostParameters = suggestedPostParameters,
+    replyParameters = ReplyParameters(messageId = event.message.messageId),
     replyMarkup = replyMarkup,
 )
 
@@ -162,6 +253,49 @@ suspend fun TelegramBotEventContext<MessageEvent>.sendVideo(
     replyMarkup = replyMarkup,
 )
 
+suspend fun TelegramBotEventContext<MessageEvent>.replyVideo(
+    video: InputFile,
+    duration: Long? = null,
+    width: Long? = null,
+    height: Long? = null,
+    thumbnail: InputFile? = null,
+    cover: InputFile? = null,
+    startTimestamp: Long? = null,
+    caption: String? = null,
+    parseMode: String? = null,
+    captionEntities: List<MessageEntity>? = null,
+    showCaptionAboveMedia: Boolean? = null,
+    hasSpoiler: Boolean? = null,
+    supportsStreaming: Boolean? = null,
+    disableNotification: Boolean? = null,
+    protectContent: Boolean? = null,
+    allowPaidBroadcast: Boolean? = null,
+    messageEffectId: String? = null,
+    suggestedPostParameters: SuggestedPostParameters? = null,
+    replyMarkup: ReplyMarkup? = null,
+) = sendVideo(
+    video = video,
+    duration = duration,
+    width = width,
+    height = height,
+    thumbnail = thumbnail,
+    cover = cover,
+    startTimestamp = startTimestamp,
+    caption = caption,
+    parseMode = parseMode,
+    captionEntities = captionEntities,
+    showCaptionAboveMedia = showCaptionAboveMedia,
+    hasSpoiler = hasSpoiler,
+    supportsStreaming = supportsStreaming,
+    disableNotification = disableNotification,
+    protectContent = protectContent,
+    allowPaidBroadcast = allowPaidBroadcast,
+    messageEffectId = messageEffectId,
+    suggestedPostParameters = suggestedPostParameters,
+    replyParameters = ReplyParameters(messageId = event.message.messageId),
+    replyMarkup = replyMarkup,
+)
+
 suspend fun TelegramBotEventContext<MessageEvent>.sendAnimation(
     animation: InputFile,
     duration: Long? = null,
@@ -204,6 +338,43 @@ suspend fun TelegramBotEventContext<MessageEvent>.sendAnimation(
     replyMarkup = replyMarkup,
 )
 
+suspend fun TelegramBotEventContext<MessageEvent>.replyAnimation(
+    animation: InputFile,
+    duration: Long? = null,
+    width: Long? = null,
+    height: Long? = null,
+    thumbnail: InputFile? = null,
+    caption: String? = null,
+    parseMode: String? = null,
+    captionEntities: List<MessageEntity>? = null,
+    showCaptionAboveMedia: Boolean? = null,
+    hasSpoiler: Boolean? = null,
+    disableNotification: Boolean? = null,
+    protectContent: Boolean? = null,
+    allowPaidBroadcast: Boolean? = null,
+    messageEffectId: String? = null,
+    suggestedPostParameters: SuggestedPostParameters? = null,
+    replyMarkup: ReplyMarkup? = null,
+) = sendAnimation(
+    animation = animation,
+    duration = duration,
+    width = width,
+    height = height,
+    thumbnail = thumbnail,
+    caption = caption,
+    parseMode = parseMode,
+    captionEntities = captionEntities,
+    showCaptionAboveMedia = showCaptionAboveMedia,
+    hasSpoiler = hasSpoiler,
+    disableNotification = disableNotification,
+    protectContent = protectContent,
+    allowPaidBroadcast = allowPaidBroadcast,
+    messageEffectId = messageEffectId,
+    suggestedPostParameters = suggestedPostParameters,
+    replyParameters = ReplyParameters(messageId = event.message.messageId),
+    replyMarkup = replyMarkup,
+)
+
 suspend fun TelegramBotEventContext<MessageEvent>.sendVoice(
     voice: InputFile,
     caption: String? = null,
@@ -233,6 +404,33 @@ suspend fun TelegramBotEventContext<MessageEvent>.sendVoice(
     messageEffectId = messageEffectId,
     suggestedPostParameters = suggestedPostParameters,
     replyParameters = replyParameters,
+    replyMarkup = replyMarkup,
+)
+
+suspend fun TelegramBotEventContext<MessageEvent>.replyVoice(
+    voice: InputFile,
+    caption: String? = null,
+    parseMode: String? = null,
+    captionEntities: List<MessageEntity>? = null,
+    duration: Long? = null,
+    disableNotification: Boolean? = null,
+    protectContent: Boolean? = null,
+    allowPaidBroadcast: Boolean? = null,
+    messageEffectId: String? = null,
+    suggestedPostParameters: SuggestedPostParameters? = null,
+    replyMarkup: ReplyMarkup? = null,
+) = sendVoice(
+    voice = voice,
+    caption = caption,
+    parseMode = parseMode,
+    captionEntities = captionEntities,
+    duration = duration,
+    disableNotification = disableNotification,
+    protectContent = protectContent,
+    allowPaidBroadcast = allowPaidBroadcast,
+    messageEffectId = messageEffectId,
+    suggestedPostParameters = suggestedPostParameters,
+    replyParameters = ReplyParameters(messageId = event.message.messageId),
     replyMarkup = replyMarkup,
 )
 
@@ -266,6 +464,31 @@ suspend fun TelegramBotEventContext<MessageEvent>.sendVideoNote(
     replyMarkup = replyMarkup,
 )
 
+suspend fun TelegramBotEventContext<MessageEvent>.replyVideoNote(
+    videoNote: InputFile,
+    duration: Long? = null,
+    length: Long? = null,
+    thumbnail: InputFile? = null,
+    disableNotification: Boolean? = null,
+    protectContent: Boolean? = null,
+    allowPaidBroadcast: Boolean? = null,
+    messageEffectId: String? = null,
+    suggestedPostParameters: SuggestedPostParameters? = null,
+    replyMarkup: ReplyMarkup? = null,
+) = sendVideoNote(
+    videoNote = videoNote,
+    duration = duration,
+    length = length,
+    thumbnail = thumbnail,
+    disableNotification = disableNotification,
+    protectContent = protectContent,
+    allowPaidBroadcast = allowPaidBroadcast,
+    messageEffectId = messageEffectId,
+    suggestedPostParameters = suggestedPostParameters,
+    replyParameters = ReplyParameters(messageId = event.message.messageId),
+    replyMarkup = replyMarkup,
+)
+
 suspend fun TelegramBotEventContext<MessageEvent>.sendMediaGroup(
     media: List<InputMedia>,
     disableNotification: Boolean? = null,
@@ -285,6 +508,23 @@ suspend fun TelegramBotEventContext<MessageEvent>.sendMediaGroup(
     allowPaidBroadcast = allowPaidBroadcast,
     messageEffectId = messageEffectId,
     replyParameters = replyParameters,
+    attachments = attachments,
+)
+
+suspend fun TelegramBotEventContext<MessageEvent>.replyMediaGroup(
+    media: List<InputMedia>,
+    disableNotification: Boolean? = null,
+    protectContent: Boolean? = null,
+    allowPaidBroadcast: Boolean? = null,
+    messageEffectId: String? = null,
+    attachments: List<FormPart<ChannelProvider>>? = null,
+): TelegramResponse<List<Message>> = sendMediaGroup(
+    media = media,
+    disableNotification = disableNotification,
+    protectContent = protectContent,
+    allowPaidBroadcast = allowPaidBroadcast,
+    messageEffectId = messageEffectId,
+    replyParameters = ReplyParameters(messageId = event.message.messageId),
     attachments = attachments,
 )
 
@@ -319,6 +559,35 @@ suspend fun TelegramBotEventContext<MessageEvent>.sendLocation(
     messageEffectId = messageEffectId,
     suggestedPostParameters = suggestedPostParameters,
     replyParameters = replyParameters,
+    replyMarkup = replyMarkup,
+)
+
+suspend fun TelegramBotEventContext<MessageEvent>.replyLocation(
+    latitude: Double,
+    longitude: Double,
+    horizontalAccuracy: Double? = null,
+    livePeriod: Long? = null,
+    heading: Long? = null,
+    proximityAlertRadius: Long? = null,
+    disableNotification: Boolean? = null,
+    protectContent: Boolean? = null,
+    allowPaidBroadcast: Boolean? = null,
+    messageEffectId: String? = null,
+    suggestedPostParameters: SuggestedPostParameters? = null,
+    replyMarkup: ReplyMarkup? = null,
+) = sendLocation(
+    latitude = latitude,
+    longitude = longitude,
+    horizontalAccuracy = horizontalAccuracy,
+    livePeriod = livePeriod,
+    heading = heading,
+    proximityAlertRadius = proximityAlertRadius,
+    disableNotification = disableNotification,
+    protectContent = protectContent,
+    allowPaidBroadcast = allowPaidBroadcast,
+    messageEffectId = messageEffectId,
+    suggestedPostParameters = suggestedPostParameters,
+    replyParameters = ReplyParameters(messageId = event.message.messageId),
     replyMarkup = replyMarkup,
 )
 
@@ -360,6 +629,39 @@ suspend fun TelegramBotEventContext<MessageEvent>.sendVenue(
     replyMarkup = replyMarkup,
 )
 
+suspend fun TelegramBotEventContext<MessageEvent>.replyVenue(
+    latitude: Double,
+    longitude: Double,
+    title: String,
+    address: String,
+    foursquareId: String? = null,
+    foursquareType: String? = null,
+    googlePlaceId: String? = null,
+    googlePlaceType: String? = null,
+    disableNotification: Boolean? = null,
+    protectContent: Boolean? = null,
+    allowPaidBroadcast: Boolean? = null,
+    messageEffectId: String? = null,
+    suggestedPostParameters: SuggestedPostParameters? = null,
+    replyMarkup: ReplyMarkup? = null,
+) = sendVenue(
+    latitude = latitude,
+    longitude = longitude,
+    title = title,
+    address = address,
+    foursquareId = foursquareId,
+    foursquareType = foursquareType,
+    googlePlaceId = googlePlaceId,
+    googlePlaceType = googlePlaceType,
+    disableNotification = disableNotification,
+    protectContent = protectContent,
+    allowPaidBroadcast = allowPaidBroadcast,
+    messageEffectId = messageEffectId,
+    suggestedPostParameters = suggestedPostParameters,
+    replyParameters = ReplyParameters(messageId = event.message.messageId),
+    replyMarkup = replyMarkup,
+)
+
 suspend fun TelegramBotEventContext<MessageEvent>.sendContact(
     phoneNumber: String,
     firstName: String,
@@ -387,6 +689,31 @@ suspend fun TelegramBotEventContext<MessageEvent>.sendContact(
     messageEffectId = messageEffectId,
     suggestedPostParameters = suggestedPostParameters,
     replyParameters = replyParameters,
+    replyMarkup = replyMarkup,
+)
+
+suspend fun TelegramBotEventContext<MessageEvent>.replyContact(
+    phoneNumber: String,
+    firstName: String,
+    lastName: String? = null,
+    vcard: String? = null,
+    disableNotification: Boolean? = null,
+    protectContent: Boolean? = null,
+    allowPaidBroadcast: Boolean? = null,
+    messageEffectId: String? = null,
+    suggestedPostParameters: SuggestedPostParameters? = null,
+    replyMarkup: ReplyMarkup? = null,
+) = sendContact(
+    phoneNumber = phoneNumber,
+    firstName = firstName,
+    lastName = lastName,
+    vcard = vcard,
+    disableNotification = disableNotification,
+    protectContent = protectContent,
+    allowPaidBroadcast = allowPaidBroadcast,
+    messageEffectId = messageEffectId,
+    suggestedPostParameters = suggestedPostParameters,
+    replyParameters = ReplyParameters(messageId = event.message.messageId),
     replyMarkup = replyMarkup,
 )
 
@@ -437,6 +764,49 @@ suspend fun TelegramBotEventContext<MessageEvent>.sendPoll(
     replyMarkup = replyMarkup,
 )
 
+suspend fun TelegramBotEventContext<MessageEvent>.replyPoll(
+    question: String,
+    options: List<InputPollOption>,
+    questionParseMode: String? = null,
+    questionEntities: List<MessageEntity>? = null,
+    isAnonymous: Boolean? = null,
+    type: String? = null,
+    allowsMultipleAnswers: Boolean? = null,
+    correctOptionId: Long? = null,
+    explanation: String? = null,
+    explanationParseMode: String? = null,
+    explanationEntities: List<MessageEntity>? = null,
+    openPeriod: Long? = null,
+    closeDate: Long? = null,
+    isClosed: Boolean? = null,
+    disableNotification: Boolean? = null,
+    protectContent: Boolean? = null,
+    allowPaidBroadcast: Boolean? = null,
+    messageEffectId: String? = null,
+    replyMarkup: ReplyMarkup? = null,
+) = sendPoll(
+    question = question,
+    options = options,
+    questionParseMode = questionParseMode,
+    questionEntities = questionEntities,
+    isAnonymous = isAnonymous,
+    type = type,
+    allowsMultipleAnswers = allowsMultipleAnswers,
+    correctOptionId = correctOptionId,
+    explanation = explanation,
+    explanationParseMode = explanationParseMode,
+    explanationEntities = explanationEntities,
+    openPeriod = openPeriod,
+    closeDate = closeDate,
+    isClosed = isClosed,
+    disableNotification = disableNotification,
+    protectContent = protectContent,
+    allowPaidBroadcast = allowPaidBroadcast,
+    messageEffectId = messageEffectId,
+    replyParameters = ReplyParameters(messageId = event.message.messageId),
+    replyMarkup = replyMarkup,
+)
+
 suspend fun TelegramBotEventContext<MessageEvent>.sendDice(
     emoji: String? = null,
     disableNotification: Boolean? = null,
@@ -461,6 +831,25 @@ suspend fun TelegramBotEventContext<MessageEvent>.sendDice(
     replyMarkup = replyMarkup,
 )
 
+suspend fun TelegramBotEventContext<MessageEvent>.replyDice(
+    emoji: String? = null,
+    disableNotification: Boolean? = null,
+    protectContent: Boolean? = null,
+    allowPaidBroadcast: Boolean? = null,
+    messageEffectId: String? = null,
+    suggestedPostParameters: SuggestedPostParameters? = null,
+    replyMarkup: ReplyMarkup? = null,
+) = sendDice(
+    emoji = emoji,
+    disableNotification = disableNotification,
+    protectContent = protectContent,
+    allowPaidBroadcast = allowPaidBroadcast,
+    messageEffectId = messageEffectId,
+    suggestedPostParameters = suggestedPostParameters,
+    replyParameters = ReplyParameters(messageId = event.message.messageId),
+    replyMarkup = replyMarkup,
+)
+
 suspend fun TelegramBotEventContext<MessageEvent>.sendGame(
     gameShortName: String,
     disableNotification: Boolean? = null,
@@ -479,6 +868,23 @@ suspend fun TelegramBotEventContext<MessageEvent>.sendGame(
     allowPaidBroadcast = allowPaidBroadcast,
     messageEffectId = messageEffectId,
     replyParameters = replyParameters,
+    replyMarkup = replyMarkup,
+)
+
+suspend fun TelegramBotEventContext<MessageEvent>.replyGame(
+    gameShortName: String,
+    disableNotification: Boolean? = null,
+    protectContent: Boolean? = null,
+    allowPaidBroadcast: Boolean? = null,
+    messageEffectId: String? = null,
+    replyMarkup: InlineKeyboardMarkup? = null,
+) = sendGame(
+    gameShortName = gameShortName,
+    disableNotification = disableNotification,
+    protectContent = protectContent,
+    allowPaidBroadcast = allowPaidBroadcast,
+    messageEffectId = messageEffectId,
+    replyParameters = ReplyParameters(messageId = event.message.messageId),
     replyMarkup = replyMarkup,
 )
 
@@ -509,6 +915,31 @@ suspend fun TelegramBotEventContext<MessageEvent>.sendMessage(
     messageEffectId = messageEffectId,
     suggestedPostParameters = suggestedPostParameters,
     replyParameters = replyParameters,
+    replyMarkup = replyMarkup,
+)
+
+suspend fun TelegramBotEventContext<MessageEvent>.replyMessage(
+    text: String,
+    parseMode: String? = null,
+    entities: List<MessageEntity>? = null,
+    linkPreviewOptions: LinkPreviewOptions? = null,
+    disableNotification: Boolean? = null,
+    protectContent: Boolean? = null,
+    allowPaidBroadcast: Boolean? = null,
+    messageEffectId: String? = null,
+    suggestedPostParameters: SuggestedPostParameters? = null,
+    replyMarkup: ReplyMarkup? = null,
+) = sendMessage(
+    text = text,
+    parseMode = parseMode,
+    entities = entities,
+    linkPreviewOptions = linkPreviewOptions,
+    disableNotification = disableNotification,
+    protectContent = protectContent,
+    allowPaidBroadcast = allowPaidBroadcast,
+    messageEffectId = messageEffectId,
+    suggestedPostParameters = suggestedPostParameters,
+    replyParameters = ReplyParameters(messageId = event.message.messageId),
     replyMarkup = replyMarkup,
 )
 

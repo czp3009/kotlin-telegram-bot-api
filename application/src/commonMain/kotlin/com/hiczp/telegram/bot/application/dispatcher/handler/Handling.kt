@@ -13,18 +13,18 @@ import kotlinx.coroutines.CoroutineScope
  * Example usage:
  * ```kotlin
  * val rootNode = handling {
- *     on<MessageEvent> {
- *         command("start") { ctx, _ ->
- *             ctx.client.sendMessage(ctx.event.message.chat.id, "Welcome!")
- *         }
+ *     commandEndpoint("start") { ctx ->
+ *         ctx.client.sendMessage(ctx.event.message.chat.id, "Welcome!")
  *     }
  *     on<CallbackQueryEvent> {
  *         callbackData("confirm") { ctx ->
  *             // Handle callback
  *         }
  *     }
- *     command("stop") { ctx, _ -> ... }
- *     command("help") { ctx, _ -> ... }
+ *     commandEndpoint("stop") { /* ... */ }
+ *     commandEndpoint("help") { /* ... */ }
+ *     // Dead letter handler for unhandled events
+ *     handle { ctx -> println("Unhandled: ${ctx.event.updateId}") }
  * }
  *
  * // Use directly
@@ -55,12 +55,12 @@ inline fun handling(
  * Example usage:
  * ```kotlin
  * val adminRoutes = handling {
- *     command("admin") { ctx, _ -> /* ... */ }
+ *     commandEndpoint("admin") { /* ... */ }
  * }
  *
  * handling {
  *     include(adminRoutes)
- *     command("start") { ctx, _ -> /* ... */ }
+ *     commandEndpoint("start") { /* ... */ }
  * }
  * ```
  *
