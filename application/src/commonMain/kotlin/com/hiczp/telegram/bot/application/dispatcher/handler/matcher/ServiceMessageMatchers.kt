@@ -5,535 +5,525 @@ import com.hiczp.telegram.bot.application.dispatcher.handler.EventRoute
 import com.hiczp.telegram.bot.protocol.event.MessageEvent
 import com.hiczp.telegram.bot.protocol.event.TelegramBotEvent
 import kotlinx.coroutines.CoroutineScope
+import kotlin.jvm.JvmName
 
-/**
- * Registers a handler for messages about new chat members.
- *
- * Triggered when new members are added to a group or supergroup.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("newChatMembersMessageEvent")
+fun EventRoute<MessageEvent>.newChatMembers(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = select({ if (it.event.message.newChatMembers != null) it else null }, build)
+
+@JvmName("newChatMembersTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.newChatMembers(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = on<MessageEvent> { newChatMembers(build) }
+
+@JvmName("whenNewChatMembersMessageEvent")
 fun EventRoute<MessageEvent>.whenNewChatMembers(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) {
-    select({ if (it.event.message.newChatMembers != null) it else null }) {
-        handle(handler)
-    }
-}
+) = newChatMembers { handle(handler) }
 
-/**
- * Convenience extension that registers a new chat members handler directly at the root level.
- */
+@JvmName("whenNewChatMembersTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenNewChatMembers(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) = on<MessageEvent> { whenNewChatMembers(handler) }
 
-/**
- * Registers a handler for messages about a member leaving the chat.
- *
- * Triggered when a member is removed from a group or supergroup.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("leftChatMemberMessageEvent")
+fun EventRoute<MessageEvent>.leftChatMember(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = select({ if (it.event.message.leftChatMember != null) it else null }, build)
+
+@JvmName("leftChatMemberTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.leftChatMember(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = on<MessageEvent> { leftChatMember(build) }
+
+@JvmName("whenLeftChatMemberMessageEvent")
 fun EventRoute<MessageEvent>.whenLeftChatMember(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) {
-    select({ if (it.event.message.leftChatMember != null) it else null }) {
-        handle(handler)
-    }
-}
+) = leftChatMember { handle(handler) }
 
-/**
- * Convenience extension that registers a left chat member handler directly at the root level.
- */
+@JvmName("whenLeftChatMemberTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenLeftChatMember(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) = on<MessageEvent> { whenLeftChatMember(handler) }
 
-/**
- * Registers a handler for messages about chat title changes.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("newChatTitleMessageEvent")
+fun EventRoute<MessageEvent>.newChatTitle(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = select({ if (it.event.message.newChatTitle != null) it else null }, build)
+
+@JvmName("newChatTitleTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.newChatTitle(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = on<MessageEvent> { newChatTitle(build) }
+
+@JvmName("whenNewChatTitleMessageEvent")
 fun EventRoute<MessageEvent>.whenNewChatTitle(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) {
-    select({ if (it.event.message.newChatTitle != null) it else null }) {
-        handle(handler)
-    }
-}
+) = newChatTitle { handle(handler) }
 
-/**
- * Convenience extension that registers a new chat title handler directly at the root level.
- */
+@JvmName("whenNewChatTitleTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenNewChatTitle(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) = on<MessageEvent> { whenNewChatTitle(handler) }
 
-/**
- * Registers a handler for messages about chat photo changes.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("newChatPhotoMessageEvent")
+fun EventRoute<MessageEvent>.newChatPhoto(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = select({ if (it.event.message.newChatPhoto != null) it else null }, build)
+
+@JvmName("newChatPhotoTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.newChatPhoto(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = on<MessageEvent> { newChatPhoto(build) }
+
+@JvmName("whenNewChatPhotoMessageEvent")
 fun EventRoute<MessageEvent>.whenNewChatPhoto(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) {
-    select({ if (it.event.message.newChatPhoto != null) it else null }) {
-        handle(handler)
-    }
-}
+) = newChatPhoto { handle(handler) }
 
-/**
- * Convenience extension that registers a new chat photo handler directly at the root level.
- */
+@JvmName("whenNewChatPhotoTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenNewChatPhoto(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) = on<MessageEvent> { whenNewChatPhoto(handler) }
 
-/**
- * Registers a handler for messages about chat photo deletion.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("deleteChatPhotoMessageEvent")
+fun EventRoute<MessageEvent>.deleteChatPhoto(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = select({ if (it.event.message.deleteChatPhoto == true) it else null }, build)
+
+@JvmName("deleteChatPhotoTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.deleteChatPhoto(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = on<MessageEvent> { deleteChatPhoto(build) }
+
+@JvmName("whenDeleteChatPhotoMessageEvent")
 fun EventRoute<MessageEvent>.whenDeleteChatPhoto(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) {
-    select({ if (it.event.message.deleteChatPhoto == true) it else null }) {
-        handle(handler)
-    }
-}
+) = deleteChatPhoto { handle(handler) }
 
-/**
- * Convenience extension that registers a delete chat photo handler directly at the root level.
- */
+@JvmName("whenDeleteChatPhotoTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenDeleteChatPhoto(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) = on<MessageEvent> { whenDeleteChatPhoto(handler) }
 
-/**
- * Registers a handler for messages about pinned messages.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("pinnedMessageMessageEvent")
+fun EventRoute<MessageEvent>.pinnedMessage(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = select({ if (it.event.message.pinnedMessage != null) it else null }, build)
+
+@JvmName("pinnedMessageTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.pinnedMessage(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = on<MessageEvent> { pinnedMessage(build) }
+
+@JvmName("whenPinnedMessageMessageEvent")
 fun EventRoute<MessageEvent>.whenPinnedMessage(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) {
-    select({ if (it.event.message.pinnedMessage != null) it else null }) {
-        handle(handler)
-    }
-}
+) = pinnedMessage { handle(handler) }
 
-/**
- * Convenience extension that registers a pinned message handler directly at the root level.
- */
+@JvmName("whenPinnedMessageTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenPinnedMessage(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) = on<MessageEvent> { whenPinnedMessage(handler) }
 
+@JvmName("groupCreatedMessageEvent")
+fun EventRoute<MessageEvent>.groupCreated(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = select({ if (it.event.message.groupChatCreated == true) it else null }, build)
 
-/**
- * Registers a handler for messages about group chat creation.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("groupCreatedTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.groupCreated(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = on<MessageEvent> { groupCreated(build) }
+
+@JvmName("whenGroupCreatedMessageEvent")
 fun EventRoute<MessageEvent>.whenGroupCreated(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) {
-    select({ if (it.event.message.groupChatCreated == true) it else null }) {
-        handle(handler)
-    }
-}
+) = groupCreated { handle(handler) }
 
-/**
- * Convenience extension that registers a group created handler directly at the root level.
- */
+@JvmName("whenGroupCreatedTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenGroupCreated(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) = on<MessageEvent> { whenGroupCreated(handler) }
 
-/**
- * Registers a handler for messages about supergroup chat creation.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("supergroupCreatedMessageEvent")
+fun EventRoute<MessageEvent>.supergroupCreated(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = select({ if (it.event.message.supergroupChatCreated == true) it else null }, build)
+
+@JvmName("supergroupCreatedTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.supergroupCreated(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = on<MessageEvent> { supergroupCreated(build) }
+
+@JvmName("whenSupergroupCreatedMessageEvent")
 fun EventRoute<MessageEvent>.whenSupergroupCreated(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) {
-    select({ if (it.event.message.supergroupChatCreated == true) it else null }) {
-        handle(handler)
-    }
-}
+) = supergroupCreated { handle(handler) }
 
-/**
- * Convenience extension that registers a supergroup created handler directly at the root level.
- */
+@JvmName("whenSupergroupCreatedTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenSupergroupCreated(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) = on<MessageEvent> { whenSupergroupCreated(handler) }
 
-/**
- * Registers a handler for messages about channel creation.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("channelCreatedMessageEvent")
+fun EventRoute<MessageEvent>.channelCreated(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = select({ if (it.event.message.channelChatCreated == true) it else null }, build)
+
+@JvmName("channelCreatedTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.channelCreated(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = on<MessageEvent> { channelCreated(build) }
+
+@JvmName("whenChannelCreatedMessageEvent")
 fun EventRoute<MessageEvent>.whenChannelCreated(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) {
-    select({ if (it.event.message.channelChatCreated == true) it else null }) {
-        handle(handler)
-    }
-}
+) = channelCreated { handle(handler) }
 
-/**
- * Convenience extension that registers a channel created handler directly at the root level.
- */
+@JvmName("whenChannelCreatedTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenChannelCreated(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) = on<MessageEvent> { whenChannelCreated(handler) }
 
+@JvmName("videoChatStartedMessageEvent")
+fun EventRoute<MessageEvent>.videoChatStarted(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = select({ if (it.event.message.videoChatStarted != null) it else null }, build)
 
-/**
- * Registers a handler for messages about video chat started.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("videoChatStartedTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.videoChatStarted(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = on<MessageEvent> { videoChatStarted(build) }
+
+@JvmName("whenVideoChatStartedMessageEvent")
 fun EventRoute<MessageEvent>.whenVideoChatStarted(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) {
-    select({ if (it.event.message.videoChatStarted != null) it else null }) {
-        handle(handler)
-    }
-}
+) = videoChatStarted { handle(handler) }
 
-/**
- * Convenience extension that registers a video chat started handler directly at the root level.
- */
+@JvmName("whenVideoChatStartedTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenVideoChatStarted(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) = on<MessageEvent> { whenVideoChatStarted(handler) }
 
-/**
- * Registers a handler for messages about video chat ended.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("videoChatEndedMessageEvent")
+fun EventRoute<MessageEvent>.videoChatEnded(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = select({ if (it.event.message.videoChatEnded != null) it else null }, build)
+
+@JvmName("videoChatEndedTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.videoChatEnded(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = on<MessageEvent> { videoChatEnded(build) }
+
+@JvmName("whenVideoChatEndedMessageEvent")
 fun EventRoute<MessageEvent>.whenVideoChatEnded(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) {
-    select({ if (it.event.message.videoChatEnded != null) it else null }) {
-        handle(handler)
-    }
-}
+) = videoChatEnded { handle(handler) }
 
-/**
- * Convenience extension that registers a video chat ended handler directly at the root level.
- */
+@JvmName("whenVideoChatEndedTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenVideoChatEnded(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) = on<MessageEvent> { whenVideoChatEnded(handler) }
 
-/**
- * Registers a handler for messages about video chat scheduled.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("videoChatScheduledMessageEvent")
+fun EventRoute<MessageEvent>.videoChatScheduled(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = select({ if (it.event.message.videoChatScheduled != null) it else null }, build)
+
+@JvmName("videoChatScheduledTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.videoChatScheduled(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = on<MessageEvent> { videoChatScheduled(build) }
+
+@JvmName("whenVideoChatScheduledMessageEvent")
 fun EventRoute<MessageEvent>.whenVideoChatScheduled(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) {
-    select({ if (it.event.message.videoChatScheduled != null) it else null }) {
-        handle(handler)
-    }
-}
+) = videoChatScheduled { handle(handler) }
 
-/**
- * Convenience extension that registers a video chat scheduled handler directly at the root level.
- */
+@JvmName("whenVideoChatScheduledTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenVideoChatScheduled(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) = on<MessageEvent> { whenVideoChatScheduled(handler) }
 
-/**
- * Registers a handler for messages about video chat participants invited.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("videoChatParticipantsInvitedMessageEvent")
+fun EventRoute<MessageEvent>.videoChatParticipantsInvited(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = select({ if (it.event.message.videoChatParticipantsInvited != null) it else null }, build)
+
+@JvmName("videoChatParticipantsInvitedTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.videoChatParticipantsInvited(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = on<MessageEvent> { videoChatParticipantsInvited(build) }
+
+@JvmName("whenVideoChatParticipantsInvitedMessageEvent")
 fun EventRoute<MessageEvent>.whenVideoChatParticipantsInvited(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) {
-    select({ if (it.event.message.videoChatParticipantsInvited != null) it else null }) {
-        handle(handler)
-    }
-}
+) = videoChatParticipantsInvited { handle(handler) }
 
-/**
- * Convenience extension that registers a video chat participants invited handler directly at the root level.
- */
+@JvmName("whenVideoChatParticipantsInvitedTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenVideoChatParticipantsInvited(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) = on<MessageEvent> { whenVideoChatParticipantsInvited(handler) }
 
+@JvmName("forumTopicCreatedMessageEvent")
+fun EventRoute<MessageEvent>.forumTopicCreated(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = select({ if (it.event.message.forumTopicCreated != null) it else null }, build)
 
-/**
- * Registers a handler for messages about forum topic created.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("forumTopicCreatedTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.forumTopicCreated(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = on<MessageEvent> { forumTopicCreated(build) }
+
+@JvmName("whenForumTopicCreatedMessageEvent")
 fun EventRoute<MessageEvent>.whenForumTopicCreated(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) {
-    select({ if (it.event.message.forumTopicCreated != null) it else null }) {
-        handle(handler)
-    }
-}
+) = forumTopicCreated { handle(handler) }
 
-/**
- * Convenience extension that registers a forum topic created handler directly at the root level.
- */
+@JvmName("whenForumTopicCreatedTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenForumTopicCreated(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) = on<MessageEvent> { whenForumTopicCreated(handler) }
 
-/**
- * Registers a handler for messages about forum topic edited.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("forumTopicEditedMessageEvent")
+fun EventRoute<MessageEvent>.forumTopicEdited(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = select({ if (it.event.message.forumTopicEdited != null) it else null }, build)
+
+@JvmName("forumTopicEditedTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.forumTopicEdited(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = on<MessageEvent> { forumTopicEdited(build) }
+
+@JvmName("whenForumTopicEditedMessageEvent")
 fun EventRoute<MessageEvent>.whenForumTopicEdited(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) {
-    select({ if (it.event.message.forumTopicEdited != null) it else null }) {
-        handle(handler)
-    }
-}
+) = forumTopicEdited { handle(handler) }
 
-/**
- * Convenience extension that registers a forum topic edited handler directly at the root level.
- */
+@JvmName("whenForumTopicEditedTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenForumTopicEdited(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) = on<MessageEvent> { whenForumTopicEdited(handler) }
 
-/**
- * Registers a handler for messages about forum topic closed.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("forumTopicClosedMessageEvent")
+fun EventRoute<MessageEvent>.forumTopicClosed(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = select({ if (it.event.message.forumTopicClosed != null) it else null }, build)
+
+@JvmName("forumTopicClosedTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.forumTopicClosed(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = on<MessageEvent> { forumTopicClosed(build) }
+
+@JvmName("whenForumTopicClosedMessageEvent")
 fun EventRoute<MessageEvent>.whenForumTopicClosed(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) {
-    select({ if (it.event.message.forumTopicClosed != null) it else null }) {
-        handle(handler)
-    }
-}
+) = forumTopicClosed { handle(handler) }
 
-/**
- * Convenience extension that registers a forum topic closed handler directly at the root level.
- */
+@JvmName("whenForumTopicClosedTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenForumTopicClosed(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) = on<MessageEvent> { whenForumTopicClosed(handler) }
 
-/**
- * Registers a handler for messages about forum topic reopened.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("forumTopicReopenedMessageEvent")
+fun EventRoute<MessageEvent>.forumTopicReopened(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = select({ if (it.event.message.forumTopicReopened != null) it else null }, build)
+
+@JvmName("forumTopicReopenedTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.forumTopicReopened(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = on<MessageEvent> { forumTopicReopened(build) }
+
+@JvmName("whenForumTopicReopenedMessageEvent")
 fun EventRoute<MessageEvent>.whenForumTopicReopened(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) {
-    select({ if (it.event.message.forumTopicReopened != null) it else null }) {
-        handle(handler)
-    }
-}
+) = forumTopicReopened { handle(handler) }
 
-/**
- * Convenience extension that registers a forum topic reopened handler directly at the root level.
- */
+@JvmName("whenForumTopicReopenedTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenForumTopicReopened(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) = on<MessageEvent> { whenForumTopicReopened(handler) }
 
-/**
- * Registers a handler for messages about general forum topic hidden.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("generalForumTopicHiddenMessageEvent")
+fun EventRoute<MessageEvent>.generalForumTopicHidden(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = select({ if (it.event.message.generalForumTopicHidden != null) it else null }, build)
+
+@JvmName("generalForumTopicHiddenTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.generalForumTopicHidden(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = on<MessageEvent> { generalForumTopicHidden(build) }
+
+@JvmName("whenGeneralForumTopicHiddenMessageEvent")
 fun EventRoute<MessageEvent>.whenGeneralForumTopicHidden(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) {
-    select({ if (it.event.message.generalForumTopicHidden != null) it else null }) {
-        handle(handler)
-    }
-}
+) = generalForumTopicHidden { handle(handler) }
 
-/**
- * Convenience extension that registers a general forum topic hidden handler directly at the root level.
- */
+@JvmName("whenGeneralForumTopicHiddenTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenGeneralForumTopicHidden(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) = on<MessageEvent> { whenGeneralForumTopicHidden(handler) }
 
-/**
- * Registers a handler for messages about general forum topic unhidden.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("generalForumTopicUnhiddenMessageEvent")
+fun EventRoute<MessageEvent>.generalForumTopicUnhidden(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = select({ if (it.event.message.generalForumTopicUnhidden != null) it else null }, build)
+
+@JvmName("generalForumTopicUnhiddenTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.generalForumTopicUnhidden(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = on<MessageEvent> { generalForumTopicUnhidden(build) }
+
+@JvmName("whenGeneralForumTopicUnhiddenMessageEvent")
 fun EventRoute<MessageEvent>.whenGeneralForumTopicUnhidden(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) {
-    select({ if (it.event.message.generalForumTopicUnhidden != null) it else null }) {
-        handle(handler)
-    }
-}
+) = generalForumTopicUnhidden { handle(handler) }
 
-/**
- * Convenience extension that registers a general forum topic unhidden handler directly at the root level.
- */
+@JvmName("whenGeneralForumTopicUnhiddenTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenGeneralForumTopicUnhidden(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) = on<MessageEvent> { whenGeneralForumTopicUnhidden(handler) }
 
+@JvmName("giveawayCreatedMessageEvent")
+fun EventRoute<MessageEvent>.giveawayCreated(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = select({ if (it.event.message.giveawayCreated != null) it else null }, build)
 
-/**
- * Registers a handler for messages about giveaway created.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("giveawayCreatedTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.giveawayCreated(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = on<MessageEvent> { giveawayCreated(build) }
+
+@JvmName("whenGiveawayCreatedMessageEvent")
 fun EventRoute<MessageEvent>.whenGiveawayCreated(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) {
-    select({ if (it.event.message.giveawayCreated != null) it else null }) {
-        handle(handler)
-    }
-}
+) = giveawayCreated { handle(handler) }
 
-/**
- * Convenience extension that registers a giveaway created handler directly at the root level.
- */
+@JvmName("whenGiveawayCreatedTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenGiveawayCreated(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) = on<MessageEvent> { whenGiveawayCreated(handler) }
 
-/**
- * Registers a handler for messages about giveaway completed.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("giveawayCompletedMessageEvent")
+fun EventRoute<MessageEvent>.giveawayCompleted(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = select({ if (it.event.message.giveawayCompleted != null) it else null }, build)
+
+@JvmName("giveawayCompletedTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.giveawayCompleted(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = on<MessageEvent> { giveawayCompleted(build) }
+
+@JvmName("whenGiveawayCompletedMessageEvent")
 fun EventRoute<MessageEvent>.whenGiveawayCompleted(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) {
-    select({ if (it.event.message.giveawayCompleted != null) it else null }) {
-        handle(handler)
-    }
-}
+) = giveawayCompleted { handle(handler) }
 
-/**
- * Convenience extension that registers a giveaway completed handler directly at the root level.
- */
+@JvmName("whenGiveawayCompletedTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenGiveawayCompleted(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) = on<MessageEvent> { whenGiveawayCompleted(handler) }
 
+@JvmName("boostAddedMessageEvent")
+fun EventRoute<MessageEvent>.boostAdded(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = select({ if (it.event.message.boostAdded != null) it else null }, build)
 
-/**
- * Registers a handler for messages about boost added to chat.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("boostAddedTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.boostAdded(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = on<MessageEvent> { boostAdded(build) }
+
+@JvmName("whenBoostAddedMessageEvent")
 fun EventRoute<MessageEvent>.whenBoostAdded(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) {
-    select({ if (it.event.message.boostAdded != null) it else null }) {
-        handle(handler)
-    }
-}
+) = boostAdded { handle(handler) }
 
-/**
- * Convenience extension that registers a boost added handler directly at the root level.
- */
+@JvmName("whenBoostAddedTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenBoostAdded(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) = on<MessageEvent> { whenBoostAdded(handler) }
 
+@JvmName("migrateToSupergroupMessageEvent")
+fun EventRoute<MessageEvent>.migrateToSupergroup(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = select({ if (it.event.message.migrateToChatId != null) it else null }, build)
 
-/**
- * Registers a handler for messages about group migration to supergroup.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("migrateToSupergroupTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.migrateToSupergroup(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = on<MessageEvent> { migrateToSupergroup(build) }
+
+@JvmName("whenMigrateToSupergroupMessageEvent")
 fun EventRoute<MessageEvent>.whenMigrateToSupergroup(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) {
-    select({ if (it.event.message.migrateToChatId != null) it else null }) {
-        handle(handler)
-    }
-}
+) = migrateToSupergroup { handle(handler) }
 
-/**
- * Convenience extension that registers a migrate to supergroup handler directly at the root level.
- */
+@JvmName("whenMigrateToSupergroupTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenMigrateToSupergroup(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) = on<MessageEvent> { whenMigrateToSupergroup(handler) }
 
-/**
- * Registers a handler for messages about supergroup migration from group.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("migrateFromGroupMessageEvent")
+fun EventRoute<MessageEvent>.migrateFromGroup(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = select({ if (it.event.message.migrateFromChatId != null) it else null }, build)
+
+@JvmName("migrateFromGroupTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.migrateFromGroup(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = on<MessageEvent> { migrateFromGroup(build) }
+
+@JvmName("whenMigrateFromGroupMessageEvent")
 fun EventRoute<MessageEvent>.whenMigrateFromGroup(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) {
-    select({ if (it.event.message.migrateFromChatId != null) it else null }) {
-        handle(handler)
-    }
-}
+) = migrateFromGroup { handle(handler) }
 
-/**
- * Convenience extension that registers a migrate from group handler directly at the root level.
- */
+@JvmName("whenMigrateFromGroupTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenMigrateFromGroup(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) = on<MessageEvent> { whenMigrateFromGroup(handler) }
 
+@JvmName("messageAutoDeleteTimerChangedMessageEvent")
+fun EventRoute<MessageEvent>.messageAutoDeleteTimerChanged(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> =
+    select({ if (it.event.message.messageAutoDeleteTimerChanged != null) it else null }, build)
 
-/**
- * Registers a handler for messages about auto-delete timer changed.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("messageAutoDeleteTimerChangedTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.messageAutoDeleteTimerChanged(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = on<MessageEvent> { messageAutoDeleteTimerChanged(build) }
+
+@JvmName("whenMessageAutoDeleteTimerChangedMessageEvent")
 fun EventRoute<MessageEvent>.whenMessageAutoDeleteTimerChanged(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) {
-    select({ if (it.event.message.messageAutoDeleteTimerChanged != null) it else null }) {
-        handle(handler)
-    }
-}
+) = messageAutoDeleteTimerChanged { handle(handler) }
 
-/**
- * Convenience extension that registers a message auto delete timer changed handler directly at the root level.
- */
+@JvmName("whenMessageAutoDeleteTimerChangedTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenMessageAutoDeleteTimerChanged(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) = on<MessageEvent> { whenMessageAutoDeleteTimerChanged(handler) }
 
+@JvmName("webAppDataMessageEvent")
+fun EventRoute<MessageEvent>.webAppData(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = select({ if (it.event.message.webAppData != null) it else null }, build)
 
-/**
- * Registers a handler for messages containing Web App data.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("webAppDataTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.webAppData(
+    build: EventRoute<MessageEvent>.() -> Unit
+): EventRoute<MessageEvent> = on<MessageEvent> { webAppData(build) }
+
+@JvmName("whenWebAppDataMessageEvent")
 fun EventRoute<MessageEvent>.whenWebAppData(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) {
-    select({ if (it.event.message.webAppData != null) it else null }) {
-        handle(handler)
-    }
-}
+) = webAppData { handle(handler) }
 
-/**
- * Convenience extension that registers a web app data handler directly at the root level.
- */
+@JvmName("whenWebAppDataTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenWebAppData(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) = on<MessageEvent> { whenWebAppData(handler) }

@@ -7,131 +7,118 @@ import com.hiczp.telegram.bot.protocol.event.PurchasedPaidMediaEvent
 import com.hiczp.telegram.bot.protocol.event.ShippingQueryEvent
 import com.hiczp.telegram.bot.protocol.event.TelegramBotEvent
 import kotlinx.coroutines.CoroutineScope
+import kotlin.jvm.JvmName
 
-/**
- * Registers a handler for shipping queries.
- *
- * Triggered when a user chooses a shipping option during checkout.
- * Only for invoices with flexible price.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("shippingQueryTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.shippingQuery(
+    build: EventRoute<ShippingQueryEvent>.() -> Unit
+): EventRoute<ShippingQueryEvent> = on<ShippingQueryEvent> { build() }
+
+@JvmName("whenShippingQueryTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenShippingQuery(
     handler: suspend CoroutineScope.(TelegramBotEventContext<ShippingQueryEvent>) -> Unit
-) = on<ShippingQueryEvent> { handle(handler) }
+) = shippingQuery { handle(handler) }
 
-/**
- * Registers a handler for shipping queries from a specific user.
- *
- * @param userId The Telegram user ID to match.
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("shippingQueryFromUserTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.shippingQueryFromUser(
+    userId: Long,
+    build: EventRoute<ShippingQueryEvent>.() -> Unit
+): EventRoute<ShippingQueryEvent> = on<ShippingQueryEvent> {
+    select({ if (it.event.shippingQuery.from.id == userId) it else null }, build)
+}
+
+@JvmName("whenShippingQueryFromUserTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenShippingQueryFromUser(
     userId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<ShippingQueryEvent>) -> Unit
-) = on<ShippingQueryEvent> {
-    select({ if (it.event.shippingQuery.from.id == userId) it else null }) {
-        handle(handler)
-    }
+) = shippingQueryFromUser(userId) { handle(handler) }
+
+@JvmName("shippingQueryWithPayloadTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.shippingQueryWithPayload(
+    invoicePayload: String,
+    build: EventRoute<ShippingQueryEvent>.() -> Unit
+): EventRoute<ShippingQueryEvent> = on<ShippingQueryEvent> {
+    select({ if (it.event.shippingQuery.invoicePayload == invoicePayload) it else null }, build)
 }
 
-/**
- * Registers a handler for shipping queries with a specific invoice payload.
- *
- * @param invoicePayload The invoice payload to match.
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("whenShippingQueryWithPayloadTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenShippingQueryWithPayload(
     invoicePayload: String,
     handler: suspend CoroutineScope.(TelegramBotEventContext<ShippingQueryEvent>) -> Unit
-) = on<ShippingQueryEvent> {
-    select({ if (it.event.shippingQuery.invoicePayload == invoicePayload) it else null }) {
-        handle(handler)
-    }
-}
+) = shippingQueryWithPayload(invoicePayload) { handle(handler) }
 
+@JvmName("preCheckoutQueryTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.preCheckoutQuery(
+    build: EventRoute<PreCheckoutQueryEvent>.() -> Unit
+): EventRoute<PreCheckoutQueryEvent> = on<PreCheckoutQueryEvent> { build() }
 
-/**
- * Registers a handler for pre-checkout queries.
- *
- * Triggered when a user confirms payment, before the transaction is completed.
- * Contains full information about checkout. The bot must respond within 10 seconds.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("whenPreCheckoutQueryTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenPreCheckoutQuery(
     handler: suspend CoroutineScope.(TelegramBotEventContext<PreCheckoutQueryEvent>) -> Unit
-) = on<PreCheckoutQueryEvent> { handle(handler) }
+) = preCheckoutQuery { handle(handler) }
 
-/**
- * Registers a handler for pre-checkout queries from a specific user.
- *
- * @param userId The Telegram user ID to match.
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("preCheckoutQueryFromUserTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.preCheckoutQueryFromUser(
+    userId: Long,
+    build: EventRoute<PreCheckoutQueryEvent>.() -> Unit
+): EventRoute<PreCheckoutQueryEvent> = on<PreCheckoutQueryEvent> {
+    select({ if (it.event.preCheckoutQuery.from.id == userId) it else null }, build)
+}
+
+@JvmName("whenPreCheckoutQueryFromUserTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenPreCheckoutQueryFromUser(
     userId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<PreCheckoutQueryEvent>) -> Unit
-) = on<PreCheckoutQueryEvent> {
-    select({ if (it.event.preCheckoutQuery.from.id == userId) it else null }) {
-        handle(handler)
-    }
+) = preCheckoutQueryFromUser(userId) { handle(handler) }
+
+@JvmName("preCheckoutQueryWithPayloadTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.preCheckoutQueryWithPayload(
+    invoicePayload: String,
+    build: EventRoute<PreCheckoutQueryEvent>.() -> Unit
+): EventRoute<PreCheckoutQueryEvent> = on<PreCheckoutQueryEvent> {
+    select({ if (it.event.preCheckoutQuery.invoicePayload == invoicePayload) it else null }, build)
 }
 
-/**
- * Registers a handler for pre-checkout queries with a specific invoice payload.
- *
- * @param invoicePayload The invoice payload to match.
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("whenPreCheckoutQueryWithPayloadTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenPreCheckoutQueryWithPayload(
     invoicePayload: String,
     handler: suspend CoroutineScope.(TelegramBotEventContext<PreCheckoutQueryEvent>) -> Unit
-) = on<PreCheckoutQueryEvent> {
-    select({ if (it.event.preCheckoutQuery.invoicePayload == invoicePayload) it else null }) {
-        handle(handler)
-    }
+) = preCheckoutQueryWithPayload(invoicePayload) { handle(handler) }
+
+@JvmName("preCheckoutQueryWithCurrencyTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.preCheckoutQueryWithCurrency(
+    currency: String,
+    build: EventRoute<PreCheckoutQueryEvent>.() -> Unit
+): EventRoute<PreCheckoutQueryEvent> = on<PreCheckoutQueryEvent> {
+    select({ if (it.event.preCheckoutQuery.currency == currency) it else null }, build)
 }
 
-/**
- * Registers a handler for pre-checkout queries with a specific currency.
- *
- * @param currency The currency code to match (e.g., "USD").
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("whenPreCheckoutQueryWithCurrencyTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenPreCheckoutQueryWithCurrency(
     currency: String,
     handler: suspend CoroutineScope.(TelegramBotEventContext<PreCheckoutQueryEvent>) -> Unit
-) = on<PreCheckoutQueryEvent> {
-    select({ if (it.event.preCheckoutQuery.currency == currency) it else null }) {
-        handle(handler)
-    }
-}
+) = preCheckoutQueryWithCurrency(currency) { handle(handler) }
 
+@JvmName("purchasedPaidMediaTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.purchasedPaidMedia(
+    build: EventRoute<PurchasedPaidMediaEvent>.() -> Unit
+): EventRoute<PurchasedPaidMediaEvent> = on<PurchasedPaidMediaEvent> { build() }
 
-/**
- * Registers a handler for purchased paid media events.
- *
- * Triggered when a user purchases paid media with a non-empty payload
- * sent by the bot in a non-channel chat.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("whenPurchasedPaidMediaTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenPurchasedPaidMedia(
     handler: suspend CoroutineScope.(TelegramBotEventContext<PurchasedPaidMediaEvent>) -> Unit
-) = on<PurchasedPaidMediaEvent> { handle(handler) }
+) = purchasedPaidMedia { handle(handler) }
 
-/**
- * Registers a handler for purchased paid media events from a specific user.
- *
- * @param userId The Telegram user ID to match.
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("purchasedPaidMediaFromUserTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.purchasedPaidMediaFromUser(
+    userId: Long,
+    build: EventRoute<PurchasedPaidMediaEvent>.() -> Unit
+): EventRoute<PurchasedPaidMediaEvent> = on<PurchasedPaidMediaEvent> {
+    select({ if (it.event.purchasedPaidMedia.from.id == userId) it else null }, build)
+}
+
+@JvmName("whenPurchasedPaidMediaFromUserTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenPurchasedPaidMediaFromUser(
     userId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<PurchasedPaidMediaEvent>) -> Unit
-) = on<PurchasedPaidMediaEvent> {
-    select({ if (it.event.purchasedPaidMedia.from.id == userId) it else null }) {
-        handle(handler)
-    }
-}
+) = purchasedPaidMediaFromUser(userId) { handle(handler) }

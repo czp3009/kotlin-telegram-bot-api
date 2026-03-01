@@ -6,229 +6,218 @@ import com.hiczp.telegram.bot.protocol.event.EditedChannelPostEvent
 import com.hiczp.telegram.bot.protocol.event.EditedMessageEvent
 import com.hiczp.telegram.bot.protocol.event.TelegramBotEvent
 import kotlinx.coroutines.CoroutineScope
+import kotlin.jvm.JvmName
 
-/**
- * Registers a handler for edited messages.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the edited message.
- */
+@JvmName("editedMessageTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.editedMessage(
+    build: EventRoute<EditedMessageEvent>.() -> Unit
+): EventRoute<EditedMessageEvent> = on<EditedMessageEvent> { build() }
+
+@JvmName("whenEditedMessageTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenEditedMessage(
     handler: suspend CoroutineScope.(TelegramBotEventContext<EditedMessageEvent>) -> Unit
-) = on<EditedMessageEvent> { handle(handler) }
+) = editedMessage { handle(handler) }
 
-/**
- * Registers a handler for edited messages with exact text match.
- *
- * @param exact The exact text string to match.
- * @param handler A suspending function with [CoroutineScope] receiver that handles the matching edited message.
- */
+@JvmName("editedTextTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.editedText(
+    exact: String,
+    build: EventRoute<EditedMessageEvent>.() -> Unit
+): EventRoute<EditedMessageEvent> = on<EditedMessageEvent> {
+    select({ if (it.event.editedMessage.text == exact) it else null }, build)
+}
+
+@JvmName("whenEditedTextTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenEditedText(
     exact: String,
     handler: suspend CoroutineScope.(TelegramBotEventContext<EditedMessageEvent>) -> Unit
-) = on<EditedMessageEvent> {
-    select({ if (it.event.editedMessage.text == exact) it else null }) {
-        handle(handler)
-    }
+) = editedText(exact) { handle(handler) }
+
+@JvmName("editedTextRegexTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.editedTextRegex(
+    pattern: Regex,
+    build: EventRoute<EditedMessageEvent>.() -> Unit
+): EventRoute<EditedMessageEvent> = on<EditedMessageEvent> {
+    select({ if (it.event.editedMessage.text?.matches(pattern) == true) it else null }, build)
 }
 
-/**
- * Registers a handler for edited messages matching a regular expression.
- *
- * @param pattern The regular expression pattern to match.
- * @param handler A suspending function with [CoroutineScope] receiver that handles the matching edited message.
- */
+@JvmName("whenEditedTextRegexTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenEditedTextRegex(
     pattern: Regex,
     handler: suspend CoroutineScope.(TelegramBotEventContext<EditedMessageEvent>) -> Unit
-) = on<EditedMessageEvent> {
-    select({ if (it.event.editedMessage.text?.matches(pattern) == true) it else null }) {
-        handle(handler)
-    }
+) = editedTextRegex(pattern) { handle(handler) }
+
+@JvmName("editedTextContainsTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.editedTextContains(
+    substring: String,
+    ignoreCase: Boolean = false,
+    build: EventRoute<EditedMessageEvent>.() -> Unit
+): EventRoute<EditedMessageEvent> = on<EditedMessageEvent> {
+    select({ if (it.event.editedMessage.text?.contains(substring, ignoreCase) == true) it else null }, build)
 }
 
-/**
- * Registers a handler for edited messages that contain a specific substring.
- *
- * @param substring The substring to search for in the message text.
- * @param ignoreCase Whether the search should be case-insensitive. Default is false.
- * @param handler A suspending function with [CoroutineScope] receiver that handles the matching edited message.
- */
+@JvmName("whenEditedTextContainsTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenEditedTextContains(
     substring: String,
     ignoreCase: Boolean = false,
     handler: suspend CoroutineScope.(TelegramBotEventContext<EditedMessageEvent>) -> Unit
-) = on<EditedMessageEvent> {
-    select({ if (it.event.editedMessage.text?.contains(substring, ignoreCase) == true) it else null }) {
-        handle(handler)
-    }
+) = editedTextContains(substring, ignoreCase) { handle(handler) }
+
+@JvmName("editedTextStartsWithTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.editedTextStartsWith(
+    prefix: String,
+    ignoreCase: Boolean = false,
+    build: EventRoute<EditedMessageEvent>.() -> Unit
+): EventRoute<EditedMessageEvent> = on<EditedMessageEvent> {
+    select({ if (it.event.editedMessage.text?.startsWith(prefix, ignoreCase) == true) it else null }, build)
 }
 
-/**
- * Registers a handler for edited messages whose text starts with a specific prefix.
- *
- * @param prefix The prefix to match at the start of the message text.
- * @param ignoreCase Whether the comparison should be case-insensitive. Default is false.
- * @param handler A suspending function with [CoroutineScope] receiver that handles the matching edited message.
- */
+@JvmName("whenEditedTextStartsWithTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenEditedTextStartsWith(
     prefix: String,
     ignoreCase: Boolean = false,
     handler: suspend CoroutineScope.(TelegramBotEventContext<EditedMessageEvent>) -> Unit
-) = on<EditedMessageEvent> {
-    select({ if (it.event.editedMessage.text?.startsWith(prefix, ignoreCase) == true) it else null }) {
-        handle(handler)
-    }
+) = editedTextStartsWith(prefix, ignoreCase) { handle(handler) }
+
+@JvmName("editedTextEndsWithTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.editedTextEndsWith(
+    suffix: String,
+    ignoreCase: Boolean = false,
+    build: EventRoute<EditedMessageEvent>.() -> Unit
+): EventRoute<EditedMessageEvent> = on<EditedMessageEvent> {
+    select({ if (it.event.editedMessage.text?.endsWith(suffix, ignoreCase) == true) it else null }, build)
 }
 
-/**
- * Registers a handler for edited messages whose text ends with a specific suffix.
- *
- * @param suffix The suffix to match at the end of the message text.
- * @param ignoreCase Whether the comparison should be case-insensitive. Default is false.
- * @param handler A suspending function with [CoroutineScope] receiver that handles the matching edited message.
- */
+@JvmName("whenEditedTextEndsWithTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenEditedTextEndsWith(
     suffix: String,
     ignoreCase: Boolean = false,
     handler: suspend CoroutineScope.(TelegramBotEventContext<EditedMessageEvent>) -> Unit
-) = on<EditedMessageEvent> {
-    select({ if (it.event.editedMessage.text?.endsWith(suffix, ignoreCase) == true) it else null }) {
-        handle(handler)
-    }
+) = editedTextEndsWith(suffix, ignoreCase) { handle(handler) }
+
+@JvmName("editedPhotoTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.editedPhoto(
+    build: EventRoute<EditedMessageEvent>.() -> Unit
+): EventRoute<EditedMessageEvent> = on<EditedMessageEvent> {
+    select({ if (it.event.editedMessage.photo != null) it else null }, build)
 }
 
-/**
- * Registers a handler for edited messages that contain a photo.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the edited photo message.
- */
+@JvmName("whenEditedPhotoTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenEditedPhoto(
     handler: suspend CoroutineScope.(TelegramBotEventContext<EditedMessageEvent>) -> Unit
-) = on<EditedMessageEvent> {
-    select({ if (it.event.editedMessage.photo != null) it else null }) {
-        handle(handler)
-    }
+) = editedPhoto { handle(handler) }
+
+@JvmName("editedVideoTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.editedVideo(
+    build: EventRoute<EditedMessageEvent>.() -> Unit
+): EventRoute<EditedMessageEvent> = on<EditedMessageEvent> {
+    select({ if (it.event.editedMessage.video != null) it else null }, build)
 }
 
-/**
- * Registers a handler for edited messages that contain a video.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the edited video message.
- */
+@JvmName("whenEditedVideoTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenEditedVideo(
     handler: suspend CoroutineScope.(TelegramBotEventContext<EditedMessageEvent>) -> Unit
-) = on<EditedMessageEvent> {
-    select({ if (it.event.editedMessage.video != null) it else null }) {
-        handle(handler)
-    }
+) = editedVideo { handle(handler) }
+
+@JvmName("editedDocumentTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.editedDocument(
+    build: EventRoute<EditedMessageEvent>.() -> Unit
+): EventRoute<EditedMessageEvent> = on<EditedMessageEvent> {
+    select({ if (it.event.editedMessage.document != null) it else null }, build)
 }
 
-/**
- * Registers a handler for edited messages that contain a document.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the edited document message.
- */
+@JvmName("whenEditedDocumentTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenEditedDocument(
     handler: suspend CoroutineScope.(TelegramBotEventContext<EditedMessageEvent>) -> Unit
-) = on<EditedMessageEvent> {
-    select({ if (it.event.editedMessage.document != null) it else null }) {
-        handle(handler)
-    }
+) = editedDocument { handle(handler) }
+
+@JvmName("editedAudioTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.editedAudio(
+    build: EventRoute<EditedMessageEvent>.() -> Unit
+): EventRoute<EditedMessageEvent> = on<EditedMessageEvent> {
+    select({ if (it.event.editedMessage.audio != null) it else null }, build)
 }
 
-/**
- * Registers a handler for edited messages that contain an audio file.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the edited audio message.
- */
+@JvmName("whenEditedAudioTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenEditedAudio(
     handler: suspend CoroutineScope.(TelegramBotEventContext<EditedMessageEvent>) -> Unit
-) = on<EditedMessageEvent> {
-    select({ if (it.event.editedMessage.audio != null) it else null }) {
-        handle(handler)
-    }
+) = editedAudio { handle(handler) }
+
+@JvmName("editedFromUserTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.editedFromUser(
+    userId: Long,
+    build: EventRoute<EditedMessageEvent>.() -> Unit
+): EventRoute<EditedMessageEvent> = on<EditedMessageEvent> {
+    select({ if (it.event.editedMessage.from?.id == userId) it else null }, build)
 }
 
-/**
- * Registers a handler for edited messages from a specific user.
- *
- * @param userId The Telegram user ID to match.
- * @param handler A suspending function with [CoroutineScope] receiver that handles the edited message.
- */
+@JvmName("whenEditedFromUserTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenEditedFromUser(
     userId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<EditedMessageEvent>) -> Unit
-) = on<EditedMessageEvent> {
-    select({ if (it.event.editedMessage.from?.id == userId) it else null }) {
-        handle(handler)
-    }
+) = editedFromUser(userId) { handle(handler) }
+
+@JvmName("editedInChatTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.editedInChat(
+    chatId: Long,
+    build: EventRoute<EditedMessageEvent>.() -> Unit
+): EventRoute<EditedMessageEvent> = on<EditedMessageEvent> {
+    select({ if (it.event.editedMessage.chat.id == chatId) it else null }, build)
 }
 
-/**
- * Registers a handler for edited messages in a specific chat.
- *
- * @param chatId The Telegram chat ID to match.
- * @param handler A suspending function with [CoroutineScope] receiver that handles the edited message.
- */
+@JvmName("whenEditedInChatTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenEditedInChat(
     chatId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<EditedMessageEvent>) -> Unit
-) = on<EditedMessageEvent> {
-    select({ if (it.event.editedMessage.chat.id == chatId) it else null }) {
-        handle(handler)
-    }
-}
+) = editedInChat(chatId) { handle(handler) }
 
-/**
- * Registers a handler for edited channel posts.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the edited channel post.
- */
+@JvmName("editedChannelPostTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.editedChannelPost(
+    build: EventRoute<EditedChannelPostEvent>.() -> Unit
+): EventRoute<EditedChannelPostEvent> = on<EditedChannelPostEvent> { build() }
+
+@JvmName("whenEditedChannelPostTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenEditedChannelPost(
     handler: suspend CoroutineScope.(TelegramBotEventContext<EditedChannelPostEvent>) -> Unit
-) = on<EditedChannelPostEvent> { handle(handler) }
+) = editedChannelPost { handle(handler) }
 
-/**
- * Registers a handler for edited channel posts with exact text match.
- *
- * @param exact The exact text string to match.
- * @param handler A suspending function with [CoroutineScope] receiver that handles the matching edited channel post.
- */
+@JvmName("editedChannelPostTextTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.editedChannelPostText(
+    exact: String,
+    build: EventRoute<EditedChannelPostEvent>.() -> Unit
+): EventRoute<EditedChannelPostEvent> = on<EditedChannelPostEvent> {
+    select({ if (it.event.editedChannelPost.text == exact) it else null }, build)
+}
+
+@JvmName("whenEditedChannelPostTextTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenEditedChannelPostText(
     exact: String,
     handler: suspend CoroutineScope.(TelegramBotEventContext<EditedChannelPostEvent>) -> Unit
-) = on<EditedChannelPostEvent> {
-    select({ if (it.event.editedChannelPost.text == exact) it else null }) {
-        handle(handler)
-    }
+) = editedChannelPostText(exact) { handle(handler) }
+
+@JvmName("editedChannelPostTextRegexTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.editedChannelPostTextRegex(
+    pattern: Regex,
+    build: EventRoute<EditedChannelPostEvent>.() -> Unit
+): EventRoute<EditedChannelPostEvent> = on<EditedChannelPostEvent> {
+    select({ if (it.event.editedChannelPost.text?.matches(pattern) == true) it else null }, build)
 }
 
-/**
- * Registers a handler for edited channel posts matching a regular expression.
- *
- * @param pattern The regular expression pattern to match.
- * @param handler A suspending function with [CoroutineScope] receiver that handles the matching edited channel post.
- */
+@JvmName("whenEditedChannelPostTextRegexTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenEditedChannelPostTextRegex(
     pattern: Regex,
     handler: suspend CoroutineScope.(TelegramBotEventContext<EditedChannelPostEvent>) -> Unit
-) = on<EditedChannelPostEvent> {
-    select({ if (it.event.editedChannelPost.text?.matches(pattern) == true) it else null }) {
-        handle(handler)
-    }
+) = editedChannelPostTextRegex(pattern) { handle(handler) }
+
+@JvmName("editedChannelPostFromChatTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.editedChannelPostFromChat(
+    chatId: Long,
+    build: EventRoute<EditedChannelPostEvent>.() -> Unit
+): EventRoute<EditedChannelPostEvent> = on<EditedChannelPostEvent> {
+    select({ if (it.event.editedChannelPost.chat.id == chatId) it else null }, build)
 }
 
-/**
- * Registers a handler for edited channel posts from a specific channel.
- *
- * @param chatId The Telegram channel ID to match.
- * @param handler A suspending function with [CoroutineScope] receiver that handles the edited channel post.
- */
+@JvmName("whenEditedChannelPostFromChatTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenEditedChannelPostFromChat(
     chatId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<EditedChannelPostEvent>) -> Unit
-) = on<EditedChannelPostEvent> {
-    select({ if (it.event.editedChannelPost.chat.id == chatId) it else null }) {
-        handle(handler)
-    }
-}
+) = editedChannelPostFromChat(chatId) { handle(handler) }

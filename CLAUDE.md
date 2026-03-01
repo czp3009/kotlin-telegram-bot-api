@@ -217,15 +217,36 @@ specialized matcher files in `application/src/commonMain/kotlin/com/hiczp/telegr
 
 - **Handling.kt** - Core DSL (`handling`, `match`, `whenMatch`, `include`, `select`)
 - **CompositeMatchers.kt** - Logic combinators (`allOf`, `anyOf`, `not`, `whenAllOf`, `whenAnyOf`, `whenNot`)
-- **MessageEventMatchers.kt** - Message handlers (`whenText`, `whenTextRegex`, `whenPhoto`, `whenVideo`, etc.)
-- **CallbackQueryMatchers.kt** - Callback query handlers (`whenCallbackData`, `whenCallbackDataRegex`)
-- **InlineQueryMatchers.kt** - Inline query handlers (`whenInlineQuery`, `whenInlineQueryRegex`)
-- **ChatTypeMatchers.kt** - Chat type filters (`whenPrivateChat`, `whenGroupChat`, `whenSupergroupChat`, `whenChannel`)
-- **EditedMessageMatchers.kt** - Edited message handlers
-- **ChatEventMatchers.kt** - Chat event handlers (joins, member updates)
-- **ServiceMessageMatchers.kt** - Service message handlers
-- **PollMatchers.kt** - Poll and reaction handlers
-- **PaymentMatchers.kt** - Payment event handlers
+- **MessageEventMatchers.kt** - Message handlers (`text`, `textRegex`, `textContains`, `textStartsWith`, `textEndsWith`,
+  `photo`, `video`, `audio`, `document`, `sticker`, `voice`, `videoNote`, `animation`, `contact`, `location`, `venue`,
+  `messagePoll`, `dice`, `reply`, `replyTo`, `fromUser`, `fromUsers`, `inChat`, `inChats`, `forwarded`,
+  `forwardedFromChat`, `forwardedFromUser`, and their `when*` variants)
+- **CallbackQueryMatchers.kt** - Callback query handlers (`callbackData`, `callbackDataRegex`, `whenCallbackData`,
+  `whenCallbackDataRegex`)
+- **InlineQueryMatchers.kt** - Inline query handlers (`inlineQuery`, `inlineQueryRegex`, `inlineQueryContains`,
+  `inlineQueryStartsWith`, `inlineQueryFromUser`, `chosenInlineResult`, `chosenInlineResultFromUser`, and their `when*`
+  variants)
+- **ChatTypeMatchers.kt** - Chat type filters (`privateChat`, `groupChat`, `supergroupChat`, `channel`,
+  `whenPrivateChat`, `whenGroupChat`, `whenSupergroupChat`, `whenChannel`)
+- **EditedMessageMatchers.kt** - Edited message handlers (`editedMessage`, `editedText`, `editedTextRegex`,
+  `editedTextContains`, `editedTextStartsWith`, `editedTextEndsWith`, `editedPhoto`, `editedVideo`, `editedDocument`,
+  `editedAudio`, `editedFromUser`, `editedInChat`, `editedChannelPost`, and their `when*` variants)
+- **ChatEventMatchers.kt** - Chat event handlers (`chatJoinRequest`, `chatJoinRequestFromChat`,
+  `chatJoinRequestFromUser`, `chatMemberUpdated`, `chatMemberUpdatedInChat`, `myChatMemberUpdated`,
+  `myChatMemberUpdatedInChat`, `chatBoost`, `chatBoostInChat`, `removedChatBoost`, `removedChatBoostInChat`, and their
+  `when*` variants)
+- **ServiceMessageMatchers.kt** - Service message handlers (`newChatMembers`, `leftChatMember`, `newChatTitle`,
+  `newChatPhoto`, `deleteChatPhoto`, `pinnedMessage`, `groupCreated`, `supergroupCreated`, `channelCreated`,
+  `videoChatStarted`, `videoChatEnded`, `videoChatScheduled`, `videoChatParticipantsInvited`, `forumTopicCreated`,
+  `forumTopicEdited`, `forumTopicClosed`, `forumTopicReopened`, `generalForumTopicHidden`, `generalForumTopicUnhidden`,
+  `giveawayCreated`, `giveawayCompleted`, `boostAdded`, `migrateToSupergroup`, `migrateFromGroup`,
+  `messageAutoDeleteTimerChanged`, `webAppData`, and their `when*` variants)
+- **PollMatchers.kt** - Poll and reaction handlers (`pollUpdate`, `pollAnswer`, `pollAnswerFromUser`, `messageReaction`,
+  `messageReactionInChat`, `messageReactionToMessage`, `messageReactionCount`, `messageReactionCountInChat`, and their
+  `when*` variants)
+- **PaymentMatchers.kt** - Payment event handlers (`shippingQuery`, `shippingQueryFromUser`, `shippingQueryWithPayload`,
+  `preCheckoutQuery`, `preCheckoutQueryFromUser`, `preCheckoutQueryWithPayload`, `preCheckoutQueryWithCurrency`,
+  `purchasedPaidMedia`, `purchasedPaidMediaFromUser`, and their `when*` variants)
 
 **Naming Convention:**
 

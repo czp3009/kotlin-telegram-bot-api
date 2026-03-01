@@ -4,146 +4,128 @@ import com.hiczp.telegram.bot.application.context.TelegramBotEventContext
 import com.hiczp.telegram.bot.application.dispatcher.handler.EventRoute
 import com.hiczp.telegram.bot.protocol.event.*
 import kotlinx.coroutines.CoroutineScope
+import kotlin.jvm.JvmName
 
-/**
- * Registers a handler for poll state updates.
- *
- * Bots receive only updates about manually stopped polls and polls
- * which were sent by the bot.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
-fun EventRoute<TelegramBotEvent>.whenPoll(
+@JvmName("pollUpdateTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.pollUpdate(
+    build: EventRoute<PollEvent>.() -> Unit
+): EventRoute<PollEvent> = on<PollEvent> { build() }
+
+@JvmName("whenPollUpdateTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.whenPollUpdate(
     handler: suspend CoroutineScope.(TelegramBotEventContext<PollEvent>) -> Unit
-) = on<PollEvent> { handle(handler) }
+) = pollUpdate { handle(handler) }
 
-/**
- * Registers a handler for poll state updates with a specific poll ID.
- *
- * @param pollId The poll ID to match.
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
-fun EventRoute<TelegramBotEvent>.whenPoll(
+@JvmName("pollUpdateWithPollIdTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.pollUpdate(
     pollId: String,
-    handler: suspend CoroutineScope.(TelegramBotEventContext<PollEvent>) -> Unit
-) = on<PollEvent> {
-    select({ if (it.event.poll.id == pollId) it else null }) {
-        handle(handler)
-    }
+    build: EventRoute<PollEvent>.() -> Unit
+): EventRoute<PollEvent> = on<PollEvent> {
+    select({ if (it.event.poll.id == pollId) it else null }, build)
 }
 
+@JvmName("whenPollUpdateWithPollIdTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.whenPollUpdate(
+    pollId: String,
+    handler: suspend CoroutineScope.(TelegramBotEventContext<PollEvent>) -> Unit
+) = pollUpdate(pollId) { handle(handler) }
 
-/**
- * Registers a handler for poll answer events.
- *
- * Triggered when a user changes their answer in a non-anonymous poll.
- * Bots receive new votes only in polls that were sent by the bot itself.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("pollAnswerTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.pollAnswer(
+    build: EventRoute<PollAnswerEvent>.() -> Unit
+): EventRoute<PollAnswerEvent> = on<PollAnswerEvent> { build() }
+
+@JvmName("whenPollAnswerTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenPollAnswer(
     handler: suspend CoroutineScope.(TelegramBotEventContext<PollAnswerEvent>) -> Unit
-) = on<PollAnswerEvent> { handle(handler) }
+) = pollAnswer { handle(handler) }
 
-/**
- * Registers a handler for poll answer events with a specific poll ID.
- *
- * @param pollId The poll ID to match.
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("pollAnswerWithPollIdTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.pollAnswer(
+    pollId: String,
+    build: EventRoute<PollAnswerEvent>.() -> Unit
+): EventRoute<PollAnswerEvent> = on<PollAnswerEvent> {
+    select({ if (it.event.pollAnswer.pollId == pollId) it else null }, build)
+}
+
+@JvmName("whenPollAnswerWithPollIdTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenPollAnswer(
     pollId: String,
     handler: suspend CoroutineScope.(TelegramBotEventContext<PollAnswerEvent>) -> Unit
-) = on<PollAnswerEvent> {
-    select({ if (it.event.pollAnswer.pollId == pollId) it else null }) {
-        handle(handler)
-    }
+) = pollAnswer(pollId) { handle(handler) }
+
+@JvmName("pollAnswerFromUserTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.pollAnswerFromUser(
+    userId: Long,
+    build: EventRoute<PollAnswerEvent>.() -> Unit
+): EventRoute<PollAnswerEvent> = on<PollAnswerEvent> {
+    select({ if (it.event.pollAnswer.user?.id == userId) it else null }, build)
 }
 
-/**
- * Registers a handler for poll answer events from a specific user.
- *
- * @param userId The Telegram user ID to match.
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("whenPollAnswerFromUserTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenPollAnswerFromUser(
     userId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<PollAnswerEvent>) -> Unit
-) = on<PollAnswerEvent> {
-    select({ if (it.event.pollAnswer.user?.id == userId) it else null }) {
-        handle(handler)
-    }
-}
+) = pollAnswerFromUser(userId) { handle(handler) }
 
+@JvmName("messageReactionTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.messageReaction(
+    build: EventRoute<MessageReactionEvent>.() -> Unit
+): EventRoute<MessageReactionEvent> = on<MessageReactionEvent> { build() }
 
-/**
- * Registers a handler for message reaction events.
- *
- * Triggered when a reaction to a message was changed by a user.
- * The bot must be an administrator in the chat and must explicitly specify
- * "message_reaction" in the list of allowed_updates to receive these updates.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("whenMessageReactionTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenMessageReaction(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageReactionEvent>) -> Unit
-) = on<MessageReactionEvent> { handle(handler) }
+) = messageReaction { handle(handler) }
 
-/**
- * Registers a handler for message reaction events in a specific chat.
- *
- * @param chatId The Telegram chat ID to match.
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("messageReactionInChatTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.messageReactionInChat(
+    chatId: Long,
+    build: EventRoute<MessageReactionEvent>.() -> Unit
+): EventRoute<MessageReactionEvent> = on<MessageReactionEvent> {
+    select({ if (it.event.messageReaction.chat.id == chatId) it else null }, build)
+}
+
+@JvmName("whenMessageReactionInChatTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenMessageReactionInChat(
     chatId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageReactionEvent>) -> Unit
-) = on<MessageReactionEvent> {
-    select({ if (it.event.messageReaction.chat.id == chatId) it else null }) {
-        handle(handler)
-    }
+) = messageReactionInChat(chatId) { handle(handler) }
+
+@JvmName("messageReactionToMessageTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.messageReactionToMessage(
+    messageId: Long,
+    build: EventRoute<MessageReactionEvent>.() -> Unit
+): EventRoute<MessageReactionEvent> = on<MessageReactionEvent> {
+    select({ if (it.event.messageReaction.messageId == messageId) it else null }, build)
 }
 
-/**
- * Registers a handler for message reaction events on a specific message.
- *
- * @param messageId The message ID to match.
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("whenMessageReactionToMessageTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenMessageReactionToMessage(
     messageId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageReactionEvent>) -> Unit
-) = on<MessageReactionEvent> {
-    select({ if (it.event.messageReaction.messageId == messageId) it else null }) {
-        handle(handler)
-    }
-}
+) = messageReactionToMessage(messageId) { handle(handler) }
 
+@JvmName("messageReactionCountTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.messageReactionCount(
+    build: EventRoute<MessageReactionCountEvent>.() -> Unit
+): EventRoute<MessageReactionCountEvent> = on<MessageReactionCountEvent> { build() }
 
-/**
- * Registers a handler for message reaction count events.
- *
- * Triggered when reactions to a message with anonymous reactions were changed.
- * The bot must be an administrator in the chat and must explicitly specify
- * "message_reaction_count" in the list of allowed_updates to receive these updates.
- *
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("whenMessageReactionCountTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenMessageReactionCount(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageReactionCountEvent>) -> Unit
-) = on<MessageReactionCountEvent> { handle(handler) }
+) = messageReactionCount { handle(handler) }
 
-/**
- * Registers a handler for message reaction count events in a specific chat.
- *
- * @param chatId The Telegram chat ID to match.
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
- */
+@JvmName("messageReactionCountInChatTelegramBotEvent")
+fun EventRoute<TelegramBotEvent>.messageReactionCountInChat(
+    chatId: Long,
+    build: EventRoute<MessageReactionCountEvent>.() -> Unit
+): EventRoute<MessageReactionCountEvent> = on<MessageReactionCountEvent> {
+    select({ if (it.event.messageReactionCount.chat.id == chatId) it else null }, build)
+}
+
+@JvmName("whenMessageReactionCountInChatTelegramBotEvent")
 fun EventRoute<TelegramBotEvent>.whenMessageReactionCountInChat(
     chatId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageReactionCountEvent>) -> Unit
-) = on<MessageReactionCountEvent> {
-    select({ if (it.event.messageReactionCount.chat.id == chatId) it else null }) {
-        handle(handler)
-    }
-}
+) = messageReactionCountInChat(chatId) { handle(handler) }
