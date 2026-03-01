@@ -9,12 +9,9 @@ import com.hiczp.telegram.bot.protocol.event.BusinessMessageEvent
 import com.hiczp.telegram.bot.protocol.event.MessageEvent
 import com.hiczp.telegram.bot.protocol.event.TelegramBotEvent
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeout
 import kotlin.time.Duration
 
 private val logger = KotlinLogging.logger("ConversationFSM")
@@ -154,6 +151,7 @@ class ConversationScope(
  * @param onTimeout Callback invoked when the conversation times out. Called with the original context.
  * @param onCancel Callback invoked when the conversation is canceled. Called with the context that triggered cancellation.
  * @param block The conversation logic to execute within a [ConversationScope].
+ * @return The [Job] representing the conversation coroutine. Can be used to cancel the conversation externally.
  * @throws IllegalStateException if [conversationInterceptor] is not installed.
  * @throws IllegalStateException if the current event cannot provide chatId/userId for the default [ConversationId.userInChat].
  */
@@ -175,7 +173,7 @@ fun <T : TelegramBotEvent> TelegramBotEventContext<T>.startConversation(
     onTimeout: suspend TelegramBotEventContext<T>.() -> Unit = {},
     onCancel: suspend TelegramBotEventContext<TelegramBotEvent>.() -> Unit = {},
     block: suspend ConversationScope.() -> Unit,
-) {
+): Job {
     val manager = attributes.getOrNull(ConversationManagerKey)
         ?: error("ConversationInterceptor not installed")
 
@@ -200,7 +198,7 @@ fun <T : TelegramBotEvent> TelegramBotEventContext<T>.startConversation(
         error("A conversation is already active for Conversation: $id. You must finish or cancel the existing conversation before starting a new one.")
     }
 
-    applicationScope.launch {
+    return applicationScope.launch {
         try {
             if (timeout != null) {
                 withTimeout(timeout) {
