@@ -989,7 +989,7 @@ class HandlingTest {
     }
 
     @Test
-    fun `multiple launches should all execute in child scope (not TestScope)`() = runTest {
+    fun `multiple launches should all execute in child scope not TestScope`() = runTest {
         val testScopeJob = coroutineContext[Job]
         val launchJobs = mutableListOf<Job?>()
 

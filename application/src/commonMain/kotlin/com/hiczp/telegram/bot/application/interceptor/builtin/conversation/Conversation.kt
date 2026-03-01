@@ -2,6 +2,7 @@ package com.hiczp.telegram.bot.application.interceptor.builtin.conversation
 
 import com.hiczp.telegram.bot.application.context.TelegramBotEventContext
 import com.hiczp.telegram.bot.application.context.extractChatId
+import com.hiczp.telegram.bot.application.context.extractThreadId
 import com.hiczp.telegram.bot.application.context.extractUserId
 import com.hiczp.telegram.bot.application.interceptor.TelegramEventInterceptor
 import com.hiczp.telegram.bot.protocol.event.TelegramBotEvent
@@ -10,41 +11,32 @@ import io.ktor.util.*
 import io.ktor.util.collections.*
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
-import kotlin.jvm.JvmInline
 
 private val logger = KotlinLogging.logger("ConversationInterceptor")
 
 /**
  * Represents a unique identifier for a conversation session.
  *
- * Used to route events to the correct active conversation. The ID can be based on:
- * - A specific chat (all users in that chat share the same conversation)
- * - A specific user (across all chats)
- * - A user in a specific chat (most common for private conversations)
- * - A thread/topic within a chat
- * - A user in a specific thread/topic
+ * Used to route events to the correct active conversation. The ID is composed of:
+ * - [chatId]: The chat where the conversation takes place (required)
+ * - [userId]: The user participating in the conversation (optional, for per-user conversations in group chats)
+ * - [threadId]: The thread/topic within a chat (optional, for forum topics or message threads)
  *
- * @property value The string representation of this conversation ID.
+ * Common patterns:
+ * - Whole chat: `ConversationId(chatId = 123)` - all users share one conversation
+ * - User in chat: `ConversationId(chatId = 123, userId = 456)` - per-user conversation in group
+ * - Thread in chat: `ConversationId(chatId = 123, threadId = 789)` - whole thread shares conversation
+ * - User in thread: `ConversationId(chatId = 123, threadId = 789, userId = 456)` - per-user in thread
+ *
+ * @property chatId The chat ID where the conversation takes place.
+ * @property threadId The thread/topic ID within the chat, or null for main chat conversations.
+ * @property userId The user ID participating in the conversation, or null for chat-wide conversations.
  */
-@JvmInline
-value class ConversationId(val value: String) {
-    companion object {
-        fun chat(chatId: Long) =
-            ConversationId("chat:$chatId")
-
-        fun user(userId: Long) =
-            ConversationId("user:$userId")
-
-        fun userInChat(chatId: Long, userId: Long) =
-            ConversationId("chat:$chatId:user:$userId")
-
-        fun thread(chatId: Long, threadId: Long) =
-            ConversationId("chat:$chatId:thread:$threadId")
-
-        fun userInThread(chatId: Long, threadId: Long, userId: Long) =
-            ConversationId("chat:$chatId:thread:$threadId:user:$userId")
-    }
-}
+data class ConversationId(
+    val chatId: Long,
+    val threadId: Long? = null,
+    val userId: Long? = null,
+)
 
 /**
  * Holds the state for an active conversation.
@@ -69,20 +61,42 @@ data class ConversationRecord(
  * It is stored in the [TelegramBotEventContext.attributes] and shared across all event processing.
  *
  * @param idExtractors A list of functions that extract [ConversationId] from events.
- *        The first non-null result is used. Defaults to extracting userInChat, then chat, then user.
+ *        The first non-null result is used. Defaults to trying in order:
+ *        1. chatId + threadId + userId (most specific: user in a thread)
+ *        2. chatId + userId (user in chat, no thread)
+ *        3. chatId + threadId (whole thread, no specific user)
+ *        4. chatId (whole chat)
  */
 open class ConversationManager(
     val idExtractors: List<(TelegramBotEvent) -> ConversationId?> = listOf(
+        // chatId + threadId + userId (most specific)
+        { event ->
+            val chatId = event.extractChatId()
+            val threadId = event.extractThreadId()
+            val userId = event.extractUserId()
+            if (chatId != null && threadId != null && userId != null) {
+                ConversationId(chatId, threadId, userId)
+            } else null
+        },
+        // chatId + userId (user in chat, no thread)
         { event ->
             val chatId = event.extractChatId()
             val userId = event.extractUserId()
-            if (chatId != null && userId != null) ConversationId.userInChat(chatId, userId) else null
+            if (chatId != null && userId != null) {
+                ConversationId(chatId, userId = userId)
+            } else null
         },
+        // chatId + threadId (whole thread)
         { event ->
-            event.extractChatId()?.let { ConversationId.chat(it) }
+            val chatId = event.extractChatId()
+            val threadId = event.extractThreadId()
+            if (chatId != null && threadId != null) {
+                ConversationId(chatId, threadId)
+            } else null
         },
+        // chatId (whole chat)
         { event ->
-            event.extractUserId()?.let { ConversationId.user(it) }
+            event.extractChatId()?.let { ConversationId(it) }
         }
     )
 ) {

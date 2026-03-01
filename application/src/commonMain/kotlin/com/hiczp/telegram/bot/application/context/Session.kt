@@ -10,6 +10,7 @@ import com.hiczp.telegram.bot.protocol.event.*
  *
  * @return The chat ID, or null if the event has no associated chat.
  * @see extractUserId
+ * @see extractThreadId
  */
 fun TelegramBotEvent.extractChatId(): Long? = when (this) {
     is MessageEvent -> message.chat.id
@@ -35,6 +36,41 @@ fun TelegramBotEvent.extractChatId(): Long? = when (this) {
     is ChatJoinRequestEvent -> chatJoinRequest.chat.id
     is ChatBoostEvent -> chatBoost.chat.id
     is RemovedChatBoostEvent -> removedChatBoost.chat.id
+}
+
+/**
+ * Extracts the thread/topic ID from this Telegram event.
+ *
+ * This function returns the message thread ID for event types that are associated with a forum topic
+ * or message thread. For events without a thread association, it returns null.
+ *
+ * @return The thread/topic ID, or null if the event has no associated thread.
+ * @see extractChatId
+ */
+fun TelegramBotEvent.extractThreadId(): Long? = when (this) {
+    is MessageEvent -> message.messageThreadId
+    is EditedMessageEvent -> editedMessage.messageThreadId
+    is ChannelPostEvent -> channelPost.messageThreadId
+    is EditedChannelPostEvent -> editedChannelPost.messageThreadId
+    is BusinessConnectionEvent -> null
+    is BusinessMessageEvent -> businessMessage.messageThreadId
+    is EditedBusinessMessageEvent -> editedBusinessMessage.messageThreadId
+    is DeletedBusinessMessagesEvent -> null
+    is MessageReactionEvent -> null
+    is MessageReactionCountEvent -> null
+    is InlineQueryEvent -> null
+    is ChosenInlineResultEvent -> null
+    is CallbackQueryEvent -> callbackQuery.message?.messageThreadId
+    is ShippingQueryEvent -> null
+    is PreCheckoutQueryEvent -> null
+    is PurchasedPaidMediaEvent -> null
+    is PollEvent -> null
+    is PollAnswerEvent -> null
+    is MyChatMemberEvent -> null
+    is ChatMemberEvent -> null
+    is ChatJoinRequestEvent -> null
+    is ChatBoostEvent -> null
+    is RemovedChatBoostEvent -> null
 }
 
 /**

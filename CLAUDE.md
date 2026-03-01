@@ -392,20 +392,37 @@ val interceptors = listOf(conversationInterceptor)
 
 // In a handler, start a conversation
 command("survey") {
-    handle {
+  handle { ctx ->
         startConversation(
             timeout = 5.minutes,
-            onTimeout = { reply("Survey timed out.") },
-            onCancel = { reply("Survey cancelled.") }
+          onTimeout = {
+            val chatId = event.extractChatId()
+            if (chatId != null) {
+              client.sendMessage(chatId.toString(), "Survey timed out.")
+            }
+          },
+          onCancel = {
+            val chatId = event.extractChatId()
+            if (chatId != null) {
+              client.sendMessage(chatId.toString(), "Survey cancelled.")
+            }
+          }
         ) {
+          // Use id.chatId to send messages in the conversation
             val name = awaitTextMessage().event.message.text
-            reply("Hello, $name!")
+          client.sendMessage(id.chatId.toString(), "Hello, $name!")
             val age = awaitTextMessage().event.message.text
-            reply("Thanks! You are $age years old.")
+          client.sendMessage(id.chatId.toString(), "Thanks! You are $age years old.")
         }
     }
 }
 ```
+
+The `ConversationId` is a data class with `chatId`, `userId` (optional), and `threadId` (optional):
+
+- `ConversationId(chatId)` - whole chat shares one conversation
+- `ConversationId(chatId, userId = userId)` - per-user conversation in a group
+- `ConversationId(chatId, threadId = threadId)` - per-thread conversation
 
 ### Quick Start (Application Module)
 
