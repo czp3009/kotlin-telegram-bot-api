@@ -64,13 +64,13 @@ class CompositeMatchersTest {
     @Test
     fun `allOf should match when all predicates are true`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
-                allOf(
+            onMessageEvent {
+                whenAllOf(
                     { it.event.message.text != null },
                     { it.event.message.chat.id == 100L },
                     { it.event.message.from?.id == 1L }
                 ) {
-                    handle { invokedHandlers.add("all_matched") }
+                    invokedHandlers.add("all_matched")
                 }
             }
         }
@@ -85,13 +85,13 @@ class CompositeMatchersTest {
     @Test
     fun `allOf should not match when any predicate is false`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
-                allOf(
+            onMessageEvent {
+                whenAllOf(
                     { it.event.message.text != null },
                     { it.event.message.chat.id == 999L },
                     { it.event.message.from?.id == 1L }
                 ) {
-                    handle { invokedHandlers.add("all_matched") }
+                    invokedHandlers.add("all_matched")
                 }
             }
         }
@@ -106,9 +106,9 @@ class CompositeMatchersTest {
     @Test
     fun `allOf with empty predicates should match`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
-                allOf {
-                    handle { invokedHandlers.add("empty_allOf") }
+            onMessageEvent {
+                whenAllOf {
+                    invokedHandlers.add("empty_allOf")
                 }
             }
         }
@@ -123,13 +123,13 @@ class CompositeMatchersTest {
     @Test
     fun `anyOf should match when any predicate is true`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
-                anyOf(
+            onMessageEvent {
+                whenAnyOf(
                     { it.event.message.chat.id == 999L },
                     { it.event.message.text?.contains("hello") == true },
                     { it.event.message.from?.id == 999L }
                 ) {
-                    handle { invokedHandlers.add("any_matched") }
+                    invokedHandlers.add("any_matched")
                 }
             }
         }
@@ -144,13 +144,13 @@ class CompositeMatchersTest {
     @Test
     fun `anyOf should not match when all predicates are false`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
-                anyOf(
+            onMessageEvent {
+                whenAnyOf(
                     { it.event.message.chat.id == 999L },
                     { it.event.message.text?.contains("xyz") == true },
                     { it.event.message.from?.id == 999L }
                 ) {
-                    handle { invokedHandlers.add("any_matched") }
+                    invokedHandlers.add("any_matched")
                 }
             }
         }
@@ -165,9 +165,9 @@ class CompositeMatchersTest {
     @Test
     fun `anyOf with empty predicates should not match`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
-                anyOf {
-                    handle { invokedHandlers.add("empty_anyOf") }
+            onMessageEvent {
+                whenAnyOf {
+                    invokedHandlers.add("empty_anyOf")
                 }
             }
         }
@@ -182,9 +182,9 @@ class CompositeMatchersTest {
     @Test
     fun `not should match when predicate is false`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
-                not({ it.event.message.text?.startsWith("/") == true }) {
-                    handle { invokedHandlers.add("not_command") }
+            onMessageEvent {
+                whenNot({ it.event.message.text?.startsWith("/") == true }) {
+                    invokedHandlers.add("not_command")
                 }
             }
         }
@@ -199,9 +199,9 @@ class CompositeMatchersTest {
     @Test
     fun `not should not match when predicate is true`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
-                not({ it.event.message.text?.startsWith("/") == true }) {
-                    handle { invokedHandlers.add("not_command") }
+            onMessageEvent {
+                whenNot({ it.event.message.text?.startsWith("/") == true }) {
+                    invokedHandlers.add("not_command")
                 }
             }
         }
@@ -216,12 +216,12 @@ class CompositeMatchersTest {
     @Test
     fun `whenAllOf should combine allOf with handle`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
+            onMessageEvent {
                 whenAllOf(
                     { it.event.message.text != null },
                     { it.event.message.chat.id == 100L }
-                ) { ctx ->
-                    invokedHandlers.add("whenAllOf:${ctx.event.message.text}")
+                ) {
+                    invokedHandlers.add("whenAllOf:${event.message.text}")
                 }
             }
         }
@@ -236,12 +236,12 @@ class CompositeMatchersTest {
     @Test
     fun `whenAnyOf should combine anyOf with handle`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
+            onMessageEvent {
                 whenAnyOf(
                     { it.event.message.text?.contains("hello") == true },
                     { it.event.message.text?.contains("world") == true }
-                ) { ctx ->
-                    invokedHandlers.add("whenAnyOf:${ctx.event.message.text}")
+                ) {
+                    invokedHandlers.add("whenAnyOf:${event.message.text}")
                 }
             }
         }
@@ -256,9 +256,9 @@ class CompositeMatchersTest {
     @Test
     fun `whenNot should combine not with handle`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
-                whenNot({ it.event.message.text?.length?.let { l -> l > 10 } == true }) { ctx ->
-                    invokedHandlers.add("short_message:${ctx.event.message.text}")
+            onMessageEvent {
+                whenNot({ it.event.message.text?.length?.let { l -> l > 10 } == true }) {
+                    invokedHandlers.add("short_message:${event.message.text}")
                 }
             }
         }
@@ -280,8 +280,8 @@ class CompositeMatchersTest {
         // Match: has text AND (contains "hello" OR contains "hi") AND NOT a command
         // We inline the OR and NOT conditions into the allOf predicates
         val routeNode = handling {
-            on<MessageEvent> {
-                allOf(
+            onMessageEvent {
+                whenAllOf(
                     { it.event.message.text != null },
                     { ctx ->
                         val text = ctx.event.message.text
@@ -290,9 +290,7 @@ class CompositeMatchersTest {
                     },
                     { it.event.message.text?.startsWith("/") != true }
                 ) {
-                    handle { ctx ->
-                        invokedHandlers.add("greeting:${ctx.event.message.text}")
-                    }
+                    invokedHandlers.add("greeting:${event.message.text}")
                 }
             }
         }
@@ -324,18 +322,18 @@ class CompositeMatchersTest {
     @Test
     fun `composite matchers with fallback handle`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
-                allOf(
+            onMessageEvent {
+                whenAllOf(
                     { it.event.message.text != null },
                     { it.event.message.chat.id == 100L }
                 ) {
-                    handle { invokedHandlers.add("matched") }
+                    invokedHandlers.add("matched")
                 }
                 handle { invokedHandlers.add("fallback") }
             }
         }
 
-        // Should match allOf
+        // Should match whenAllOf
         var context = createContext(createMessageEvent(text = "hello"))
         assertTrue(routeNode.execute(context))
         assertEquals(listOf("matched"), invokedHandlers)
@@ -350,11 +348,11 @@ class CompositeMatchersTest {
     @Test
     fun `composite matchers at root level`() = runTest {
         val routeNode = handling {
-            anyOf(
+            whenAnyOf(
                 { ctx -> ctx.event is MessageEvent },
                 { ctx -> ctx.event is MessageEvent && (ctx.event as MessageEvent).message.text?.contains("test") == true }
             ) {
-                handle { invokedHandlers.add("root_composite") }
+                invokedHandlers.add("root_composite")
             }
         }
 
@@ -368,19 +366,16 @@ class CompositeMatchersTest {
     @Test
     fun `chained composite matchers`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
-                // First check: must have text
+            onMessageEvent {
+                // Nested composite matchers: text AND (chat 100 OR user 1) AND NOT command
+                // For nested composites, use stackable versions with handle at the end
                 allOf({ it.event.message.text != null }) {
-                    // Second check: must be private chat or from specific user
                     anyOf(
                         { it.event.message.chat.id == 100L },
                         { it.event.message.from?.id == 1L }
                     ) {
-                        // Third check: must not be a command
-                        not({ it.event.message.text?.startsWith("/") == true }) {
-                            handle { ctx ->
-                                invokedHandlers.add("chained:${ctx.event.message.text}")
-                            }
+                        whenNot({ it.event.message.text?.startsWith("/") == true }) {
+                            invokedHandlers.add("chained:${event.message.text}")
                         }
                     }
                 }

@@ -1,8 +1,7 @@
 package com.hiczp.telegram.bot.application.test.dispatcher.handler
 
-import com.hiczp.telegram.bot.application.dispatcher.handler.ArgumentDefinition
-import com.hiczp.telegram.bot.application.dispatcher.handler.CommandParseException
-import com.hiczp.telegram.bot.application.dispatcher.handler.generateHelpText
+import com.hiczp.telegram.bot.application.dispatcher.handler.command.ArgumentDefinition
+import com.hiczp.telegram.bot.application.dispatcher.handler.command.CommandParseException
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue

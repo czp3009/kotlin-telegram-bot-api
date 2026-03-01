@@ -1,7 +1,9 @@
 package com.hiczp.telegram.bot.application.test.dispatcher.handler
 
 import com.hiczp.telegram.bot.application.context.ProvidedUserTelegramBotEventContext
-import com.hiczp.telegram.bot.application.dispatcher.handler.*
+import com.hiczp.telegram.bot.application.dispatcher.handler.HandlerTelegramEventDispatcher
+import com.hiczp.telegram.bot.application.dispatcher.handler.command.*
+import com.hiczp.telegram.bot.application.dispatcher.handler.handling
 import com.hiczp.telegram.bot.client.TelegramBotClient
 import com.hiczp.telegram.bot.protocol.event.MessageEvent
 import com.hiczp.telegram.bot.protocol.model.Chat
@@ -341,25 +343,17 @@ class StructuredCommandTest {
             commandEndpoint("ping") { invokedHandlers.add("ping") }
         }
 
-        val context = createContext("/ping")
-        val result = routeNode.execute(context)
-
-        assertTrue(result)
+        assertTrue(routeNode.execute(createContext("/ping")))
         assertEquals(listOf("ping"), invokedHandlers)
     }
 
     @Test
     fun `root command with direct handler should work`() = runTest {
         val routeNode = handling {
-            commandEndpoint("ping") { ctx ->
-                invokedHandlers.add("ping:${ctx.commandPath}")
-            }
+            commandEndpoint("ping") { invokedHandlers.add("ping:${commandPath}") }
         }
 
-        val context = createContext("/ping")
-        val result = routeNode.execute(context)
-
-        assertTrue(result)
+        assertTrue(routeNode.execute(createContext("/ping")))
         assertEquals(listOf("ping:ping"), invokedHandlers)
     }
 
@@ -369,10 +363,7 @@ class StructuredCommandTest {
             commandEndpoint("ping") { invokedHandlers.add("ping") }
         }
 
-        val context = createContext("/ping@test_bot")
-        val result = routeNode.execute(context)
-
-        assertTrue(result)
+        assertTrue(routeNode.execute(createContext("/ping@test_bot")))
         assertEquals(listOf("ping"), invokedHandlers)
     }
 
@@ -382,25 +373,17 @@ class StructuredCommandTest {
             commandEndpoint("ping") { invokedHandlers.add("ping") }
         }
 
-        val context = createContext("/ping@other_bot")
-        val result = routeNode.execute(context)
-
-        assertFalse(result)
+        assertFalse(routeNode.execute(createContext("/ping@other_bot")))
         assertTrue(invokedHandlers.isEmpty())
     }
 
     @Test
     fun `root command with typed arguments should parse and invoke`() = runTest {
         val routeNode = handling {
-            command("greet", ::SimpleArgs) { ctx ->
-                invokedHandlers.add("greet:${ctx.arguments.name}")
-            }
+            command("greet", ::SimpleArgs) { invokedHandlers.add("greet:${arguments.name}") }
         }
 
-        val context = createContext("/greet Alice")
-        val result = routeNode.execute(context)
-
-        assertTrue(result)
+        assertTrue(routeNode.execute(createContext("/greet Alice")))
         assertEquals(listOf("greet:Alice"), invokedHandlers)
     }
 
@@ -410,10 +393,7 @@ class StructuredCommandTest {
             commandEndpoint("PING") { invokedHandlers.add("ping") }
         }
 
-        val context = createContext("/ping")
-        val result = routeNode.execute(context)
-
-        assertTrue(result)
+        assertTrue(routeNode.execute(createContext("/ping")))
         assertEquals(listOf("ping"), invokedHandlers)
     }
 
@@ -422,16 +402,11 @@ class StructuredCommandTest {
     fun `subcommand without arguments should match`() = runTest {
         val routeNode = handling {
             command("tool") {
-                subCommand("execute") {
-                    handle { invokedHandlers.add("tool:execute") }
-                }
+                subCommandEndpoint("execute") { invokedHandlers.add("tool:execute") }
             }
         }
 
-        val context = createContext("/tool execute")
-        val result = routeNode.execute(context)
-
-        assertTrue(result)
+        assertTrue(routeNode.execute(createContext("/tool execute")))
         assertEquals(listOf("tool:execute"), invokedHandlers)
     }
 
@@ -439,16 +414,11 @@ class StructuredCommandTest {
     fun `subcommand with direct handler should work`() = runTest {
         val routeNode = handling {
             command("tool") {
-                subCommandEndpoint("execute") { ctx ->
-                    invokedHandlers.add("tool:execute:${ctx.commandPath}")
-                }
+                subCommandEndpoint("execute") { invokedHandlers.add("tool:execute:${commandPath}") }
             }
         }
 
-        val context = createContext("/tool execute")
-        val result = routeNode.execute(context)
-
-        assertTrue(result)
+        assertTrue(routeNode.execute(createContext("/tool execute")))
         assertEquals(listOf("tool:execute:tool execute"), invokedHandlers)
     }
 
@@ -456,16 +426,11 @@ class StructuredCommandTest {
     fun `subcommand with arguments should parse and invoke`() = runTest {
         val routeNode = handling {
             command("tool") {
-                subCommand("rename", ::SimpleArgs) { ctx ->
-                    invokedHandlers.add("tool:rename:${ctx.arguments.name}")
-                }
+                subCommand("rename", ::SimpleArgs) { invokedHandlers.add("tool:rename:${arguments.name}") }
             }
         }
 
-        val context = createContext("/tool rename new_name")
-        val result = routeNode.execute(context)
-
-        assertTrue(result)
+        assertTrue(routeNode.execute(createContext("/tool rename new_name")))
         assertEquals(listOf("tool:rename:new_name"), invokedHandlers)
     }
 
@@ -473,16 +438,11 @@ class StructuredCommandTest {
     fun `subcommand case insensitive should match`() = runTest {
         val routeNode = handling {
             command("tool") {
-                subCommand("EXECUTE") {
-                    handle { invokedHandlers.add("tool:execute") }
-                }
+                subCommandEndpoint("EXECUTE") { invokedHandlers.add("tool:execute") }
             }
         }
 
-        val context = createContext("/tool execute")
-        val result = routeNode.execute(context)
-
-        assertTrue(result)
+        assertTrue(routeNode.execute(createContext("/tool execute")))
         assertEquals(listOf("tool:execute"), invokedHandlers)
     }
 
@@ -491,25 +451,17 @@ class StructuredCommandTest {
         val routeNode = handling {
             command("admin") {
                 subCommand("user") {
-                    subCommand("add") {
-                        handle { invokedHandlers.add("admin:user:add") }
-                    }
-                    subCommand("remove") {
-                        handle { invokedHandlers.add("admin:user:remove") }
-                    }
+                    subCommandEndpoint("add") { invokedHandlers.add("admin:user:add") }
+                    subCommandEndpoint("remove") { invokedHandlers.add("admin:user:remove") }
                 }
             }
         }
 
-        // Test admin user add
-        var context = createContext("/admin user add")
-        assertTrue(routeNode.execute(context))
+        assertTrue(routeNode.execute(createContext("/admin user add")))
         assertEquals(listOf("admin:user:add"), invokedHandlers)
 
-        // Test admin user remove
         resetTracking()
-        context = createContext("/admin user remove")
-        assertTrue(routeNode.execute(context))
+        assertTrue(routeNode.execute(createContext("/admin user remove")))
         assertEquals(listOf("admin:user:remove"), invokedHandlers)
     }
 
@@ -518,17 +470,12 @@ class StructuredCommandTest {
         val routeNode = handling {
             command("admin") {
                 subCommand("user") {
-                    subCommand("ban", ::SimpleArgs) { ctx ->
-                        invokedHandlers.add("admin:user:ban:${ctx.arguments.name}")
-                    }
+                    subCommand("ban", ::SimpleArgs) { invokedHandlers.add("admin:user:ban:${arguments.name}") }
                 }
             }
         }
 
-        val context = createContext("/admin user ban john_doe")
-        val result = routeNode.execute(context)
-
-        assertTrue(result)
+        assertTrue(routeNode.execute(createContext("/admin user ban john_doe")))
         assertEquals(listOf("admin:user:ban:john_doe"), invokedHandlers)
     }
 
@@ -536,24 +483,16 @@ class StructuredCommandTest {
     fun `parent command handle should work when no subcommand matches`() = runTest {
         val routeNode = handling {
             command("tool") {
-                handle {
-                    invokedHandlers.add("tool:root")
-                }
-                subCommand("execute") {
-                    handle { invokedHandlers.add("tool:execute") }
-                }
+                handle { invokedHandlers.add("tool:root") }
+                subCommandEndpoint("execute") { invokedHandlers.add("tool:execute") }
             }
         }
 
-        // Execute subcommand
-        var context = createContext("/tool execute")
-        assertTrue(routeNode.execute(context))
+        assertTrue(routeNode.execute(createContext("/tool execute")))
         assertEquals(listOf("tool:execute"), invokedHandlers)
 
-        // Root command without subcommand
         resetTracking()
-        context = createContext("/tool")
-        assertTrue(routeNode.execute(context))
+        assertTrue(routeNode.execute(createContext("/tool")))
         assertEquals(listOf("tool:root"), invokedHandlers)
     }
 
@@ -565,15 +504,14 @@ class StructuredCommandTest {
 
         val routeNode = handling {
             command("test") {
-                handle { ctx ->
-                    capturedPath = ctx.commandPath
-                    capturedArgs = ctx.unconsumedArguments
+                handle {
+                    capturedPath = commandPath
+                    capturedArgs = unconsumedArguments
                 }
             }
         }
 
-        val context = createContext("/test arg1 arg2")
-        routeNode.execute(context)
+        routeNode.execute(createContext("/test arg1 arg2"))
 
         assertEquals("test", capturedPath)
         assertEquals(listOf("arg1", "arg2"), capturedArgs)
@@ -586,17 +524,14 @@ class StructuredCommandTest {
 
         val routeNode = handling {
             command("admin") {
-                subCommand("user") {
-                    handle { ctx ->
-                        capturedPath = ctx.commandPath
-                        capturedArgs = ctx.unconsumedArguments
-                    }
+                subCommandEndpoint("user") {
+                    capturedPath = commandPath
+                    capturedArgs = unconsumedArguments
                 }
             }
         }
 
-        val context = createContext("/admin user arg1 arg2")
-        routeNode.execute(context)
+        routeNode.execute(createContext("/admin user arg1 arg2"))
 
         assertEquals("admin user", capturedPath)
         assertEquals(listOf("arg1", "arg2"), capturedArgs)
@@ -607,31 +542,21 @@ class StructuredCommandTest {
     fun `multiple root commands should route correctly`() = runTest {
         val routeNode = handling {
             commandEndpoint("ping") { invokedHandlers.add("ping") }
-            command("echo", ::SimpleArgs) { ctx ->
-                invokedHandlers.add("echo:${ctx.arguments.name}")
-            }
+            command("echo", ::SimpleArgs) { invokedHandlers.add("echo:${arguments.name}") }
             command("admin") {
-                subCommand("status") {
-                    handle { invokedHandlers.add("admin:status") }
-                }
+                subCommandEndpoint("status") { invokedHandlers.add("admin:status") }
             }
         }
 
-        // Test ping
-        var context = createContext("/ping")
-        assertTrue(routeNode.execute(context))
+        assertTrue(routeNode.execute(createContext("/ping")))
         assertEquals(listOf("ping"), invokedHandlers)
 
-        // Test echo
         resetTracking()
-        context = createContext("/echo hello")
-        assertTrue(routeNode.execute(context))
+        assertTrue(routeNode.execute(createContext("/echo hello")))
         assertEquals(listOf("echo:hello"), invokedHandlers)
 
-        // Test admin status
         resetTracking()
-        context = createContext("/admin status")
-        assertTrue(routeNode.execute(context))
+        assertTrue(routeNode.execute(createContext("/admin status")))
         assertEquals(listOf("admin:status"), invokedHandlers)
     }
 
@@ -643,8 +568,7 @@ class StructuredCommandTest {
             commandEndpoint("test") { invokedHandlers.add("second") }
         }
 
-        val context = createContext("/test")
-        routeNode.execute(context)
+        routeNode.execute(createContext("/test"))
 
         assertEquals(listOf("first"), invokedHandlers)
     }
@@ -656,10 +580,7 @@ class StructuredCommandTest {
             commandEndpoint("start") { invokedHandlers.add("start") }
         }
 
-        val context = createContext("/unknown")
-        val result = routeNode.execute(context)
-
-        assertFalse(result)
+        assertFalse(routeNode.execute(createContext("/unknown")))
         assertTrue(invokedHandlers.isEmpty())
     }
 
@@ -667,17 +588,12 @@ class StructuredCommandTest {
     fun `partial command match should not invoke handler`() = runTest {
         val routeNode = handling {
             command("admin") {
-                subCommand("user") {
-                    handle { invokedHandlers.add("admin:user") }
-                }
+                subCommandEndpoint("user") { invokedHandlers.add("admin:user") }
             }
         }
 
         // Only /admin without subcommand - no handler at admin level
-        val context = createContext("/admin")
-        val result = routeNode.execute(context)
-
-        assertFalse(result)
+        assertFalse(routeNode.execute(createContext("/admin")))
         assertTrue(invokedHandlers.isEmpty())
     }
 
@@ -691,15 +607,10 @@ class StructuredCommandTest {
         var capturedValue: Int? = null
 
         val routeNode = handling {
-            command("number", ::TestArgs) { ctx ->
-                capturedValue = ctx.arguments.value
-            }
+            command("number", ::TestArgs) { capturedValue = arguments.value }
         }
 
-        val context = createContext("/number 42")
-        val result = routeNode.execute(context)
-
-        assertTrue(result)
+        assertTrue(routeNode.execute(createContext("/number 42")))
         assertEquals(42, capturedValue)
     }
 
@@ -711,21 +622,19 @@ class StructuredCommandTest {
         }
 
         val routeNode = handling {
-            command("strict", ::StrictArgs, sendHelpOnError = false) { ctx ->
-                invokedHandlers.add("strict:${ctx.arguments.value}")
+            command("strict", ::StrictArgs, sendHelpOnError = false) {
+                invokedHandlers.add("strict:${arguments.value}")
             }
         }
 
         // Valid value should work
-        val validContext = createContext("/strict 5")
-        assertTrue(routeNode.execute(validContext))
+        assertTrue(routeNode.execute(createContext("/strict 5")))
         assertEquals(listOf("strict:5"), invokedHandlers)
 
         // Invalid value should throw CommandParseException
         resetTracking()
-        val invalidContext = createContext("/strict 100")
         val exception = assertFailsWith<CommandParseException> {
-            routeNode.execute(invalidContext)
+            routeNode.execute(createContext("/strict 100"))
         }
         assertTrue(exception.message.contains("Value must be 1-10"))
         assertTrue(invokedHandlers.isEmpty())
@@ -739,7 +648,6 @@ class StructuredCommandTest {
         val routeNode = handling {
             commandEndpoint("test") {
                 launch {
-                    // Wait for main handler to complete first (controlled order)
                     handlerMainCompleted.await()
                     launchCompleted.complete(Unit)
                 }
@@ -747,12 +655,8 @@ class StructuredCommandTest {
             }
         }
 
-        val context = createContext("/test")
-        val result = routeNode.execute(context)
-
-        assertTrue(result, "Command should match")
-        // If execute waits for launch, this should be completed
-        assertTrue(launchCompleted.isCompleted, "Launch should have completed before execute returns")
+        assertTrue(routeNode.execute(createContext("/test")))
+        assertTrue(launchCompleted.isCompleted)
     }
 
     @Test
@@ -762,61 +666,51 @@ class StructuredCommandTest {
 
         val routeNode = handling {
             command("greet", ::SimpleArgs) {
+                val args = arguments
                 launch {
-                    // Wait for main handler to complete first (controlled order)
                     handlerMainCompleted.await()
-                    invokedHandlers.add("greet:${it.arguments.name}")
+                    invokedHandlers.add("greet:${args.name}")
                     launchCompleted.complete(Unit)
                 }
                 handlerMainCompleted.complete(Unit)
             }
         }
 
-        val context = createContext("/greet Alice")
-        val result = routeNode.execute(context)
-
-        assertTrue(result, "Command should match")
-        // If execute waits for launch, this should be completed
-        assertTrue(launchCompleted.isCompleted, "Launch should have completed before execute returns")
-        assertEquals(listOf("greet:Alice"), invokedHandlers, "Handler should have been invoked")
+        assertTrue(routeNode.execute(createContext("/greet Alice")))
+        assertTrue(launchCompleted.isCompleted)
+        assertEquals(listOf("greet:Alice"), invokedHandlers)
     }
 
     // ==================== sendHelpOnError Tests ====================
-    // Note: sendHelpOnError=true tests are omitted because they trigger sendMessage network calls.
-    // We only test sendHelpOnError=false which throws exceptions that can be caught.
 
     @Test
     fun `sendHelpOnError=false should throw on missing required argument`() = runTest {
         val routeNode = handling {
-            command("test", ::SimpleArgs, sendHelpOnError = false) { ctx ->
-                invokedHandlers.add("test:${ctx.arguments.name}")
+            command("test", ::SimpleArgs, sendHelpOnError = false) {
+                invokedHandlers.add("test:${arguments.name}")
             }
         }
 
-        // Missing argument - should throw
-        val context = createContext("/test")
         val exception = assertFailsWith<CommandParseException> {
-            routeNode.execute(context)
+            routeNode.execute(createContext("/test"))
         }
 
         assertEquals("Missing required parameter", exception.message)
-        assertEquals("name", exception.argumentName) // argumentName is set when thrown from executeEndpoint
+        assertEquals("name", exception.argumentName)
     }
 
     @Test
     fun `subCommand with sendHelpOnError=false should throw on error`() = runTest {
         val routeNode = handling {
             command("admin") {
-                subCommand("user", ::SimpleArgs, sendHelpOnError = false) { ctx ->
-                    invokedHandlers.add("admin:user:${ctx.arguments.name}")
+                subCommand("user", ::SimpleArgs, sendHelpOnError = false) {
+                    invokedHandlers.add("admin:user:${arguments.name}")
                 }
             }
         }
 
-        // Missing argument for subcommand - should throw
-        val context = createContext("/admin user")
         val exception = assertFailsWith<CommandParseException> {
-            routeNode.execute(context)
+            routeNode.execute(createContext("/admin user"))
         }
 
         assertEquals("Missing required parameter", exception.message)
@@ -830,10 +724,10 @@ class StructuredCommandTest {
 
         val routeNode = handling {
             command("test") {
-                handle { ctx ->
+                handle {
                     try {
                         val args = SimpleArgs()
-                        args.parse(ctx.unconsumedArguments, ctx.commandPath, ctx)
+                        args.parse(unconsumedArguments, commandPath, this)
                         invokedHandlers.add("test:${args.name}")
                     } catch (e: CommandParseException) {
                         capturedException = e
@@ -843,11 +737,7 @@ class StructuredCommandTest {
             }
         }
 
-        // Missing argument - handler catches the exception
-        val context = createContext("/test")
-        val result = routeNode.execute(context)
-
-        assertTrue(result)
+        assertTrue(routeNode.execute(createContext("/test")))
         assertNotNull(capturedException)
         assertEquals("Missing required parameter", capturedException.message)
         assertEquals(listOf("error:Missing required parameter"), invokedHandlers)
@@ -859,10 +749,10 @@ class StructuredCommandTest {
 
         val routeNode = handling {
             command("test") {
-                handle { ctx ->
+                handle {
                     try {
                         val args = SimpleArgs()
-                        args.parse(ctx.unconsumedArguments, ctx.commandPath, ctx)
+                        args.parse(unconsumedArguments, commandPath, this)
                         invokedHandlers.add("test:${args.name}")
                     } catch (e: CommandParseException) {
                         capturedContext = e.context
@@ -872,37 +762,28 @@ class StructuredCommandTest {
             }
         }
 
-        // Missing argument - handler catches and inspects context
-        val context = createContext("/test")
-        val result = routeNode.execute(context)
-
-        assertTrue(result)
+        assertTrue(routeNode.execute(createContext("/test")))
         assertNotNull(capturedContext)
         assertEquals("test", capturedContext!!.commandPath)
         assertEquals(listOf("error"), invokedHandlers)
     }
 
     // ==================== Interceptor-level Exception Catching Tests ====================
-    // Note: These tests verify that interceptors can catch CommandParseException when
-    // sendHelpOnError=false. We test the dispatcher directly instead of using TelegramEventPipeline
-    // to avoid network calls (getMe) that would occur in the pipeline.
 
     @Test
     fun `interceptor pattern can catch CommandParseException`() = runTest {
         var capturedException: CommandParseException? = null
 
-        // Simulate interceptor pattern: try-catch around dispatcher
         val routeNode = handling {
-            command("test", ::SimpleArgs, sendHelpOnError = false) { ctx ->
-                invokedHandlers.add("test:${ctx.arguments.name}")
+            command("test", ::SimpleArgs, sendHelpOnError = false) {
+                invokedHandlers.add("test:${arguments.name}")
             }
         }
 
         val dispatcher = HandlerTelegramEventDispatcher(routeNode)
 
-        val context = createContext("/test")
         try {
-            dispatcher.dispatch(context)
+            dispatcher.dispatch(createContext("/test"))
         } catch (e: CommandParseException) {
             capturedException = e
         }
@@ -914,52 +795,43 @@ class StructuredCommandTest {
 
     @Test
     fun `interceptor can send custom error message using exception context`() = runTest {
-        var customMessageSent = false
         var sentMessage: String? = null
 
         val routeNode = handling {
-            command("test", ::SimpleArgs, sendHelpOnError = false) { ctx ->
-                invokedHandlers.add("test:${ctx.arguments.name}")
+            command("test", ::SimpleArgs, sendHelpOnError = false) {
+                invokedHandlers.add("test:${arguments.name}")
             }
         }
 
         val dispatcher = HandlerTelegramEventDispatcher(routeNode)
 
-        val context = createContext("/test")
         try {
-            dispatcher.dispatch(context)
+            dispatcher.dispatch(createContext("/test"))
         } catch (e: CommandParseException) {
-            // Custom error handling using context from exception
-            customMessageSent = true
             sentMessage = "Custom error for command /${e.commandPath}: ${e.message}"
         }
 
-        assertTrue(customMessageSent)
         assertEquals("Custom error for command /test: Missing required parameter", sentMessage)
     }
 
     @Test
     fun `interceptor can use exception to generate help text`() = runTest {
-        var helpTextGenerated = false
         var generatedHelp: String? = null
 
         val routeNode = handling {
-            command("test", ::SimpleArgs, sendHelpOnError = false) { ctx ->
-                invokedHandlers.add("test:${ctx.arguments.name}")
+            command("test", ::SimpleArgs, sendHelpOnError = false) {
+                invokedHandlers.add("test:${arguments.name}")
             }
         }
 
         val dispatcher = HandlerTelegramEventDispatcher(routeNode)
 
-        val context = createContext("/test")
         try {
-            dispatcher.dispatch(context)
+            dispatcher.dispatch(createContext("/test"))
         } catch (e: CommandParseException) {
-            helpTextGenerated = true
             generatedHelp = e.generateHelpText()
         }
 
-        assertTrue(helpTextGenerated)
         assertNotNull(generatedHelp)
         assertTrue(generatedHelp.contains("❌ Missing required parameter"))
         assertTrue(generatedHelp.contains("/test <name>"))
@@ -970,43 +842,38 @@ class StructuredCommandTest {
         var capturedChatId: Long? = null
 
         val routeNode = handling {
-            command("test", ::SimpleArgs, sendHelpOnError = false) { ctx ->
-                invokedHandlers.add("test:${ctx.arguments.name}")
+            command("test", ::SimpleArgs, sendHelpOnError = false) {
+                invokedHandlers.add("test:${arguments.name}")
             }
         }
 
         val dispatcher = HandlerTelegramEventDispatcher(routeNode)
 
-        val context = createContext("/test")
         try {
-            dispatcher.dispatch(context)
+            dispatcher.dispatch(createContext("/test"))
         } catch (e: CommandParseException) {
-            // Access the bot context from the exception
             capturedChatId = e.context?.event?.message?.chat?.id
         }
 
-        assertEquals(100L, capturedChatId) // testChat.id = 100
+        assertEquals(100L, capturedChatId)
     }
 
     @Test
     fun `interceptor can swallow exception to continue processing`() = runTest {
         val routeNode = handling {
-            command("test", ::SimpleArgs, sendHelpOnError = false) { ctx ->
-                invokedHandlers.add("test:${ctx.arguments.name}")
+            command("test", ::SimpleArgs, sendHelpOnError = false) {
+                invokedHandlers.add("test:${arguments.name}")
             }
         }
 
         val dispatcher = HandlerTelegramEventDispatcher(routeNode)
 
-        // Interceptor swallows the exception - processing continues
-        val context = createContext("/test")
         try {
-            dispatcher.dispatch(context)
+            dispatcher.dispatch(createContext("/test"))
         } catch (_: CommandParseException) {
-            // Swallow - don't rethrow, allowing the application to continue
+            // Swallow
         }
-        // If we reach this point without crashing, the test passes
-        // The handler was not invoked because the exception was thrown before it could complete
+
         assertTrue(invokedHandlers.isEmpty())
     }
 }

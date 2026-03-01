@@ -2,8 +2,12 @@ package com.hiczp.telegram.bot.application.test.dispatcher.handler
 
 import com.hiczp.telegram.bot.application.context.ProvidedUserTelegramBotEventContext
 import com.hiczp.telegram.bot.application.context.TelegramBotEventContext
-import com.hiczp.telegram.bot.application.dispatcher.handler.*
+import com.hiczp.telegram.bot.application.dispatcher.handler.command.commandEndpoint
+import com.hiczp.telegram.bot.application.dispatcher.handler.handling
+import com.hiczp.telegram.bot.application.dispatcher.handler.include
+import com.hiczp.telegram.bot.application.dispatcher.handler.match
 import com.hiczp.telegram.bot.application.dispatcher.handler.matcher.*
+import com.hiczp.telegram.bot.application.dispatcher.handler.whenMatch
 import com.hiczp.telegram.bot.client.TelegramBotClient
 import com.hiczp.telegram.bot.protocol.event.CallbackQueryEvent
 import com.hiczp.telegram.bot.protocol.event.InlineQueryEvent
@@ -355,10 +359,10 @@ class HandlingTest {
     @Test
     fun `on match should route by event type`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
+            onMessageEvent {
                 handle { invokedHandlers.add("message") }
             }
-            on<CallbackQueryEvent> {
+            onCallbackQueryEvent {
                 handle { invokedHandlers.add("callback") }
             }
         }
@@ -378,8 +382,10 @@ class HandlingTest {
     @Test
     fun `on with predicate should match events`() = runTest {
         val routeNode = handling {
-            on<MessageEvent>({ it.event.message.chat.id == 100L }) {
-                handle { invokedHandlers.add("chat_100") }
+            onMessageEvent {
+                whenMatch({ it.event.message.chat.id == 100L }) {
+                    invokedHandlers.add("chat_100")
+                }
             }
         }
 
@@ -399,11 +405,11 @@ class HandlingTest {
     // ==================== Match Tests ====================
 
     @Test
-    fun `match should allow custom predicates`() = runTest {
+    fun `whenMatch should allow custom predicates`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
-                match({ (it.event.message.text?.length ?: 0) > 5 }) {
-                    handle { invokedHandlers.add("long_message") }
+            onMessageEvent {
+                whenMatch({ (it.event.message.text?.length ?: 0) > 5 }) {
+                    invokedHandlers.add("long_message")
                 }
             }
         }
@@ -423,9 +429,9 @@ class HandlingTest {
     @Test
     fun `whenMatch should combine matching and handling`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
-                whenMatch({ (it.event.message.text?.length ?: 0) > 5 }) { ctx ->
-                    invokedHandlers.add("long_message:${ctx.event.message.text}")
+            onMessageEvent {
+                whenMatch({ (it.event.message.text?.length ?: 0) > 5 }) {
+                    invokedHandlers.add("long_message:${event.message.text}")
                 }
             }
         }
@@ -447,7 +453,7 @@ class HandlingTest {
         var launchExecuted = false
 
         val routeNode = handling {
-            on<MessageEvent> {
+            onMessageEvent {
                 whenMatch({ it.event.message.text?.contains("test") == true }) {
                     launch {
                         launchExecuted = true
@@ -494,7 +500,7 @@ class HandlingTest {
     fun `handle acts as fallback when children do not consume`() = runTest {
         // handle is invoked only when no child consumes the event
         val routeNode = handling {
-            on<MessageEvent> {
+            onMessageEvent {
                 commandEndpoint("start") { invokedHandlers.add("start") }
                 whenText("hello") {
                     invokedHandlers.add("hello")
@@ -525,7 +531,7 @@ class HandlingTest {
     fun `handle position does not affect priority - children always tried first`() = runTest {
         // handle position in DSL doesn't matter - children are always tried first
         val routeNode = handling {
-            on<MessageEvent> {
+            onMessageEvent {
                 handle { invokedHandlers.add("handle") }
                 commandEndpoint("start") { invokedHandlers.add("start") }
             }
@@ -544,11 +550,11 @@ class HandlingTest {
     }
 
     @Test
-    fun `match with handle inside should not short-circuit siblings when match fails`() = runTest {
+    fun `match with whenMatch inside should not short-circuit siblings when match fails`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
-                match({ (it.event.message.text?.length ?: 0) > 100 }) {
-                    handle { invokedHandlers.add("long_text") }
+            onMessageEvent {
+                whenMatch({ (it.event.message.text?.length ?: 0) > 100 }) {
+                    invokedHandlers.add("long_text")
                 }
                 handle { invokedHandlers.add("fallback") }
             }
@@ -565,12 +571,12 @@ class HandlingTest {
     @Test
     fun `should short-circuit on first matching handler`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
-                match({ true }) {
-                    handle { invokedHandlers.add("first") }
+            onMessageEvent {
+                whenMatch({ true }) {
+                    invokedHandlers.add("first")
                 }
-                match({ true }) {
-                    handle { invokedHandlers.add("second") }
+                whenMatch({ true }) {
+                    invokedHandlers.add("second")
                 }
             }
         }
@@ -586,9 +592,9 @@ class HandlingTest {
     @Test
     fun `should continue to sibling if child does not consume`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
-                match({ false }) {
-                    handle { invokedHandlers.add("matched_out") }
+            onMessageEvent {
+                whenMatch({ false }) {
+                    invokedHandlers.add("matched_out")
                 }
                 whenText("hello") {
                     invokedHandlers.add("hello")
@@ -606,7 +612,8 @@ class HandlingTest {
     @Test
     fun `nested routes should work correctly`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
+            onMessageEvent {
+                // For nested matchers, use stackable match() with build lambda
                 match({ it.event.message.chat.id == 100L }) {
                     commandEndpoint("admin") { invokedHandlers.add("admin_chat_100") }
                     whenText("ping") {
@@ -659,8 +666,8 @@ class HandlingTest {
                 invokedHandlers.add("hello")
             }
             // Dead letter handler - catches everything else
-            handle { ctx ->
-                invokedHandlers.add("dead_letter:${ctx.event.updateId}")
+            handle {
+                invokedHandlers.add("dead_letter:${event.updateId}")
             }
         }
 
@@ -695,10 +702,10 @@ class HandlingTest {
     @Test
     fun `root level handle with on blocks should act as dead letter handler`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
+            onMessageEvent {
                 commandEndpoint("start") { invokedHandlers.add("start") }
             }
-            on<CallbackQueryEvent> {
+            onCallbackQueryEvent {
                 whenCallbackData("confirm") {
                     invokedHandlers.add("confirm")
                 }
@@ -754,7 +761,7 @@ class HandlingTest {
     @Test
     fun `select should allow custom selectors`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
+            onMessageEvent {
                 select(
                     selector = { ctx ->
                         // Custom selector that transforms the context
@@ -968,7 +975,7 @@ class HandlingTest {
         var launchContext: kotlin.coroutines.CoroutineContext? = null
 
         val routeNode = handling {
-            on<MessageEvent> {
+            onMessageEvent {
                 whenMatch({ it.event.message.text?.contains("test") == true }) {
                     launch {
                         launchContext = currentCoroutineContext()

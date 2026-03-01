@@ -5,20 +5,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
 
 /**
- * DSL marker annotation for the Telegram bot event routing DSL.
- *
- * This annotation prevents implicit receiver access across different DSL scopes,
- * ensuring type-safe builder patterns when constructing event routes.
- */
-@DslMarker
-annotation class TelegramBotDsl
-
-/**
  * Internal routing node that executes depth-first short-circuit matching.
  *
- * This class is the engine behind [EventRoute] and handles the actual event
- * dispatching logic. It is stripped of generic type constraints for maximum
- * runtime efficiency.
+ * This class is the engine behind [HandlerRoute] and [CommandRoute],
+ * handling the actual event dispatching logic. It is stripped of generic type constraints
+ * for maximum runtime efficiency.
  *
  * The matching algorithm:
  * First, the selector is applied to match and transform the incoming context.

@@ -105,11 +105,11 @@ class StackableMatchersTest {
     @Test
     fun `text matcher with nested matchers`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
-                text("hello") {
+            onMessageEvent {
+                onText("hello") {
                     handle { invokedHandlers.add("hello") }
                 }
-                text("world") {
+                onText("world") {
                     handle { invokedHandlers.add("world") }
                 }
             }
@@ -128,8 +128,8 @@ class StackableMatchersTest {
     @Test
     fun `textRegex matcher should be stackable`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
-                textRegex(Regex("^hello.*")) {
+            onMessageEvent {
+                onTextRegex(Regex("^hello.*")) {
                     handle { invokedHandlers.add("hello_prefix") }
                 }
             }
@@ -147,9 +147,9 @@ class StackableMatchersTest {
     @Test
     fun `textContains matcher should be stackable`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
-                textContains("hello") {
-                    textContains("world") {
+            onMessageEvent {
+                onTextContains("hello") {
+                    onTextContains("world") {
                         handle { invokedHandlers.add("both") }
                     }
                     handle { invokedHandlers.add("hello_only") }
@@ -170,9 +170,9 @@ class StackableMatchersTest {
     @Test
     fun `textStartsWith matcher should be stackable`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
-                textStartsWith("/admin") {
-                    textStartsWith("/admin user") {
+            onMessageEvent {
+                onTextStartsWith("/admin") {
+                    onTextStartsWith("/admin user") {
                         handle { invokedHandlers.add("admin_user") }
                     }
                     handle { invokedHandlers.add("admin") }
@@ -193,9 +193,9 @@ class StackableMatchersTest {
     @Test
     fun `textEndsWith matcher should be stackable`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
-                textEndsWith("please") {
-                    textEndsWith("help please") {
+            onMessageEvent {
+                onTextEndsWith("please") {
+                    onTextEndsWith("help please") {
                         handle { invokedHandlers.add("help") }
                     }
                     handle { invokedHandlers.add("polite") }
@@ -218,9 +218,9 @@ class StackableMatchersTest {
     @Test
     fun `photo matcher should be stackable`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
-                photo {
-                    textContains("caption") {
+            onMessageEvent {
+                onPhoto {
+                    onTextContains("caption") {
                         handle { invokedHandlers.add("photo_with_caption") }
                     }
                     handle { invokedHandlers.add("photo_any") }
@@ -250,8 +250,8 @@ class StackableMatchersTest {
     @Test
     fun `video matcher should be stackable`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
-                video {
+            onMessageEvent {
+                onVideo {
                     handle { invokedHandlers.add("video") }
                 }
             }
@@ -269,8 +269,8 @@ class StackableMatchersTest {
     @Test
     fun `document matcher should be stackable`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
-                document {
+            onMessageEvent {
+                onDocument {
                     handle { invokedHandlers.add("document") }
                 }
             }
@@ -288,8 +288,8 @@ class StackableMatchersTest {
     @Test
     fun `audio matcher should be stackable`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
-                audio {
+            onMessageEvent {
+                onAudio {
                     handle { invokedHandlers.add("audio") }
                 }
             }
@@ -307,8 +307,8 @@ class StackableMatchersTest {
     @Test
     fun `sticker matcher should be stackable`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
-                sticker {
+            onMessageEvent {
+                onSticker {
                     handle { invokedHandlers.add("sticker") }
                 }
             }
@@ -334,8 +334,8 @@ class StackableMatchersTest {
     @Test
     fun `voice matcher should be stackable`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
-                voice {
+            onMessageEvent {
+                onVoice {
                     handle { invokedHandlers.add("voice") }
                 }
             }
@@ -355,9 +355,9 @@ class StackableMatchersTest {
     @Test
     fun `reply matcher should be stackable`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
-                reply {
-                    replyTo(42L) {
+            onMessageEvent {
+                onReply {
+                    onReplyTo(42L) {
                         handle { invokedHandlers.add("reply_to_42") }
                     }
                     handle { invokedHandlers.add("reply_any") }
@@ -385,9 +385,9 @@ class StackableMatchersTest {
     @Test
     fun `fromUser matcher should be stackable`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
-                fromUser(1L) {
-                    inChat(100L) {
+            onMessageEvent {
+                onFromUser(1L) {
+                    onInChat(100L) {
                         handle { invokedHandlers.add("user_in_chat") }
                     }
                     handle { invokedHandlers.add("user_any") }
@@ -408,8 +408,8 @@ class StackableMatchersTest {
     @Test
     fun `fromUsers matcher should be stackable`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
-                fromUsers(setOf(1L, 2L, 3L)) {
+            onMessageEvent {
+                onFromUsers(setOf(1L, 2L, 3L)) {
                     handle { invokedHandlers.add("allowed_user") }
                 }
             }
@@ -428,8 +428,8 @@ class StackableMatchersTest {
     @Test
     fun `inChat matcher should be stackable`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
-                inChat(100L) {
+            onMessageEvent {
+                onInChat(100L) {
                     handle { invokedHandlers.add("in_chat_100") }
                 }
             }
@@ -447,8 +447,8 @@ class StackableMatchersTest {
     @Test
     fun `inChats matcher should be stackable`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
-                inChats(setOf(100L, 200L, 300L)) {
+            onMessageEvent {
+                onInChats(setOf(100L, 200L, 300L)) {
                     handle { invokedHandlers.add("allowed_chat") }
                 }
             }
@@ -468,8 +468,8 @@ class StackableMatchersTest {
     @Test
     fun `forwarded matcher should be stackable`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
-                forwarded {
+            onMessageEvent {
+                onForwarded {
                     handle { invokedHandlers.add("forwarded") }
                 }
             }
@@ -493,11 +493,11 @@ class StackableMatchersTest {
     @Test
     fun `callbackData matcher should be stackable`() = runTest {
         val routeNode = handling {
-            on<CallbackQueryEvent> {
-                callbackData("action") {
+            onCallbackQueryEvent {
+                onCallbackData("action") {
                     handle { invokedHandlers.add("action") }
                 }
-                callbackData("cancel") {
+                onCallbackData("cancel") {
                     handle { invokedHandlers.add("cancel") }
                 }
             }
@@ -516,8 +516,8 @@ class StackableMatchersTest {
     @Test
     fun `callbackDataRegex matcher should be stackable`() = runTest {
         val routeNode = handling {
-            on<CallbackQueryEvent> {
-                callbackDataRegex(Regex("^action_.*")) {
+            onCallbackQueryEvent {
+                onCallbackDataRegex(Regex("^action_.*")) {
                     handle { invokedHandlers.add("action_prefix") }
                 }
             }
@@ -537,8 +537,8 @@ class StackableMatchersTest {
     @Test
     fun `inlineQuery matcher should be stackable`() = runTest {
         val routeNode = handling {
-            on<InlineQueryEvent> {
-                inlineQuery("search") {
+            onInlineQueryEvent {
+                onInlineQuery("search") {
                     handle { invokedHandlers.add("search") }
                 }
             }
@@ -552,8 +552,8 @@ class StackableMatchersTest {
     @Test
     fun `inlineQueryRegex matcher should be stackable`() = runTest {
         val routeNode = handling {
-            on<InlineQueryEvent> {
-                inlineQueryRegex(Regex("^search:.*")) {
+            onInlineQueryEvent {
+                onInlineQueryRegex(Regex("^search:.*")) {
                     handle { invokedHandlers.add("search_prefix") }
                 }
             }
@@ -571,8 +571,8 @@ class StackableMatchersTest {
     @Test
     fun `inlineQueryContains matcher should be stackable`() = runTest {
         val routeNode = handling {
-            on<InlineQueryEvent> {
-                inlineQueryContains("hello") {
+            onInlineQueryEvent {
+                onInlineQueryContains("hello") {
                     handle { invokedHandlers.add("contains_hello") }
                 }
             }
@@ -590,8 +590,8 @@ class StackableMatchersTest {
     @Test
     fun `inlineQueryStartsWith matcher should be stackable`() = runTest {
         val routeNode = handling {
-            on<InlineQueryEvent> {
-                inlineQueryStartsWith("@") {
+            onInlineQueryEvent {
+                onInlineQueryStartsWith("@") {
                     handle { invokedHandlers.add("mention") }
                 }
             }
@@ -609,8 +609,8 @@ class StackableMatchersTest {
     @Test
     fun `inlineQueryFromUser matcher should be stackable`() = runTest {
         val routeNode = handling {
-            on<InlineQueryEvent> {
-                inlineQueryFromUser(1L) {
+            onInlineQueryEvent {
+                onInlineQueryFromUser(1L) {
                     handle { invokedHandlers.add("from_user_1") }
                 }
             }
@@ -626,8 +626,8 @@ class StackableMatchersTest {
     @Test
     fun `privateChat matcher should be stackable`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
-                privateChat {
+            onMessageEvent {
+                onPrivateChat {
                     handle { invokedHandlers.add("private") }
                 }
             }
@@ -641,8 +641,8 @@ class StackableMatchersTest {
     @Test
     fun `groupChat matcher should be stackable`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
-                groupChat {
+            onMessageEvent {
+                onGroupChat {
                     handle { invokedHandlers.add("group") }
                 }
             }
@@ -656,8 +656,8 @@ class StackableMatchersTest {
     @Test
     fun `supergroupChat matcher should be stackable`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
-                supergroupChat {
+            onMessageEvent {
+                onSupergroupChat {
                     handle { invokedHandlers.add("supergroup") }
                 }
             }
@@ -671,8 +671,8 @@ class StackableMatchersTest {
     @Test
     fun `channel matcher should be stackable`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
-                channel {
+            onMessageEvent {
+                onChannel {
                     handle { invokedHandlers.add("channel") }
                 }
             }
@@ -688,7 +688,7 @@ class StackableMatchersTest {
     @Test
     fun `pollUpdate matcher should be stackable`() = runTest {
         val routeNode = handling {
-            pollUpdate {
+            onPollEvent {
                 handle { invokedHandlers.add("poll_update") }
             }
         }
@@ -715,7 +715,7 @@ class StackableMatchersTest {
     @Test
     fun `pollAnswer matcher should be stackable`() = runTest {
         val routeNode = handling {
-            pollAnswer {
+            onPollAnswerEvent {
                 handle { invokedHandlers.add("poll_answer") }
             }
         }
@@ -739,7 +739,7 @@ class StackableMatchersTest {
     @Test
     fun `allOf matcher should be stackable`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
+            onMessageEvent {
                 allOf(
                     { it.event.message.text != null },
                     { it.event.message.chat.id == 100L }
@@ -761,7 +761,7 @@ class StackableMatchersTest {
     @Test
     fun `anyOf matcher should be stackable`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
+            onMessageEvent {
                 anyOf(
                     { it.event.message.text?.contains("hello") == true },
                     { it.event.message.text?.contains("hi") == true }
@@ -783,7 +783,7 @@ class StackableMatchersTest {
     @Test
     fun `not matcher should be stackable`() = runTest {
         val routeNode = handling {
-            on<MessageEvent> {
+            onMessageEvent {
                 not({ it.event.message.text?.startsWith("/") == true }) {
                     not({ it.event.message.text?.length?.let { l -> l > 100 } == true }) {
                         handle { invokedHandlers.add("not_command_not_long") }
@@ -802,7 +802,7 @@ class StackableMatchersTest {
     @Test
     fun `root level text matcher should work`() = runTest {
         val routeNode = handling {
-            text("hello") {
+            onText("hello") {
                 handle { invokedHandlers.add("root_hello") }
             }
         }
@@ -815,7 +815,7 @@ class StackableMatchersTest {
     @Test
     fun `root level callbackData matcher should work`() = runTest {
         val routeNode = handling {
-            callbackData("confirm") {
+            onCallbackData("confirm") {
                 handle { invokedHandlers.add("root_confirm") }
             }
         }
@@ -828,7 +828,7 @@ class StackableMatchersTest {
     @Test
     fun `root level inlineQuery matcher should work`() = runTest {
         val routeNode = handling {
-            inlineQuery("search") {
+            onInlineQuery("search") {
                 handle { invokedHandlers.add("root_search") }
             }
         }
@@ -841,7 +841,7 @@ class StackableMatchersTest {
     @Test
     fun `root level privateChat matcher should work`() = runTest {
         val routeNode = handling {
-            privateChat {
+            onPrivateChat {
                 handle { invokedHandlers.add("root_private") }
             }
         }

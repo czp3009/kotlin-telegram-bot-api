@@ -213,7 +213,7 @@ class TelegramBotApplication(
      *
      * Example of problematic code in a handler:
      * ```kotlin
-     * on<MessageEvent> {
+     * onMessageEvent {
      *     whenText("bad") {
      *         launch {
      *             while (true) {

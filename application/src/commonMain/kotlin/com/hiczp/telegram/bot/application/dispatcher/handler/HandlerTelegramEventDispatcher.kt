@@ -87,7 +87,7 @@ open class HandlerTelegramEventDispatcher(
      *
      * **Note**: The recommended approach for most use cases is to use a root-level
      * `handle` in the routing DSL instead of overriding this method, as it provides
-     * more flexibility and access to the full handler context (including [CoroutineScope]
+     * more flexibility and access to the full handler context (including `CoroutineScope`
      * for structured concurrency).
      *
      * @param context The event context containing the unhandled event.

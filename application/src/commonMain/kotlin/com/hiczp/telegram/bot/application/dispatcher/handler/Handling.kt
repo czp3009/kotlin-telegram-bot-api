@@ -2,7 +2,6 @@ package com.hiczp.telegram.bot.application.dispatcher.handler
 
 import com.hiczp.telegram.bot.application.context.TelegramBotEventContext
 import com.hiczp.telegram.bot.protocol.event.TelegramBotEvent
-import kotlinx.coroutines.CoroutineScope
 
 /**
  * Top-level entry point for the routing DSL.
@@ -13,18 +12,16 @@ import kotlinx.coroutines.CoroutineScope
  * Example usage:
  * ```kotlin
  * val rootNode = handling {
- *     commandEndpoint("start") { ctx ->
- *         ctx.client.sendMessage(ctx.event.message.chat.id, "Welcome!")
+ *     commandEndpoint("start") {
+ *         client.sendMessage(event.message.chat.id, "Welcome!")
  *     }
- *     on<CallbackQueryEvent> {
- *         whenCallbackData("confirm") { ctx ->
+ *     onCallbackQueryEvent {
+ *         onCallbackData("confirm") {
  *             // Handle callback
  *         }
  *     }
- *     commandEndpoint("stop") { /* ... */ }
- *     commandEndpoint("help") { /* ... */ }
  *     // Dead letter handler for unhandled events
- *     handle { ctx -> println("Unhandled: ${ctx.event.updateId}") }
+ *     handle { println("Unhandled: ${event.updateId}") }
  * }
  *
  * // Use directly
@@ -37,11 +34,9 @@ import kotlinx.coroutines.CoroutineScope
  * @param build A builder lambda for configuring the root route.
  * @return The assembled root [RouteNode].
  */
-inline fun handling(
-    build: EventRoute<TelegramBotEvent>.() -> Unit
-): RouteNode {
+fun handling(build: HandlerRoute<TelegramBotEvent>.() -> Unit): RouteNode {
     val rootNode = RouteNode { it }
-    EventRoute<TelegramBotEvent>(rootNode).build()
+    HandlerRoute<TelegramBotEvent>(rootNode).build()
     return rootNode
 }
 
@@ -66,8 +61,8 @@ inline fun handling(
  *
  * @param other The [RouteNode] to include as a child of this route.
  */
-fun EventRoute<*>.include(other: RouteNode) {
-    this.node.children.add(other)
+fun HandlerRoute<*>.include(other: RouteNode) {
+    node.children.add(other)
 }
 
 /**
@@ -79,9 +74,9 @@ fun EventRoute<*>.include(other: RouteNode) {
  * Example usage:
  * ```kotlin
  * handling {
- *     on<MessageEvent> {
+ *     onMessageEvent {
  *         match({ it.event.message.text?.startsWith("/") == true }) {
- *             handle { ctx -> println("Received command: ${ctx.event.message.text}") }
+ *             handle { println("Received command: ${event.message.text}") }
  *         }
  *     }
  * }
@@ -90,11 +85,10 @@ fun EventRoute<*>.include(other: RouteNode) {
  * @param T The event type of the parent route.
  * @param predicate A suspending function that determines if the event should be routed.
  * @param build A builder lambda for configuring the child route.
- * @return The created child [EventRoute].
  */
-fun <T : TelegramBotEvent> EventRoute<T>.match(
+fun <T : TelegramBotEvent> HandlerRoute<T>.match(
     predicate: suspend (TelegramBotEventContext<T>) -> Boolean,
-    build: EventRoute<T>.() -> Unit
+    build: HandlerRoute<T>.() -> Unit
 ) = select({ if (predicate(it)) it else null }, build)
 
 /**
@@ -107,9 +101,9 @@ fun <T : TelegramBotEvent> EventRoute<T>.match(
  * Example usage:
  * ```kotlin
  * handling {
- *     on<MessageEvent> {
- *         whenMatch({ it.event.message.text?.length ?: 0 > 10 }) { ctx ->
- *             ctx.client.sendMessage(ctx.event.message.chat.id, "Long message!")
+ *     onMessageEvent {
+ *         whenMatch({ it.event.message.text?.length ?: 0 > 10 }) {
+ *             client.sendMessage(event.message.chat.id, "Long message!")
  *         }
  *     }
  * }
@@ -117,11 +111,9 @@ fun <T : TelegramBotEvent> EventRoute<T>.match(
  *
  * @param T The event type of the parent route.
  * @param predicate A suspending function that determines if the event should be handled.
- * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
+ * @param handler A suspending function with [HandlerBotCall] receiver that handles the event.
  */
-fun <T : TelegramBotEvent> EventRoute<T>.whenMatch(
+fun <T : TelegramBotEvent> HandlerRoute<T>.whenMatch(
     predicate: suspend (TelegramBotEventContext<T>) -> Boolean,
-    handler: suspend CoroutineScope.(TelegramBotEventContext<T>) -> Unit
-) = select({ if (predicate(it)) it else null }) {
-    handle(handler)
-}
+    handler: suspend HandlerBotCall<T>.() -> Unit
+) = select({ if (predicate(it)) it else null }) { handle(handler) }
