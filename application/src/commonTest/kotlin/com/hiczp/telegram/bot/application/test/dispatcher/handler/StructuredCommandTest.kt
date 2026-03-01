@@ -204,13 +204,16 @@ class StructuredCommandTest {
     }
 
     @Test
-    fun `parse should clear previous values on reparse`() {
+    fun `parse should throw on second call to prevent reuse`() {
         val args = SimpleArgs()
         args.parse(listOf("Alice"), "test")
         assertEquals("Alice", args.name)
 
-        args.parse(listOf("Bob"), "test")
-        assertEquals("Bob", args.name)
+        // Second call should throw IllegalStateException
+        val exception = assertFailsWith<IllegalStateException> {
+            args.parse(listOf("Bob"), "test")
+        }
+        assertTrue(exception.message!!.contains("can only be called once per instance"))
     }
 
 

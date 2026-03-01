@@ -7,6 +7,7 @@ import com.hiczp.telegram.bot.application.context.TelegramBotEventContext
 import com.hiczp.telegram.bot.application.context.action.replyMessage
 import com.hiczp.telegram.bot.protocol.event.MessageEvent
 import com.hiczp.telegram.bot.protocol.event.TelegramBotEvent
+import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.CoroutineScope
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
@@ -211,6 +212,8 @@ abstract class BotArguments(val commandDescription: String = "") {
      */
     val parsedValues = mutableMapOf<String, Any?>()
 
+    private val alreadyParsed = atomic(false)
+
     /**
      * Parses the given positional arguments against this schema.
      *
@@ -221,12 +224,20 @@ abstract class BotArguments(val commandDescription: String = "") {
      * 4. Applies defaults for missing optional arguments
      * 5. Throws [CommandParseException] on any error
      *
+     * Note: This method can only be called once per instance. If called multiple times,
+     * an [IllegalStateException] will be thrown. This is to prevent accidental reuse
+     * of [BotArguments] instances, which are stateful.
+     *
      * @param arguments The positional arguments to parse (typically from [TelegramBotCommandContext.unconsumedArguments]).
      * @param commandPath The command path for error messages.
      * @param context The command context for error responses, or null if not available.
      * @throws CommandParseException if parsing or validation fails.
+     * @throws IllegalStateException if [parse] has already been called on this instance.
      */
     fun parse(arguments: List<String>, commandPath: String, context: TelegramBotCommandContext? = null) {
+        check(alreadyParsed.compareAndSet(expect = false, update = true)) {
+            "${::parse.name}() can only be called once per instance, please create a new instance for each command invocation"
+        }
         parsedValues.clear()
         var index = 0
         for (definition in schema) {
