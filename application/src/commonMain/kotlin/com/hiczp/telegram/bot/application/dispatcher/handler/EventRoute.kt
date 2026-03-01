@@ -110,7 +110,7 @@ class EventRoute<T : TelegramBotEvent>(
      *     on<MessageEvent> {
      *         // Then match by group
      *         match({ it.event.message.chat.id == -100123L }) {
-     *             text("ping") { /* ... */ }
+     *             whenText("ping") { /* ... */ }
      *         }
      *     }
      * }
@@ -139,7 +139,7 @@ class EventRoute<T : TelegramBotEvent>(
      *     // Type casting + conditional matching in one step!
      *     // Note: it.event is automatically inferred as MessageEvent
      *     on<MessageEvent>({ it.event.message.chat.id == -100123L }) {
-     *         text("ping") { /* ... */ }
+     *         whenText("ping") { /* ... */ }
      *     }
      * }
      * ```

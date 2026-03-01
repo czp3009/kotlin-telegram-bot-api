@@ -216,16 +216,23 @@ The `HandlerTelegramEventDispatcher` provides a type-safe routing DSL for event 
 specialized matcher files in `application/src/commonMain/kotlin/com/hiczp/telegram/bot/application/dispatcher/handler/`:
 
 - **Handling.kt** - Core DSL (`handling`, `match`, `whenMatch`, `include`, `select`)
-- **CompositeMatchers.kt** - Logic combinators (`allOf`, `anyOf`, `not`)
-- **MessageEventMatchers.kt** - Message handlers (`command`, `text`, `textRegex`, media types, etc.)
-- **CallbackQueryMatchers.kt** - Callback query handlers (`callbackData`, `callbackDataRegex`)
-- **InlineQueryMatchers.kt** - Inline query handlers (`inlineQuery`, `inlineQueryRegex`)
-- **ChatTypeMatchers.kt** - Chat type filters (`privateChat`, `groupChat`, `supergroupChat`, `channel`)
+- **CompositeMatchers.kt** - Logic combinators (`allOf`, `anyOf`, `not`, `whenAllOf`, `whenAnyOf`, `whenNot`)
+- **MessageEventMatchers.kt** - Message handlers (`whenText`, `whenTextRegex`, `whenPhoto`, `whenVideo`, etc.)
+- **CallbackQueryMatchers.kt** - Callback query handlers (`whenCallbackData`, `whenCallbackDataRegex`)
+- **InlineQueryMatchers.kt** - Inline query handlers (`whenInlineQuery`, `whenInlineQueryRegex`)
+- **ChatTypeMatchers.kt** - Chat type filters (`whenPrivateChat`, `whenGroupChat`, `whenSupergroupChat`, `whenChannel`)
 - **EditedMessageMatchers.kt** - Edited message handlers
 - **ChatEventMatchers.kt** - Chat event handlers (joins, member updates)
 - **ServiceMessageMatchers.kt** - Service message handlers
 - **PollMatchers.kt** - Poll and reaction handlers
 - **PaymentMatchers.kt** - Payment event handlers
+
+**Naming Convention:**
+
+- Functions starting with `when` (e.g., `whenText`, `whenPhoto`, `whenMatch`) are **terminal operations** that take a
+  handler directly and cannot be chained further.
+- Functions without `when` prefix (e.g., `match`, `allOf`, `anyOf`, `not`) are **composable** and take a build lambda
+  for further nesting.
 
 Each matcher provides two variants: one for the specific event type scope (e.g., inside `on<MessageEvent>`) and one
 for the root level that auto-wraps with `on<EventType>`.
@@ -260,35 +267,35 @@ val dispatcher = HandlerTelegramEventDispatcher(handling {
 
     // Event type matching
     on<MessageEvent> {
-        text("hello") { ctx -> /* exact text match */ }
-        textRegex(Regex("(?i)^hello")) { ctx -> /* regex match */ }
-        textContains("help", ignoreCase = true) { ctx -> /* substring match */ }
-        textStartsWith("/admin") { ctx -> /* prefix match */ }
+        whenText("hello") { ctx -> /* exact text match */ }
+        whenTextRegex(Regex("(?i)^hello")) { ctx -> /* regex match */ }
+        whenTextContains("help", ignoreCase = true) { ctx -> /* substring match */ }
+        whenTextStartsWith("/admin") { ctx -> /* prefix match */ }
 
         // Media type handlers
-        photo { ctx -> /* photo message */ }
-        video { ctx -> /* video message */ }
-        document { ctx -> /* document message */ }
-        sticker { ctx -> /* sticker message */ }
+        whenPhoto { ctx -> /* photo message */ }
+        whenVideo { ctx -> /* video message */ }
+        whenDocument { ctx -> /* document message */ }
+        whenSticker { ctx -> /* sticker message */ }
 
         // User/chat filters
-        fromUser(123456L) { ctx -> /* from specific user */ }
-        inChat(-100123456L) { ctx -> /* in specific chat */ }
+        whenFromUser(123456L) { ctx -> /* from specific user */ }
+        whenInChat(-100123456L) { ctx -> /* in specific chat */ }
 
         // Reply detection
-        reply { ctx -> /* is a reply */ }
-        replyTo(messageId = 42L) { ctx -> /* reply to specific message */ }
+        whenReply { ctx -> /* is a reply */ }
+        whenReplyTo(messageId = 42L) { ctx -> /* reply to specific message */ }
 
         // Forwarded messages
-        forwarded { ctx -> /* forwarded message */ }
-        forwardedFromChat(-100123L) { ctx -> /* forwarded from specific chat */ }
+        whenForwarded { ctx -> /* forwarded message */ }
+        whenForwardedFromChat(-100123L) { ctx -> /* forwarded from specific chat */ }
 
         // Conditional handler with whenMatch
         whenMatch({ (it.event.message.text?.length ?: 0) > 10 }) { ctx ->
             ctx.client.sendMessage(ctx.event.message.chat.id, "Long message!")
         }
 
-        // Composite matchers - combine predicates
+        // Composite matchers - combine predicates (composable, takes build lambda)
         allOf(
             { it.event.message.text != null },
             { it.event.message.chat.id == 100L }
@@ -309,19 +316,19 @@ val dispatcher = HandlerTelegramEventDispatcher(handling {
     }
 
     // Chat type filters
-    privateChat { ctx -> /* private chat only */ }
-    groupChat { ctx -> /* group chat only */ }
-    supergroupChat { ctx -> /* supergroup only */ }
-    channel { ctx -> /* channel only */ }
+    whenPrivateChat { ctx -> /* private chat only */ }
+    whenGroupChat { ctx -> /* group chat only */ }
+    whenSupergroupChat { ctx -> /* supergroup only */ }
+    whenChannel { ctx -> /* channel only */ }
 
     on<CallbackQueryEvent> {
-        callbackData("confirm") { ctx -> /* callback handling */ }
-        callbackDataRegex(Regex("action_\\d+")) { ctx -> /* pattern match */ }
+        whenCallbackData("confirm") { ctx -> /* callback handling */ }
+        whenCallbackDataRegex(Regex("action_\\d+")) { ctx -> /* pattern match */ }
     }
 
     on<InlineQueryEvent> {
-        inlineQuery("search") { ctx -> /* exact query match */ }
-        inlineQueryStartsWith("find:") { ctx -> /* prefix match */ }
+        whenInlineQuery("search") { ctx -> /* exact query match */ }
+        whenInlineQueryStartsWith("find:") { ctx -> /* prefix match */ }
     }
 
     // Include routes from other modules

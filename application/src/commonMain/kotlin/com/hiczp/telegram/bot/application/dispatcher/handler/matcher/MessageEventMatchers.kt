@@ -16,7 +16,7 @@ import kotlinx.coroutines.CoroutineScope
  * @param exact The exact text string to match.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the matching message.
  */
-fun EventRoute<MessageEvent>.text(
+fun EventRoute<MessageEvent>.whenText(
     exact: String,
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) {
@@ -28,10 +28,10 @@ fun EventRoute<MessageEvent>.text(
 /**
  * Convenience extension that registers a text handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.text(
+fun EventRoute<TelegramBotEvent>.whenText(
     exact: String,
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) = on<MessageEvent> { text(exact, handler) }
+) = on<MessageEvent> { whenText(exact, handler) }
 
 /**
  * Registers a handler for messages matching a regular expression.
@@ -39,7 +39,7 @@ fun EventRoute<TelegramBotEvent>.text(
  * @param pattern The regular expression pattern to match.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the matching message.
  */
-fun EventRoute<MessageEvent>.textRegex(
+fun EventRoute<MessageEvent>.whenTextRegex(
     pattern: Regex,
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) {
@@ -51,10 +51,10 @@ fun EventRoute<MessageEvent>.textRegex(
 /**
  * Convenience extension that registers a text regex handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.textRegex(
+fun EventRoute<TelegramBotEvent>.whenTextRegex(
     pattern: Regex,
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) = on<MessageEvent> { textRegex(pattern, handler) }
+) = on<MessageEvent> { whenTextRegex(pattern, handler) }
 
 /**
  * Registers a handler for messages that contain a specific substring.
@@ -63,7 +63,7 @@ fun EventRoute<TelegramBotEvent>.textRegex(
  * @param ignoreCase Whether the search should be case-insensitive. Default is false.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the matching message.
  */
-fun EventRoute<MessageEvent>.textContains(
+fun EventRoute<MessageEvent>.whenTextContains(
     substring: String,
     ignoreCase: Boolean = false,
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
@@ -76,11 +76,11 @@ fun EventRoute<MessageEvent>.textContains(
 /**
  * Convenience extension that registers a text contains handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.textContains(
+fun EventRoute<TelegramBotEvent>.whenTextContains(
     substring: String,
     ignoreCase: Boolean = false,
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) = on<MessageEvent> { textContains(substring, ignoreCase, handler) }
+) = on<MessageEvent> { whenTextContains(substring, ignoreCase, handler) }
 
 /**
  * Registers a handler for messages whose text starts with a specific prefix.
@@ -89,7 +89,7 @@ fun EventRoute<TelegramBotEvent>.textContains(
  * @param ignoreCase Whether the comparison should be case-insensitive. Default is false.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the matching message.
  */
-fun EventRoute<MessageEvent>.textStartsWith(
+fun EventRoute<MessageEvent>.whenTextStartsWith(
     prefix: String,
     ignoreCase: Boolean = false,
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
@@ -102,11 +102,11 @@ fun EventRoute<MessageEvent>.textStartsWith(
 /**
  * Convenience extension that registers a text starts with handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.textStartsWith(
+fun EventRoute<TelegramBotEvent>.whenTextStartsWith(
     prefix: String,
     ignoreCase: Boolean = false,
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) = on<MessageEvent> { textStartsWith(prefix, ignoreCase, handler) }
+) = on<MessageEvent> { whenTextStartsWith(prefix, ignoreCase, handler) }
 
 /**
  * Registers a handler for messages whose text ends with a specific suffix.
@@ -115,7 +115,7 @@ fun EventRoute<TelegramBotEvent>.textStartsWith(
  * @param ignoreCase Whether the comparison should be case-insensitive. Default is false.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the matching message.
  */
-fun EventRoute<MessageEvent>.textEndsWith(
+fun EventRoute<MessageEvent>.whenTextEndsWith(
     suffix: String,
     ignoreCase: Boolean = false,
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
@@ -128,18 +128,18 @@ fun EventRoute<MessageEvent>.textEndsWith(
 /**
  * Convenience extension that registers a text ends with handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.textEndsWith(
+fun EventRoute<TelegramBotEvent>.whenTextEndsWith(
     suffix: String,
     ignoreCase: Boolean = false,
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) = on<MessageEvent> { textEndsWith(suffix, ignoreCase, handler) }
+) = on<MessageEvent> { whenTextEndsWith(suffix, ignoreCase, handler) }
 
 /**
  * Registers a handler for messages that contain a photo.
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the photo message.
  */
-fun EventRoute<MessageEvent>.photo(
+fun EventRoute<MessageEvent>.whenPhoto(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) {
     select({ if (it.event.message.photo != null) it else null }) {
@@ -150,16 +150,16 @@ fun EventRoute<MessageEvent>.photo(
 /**
  * Convenience extension that registers a photo handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.photo(
+fun EventRoute<TelegramBotEvent>.whenPhoto(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) = on<MessageEvent> { photo(handler) }
+) = on<MessageEvent> { whenPhoto(handler) }
 
 /**
  * Registers a handler for messages that contain a video.
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the video message.
  */
-fun EventRoute<MessageEvent>.video(
+fun EventRoute<MessageEvent>.whenVideo(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) {
     select({ if (it.event.message.video != null) it else null }) {
@@ -170,16 +170,16 @@ fun EventRoute<MessageEvent>.video(
 /**
  * Convenience extension that registers a video handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.video(
+fun EventRoute<TelegramBotEvent>.whenVideo(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) = on<MessageEvent> { video(handler) }
+) = on<MessageEvent> { whenVideo(handler) }
 
 /**
  * Registers a handler for messages that contain an audio file.
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the audio message.
  */
-fun EventRoute<MessageEvent>.audio(
+fun EventRoute<MessageEvent>.whenAudio(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) {
     select({ if (it.event.message.audio != null) it else null }) {
@@ -190,16 +190,16 @@ fun EventRoute<MessageEvent>.audio(
 /**
  * Convenience extension that registers an audio handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.audio(
+fun EventRoute<TelegramBotEvent>.whenAudio(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) = on<MessageEvent> { audio(handler) }
+) = on<MessageEvent> { whenAudio(handler) }
 
 /**
  * Registers a handler for messages that contain a document.
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the document message.
  */
-fun EventRoute<MessageEvent>.document(
+fun EventRoute<MessageEvent>.whenDocument(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) {
     select({ if (it.event.message.document != null) it else null }) {
@@ -210,16 +210,16 @@ fun EventRoute<MessageEvent>.document(
 /**
  * Convenience extension that registers a document handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.document(
+fun EventRoute<TelegramBotEvent>.whenDocument(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) = on<MessageEvent> { document(handler) }
+) = on<MessageEvent> { whenDocument(handler) }
 
 /**
  * Registers a handler for messages that contain a sticker.
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the sticker message.
  */
-fun EventRoute<MessageEvent>.sticker(
+fun EventRoute<MessageEvent>.whenSticker(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) {
     select({ if (it.event.message.sticker != null) it else null }) {
@@ -230,16 +230,16 @@ fun EventRoute<MessageEvent>.sticker(
 /**
  * Convenience extension that registers a sticker handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.sticker(
+fun EventRoute<TelegramBotEvent>.whenSticker(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) = on<MessageEvent> { sticker(handler) }
+) = on<MessageEvent> { whenSticker(handler) }
 
 /**
  * Registers a handler for messages that contain a voice note.
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the voice message.
  */
-fun EventRoute<MessageEvent>.voice(
+fun EventRoute<MessageEvent>.whenVoice(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) {
     select({ if (it.event.message.voice != null) it else null }) {
@@ -250,16 +250,16 @@ fun EventRoute<MessageEvent>.voice(
 /**
  * Convenience extension that registers a voice handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.voice(
+fun EventRoute<TelegramBotEvent>.whenVoice(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) = on<MessageEvent> { voice(handler) }
+) = on<MessageEvent> { whenVoice(handler) }
 
 /**
  * Registers a handler for messages that contain a video note (rounded video).
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the video note message.
  */
-fun EventRoute<MessageEvent>.videoNote(
+fun EventRoute<MessageEvent>.whenVideoNote(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) {
     select({ if (it.event.message.videoNote != null) it else null }) {
@@ -270,16 +270,16 @@ fun EventRoute<MessageEvent>.videoNote(
 /**
  * Convenience extension that registers a video note handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.videoNote(
+fun EventRoute<TelegramBotEvent>.whenVideoNote(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) = on<MessageEvent> { videoNote(handler) }
+) = on<MessageEvent> { whenVideoNote(handler) }
 
 /**
  * Registers a handler for messages that contain an animation (GIF).
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the animation message.
  */
-fun EventRoute<MessageEvent>.animation(
+fun EventRoute<MessageEvent>.whenAnimation(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) {
     select({ if (it.event.message.animation != null) it else null }) {
@@ -290,16 +290,16 @@ fun EventRoute<MessageEvent>.animation(
 /**
  * Convenience extension that registers an animation handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.animation(
+fun EventRoute<TelegramBotEvent>.whenAnimation(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) = on<MessageEvent> { animation(handler) }
+) = on<MessageEvent> { whenAnimation(handler) }
 
 /**
  * Registers a handler for messages that contain a contact.
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the contact message.
  */
-fun EventRoute<MessageEvent>.contact(
+fun EventRoute<MessageEvent>.whenContact(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) {
     select({ if (it.event.message.contact != null) it else null }) {
@@ -310,16 +310,16 @@ fun EventRoute<MessageEvent>.contact(
 /**
  * Convenience extension that registers a contact handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.contact(
+fun EventRoute<TelegramBotEvent>.whenContact(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) = on<MessageEvent> { contact(handler) }
+) = on<MessageEvent> { whenContact(handler) }
 
 /**
  * Registers a handler for messages that contain a location.
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the location message.
  */
-fun EventRoute<MessageEvent>.location(
+fun EventRoute<MessageEvent>.whenLocation(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) {
     select({ if (it.event.message.location != null) it else null }) {
@@ -330,16 +330,16 @@ fun EventRoute<MessageEvent>.location(
 /**
  * Convenience extension that registers a location handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.location(
+fun EventRoute<TelegramBotEvent>.whenLocation(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) = on<MessageEvent> { location(handler) }
+) = on<MessageEvent> { whenLocation(handler) }
 
 /**
  * Registers a handler for messages that contain a venue.
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the venue message.
  */
-fun EventRoute<MessageEvent>.venue(
+fun EventRoute<MessageEvent>.whenVenue(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) {
     select({ if (it.event.message.venue != null) it else null }) {
@@ -350,16 +350,16 @@ fun EventRoute<MessageEvent>.venue(
 /**
  * Convenience extension that registers a venue handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.venue(
+fun EventRoute<TelegramBotEvent>.whenVenue(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) = on<MessageEvent> { venue(handler) }
+) = on<MessageEvent> { whenVenue(handler) }
 
 /**
  * Registers a handler for messages that contain a poll.
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the poll message.
  */
-fun EventRoute<MessageEvent>.poll(
+fun EventRoute<MessageEvent>.whenPoll(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) {
     select({ if (it.event.message.poll != null) it else null }) {
@@ -370,16 +370,16 @@ fun EventRoute<MessageEvent>.poll(
 /**
  * Convenience extension that registers a poll handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.poll(
+fun EventRoute<TelegramBotEvent>.whenPoll(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) = on<MessageEvent> { poll(handler) }
+) = on<MessageEvent> { whenPoll(handler) }
 
 /**
  * Registers a handler for messages that contain a dice.
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the dice message.
  */
-fun EventRoute<MessageEvent>.dice(
+fun EventRoute<MessageEvent>.whenDice(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) {
     select({ if (it.event.message.dice != null) it else null }) {
@@ -390,16 +390,16 @@ fun EventRoute<MessageEvent>.dice(
 /**
  * Convenience extension that registers a dice handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.dice(
+fun EventRoute<TelegramBotEvent>.whenDice(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) = on<MessageEvent> { dice(handler) }
+) = on<MessageEvent> { whenDice(handler) }
 
 /**
  * Registers a handler for messages that are replies to another message.
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the reply message.
  */
-fun EventRoute<MessageEvent>.reply(
+fun EventRoute<MessageEvent>.whenReply(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) {
     select({ if (it.event.message.replyToMessage != null) it else null }) {
@@ -410,9 +410,9 @@ fun EventRoute<MessageEvent>.reply(
 /**
  * Convenience extension that registers a reply handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.reply(
+fun EventRoute<TelegramBotEvent>.whenReply(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) = on<MessageEvent> { reply(handler) }
+) = on<MessageEvent> { whenReply(handler) }
 
 /**
  * Registers a handler for messages that are replies to a specific message.
@@ -420,7 +420,7 @@ fun EventRoute<TelegramBotEvent>.reply(
  * @param messageId The ID of the message that this message is replying to.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the reply message.
  */
-fun EventRoute<MessageEvent>.replyTo(
+fun EventRoute<MessageEvent>.whenReplyTo(
     messageId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) {
@@ -430,12 +430,12 @@ fun EventRoute<MessageEvent>.replyTo(
 }
 
 /**
- * Convenience extension that registers a replyTo handler directly at the root level.
+ * Convenience extension that registers a whenReplyTo handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.replyTo(
+fun EventRoute<TelegramBotEvent>.whenReplyTo(
     messageId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) = on<MessageEvent> { replyTo(messageId, handler) }
+) = on<MessageEvent> { whenReplyTo(messageId, handler) }
 
 /**
  * Registers a handler for messages from a specific user.
@@ -443,7 +443,7 @@ fun EventRoute<TelegramBotEvent>.replyTo(
  * @param userId The Telegram user ID to match.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the message.
  */
-fun EventRoute<MessageEvent>.fromUser(
+fun EventRoute<MessageEvent>.whenFromUser(
     userId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) {
@@ -455,10 +455,10 @@ fun EventRoute<MessageEvent>.fromUser(
 /**
  * Convenience extension that registers a from user handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.fromUser(
+fun EventRoute<TelegramBotEvent>.whenFromUser(
     userId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) = on<MessageEvent> { fromUser(userId, handler) }
+) = on<MessageEvent> { whenFromUser(userId, handler) }
 
 /**
  * Registers a handler for messages from any of the specified users.
@@ -466,7 +466,7 @@ fun EventRoute<TelegramBotEvent>.fromUser(
  * @param userIds The set of Telegram user IDs to match.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the message.
  */
-fun EventRoute<MessageEvent>.fromUsers(
+fun EventRoute<MessageEvent>.whenFromUsers(
     userIds: Set<Long>,
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) {
@@ -478,10 +478,10 @@ fun EventRoute<MessageEvent>.fromUsers(
 /**
  * Convenience extension that registers a from users handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.fromUsers(
+fun EventRoute<TelegramBotEvent>.whenFromUsers(
     userIds: Set<Long>,
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) = on<MessageEvent> { fromUsers(userIds, handler) }
+) = on<MessageEvent> { whenFromUsers(userIds, handler) }
 
 /**
  * Registers a handler for messages in a specific chat.
@@ -489,7 +489,7 @@ fun EventRoute<TelegramBotEvent>.fromUsers(
  * @param chatId The Telegram chat ID to match.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the message.
  */
-fun EventRoute<MessageEvent>.inChat(
+fun EventRoute<MessageEvent>.whenInChat(
     chatId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) {
@@ -501,10 +501,10 @@ fun EventRoute<MessageEvent>.inChat(
 /**
  * Convenience extension that registers an in chat handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.inChat(
+fun EventRoute<TelegramBotEvent>.whenInChat(
     chatId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) = on<MessageEvent> { inChat(chatId, handler) }
+) = on<MessageEvent> { whenInChat(chatId, handler) }
 
 /**
  * Registers a handler for messages in any of the specified chats.
@@ -512,7 +512,7 @@ fun EventRoute<TelegramBotEvent>.inChat(
  * @param chatIds The set of Telegram chat IDs to match.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the message.
  */
-fun EventRoute<MessageEvent>.inChats(
+fun EventRoute<MessageEvent>.whenInChats(
     chatIds: Set<Long>,
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) {
@@ -524,17 +524,17 @@ fun EventRoute<MessageEvent>.inChats(
 /**
  * Convenience extension that registers an in chats handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.inChats(
+fun EventRoute<TelegramBotEvent>.whenInChats(
     chatIds: Set<Long>,
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) = on<MessageEvent> { inChats(chatIds, handler) }
+) = on<MessageEvent> { whenInChats(chatIds, handler) }
 
 /**
  * Registers a handler for messages that are forwarded.
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the forwarded message.
  */
-fun EventRoute<MessageEvent>.forwarded(
+fun EventRoute<MessageEvent>.whenForwarded(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) {
     select({ if (it.event.message.forwardOrigin != null) it else null }) {
@@ -545,9 +545,9 @@ fun EventRoute<MessageEvent>.forwarded(
 /**
  * Convenience extension that registers a forwarded handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.forwarded(
+fun EventRoute<TelegramBotEvent>.whenForwarded(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) = on<MessageEvent> { forwarded(handler) }
+) = on<MessageEvent> { whenForwarded(handler) }
 
 /**
  * Registers a handler for messages forwarded from a specific chat.
@@ -555,7 +555,7 @@ fun EventRoute<TelegramBotEvent>.forwarded(
  * @param chatId The Telegram chat ID from which the message was forwarded.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the forwarded message.
  */
-fun EventRoute<MessageEvent>.forwardedFromChat(
+fun EventRoute<MessageEvent>.whenForwardedFromChat(
     chatId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) {
@@ -575,10 +575,10 @@ fun EventRoute<MessageEvent>.forwardedFromChat(
 /**
  * Convenience extension that registers a forwarded from chat handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.forwardedFromChat(
+fun EventRoute<TelegramBotEvent>.whenForwardedFromChat(
     chatId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) = on<MessageEvent> { forwardedFromChat(chatId, handler) }
+) = on<MessageEvent> { whenForwardedFromChat(chatId, handler) }
 
 /**
  * Registers a handler for messages forwarded from a specific user.
@@ -586,7 +586,7 @@ fun EventRoute<TelegramBotEvent>.forwardedFromChat(
  * @param userId The Telegram user ID from which the message was forwarded.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the forwarded message.
  */
-fun EventRoute<MessageEvent>.forwardedFromUser(
+fun EventRoute<MessageEvent>.whenForwardedFromUser(
     userId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) {
@@ -605,10 +605,10 @@ fun EventRoute<MessageEvent>.forwardedFromUser(
 /**
  * Convenience extension that registers a forwarded from user handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.forwardedFromUser(
+fun EventRoute<TelegramBotEvent>.whenForwardedFromUser(
     userId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) = on<MessageEvent> { forwardedFromUser(userId, handler) }
+) = on<MessageEvent> { whenForwardedFromUser(userId, handler) }
 
 /**
  * Registers a handler for messages that contain a dice with a specific emoji.
@@ -618,7 +618,7 @@ fun EventRoute<TelegramBotEvent>.forwardedFromUser(
  * @param emoji The dice emoji to match.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the dice message.
  */
-fun EventRoute<MessageEvent>.dice(
+fun EventRoute<MessageEvent>.whenDice(
     emoji: String,
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) {
@@ -630,7 +630,7 @@ fun EventRoute<MessageEvent>.dice(
 /**
  * Convenience extension that registers a dice with emoji handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.dice(
+fun EventRoute<TelegramBotEvent>.whenDice(
     emoji: String,
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) = on<MessageEvent> { dice(emoji, handler) }
+) = on<MessageEvent> { whenDice(emoji, handler) }

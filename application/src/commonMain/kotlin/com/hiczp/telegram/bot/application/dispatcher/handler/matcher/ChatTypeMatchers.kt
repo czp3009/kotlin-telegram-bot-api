@@ -12,7 +12,7 @@ import kotlinx.coroutines.CoroutineScope
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the private chat message.
  */
-fun EventRoute<MessageEvent>.privateChat(
+fun EventRoute<MessageEvent>.whenPrivateChat(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) {
     select({ if (it.event.message.chat.type == ChatType.PRIVATE) it else null }) {
@@ -23,16 +23,16 @@ fun EventRoute<MessageEvent>.privateChat(
 /**
  * Convenience extension that registers a private chat handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.privateChat(
+fun EventRoute<TelegramBotEvent>.whenPrivateChat(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) = on<MessageEvent> { privateChat(handler) }
+) = on<MessageEvent> { whenPrivateChat(handler) }
 
 /**
  * Registers a handler for messages from group chats only.
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the group chat message.
  */
-fun EventRoute<MessageEvent>.groupChat(
+fun EventRoute<MessageEvent>.whenGroupChat(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) {
     select({ if (it.event.message.chat.type == ChatType.GROUP) it else null }) {
@@ -43,16 +43,16 @@ fun EventRoute<MessageEvent>.groupChat(
 /**
  * Convenience extension that registers a group chat handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.groupChat(
+fun EventRoute<TelegramBotEvent>.whenGroupChat(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) = on<MessageEvent> { groupChat(handler) }
+) = on<MessageEvent> { whenGroupChat(handler) }
 
 /**
  * Registers a handler for messages from supergroup chats only.
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the supergroup chat message.
  */
-fun EventRoute<MessageEvent>.supergroupChat(
+fun EventRoute<MessageEvent>.whenSupergroupChat(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) {
     select({ if (it.event.message.chat.type == ChatType.SUPERGROUP) it else null }) {
@@ -63,16 +63,16 @@ fun EventRoute<MessageEvent>.supergroupChat(
 /**
  * Convenience extension that registers a supergroup chat handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.supergroupChat(
+fun EventRoute<TelegramBotEvent>.whenSupergroupChat(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) = on<MessageEvent> { supergroupChat(handler) }
+) = on<MessageEvent> { whenSupergroupChat(handler) }
 
 /**
  * Registers a handler for messages from channels only.
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the channel message.
  */
-fun EventRoute<MessageEvent>.channel(
+fun EventRoute<MessageEvent>.whenChannel(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
 ) {
     select({ if (it.event.message.chat.type == ChatType.CHANNEL) it else null }) {
@@ -83,6 +83,6 @@ fun EventRoute<MessageEvent>.channel(
 /**
  * Convenience extension that registers a channel handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.channel(
+fun EventRoute<TelegramBotEvent>.whenChannel(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageEvent>) -> Unit
-) = on<MessageEvent> { channel(handler) }
+) = on<MessageEvent> { whenChannel(handler) }

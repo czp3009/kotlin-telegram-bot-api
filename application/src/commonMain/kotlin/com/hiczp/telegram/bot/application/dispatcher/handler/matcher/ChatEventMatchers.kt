@@ -12,7 +12,7 @@ import kotlinx.coroutines.CoroutineScope
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
  */
-fun EventRoute<TelegramBotEvent>.chatJoinRequest(
+fun EventRoute<TelegramBotEvent>.whenChatJoinRequest(
     handler: suspend CoroutineScope.(TelegramBotEventContext<ChatJoinRequestEvent>) -> Unit
 ) = on<ChatJoinRequestEvent> { handle(handler) }
 
@@ -22,7 +22,7 @@ fun EventRoute<TelegramBotEvent>.chatJoinRequest(
  * @param chatId The Telegram chat ID to match.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
  */
-fun EventRoute<TelegramBotEvent>.chatJoinRequestFromChat(
+fun EventRoute<TelegramBotEvent>.whenChatJoinRequestFromChat(
     chatId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<ChatJoinRequestEvent>) -> Unit
 ) = on<ChatJoinRequestEvent> {
@@ -37,7 +37,7 @@ fun EventRoute<TelegramBotEvent>.chatJoinRequestFromChat(
  * @param userId The Telegram user ID to match.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
  */
-fun EventRoute<TelegramBotEvent>.chatJoinRequestFromUser(
+fun EventRoute<TelegramBotEvent>.whenChatJoinRequestFromUser(
     userId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<ChatJoinRequestEvent>) -> Unit
 ) = on<ChatJoinRequestEvent> {
@@ -55,7 +55,7 @@ fun EventRoute<TelegramBotEvent>.chatJoinRequestFromUser(
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
  */
-fun EventRoute<TelegramBotEvent>.chatMemberUpdated(
+fun EventRoute<TelegramBotEvent>.whenChatMemberUpdated(
     handler: suspend CoroutineScope.(TelegramBotEventContext<ChatMemberEvent>) -> Unit
 ) = on<ChatMemberEvent> { handle(handler) }
 
@@ -65,7 +65,7 @@ fun EventRoute<TelegramBotEvent>.chatMemberUpdated(
  * @param chatId The Telegram chat ID to match.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
  */
-fun EventRoute<TelegramBotEvent>.chatMemberUpdatedInChat(
+fun EventRoute<TelegramBotEvent>.whenChatMemberUpdatedInChat(
     chatId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<ChatMemberEvent>) -> Unit
 ) = on<ChatMemberEvent> {
@@ -82,7 +82,7 @@ fun EventRoute<TelegramBotEvent>.chatMemberUpdatedInChat(
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
  */
-fun EventRoute<TelegramBotEvent>.myChatMemberUpdated(
+fun EventRoute<TelegramBotEvent>.whenMyChatMemberUpdated(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MyChatMemberEvent>) -> Unit
 ) = on<MyChatMemberEvent> { handle(handler) }
 
@@ -92,7 +92,7 @@ fun EventRoute<TelegramBotEvent>.myChatMemberUpdated(
  * @param chatId The Telegram chat ID to match.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
  */
-fun EventRoute<TelegramBotEvent>.myChatMemberUpdatedInChat(
+fun EventRoute<TelegramBotEvent>.whenMyChatMemberUpdatedInChat(
     chatId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<MyChatMemberEvent>) -> Unit
 ) = on<MyChatMemberEvent> {
@@ -109,7 +109,7 @@ fun EventRoute<TelegramBotEvent>.myChatMemberUpdatedInChat(
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
  */
-fun EventRoute<TelegramBotEvent>.chatBoost(
+fun EventRoute<TelegramBotEvent>.whenChatBoost(
     handler: suspend CoroutineScope.(TelegramBotEventContext<ChatBoostEvent>) -> Unit
 ) = on<ChatBoostEvent> { handle(handler) }
 
@@ -119,7 +119,7 @@ fun EventRoute<TelegramBotEvent>.chatBoost(
  * @param chatId The Telegram chat ID to match.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
  */
-fun EventRoute<TelegramBotEvent>.chatBoostInChat(
+fun EventRoute<TelegramBotEvent>.whenChatBoostInChat(
     chatId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<ChatBoostEvent>) -> Unit
 ) = on<ChatBoostEvent> {
@@ -136,7 +136,7 @@ fun EventRoute<TelegramBotEvent>.chatBoostInChat(
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
  */
-fun EventRoute<TelegramBotEvent>.removedChatBoost(
+fun EventRoute<TelegramBotEvent>.whenRemovedChatBoost(
     handler: suspend CoroutineScope.(TelegramBotEventContext<RemovedChatBoostEvent>) -> Unit
 ) = on<RemovedChatBoostEvent> { handle(handler) }
 
@@ -146,7 +146,7 @@ fun EventRoute<TelegramBotEvent>.removedChatBoost(
  * @param chatId The Telegram chat ID to match.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
  */
-fun EventRoute<TelegramBotEvent>.removedChatBoostInChat(
+fun EventRoute<TelegramBotEvent>.whenRemovedChatBoostInChat(
     chatId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<RemovedChatBoostEvent>) -> Unit
 ) = on<RemovedChatBoostEvent> {

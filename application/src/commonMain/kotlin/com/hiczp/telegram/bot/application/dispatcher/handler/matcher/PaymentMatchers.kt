@@ -16,7 +16,7 @@ import kotlinx.coroutines.CoroutineScope
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
  */
-fun EventRoute<TelegramBotEvent>.shippingQuery(
+fun EventRoute<TelegramBotEvent>.whenShippingQuery(
     handler: suspend CoroutineScope.(TelegramBotEventContext<ShippingQueryEvent>) -> Unit
 ) = on<ShippingQueryEvent> { handle(handler) }
 
@@ -26,7 +26,7 @@ fun EventRoute<TelegramBotEvent>.shippingQuery(
  * @param userId The Telegram user ID to match.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
  */
-fun EventRoute<TelegramBotEvent>.shippingQueryFromUser(
+fun EventRoute<TelegramBotEvent>.whenShippingQueryFromUser(
     userId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<ShippingQueryEvent>) -> Unit
 ) = on<ShippingQueryEvent> {
@@ -41,7 +41,7 @@ fun EventRoute<TelegramBotEvent>.shippingQueryFromUser(
  * @param invoicePayload The invoice payload to match.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
  */
-fun EventRoute<TelegramBotEvent>.shippingQueryWithPayload(
+fun EventRoute<TelegramBotEvent>.whenShippingQueryWithPayload(
     invoicePayload: String,
     handler: suspend CoroutineScope.(TelegramBotEventContext<ShippingQueryEvent>) -> Unit
 ) = on<ShippingQueryEvent> {
@@ -59,7 +59,7 @@ fun EventRoute<TelegramBotEvent>.shippingQueryWithPayload(
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
  */
-fun EventRoute<TelegramBotEvent>.preCheckoutQuery(
+fun EventRoute<TelegramBotEvent>.whenPreCheckoutQuery(
     handler: suspend CoroutineScope.(TelegramBotEventContext<PreCheckoutQueryEvent>) -> Unit
 ) = on<PreCheckoutQueryEvent> { handle(handler) }
 
@@ -69,7 +69,7 @@ fun EventRoute<TelegramBotEvent>.preCheckoutQuery(
  * @param userId The Telegram user ID to match.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
  */
-fun EventRoute<TelegramBotEvent>.preCheckoutQueryFromUser(
+fun EventRoute<TelegramBotEvent>.whenPreCheckoutQueryFromUser(
     userId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<PreCheckoutQueryEvent>) -> Unit
 ) = on<PreCheckoutQueryEvent> {
@@ -84,7 +84,7 @@ fun EventRoute<TelegramBotEvent>.preCheckoutQueryFromUser(
  * @param invoicePayload The invoice payload to match.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
  */
-fun EventRoute<TelegramBotEvent>.preCheckoutQueryWithPayload(
+fun EventRoute<TelegramBotEvent>.whenPreCheckoutQueryWithPayload(
     invoicePayload: String,
     handler: suspend CoroutineScope.(TelegramBotEventContext<PreCheckoutQueryEvent>) -> Unit
 ) = on<PreCheckoutQueryEvent> {
@@ -99,7 +99,7 @@ fun EventRoute<TelegramBotEvent>.preCheckoutQueryWithPayload(
  * @param currency The currency code to match (e.g., "USD").
  * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
  */
-fun EventRoute<TelegramBotEvent>.preCheckoutQueryWithCurrency(
+fun EventRoute<TelegramBotEvent>.whenPreCheckoutQueryWithCurrency(
     currency: String,
     handler: suspend CoroutineScope.(TelegramBotEventContext<PreCheckoutQueryEvent>) -> Unit
 ) = on<PreCheckoutQueryEvent> {
@@ -117,7 +117,7 @@ fun EventRoute<TelegramBotEvent>.preCheckoutQueryWithCurrency(
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
  */
-fun EventRoute<TelegramBotEvent>.purchasedPaidMedia(
+fun EventRoute<TelegramBotEvent>.whenPurchasedPaidMedia(
     handler: suspend CoroutineScope.(TelegramBotEventContext<PurchasedPaidMediaEvent>) -> Unit
 ) = on<PurchasedPaidMediaEvent> { handle(handler) }
 
@@ -127,7 +127,7 @@ fun EventRoute<TelegramBotEvent>.purchasedPaidMedia(
  * @param userId The Telegram user ID to match.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
  */
-fun EventRoute<TelegramBotEvent>.purchasedPaidMediaFromUser(
+fun EventRoute<TelegramBotEvent>.whenPurchasedPaidMediaFromUser(
     userId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<PurchasedPaidMediaEvent>) -> Unit
 ) = on<PurchasedPaidMediaEvent> {

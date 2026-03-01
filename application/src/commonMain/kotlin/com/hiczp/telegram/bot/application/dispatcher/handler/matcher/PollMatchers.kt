@@ -13,7 +13,7 @@ import kotlinx.coroutines.CoroutineScope
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
  */
-fun EventRoute<TelegramBotEvent>.poll(
+fun EventRoute<TelegramBotEvent>.whenPoll(
     handler: suspend CoroutineScope.(TelegramBotEventContext<PollEvent>) -> Unit
 ) = on<PollEvent> { handle(handler) }
 
@@ -23,7 +23,7 @@ fun EventRoute<TelegramBotEvent>.poll(
  * @param pollId The poll ID to match.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
  */
-fun EventRoute<TelegramBotEvent>.poll(
+fun EventRoute<TelegramBotEvent>.whenPoll(
     pollId: String,
     handler: suspend CoroutineScope.(TelegramBotEventContext<PollEvent>) -> Unit
 ) = on<PollEvent> {
@@ -41,7 +41,7 @@ fun EventRoute<TelegramBotEvent>.poll(
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
  */
-fun EventRoute<TelegramBotEvent>.pollAnswer(
+fun EventRoute<TelegramBotEvent>.whenPollAnswer(
     handler: suspend CoroutineScope.(TelegramBotEventContext<PollAnswerEvent>) -> Unit
 ) = on<PollAnswerEvent> { handle(handler) }
 
@@ -51,7 +51,7 @@ fun EventRoute<TelegramBotEvent>.pollAnswer(
  * @param pollId The poll ID to match.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
  */
-fun EventRoute<TelegramBotEvent>.pollAnswer(
+fun EventRoute<TelegramBotEvent>.whenPollAnswer(
     pollId: String,
     handler: suspend CoroutineScope.(TelegramBotEventContext<PollAnswerEvent>) -> Unit
 ) = on<PollAnswerEvent> {
@@ -66,7 +66,7 @@ fun EventRoute<TelegramBotEvent>.pollAnswer(
  * @param userId The Telegram user ID to match.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
  */
-fun EventRoute<TelegramBotEvent>.pollAnswerFromUser(
+fun EventRoute<TelegramBotEvent>.whenPollAnswerFromUser(
     userId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<PollAnswerEvent>) -> Unit
 ) = on<PollAnswerEvent> {
@@ -85,7 +85,7 @@ fun EventRoute<TelegramBotEvent>.pollAnswerFromUser(
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
  */
-fun EventRoute<TelegramBotEvent>.messageReaction(
+fun EventRoute<TelegramBotEvent>.whenMessageReaction(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageReactionEvent>) -> Unit
 ) = on<MessageReactionEvent> { handle(handler) }
 
@@ -95,7 +95,7 @@ fun EventRoute<TelegramBotEvent>.messageReaction(
  * @param chatId The Telegram chat ID to match.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
  */
-fun EventRoute<TelegramBotEvent>.messageReactionInChat(
+fun EventRoute<TelegramBotEvent>.whenMessageReactionInChat(
     chatId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageReactionEvent>) -> Unit
 ) = on<MessageReactionEvent> {
@@ -110,7 +110,7 @@ fun EventRoute<TelegramBotEvent>.messageReactionInChat(
  * @param messageId The message ID to match.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
  */
-fun EventRoute<TelegramBotEvent>.messageReactionToMessage(
+fun EventRoute<TelegramBotEvent>.whenMessageReactionToMessage(
     messageId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageReactionEvent>) -> Unit
 ) = on<MessageReactionEvent> {
@@ -129,7 +129,7 @@ fun EventRoute<TelegramBotEvent>.messageReactionToMessage(
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
  */
-fun EventRoute<TelegramBotEvent>.messageReactionCount(
+fun EventRoute<TelegramBotEvent>.whenMessageReactionCount(
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageReactionCountEvent>) -> Unit
 ) = on<MessageReactionCountEvent> { handle(handler) }
 
@@ -139,7 +139,7 @@ fun EventRoute<TelegramBotEvent>.messageReactionCount(
  * @param chatId The Telegram chat ID to match.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
  */
-fun EventRoute<TelegramBotEvent>.messageReactionCountInChat(
+fun EventRoute<TelegramBotEvent>.whenMessageReactionCountInChat(
     chatId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<MessageReactionCountEvent>) -> Unit
 ) = on<MessageReactionCountEvent> {

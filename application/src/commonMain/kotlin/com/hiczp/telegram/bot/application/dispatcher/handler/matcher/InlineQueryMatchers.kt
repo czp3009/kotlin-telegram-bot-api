@@ -13,7 +13,7 @@ import kotlinx.coroutines.CoroutineScope
  * @param query The query text to match.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the matching inline query.
  */
-fun EventRoute<InlineQueryEvent>.inlineQuery(
+fun EventRoute<InlineQueryEvent>.whenInlineQuery(
     query: String,
     handler: suspend CoroutineScope.(TelegramBotEventContext<InlineQueryEvent>) -> Unit
 ) {
@@ -25,10 +25,10 @@ fun EventRoute<InlineQueryEvent>.inlineQuery(
 /**
  * Convenience extension that registers an inline query handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.inlineQuery(
+fun EventRoute<TelegramBotEvent>.whenInlineQuery(
     query: String,
     handler: suspend CoroutineScope.(TelegramBotEventContext<InlineQueryEvent>) -> Unit
-) = on<InlineQueryEvent> { inlineQuery(query, handler) }
+) = on<InlineQueryEvent> { whenInlineQuery(query, handler) }
 
 /**
  * Registers a handler for inline queries whose text matches a regular expression.
@@ -36,7 +36,7 @@ fun EventRoute<TelegramBotEvent>.inlineQuery(
  * @param pattern The regular expression pattern to match against query text.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the matching inline query.
  */
-fun EventRoute<InlineQueryEvent>.inlineQueryRegex(
+fun EventRoute<InlineQueryEvent>.whenInlineQueryRegex(
     pattern: Regex,
     handler: suspend CoroutineScope.(TelegramBotEventContext<InlineQueryEvent>) -> Unit
 ) {
@@ -48,10 +48,10 @@ fun EventRoute<InlineQueryEvent>.inlineQueryRegex(
 /**
  * Convenience extension that registers an inline query regex handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.inlineQueryRegex(
+fun EventRoute<TelegramBotEvent>.whenInlineQueryRegex(
     pattern: Regex,
     handler: suspend CoroutineScope.(TelegramBotEventContext<InlineQueryEvent>) -> Unit
-) = on<InlineQueryEvent> { inlineQueryRegex(pattern, handler) }
+) = on<InlineQueryEvent> { whenInlineQueryRegex(pattern, handler) }
 
 /**
  * Registers a handler for inline queries whose text contains a specific substring.
@@ -60,7 +60,7 @@ fun EventRoute<TelegramBotEvent>.inlineQueryRegex(
  * @param ignoreCase Whether the search should be case-insensitive. Default is false.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the matching inline query.
  */
-fun EventRoute<InlineQueryEvent>.inlineQueryContains(
+fun EventRoute<InlineQueryEvent>.whenInlineQueryContains(
     substring: String,
     ignoreCase: Boolean = false,
     handler: suspend CoroutineScope.(TelegramBotEventContext<InlineQueryEvent>) -> Unit
@@ -73,11 +73,11 @@ fun EventRoute<InlineQueryEvent>.inlineQueryContains(
 /**
  * Convenience extension that registers an inline query contains handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.inlineQueryContains(
+fun EventRoute<TelegramBotEvent>.whenInlineQueryContains(
     substring: String,
     ignoreCase: Boolean = false,
     handler: suspend CoroutineScope.(TelegramBotEventContext<InlineQueryEvent>) -> Unit
-) = on<InlineQueryEvent> { inlineQueryContains(substring, ignoreCase, handler) }
+) = on<InlineQueryEvent> { whenInlineQueryContains(substring, ignoreCase, handler) }
 
 /**
  * Registers a handler for inline queries whose text starts with a specific prefix.
@@ -86,7 +86,7 @@ fun EventRoute<TelegramBotEvent>.inlineQueryContains(
  * @param ignoreCase Whether the comparison should be case-insensitive. Default is false.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the matching inline query.
  */
-fun EventRoute<InlineQueryEvent>.inlineQueryStartsWith(
+fun EventRoute<InlineQueryEvent>.whenInlineQueryStartsWith(
     prefix: String,
     ignoreCase: Boolean = false,
     handler: suspend CoroutineScope.(TelegramBotEventContext<InlineQueryEvent>) -> Unit
@@ -99,11 +99,11 @@ fun EventRoute<InlineQueryEvent>.inlineQueryStartsWith(
 /**
  * Convenience extension that registers an inline query starts with handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.inlineQueryStartsWith(
+fun EventRoute<TelegramBotEvent>.whenInlineQueryStartsWith(
     prefix: String,
     ignoreCase: Boolean = false,
     handler: suspend CoroutineScope.(TelegramBotEventContext<InlineQueryEvent>) -> Unit
-) = on<InlineQueryEvent> { inlineQueryStartsWith(prefix, ignoreCase, handler) }
+) = on<InlineQueryEvent> { whenInlineQueryStartsWith(prefix, ignoreCase, handler) }
 
 /**
  * Registers a handler for inline queries from a specific user.
@@ -111,7 +111,7 @@ fun EventRoute<TelegramBotEvent>.inlineQueryStartsWith(
  * @param userId The Telegram user ID to match.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the inline query.
  */
-fun EventRoute<InlineQueryEvent>.inlineQueryFromUser(
+fun EventRoute<InlineQueryEvent>.whenInlineQueryFromUser(
     userId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<InlineQueryEvent>) -> Unit
 ) {
@@ -123,10 +123,10 @@ fun EventRoute<InlineQueryEvent>.inlineQueryFromUser(
 /**
  * Convenience extension that registers an inline query from user handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.inlineQueryFromUser(
+fun EventRoute<TelegramBotEvent>.whenInlineQueryFromUser(
     userId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<InlineQueryEvent>) -> Unit
-) = on<InlineQueryEvent> { inlineQueryFromUser(userId, handler) }
+) = on<InlineQueryEvent> { whenInlineQueryFromUser(userId, handler) }
 
 
 /**
@@ -137,7 +137,7 @@ fun EventRoute<TelegramBotEvent>.inlineQueryFromUser(
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
  */
-fun EventRoute<TelegramBotEvent>.chosenInlineResult(
+fun EventRoute<TelegramBotEvent>.whenChosenInlineResult(
     handler: suspend CoroutineScope.(TelegramBotEventContext<ChosenInlineResultEvent>) -> Unit
 ) = on<ChosenInlineResultEvent> { handle(handler) }
 
@@ -147,7 +147,7 @@ fun EventRoute<TelegramBotEvent>.chosenInlineResult(
  * @param resultId The result ID to match.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
  */
-fun EventRoute<TelegramBotEvent>.chosenInlineResult(
+fun EventRoute<TelegramBotEvent>.whenChosenInlineResult(
     resultId: String,
     handler: suspend CoroutineScope.(TelegramBotEventContext<ChosenInlineResultEvent>) -> Unit
 ) = on<ChosenInlineResultEvent> {
@@ -162,7 +162,7 @@ fun EventRoute<TelegramBotEvent>.chosenInlineResult(
  * @param userId The Telegram user ID to match.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the event.
  */
-fun EventRoute<TelegramBotEvent>.chosenInlineResultFromUser(
+fun EventRoute<TelegramBotEvent>.whenChosenInlineResultFromUser(
     userId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<ChosenInlineResultEvent>) -> Unit
 ) = on<ChosenInlineResultEvent> {

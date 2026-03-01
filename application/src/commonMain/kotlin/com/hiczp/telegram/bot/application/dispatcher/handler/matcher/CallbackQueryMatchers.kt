@@ -12,7 +12,7 @@ import kotlinx.coroutines.CoroutineScope
  * @param data The callback data string to match.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the matching callback.
  */
-fun EventRoute<CallbackQueryEvent>.callbackData(
+fun EventRoute<CallbackQueryEvent>.whenCallbackData(
     data: String,
     handler: suspend CoroutineScope.(TelegramBotEventContext<CallbackQueryEvent>) -> Unit
 ) {
@@ -24,10 +24,10 @@ fun EventRoute<CallbackQueryEvent>.callbackData(
 /**
  * Convenience extension that registers a callback data handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.callbackData(
+fun EventRoute<TelegramBotEvent>.whenCallbackData(
     data: String,
     handler: suspend CoroutineScope.(TelegramBotEventContext<CallbackQueryEvent>) -> Unit
-) = on<CallbackQueryEvent> { callbackData(data, handler) }
+) = on<CallbackQueryEvent> { whenCallbackData(data, handler) }
 
 /**
  * Registers a handler for callback queries whose data matches a regular expression.
@@ -35,7 +35,7 @@ fun EventRoute<TelegramBotEvent>.callbackData(
  * @param pattern The regular expression pattern to match against callback data.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the matching callback.
  */
-fun EventRoute<CallbackQueryEvent>.callbackDataRegex(
+fun EventRoute<CallbackQueryEvent>.whenCallbackDataRegex(
     pattern: Regex,
     handler: suspend CoroutineScope.(TelegramBotEventContext<CallbackQueryEvent>) -> Unit
 ) {
@@ -47,7 +47,7 @@ fun EventRoute<CallbackQueryEvent>.callbackDataRegex(
 /**
  * Convenience extension that registers a callback data regex handler directly at the root level.
  */
-fun EventRoute<TelegramBotEvent>.callbackDataRegex(
+fun EventRoute<TelegramBotEvent>.whenCallbackDataRegex(
     pattern: Regex,
     handler: suspend CoroutineScope.(TelegramBotEventContext<CallbackQueryEvent>) -> Unit
-) = on<CallbackQueryEvent> { callbackDataRegex(pattern, handler) }
+) = on<CallbackQueryEvent> { whenCallbackDataRegex(pattern, handler) }

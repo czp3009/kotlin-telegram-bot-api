@@ -214,7 +214,7 @@ class TelegramBotApplication(
      * Example of problematic code in a handler:
      * ```kotlin
      * on<MessageEvent> {
-     *     text("bad") {
+     *     whenText("bad") {
      *         launch {
      *             while (true) {
      *                 // Missing isActive check - will never respond to cancellation

@@ -17,7 +17,7 @@ import kotlinx.coroutines.CoroutineScope
  *         ctx.client.sendMessage(ctx.event.message.chat.id, "Welcome!")
  *     }
  *     on<CallbackQueryEvent> {
- *         callbackData("confirm") { ctx ->
+ *         whenCallbackData("confirm") { ctx ->
  *             // Handle callback
  *         }
  *     }

@@ -12,7 +12,7 @@ import kotlinx.coroutines.CoroutineScope
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the edited message.
  */
-fun EventRoute<TelegramBotEvent>.editedMessage(
+fun EventRoute<TelegramBotEvent>.whenEditedMessage(
     handler: suspend CoroutineScope.(TelegramBotEventContext<EditedMessageEvent>) -> Unit
 ) = on<EditedMessageEvent> { handle(handler) }
 
@@ -22,7 +22,7 @@ fun EventRoute<TelegramBotEvent>.editedMessage(
  * @param exact The exact text string to match.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the matching edited message.
  */
-fun EventRoute<TelegramBotEvent>.editedText(
+fun EventRoute<TelegramBotEvent>.whenEditedText(
     exact: String,
     handler: suspend CoroutineScope.(TelegramBotEventContext<EditedMessageEvent>) -> Unit
 ) = on<EditedMessageEvent> {
@@ -37,7 +37,7 @@ fun EventRoute<TelegramBotEvent>.editedText(
  * @param pattern The regular expression pattern to match.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the matching edited message.
  */
-fun EventRoute<TelegramBotEvent>.editedTextRegex(
+fun EventRoute<TelegramBotEvent>.whenEditedTextRegex(
     pattern: Regex,
     handler: suspend CoroutineScope.(TelegramBotEventContext<EditedMessageEvent>) -> Unit
 ) = on<EditedMessageEvent> {
@@ -53,7 +53,7 @@ fun EventRoute<TelegramBotEvent>.editedTextRegex(
  * @param ignoreCase Whether the search should be case-insensitive. Default is false.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the matching edited message.
  */
-fun EventRoute<TelegramBotEvent>.editedTextContains(
+fun EventRoute<TelegramBotEvent>.whenEditedTextContains(
     substring: String,
     ignoreCase: Boolean = false,
     handler: suspend CoroutineScope.(TelegramBotEventContext<EditedMessageEvent>) -> Unit
@@ -70,7 +70,7 @@ fun EventRoute<TelegramBotEvent>.editedTextContains(
  * @param ignoreCase Whether the comparison should be case-insensitive. Default is false.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the matching edited message.
  */
-fun EventRoute<TelegramBotEvent>.editedTextStartsWith(
+fun EventRoute<TelegramBotEvent>.whenEditedTextStartsWith(
     prefix: String,
     ignoreCase: Boolean = false,
     handler: suspend CoroutineScope.(TelegramBotEventContext<EditedMessageEvent>) -> Unit
@@ -87,7 +87,7 @@ fun EventRoute<TelegramBotEvent>.editedTextStartsWith(
  * @param ignoreCase Whether the comparison should be case-insensitive. Default is false.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the matching edited message.
  */
-fun EventRoute<TelegramBotEvent>.editedTextEndsWith(
+fun EventRoute<TelegramBotEvent>.whenEditedTextEndsWith(
     suffix: String,
     ignoreCase: Boolean = false,
     handler: suspend CoroutineScope.(TelegramBotEventContext<EditedMessageEvent>) -> Unit
@@ -102,7 +102,7 @@ fun EventRoute<TelegramBotEvent>.editedTextEndsWith(
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the edited photo message.
  */
-fun EventRoute<TelegramBotEvent>.editedPhoto(
+fun EventRoute<TelegramBotEvent>.whenEditedPhoto(
     handler: suspend CoroutineScope.(TelegramBotEventContext<EditedMessageEvent>) -> Unit
 ) = on<EditedMessageEvent> {
     select({ if (it.event.editedMessage.photo != null) it else null }) {
@@ -115,7 +115,7 @@ fun EventRoute<TelegramBotEvent>.editedPhoto(
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the edited video message.
  */
-fun EventRoute<TelegramBotEvent>.editedVideo(
+fun EventRoute<TelegramBotEvent>.whenEditedVideo(
     handler: suspend CoroutineScope.(TelegramBotEventContext<EditedMessageEvent>) -> Unit
 ) = on<EditedMessageEvent> {
     select({ if (it.event.editedMessage.video != null) it else null }) {
@@ -128,7 +128,7 @@ fun EventRoute<TelegramBotEvent>.editedVideo(
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the edited document message.
  */
-fun EventRoute<TelegramBotEvent>.editedDocument(
+fun EventRoute<TelegramBotEvent>.whenEditedDocument(
     handler: suspend CoroutineScope.(TelegramBotEventContext<EditedMessageEvent>) -> Unit
 ) = on<EditedMessageEvent> {
     select({ if (it.event.editedMessage.document != null) it else null }) {
@@ -141,7 +141,7 @@ fun EventRoute<TelegramBotEvent>.editedDocument(
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the edited audio message.
  */
-fun EventRoute<TelegramBotEvent>.editedAudio(
+fun EventRoute<TelegramBotEvent>.whenEditedAudio(
     handler: suspend CoroutineScope.(TelegramBotEventContext<EditedMessageEvent>) -> Unit
 ) = on<EditedMessageEvent> {
     select({ if (it.event.editedMessage.audio != null) it else null }) {
@@ -155,7 +155,7 @@ fun EventRoute<TelegramBotEvent>.editedAudio(
  * @param userId The Telegram user ID to match.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the edited message.
  */
-fun EventRoute<TelegramBotEvent>.editedFromUser(
+fun EventRoute<TelegramBotEvent>.whenEditedFromUser(
     userId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<EditedMessageEvent>) -> Unit
 ) = on<EditedMessageEvent> {
@@ -170,7 +170,7 @@ fun EventRoute<TelegramBotEvent>.editedFromUser(
  * @param chatId The Telegram chat ID to match.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the edited message.
  */
-fun EventRoute<TelegramBotEvent>.editedInChat(
+fun EventRoute<TelegramBotEvent>.whenEditedInChat(
     chatId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<EditedMessageEvent>) -> Unit
 ) = on<EditedMessageEvent> {
@@ -184,7 +184,7 @@ fun EventRoute<TelegramBotEvent>.editedInChat(
  *
  * @param handler A suspending function with [CoroutineScope] receiver that handles the edited channel post.
  */
-fun EventRoute<TelegramBotEvent>.editedChannelPost(
+fun EventRoute<TelegramBotEvent>.whenEditedChannelPost(
     handler: suspend CoroutineScope.(TelegramBotEventContext<EditedChannelPostEvent>) -> Unit
 ) = on<EditedChannelPostEvent> { handle(handler) }
 
@@ -194,7 +194,7 @@ fun EventRoute<TelegramBotEvent>.editedChannelPost(
  * @param exact The exact text string to match.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the matching edited channel post.
  */
-fun EventRoute<TelegramBotEvent>.editedChannelPostText(
+fun EventRoute<TelegramBotEvent>.whenEditedChannelPostText(
     exact: String,
     handler: suspend CoroutineScope.(TelegramBotEventContext<EditedChannelPostEvent>) -> Unit
 ) = on<EditedChannelPostEvent> {
@@ -209,7 +209,7 @@ fun EventRoute<TelegramBotEvent>.editedChannelPostText(
  * @param pattern The regular expression pattern to match.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the matching edited channel post.
  */
-fun EventRoute<TelegramBotEvent>.editedChannelPostTextRegex(
+fun EventRoute<TelegramBotEvent>.whenEditedChannelPostTextRegex(
     pattern: Regex,
     handler: suspend CoroutineScope.(TelegramBotEventContext<EditedChannelPostEvent>) -> Unit
 ) = on<EditedChannelPostEvent> {
@@ -224,7 +224,7 @@ fun EventRoute<TelegramBotEvent>.editedChannelPostTextRegex(
  * @param chatId The Telegram channel ID to match.
  * @param handler A suspending function with [CoroutineScope] receiver that handles the edited channel post.
  */
-fun EventRoute<TelegramBotEvent>.editedChannelPostFromChat(
+fun EventRoute<TelegramBotEvent>.whenEditedChannelPostFromChat(
     chatId: Long,
     handler: suspend CoroutineScope.(TelegramBotEventContext<EditedChannelPostEvent>) -> Unit
 ) = on<EditedChannelPostEvent> {
