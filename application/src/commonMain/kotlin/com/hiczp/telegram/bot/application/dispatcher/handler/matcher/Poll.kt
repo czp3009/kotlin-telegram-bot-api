@@ -7,61 +7,61 @@ import com.hiczp.telegram.bot.application.dispatcher.handler.HandlerRoute
 import com.hiczp.telegram.bot.protocol.event.*
 import kotlin.jvm.JvmName
 
-// --- onPollEventUpdate with pollId (stackable) ---
+// --- onPollEventPollId (stackable) ---
 
-@JvmName("onPollEventUpdatePollEvent")
-fun HandlerRoute<PollEvent>.onPollEventUpdate(
+@JvmName("onPollEventPollIdPollEvent")
+fun HandlerRoute<PollEvent>.onPollEventPollId(
     pollId: String,
     build: HandlerRoute<PollEvent>.() -> Unit
 ) = select({ if (it.event.poll.id == pollId) it else null }, build)
 
-@JvmName("onPollEventUpdateTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onPollEventUpdate(
+@JvmName("onPollEventPollIdTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onPollEventPollId(
     pollId: String,
     build: HandlerRoute<PollEvent>.() -> Unit
-) = onPollEvent { onPollEventUpdate(pollId, build) }
+) = onPollEvent { onPollEventPollId(pollId, build) }
 
-// --- whenPollEventUpdate with pollId (terminal) ---
+// --- whenPollEventPollId (terminal) ---
 
-@JvmName("whenPollEventUpdatePollEvent")
-fun HandlerRoute<PollEvent>.whenPollEventUpdate(
+@JvmName("whenPollEventPollIdPollEvent")
+fun HandlerRoute<PollEvent>.whenPollEventPollId(
     pollId: String,
     handler: suspend HandlerBotCall<PollEvent>.() -> Unit
 ) = select({ if (it.event.poll.id == pollId) it else null }) { handle(handler) }
 
-@JvmName("whenPollEventUpdateTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenPollEventUpdate(
+@JvmName("whenPollEventPollIdTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenPollEventPollId(
     pollId: String,
     handler: suspend HandlerBotCall<PollEvent>.() -> Unit
-) = onPollEvent { whenPollEventUpdate(pollId, handler) }
+) = onPollEvent { whenPollEventPollId(pollId, handler) }
 
-// --- onPollAnswerEvent with pollId (stackable) ---
+// --- onPollAnswerEventPollId (stackable) ---
 
-@JvmName("onPollAnswerEventPollAnswerEvent")
-fun HandlerRoute<PollAnswerEvent>.onPollAnswerEvent(
+@JvmName("onPollAnswerEventPollIdPollAnswerEvent")
+fun HandlerRoute<PollAnswerEvent>.onPollAnswerEventPollId(
     pollId: String,
     build: HandlerRoute<PollAnswerEvent>.() -> Unit
 ) = select({ if (it.event.pollAnswer.pollId == pollId) it else null }, build)
 
-@JvmName("onPollAnswerEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onPollAnswerEvent(
+@JvmName("onPollAnswerEventPollIdTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onPollAnswerEventPollId(
     pollId: String,
     build: HandlerRoute<PollAnswerEvent>.() -> Unit
-) = onPollAnswerEvent { onPollAnswerEvent(pollId, build) }
+) = onPollAnswerEvent { onPollAnswerEventPollId(pollId, build) }
 
-// --- whenPollAnswerEvent with pollId (terminal) ---
+// --- whenPollAnswerEventPollId (terminal) ---
 
-@JvmName("whenPollAnswerEventPollAnswerEvent")
-fun HandlerRoute<PollAnswerEvent>.whenPollAnswerEvent(
+@JvmName("whenPollAnswerEventPollIdPollAnswerEvent")
+fun HandlerRoute<PollAnswerEvent>.whenPollAnswerEventPollId(
     pollId: String,
     handler: suspend HandlerBotCall<PollAnswerEvent>.() -> Unit
 ) = select({ if (it.event.pollAnswer.pollId == pollId) it else null }) { handle(handler) }
 
-@JvmName("whenPollAnswerEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenPollAnswerEvent(
+@JvmName("whenPollAnswerEventPollIdTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenPollAnswerEventPollId(
     pollId: String,
     handler: suspend HandlerBotCall<PollAnswerEvent>.() -> Unit
-) = onPollAnswerEvent { whenPollAnswerEvent(pollId, handler) }
+) = onPollAnswerEvent { whenPollAnswerEventPollId(pollId, handler) }
 
 // --- onPollAnswerEventFromUser (stackable) ---
 

@@ -279,7 +279,8 @@ matchers are in `handler/matcher/`:
   `whenMessageEventGiveawayCompleted`, `whenMessageEventBoostAdded`, `whenMessageEventMigrateToSupergroup`,
   `whenMessageEventMigrateFromGroup`,
   `whenMessageEventMessageAutoDeleteTimerChanged`, `whenMessageEventWebAppData`)
-- **Poll.kt** - Poll and reaction handlers (`whenPollEventUpdate`, `whenPollAnswerEvent`, `whenPollAnswerEventFromUser`,
+- **Poll.kt** - Poll and reaction handlers (`whenPollEventPollId`, `whenPollAnswerEventPollId`,
+  `whenPollAnswerEventFromUser`,
   `whenMessageReactionEventInChat`, `whenMessageReactionEventToMessage`, `whenMessageReactionCountEventInChat`)
 - **Payment.kt** - Payment event handlers (`whenShippingQueryEventFromUser`, `whenShippingQueryEventWithPayload`,
   `whenPreCheckoutQueryEventFromUser`, `whenPreCheckoutQueryEventWithPayload`, `whenPreCheckoutQueryEventWithCurrency`,
