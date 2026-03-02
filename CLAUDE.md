@@ -238,50 +238,65 @@ matchers are in `handler/matcher/`:
 - **Handling.kt** - Core DSL (`handling`, `match`, `whenMatch`, `include`, `select`, `middleware`, `whenMiddleware`)
 - **Composite.kt** - Logic combinators (`allOf`, `anyOf`, `not`, `whenAllOf`, `whenAnyOf`, `whenNot`)
 - **EventType.kt** - Event type matchers (`on<MessageEvent>`, `on<CallbackQueryEvent>`, `on<InlineQueryEvent>`, etc.)
-- **MessageEvent.kt** - Message handlers (`whenText`, `whenTextRegex`, `whenTextContains`, `whenTextStartsWith`,
-  `whenTextEndsWith`, `whenPhoto`, `whenVideo`, `whenAudio`, `whenDocument`, `whenSticker`, `whenVoice`,
-  `whenVideoNote`, `whenAnimation`, `whenContact`, `whenLocation`, `whenVenue`, `whenPoll`, `whenDice`, `whenReply`,
-  `whenReplyTo`, `whenFromUser`, `whenFromUsers`, `whenInChat`, `whenInChats`, `whenForwarded`, `whenForwardedFromUser`,
-  `whenForwardedFromChat`, `whenForwardedHiddenUser`)
-- **CallbackQuery.kt** - Callback query handlers (`whenCallbackData`, `whenCallbackDataRegex`,
-  `whenCallbackDataContains`,
-  `whenCallbackDataStartsWith`, `whenCallbackQueryFromUser`, `whenCallbackQueryInChat`)
-- **InlineQuery.kt** - Inline query handlers (`whenInlineQuery`, `whenInlineQueryRegex`, `whenInlineQueryContains`,
-  `whenInlineQueryStartsWith`, `whenInlineQueryFromUser`, `whenChosenInlineResult`, `whenChosenInlineResultFromUser`)
-- **ChatType.kt** - Chat type filters (`whenPrivateChat`, `whenGroupChat`, `whenSupergroupChat`, `whenChannel`)
-- **EditedMessage.kt** - Edited message handlers (`whenEditedText`, `whenEditedTextRegex`, `whenEditedTextContains`,
-  `whenEditedTextStartsWith`, `whenEditedTextEndsWith`, `whenEditedPhoto`, `whenEditedVideo`, `whenEditedDocument`,
-  `whenEditedAudio`, `whenEditedFromUser`, `whenEditedInChat`, `whenEditedChannelPost`, `whenEditedChannelPostText`,
-  `whenEditedChannelPostTextRegex`, `whenEditedChannelPostFromChat`)
-- **ChatEvent.kt** - Chat event handlers (`whenChatJoinRequest`, `whenChatJoinRequestFromChat`,
-  `whenChatJoinRequestFromUser`, `whenChatMemberUpdated`, `whenChatMemberUpdatedInChat`, `whenMyChatMemberUpdated`,
-  `whenMyChatMemberUpdatedInChat`, `whenChatBoost`, `whenChatBoostInChat`, `whenRemovedChatBoost`,
-  `whenRemovedChatBoostInChat`)
-- **ServiceMessage.kt** - Service message handlers (`whenNewChatMembers`, `whenLeftChatMember`, `whenNewChatTitle`,
-  `whenNewChatPhoto`, `whenDeleteChatPhoto`, `whenPinnedMessage`, `whenGroupCreated`, `whenSupergroupCreated`,
-  `whenChannelCreated`, `whenVideoChatStarted`, `whenVideoChatEnded`, `whenVideoChatScheduled`,
-  `whenVideoChatParticipantsInvited`, `whenForumTopicCreated`, `whenForumTopicEdited`, `whenForumTopicClosed`,
-  `whenForumTopicReopened`, `whenGeneralForumTopicHidden`, `whenGeneralForumTopicUnhidden`, `whenGiveawayCreated`,
-  `whenGiveawayCompleted`, `whenBoostAdded`, `whenMigrateToSupergroup`, `whenMigrateFromGroup`,
-  `whenMessageAutoDeleteTimerChanged`, `whenWebAppData`)
-- **Poll.kt** - Poll and reaction handlers (`whenPollUpdate`, `whenPollAnswer`, `whenPollAnswerFromUser`,
-  `whenMessageReaction`, `whenMessageReactionInChat`, `whenMessageReactionToMessage`, `whenMessageReactionCount`,
-  `whenMessageReactionCountInChat`)
-- **Payment.kt** - Payment event handlers (`whenShippingQuery`, `whenShippingQueryFromUser`,
-  `whenShippingQueryWithPayload`,
-  `whenPreCheckoutQuery`, `whenPreCheckoutQueryFromUser`, `whenPreCheckoutQueryWithPayload`,
-  `whenPreCheckoutQueryWithCurrency`, `whenPurchasedPaidMedia`, `whenPurchasedPaidMediaFromUser`)
-- **Business.kt** - Business event handlers (`whenBusinessConnection`, `whenBusinessConnectionFromUser`,
-  `whenBusinessMessage`, `whenBusinessMessageFromUser`, `whenBusinessMessageInChat`, `whenEditedBusinessMessage`,
-  `whenEditedBusinessMessageFromUser`, `whenEditedBusinessMessageInChat`, `whenDeletedBusinessMessages`,
-  `whenDeletedBusinessMessagesInChat`)
+- **MessageEvent.kt** - Message handlers (`whenMessageEventText`, `whenMessageEventTextRegex`,
+  `whenMessageEventTextContains`, `whenMessageEventTextStartsWith`,
+  `whenMessageEventTextEndsWith`, `whenMessageEventPhoto`, `whenMessageEventVideo`, `whenMessageEventAudio`,
+  `whenMessageEventDocument`, `whenMessageEventSticker`, `whenMessageEventVoice`,
+  `whenMessageEventVideoNote`, `whenMessageEventAnimation`, `whenMessageEventContact`, `whenMessageEventLocation`,
+  `whenMessageEventVenue`, `whenMessageEventPoll`, `whenMessageEventDice`, `whenMessageEventReply`,
+  `whenMessageEventReplyTo`, `whenMessageEventFromUser`, `whenMessageEventFromUsers`, `whenMessageEventInChat`,
+  `whenMessageEventInChats`, `whenMessageEventForwarded`, `whenMessageEventForwardedFromUser`,
+  `whenMessageEventForwardedFromChat`, `whenMessageEventForwardedHiddenUser`)
+- **CallbackQuery.kt** - Callback query handlers (`whenCallbackQueryEventData`, `whenCallbackQueryEventDataRegex`,
+  `whenCallbackQueryEventDataContains`, `whenCallbackQueryEventDataStartsWith`, `whenCallbackQueryEventFromUser`,
+  `whenCallbackQueryEventInChat`)
+- **InlineQuery.kt** - Inline query handlers (`whenInlineQueryEventQuery`, `whenInlineQueryEventQueryRegex`,
+  `whenInlineQueryEventQueryContains`,
+  `whenInlineQueryEventQueryStartsWith`, `whenInlineQueryEventFromUser`, `whenChosenInlineResultEvent`,
+  `whenChosenInlineResultEventFromUser`)
+- **ChatType.kt** - Chat type filters (`whenMessageEventPrivateChat`, `whenMessageEventGroupChat`,
+  `whenMessageEventSupergroupChat`, `whenMessageEventChannel`)
+- **EditedMessage.kt** - Edited message handlers (`whenEditedMessageEventText`, `whenEditedMessageEventTextRegex`,
+  `whenEditedMessageEventTextContains`,
+  `whenEditedMessageEventTextStartsWith`, `whenEditedMessageEventTextEndsWith`, `whenEditedMessageEventPhoto`,
+  `whenEditedMessageEventVideo`, `whenEditedMessageEventDocument`,
+  `whenEditedMessageEventAudio`, `whenEditedMessageEventFromUser`, `whenEditedMessageEventInChat`,
+  `whenEditedChannelPostEventText`,
+  `whenEditedChannelPostEventTextRegex`, `whenEditedChannelPostEventFromChat`)
+- **ChatEvent.kt** - Chat event handlers (`whenChatJoinRequestEventFromChat`, `whenChatJoinRequestEventFromUser`,
+  `whenChatMemberEventInChat`, `whenMyChatMemberEventInChat`, `whenChatBoostEventInChat`,
+  `whenRemovedChatBoostEventInChat`)
+- **ServiceMessage.kt** - Service message handlers (`whenMessageEventNewChatMembers`, `whenMessageEventLeftChatMember`,
+  `whenMessageEventNewChatTitle`,
+  `whenMessageEventNewChatPhoto`, `whenMessageEventDeleteChatPhoto`, `whenMessageEventPinnedMessage`,
+  `whenMessageEventGroupCreated`, `whenMessageEventSupergroupCreated`,
+  `whenMessageEventChannelCreated`, `whenMessageEventVideoChatStarted`, `whenMessageEventVideoChatEnded`,
+  `whenMessageEventVideoChatScheduled`,
+  `whenMessageEventVideoChatParticipantsInvited`, `whenMessageEventForumTopicCreated`,
+  `whenMessageEventForumTopicEdited`, `whenMessageEventForumTopicClosed`,
+  `whenMessageEventForumTopicReopened`, `whenMessageEventGeneralForumTopicHidden`,
+  `whenMessageEventGeneralForumTopicUnhidden`, `whenMessageEventGiveawayCreated`,
+  `whenMessageEventGiveawayCompleted`, `whenMessageEventBoostAdded`, `whenMessageEventMigrateToSupergroup`,
+  `whenMessageEventMigrateFromGroup`,
+  `whenMessageEventMessageAutoDeleteTimerChanged`, `whenMessageEventWebAppData`)
+- **Poll.kt** - Poll and reaction handlers (`whenPollEventUpdate`, `whenPollAnswerEvent`, `whenPollAnswerEventFromUser`,
+  `whenMessageReactionEventInChat`, `whenMessageReactionEventToMessage`, `whenMessageReactionCountEventInChat`)
+- **Payment.kt** - Payment event handlers (`whenShippingQueryEventFromUser`, `whenShippingQueryEventWithPayload`,
+  `whenPreCheckoutQueryEventFromUser`, `whenPreCheckoutQueryEventWithPayload`, `whenPreCheckoutQueryEventWithCurrency`,
+  `whenPurchasedPaidMediaEventFromUser`)
+- **Business.kt** - Business event handlers (`whenBusinessConnectionEventFromUser`, `whenBusinessMessageEventFromUser`,
+  `whenBusinessMessageEventInChat`, `whenEditedBusinessMessageEventFromUser`, `whenEditedBusinessMessageEventInChat`,
+  `whenDeletedBusinessMessagesEventInChat`)
 
 **Naming Convention:**
 
-- Functions starting with `when` (e.g., `whenText`, `whenPhoto`, `whenMatch`) are **terminal operations** that take a
+- Functions starting with `when` (e.g., `whenMessageEventText`, `whenMessageEventPhoto`, `whenMatch`) are **terminal
+  operations** that take a
   handler directly and cannot be chained further.
 - Functions without `when` prefix (e.g., `match`, `allOf`, `anyOf`, `not`) are **composable** and take a build lambda
   for further nesting.
+- All matcher functions follow the pattern: `on/when` + `EventName` + `Content` (e.g., `whenMessageEventText`,
+  `whenCallbackQueryEventData`).
 
 Each matcher provides two variants: one for the specific event type scope (e.g., inside `on<MessageEvent>`) and one
 for the root level that auto-wraps with event type.
@@ -321,28 +336,28 @@ val dispatcher = HandlerTelegramEventDispatcher(handling {
 
     // Event type matching
   on<MessageEvent> {
-    whenText("hello") { /* exact text match */ }
-    whenTextRegex(Regex("(?i)^hello")) { /* regex match */ }
-    whenTextContains("help", ignoreCase = true) { /* substring match */ }
-    whenTextStartsWith("/admin") { /* prefix match */ }
+    whenMessageEventText("hello") { /* exact text match */ }
+    whenMessageEventTextRegex(Regex("(?i)^hello")) { /* regex match */ }
+    whenMessageEventTextContains("help", ignoreCase = true) { /* substring match */ }
+    whenMessageEventTextStartsWith("/admin") { /* prefix match */ }
 
         // Media type handlers
-    whenPhoto { /* photo message */ }
-    whenVideo { /* video message */ }
-    whenDocument { /* document message */ }
-    whenSticker { /* sticker message */ }
+    whenMessageEventPhoto { /* photo message */ }
+    whenMessageEventVideo { /* video message */ }
+    whenMessageEventDocument { /* document message */ }
+    whenMessageEventSticker { /* sticker message */ }
 
         // User/chat filters
-    whenFromUser(123456L) { /* from specific user */ }
-    whenInChat(-100123456L) { /* in specific chat */ }
+    whenMessageEventFromUser(123456L) { /* from specific user */ }
+    whenMessageEventInChat(-100123456L) { /* in specific chat */ }
 
         // Reply detection
-    whenReply { /* is a reply */ }
-    whenReplyTo(messageId = 42L) { /* reply to specific message */ }
+    whenMessageEventReply { /* is a reply */ }
+    whenMessageEventReplyTo(messageId = 42L) { /* reply to specific message */ }
 
         // Forwarded messages
-    whenForwarded { /* forwarded message */ }
-    whenForwardedFromChat(-100123L) { /* forwarded from specific chat */ }
+    whenMessageEventForwarded { /* forwarded message */ }
+    whenMessageEventForwardedFromChat(-100123L) { /* forwarded from specific chat */ }
 
         // Conditional handler with whenMatch
     whenMatch({ (it.event.message.text?.length ?: 0) > 10 }) {
@@ -374,19 +389,19 @@ val dispatcher = HandlerTelegramEventDispatcher(handling {
     }
 
     // Chat type filters
-  whenPrivateChat { /* private chat only */ }
-  whenGroupChat { /* group chat only */ }
-  whenSupergroupChat { /* supergroup only */ }
-  whenChannel { /* channel only */ }
+  whenMessageEventPrivateChat { /* private chat only */ }
+  whenMessageEventGroupChat { /* group chat only */ }
+  whenMessageEventSupergroupChat { /* supergroup only */ }
+  whenMessageEventChannel { /* channel only */ }
 
   on<CallbackQueryEvent> {
-    whenCallbackData("confirm") { /* callback handling */ }
-    whenCallbackDataRegex(Regex("action_\\d+")) { /* pattern match */ }
+    whenCallbackQueryEventData("confirm") { /* callback handling */ }
+    whenCallbackQueryEventDataRegex(Regex("action_\\d+")) { /* pattern match */ }
     }
 
   on<InlineQueryEvent> {
-    whenInlineQuery("search") { /* exact query match */ }
-    whenInlineQueryStartsWith("find:") { /* prefix match */ }
+    whenInlineQueryEventQuery("search") { /* exact query match */ }
+    whenInlineQueryEventQueryStartsWith("find:") { /* prefix match */ }
     }
 
     // Include routes from other modules

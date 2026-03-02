@@ -12,174 +12,174 @@ import kotlin.jvm.JvmName
 
 // ==================== ShippingQueryEvent Filtered Matchers ====================
 
-// --- onShippingQueryFromUser (stackable) ---
+// --- onShippingQueryEventFromUser (stackable) ---
 
-@JvmName("onShippingQueryFromUserShippingQueryEvent")
-fun HandlerRoute<ShippingQueryEvent>.onShippingQueryFromUser(
+@JvmName("onShippingQueryEventFromUserShippingQueryEvent")
+fun HandlerRoute<ShippingQueryEvent>.onShippingQueryEventFromUser(
     userId: Long,
     build: HandlerRoute<ShippingQueryEvent>.() -> Unit
 ) = select({ if (it.event.shippingQuery.from.id == userId) it else null }, build)
 
-@JvmName("onShippingQueryFromUserTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onShippingQueryFromUser(
+@JvmName("onShippingQueryEventFromUserTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onShippingQueryEventFromUser(
     userId: Long,
     build: HandlerRoute<ShippingQueryEvent>.() -> Unit
-) = onShippingQueryEvent { onShippingQueryFromUser(userId, build) }
+) = onShippingQueryEvent { onShippingQueryEventFromUser(userId, build) }
 
-// --- whenShippingQueryFromUser (terminal) ---
+// --- whenShippingQueryEventFromUser (terminal) ---
 
-@JvmName("whenShippingQueryFromUserShippingQueryEvent")
-fun HandlerRoute<ShippingQueryEvent>.whenShippingQueryFromUser(
+@JvmName("whenShippingQueryEventFromUserShippingQueryEvent")
+fun HandlerRoute<ShippingQueryEvent>.whenShippingQueryEventFromUser(
     userId: Long,
     handler: suspend HandlerBotCall<ShippingQueryEvent>.() -> Unit
 ) = select({ if (it.event.shippingQuery.from.id == userId) it else null }) { handle(handler) }
 
-@JvmName("whenShippingQueryFromUserTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenShippingQueryFromUser(
+@JvmName("whenShippingQueryEventFromUserTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenShippingQueryEventFromUser(
     userId: Long,
     handler: suspend HandlerBotCall<ShippingQueryEvent>.() -> Unit
-) = onShippingQueryEvent { whenShippingQueryFromUser(userId, handler) }
+) = onShippingQueryEvent { whenShippingQueryEventFromUser(userId, handler) }
 
-// --- onShippingQueryWithPayload (stackable) ---
+// --- onShippingQueryEventWithPayload (stackable) ---
 
-@JvmName("onShippingQueryWithPayloadShippingQueryEvent")
-fun HandlerRoute<ShippingQueryEvent>.onShippingQueryWithPayload(
+@JvmName("onShippingQueryEventWithPayloadShippingQueryEvent")
+fun HandlerRoute<ShippingQueryEvent>.onShippingQueryEventWithPayload(
     invoicePayload: String,
     build: HandlerRoute<ShippingQueryEvent>.() -> Unit
 ) = select({ if (it.event.shippingQuery.invoicePayload == invoicePayload) it else null }, build)
 
-@JvmName("onShippingQueryWithPayloadTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onShippingQueryWithPayload(
+@JvmName("onShippingQueryEventWithPayloadTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onShippingQueryEventWithPayload(
     invoicePayload: String,
     build: HandlerRoute<ShippingQueryEvent>.() -> Unit
-) = onShippingQueryEvent { onShippingQueryWithPayload(invoicePayload, build) }
+) = onShippingQueryEvent { onShippingQueryEventWithPayload(invoicePayload, build) }
 
-// --- whenShippingQueryWithPayload (terminal) ---
+// --- whenShippingQueryEventWithPayload (terminal) ---
 
-@JvmName("whenShippingQueryWithPayloadShippingQueryEvent")
-fun HandlerRoute<ShippingQueryEvent>.whenShippingQueryWithPayload(
+@JvmName("whenShippingQueryEventWithPayloadShippingQueryEvent")
+fun HandlerRoute<ShippingQueryEvent>.whenShippingQueryEventWithPayload(
     invoicePayload: String,
     handler: suspend HandlerBotCall<ShippingQueryEvent>.() -> Unit
 ) = select({ if (it.event.shippingQuery.invoicePayload == invoicePayload) it else null }) { handle(handler) }
 
-@JvmName("whenShippingQueryWithPayloadTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenShippingQueryWithPayload(
+@JvmName("whenShippingQueryEventWithPayloadTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenShippingQueryEventWithPayload(
     invoicePayload: String,
     handler: suspend HandlerBotCall<ShippingQueryEvent>.() -> Unit
-) = onShippingQueryEvent { whenShippingQueryWithPayload(invoicePayload, handler) }
+) = onShippingQueryEvent { whenShippingQueryEventWithPayload(invoicePayload, handler) }
 
 // ==================== PreCheckoutQueryEvent Filtered Matchers ====================
 
-// --- onPreCheckoutQueryFromUser (stackable) ---
+// --- onPreCheckoutQueryEventFromUser (stackable) ---
 
-@JvmName("onPreCheckoutQueryFromUserPreCheckoutQueryEvent")
-fun HandlerRoute<PreCheckoutQueryEvent>.onPreCheckoutQueryFromUser(
+@JvmName("onPreCheckoutQueryEventFromUserPreCheckoutQueryEvent")
+fun HandlerRoute<PreCheckoutQueryEvent>.onPreCheckoutQueryEventFromUser(
     userId: Long,
     build: HandlerRoute<PreCheckoutQueryEvent>.() -> Unit
 ) = select({ if (it.event.preCheckoutQuery.from.id == userId) it else null }, build)
 
-@JvmName("onPreCheckoutQueryFromUserTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onPreCheckoutQueryFromUser(
+@JvmName("onPreCheckoutQueryEventFromUserTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onPreCheckoutQueryEventFromUser(
     userId: Long,
     build: HandlerRoute<PreCheckoutQueryEvent>.() -> Unit
-) = onPreCheckoutQueryEvent { onPreCheckoutQueryFromUser(userId, build) }
+) = onPreCheckoutQueryEvent { onPreCheckoutQueryEventFromUser(userId, build) }
 
-// --- whenPreCheckoutQueryFromUser (terminal) ---
+// --- whenPreCheckoutQueryEventFromUser (terminal) ---
 
-@JvmName("whenPreCheckoutQueryFromUserPreCheckoutQueryEvent")
-fun HandlerRoute<PreCheckoutQueryEvent>.whenPreCheckoutQueryFromUser(
+@JvmName("whenPreCheckoutQueryEventFromUserPreCheckoutQueryEvent")
+fun HandlerRoute<PreCheckoutQueryEvent>.whenPreCheckoutQueryEventFromUser(
     userId: Long,
     handler: suspend HandlerBotCall<PreCheckoutQueryEvent>.() -> Unit
 ) = select({ if (it.event.preCheckoutQuery.from.id == userId) it else null }) { handle(handler) }
 
-@JvmName("whenPreCheckoutQueryFromUserTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenPreCheckoutQueryFromUser(
+@JvmName("whenPreCheckoutQueryEventFromUserTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenPreCheckoutQueryEventFromUser(
     userId: Long,
     handler: suspend HandlerBotCall<PreCheckoutQueryEvent>.() -> Unit
-) = onPreCheckoutQueryEvent { whenPreCheckoutQueryFromUser(userId, handler) }
+) = onPreCheckoutQueryEvent { whenPreCheckoutQueryEventFromUser(userId, handler) }
 
-// --- onPreCheckoutQueryWithPayload (stackable) ---
+// --- onPreCheckoutQueryEventWithPayload (stackable) ---
 
-@JvmName("onPreCheckoutQueryWithPayloadPreCheckoutQueryEvent")
-fun HandlerRoute<PreCheckoutQueryEvent>.onPreCheckoutQueryWithPayload(
+@JvmName("onPreCheckoutQueryEventWithPayloadPreCheckoutQueryEvent")
+fun HandlerRoute<PreCheckoutQueryEvent>.onPreCheckoutQueryEventWithPayload(
     invoicePayload: String,
     build: HandlerRoute<PreCheckoutQueryEvent>.() -> Unit
 ) = select({ if (it.event.preCheckoutQuery.invoicePayload == invoicePayload) it else null }, build)
 
-@JvmName("onPreCheckoutQueryWithPayloadTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onPreCheckoutQueryWithPayload(
+@JvmName("onPreCheckoutQueryEventWithPayloadTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onPreCheckoutQueryEventWithPayload(
     invoicePayload: String,
     build: HandlerRoute<PreCheckoutQueryEvent>.() -> Unit
-) = onPreCheckoutQueryEvent { onPreCheckoutQueryWithPayload(invoicePayload, build) }
+) = onPreCheckoutQueryEvent { onPreCheckoutQueryEventWithPayload(invoicePayload, build) }
 
-// --- whenPreCheckoutQueryWithPayload (terminal) ---
+// --- whenPreCheckoutQueryEventWithPayload (terminal) ---
 
-@JvmName("whenPreCheckoutQueryWithPayloadPreCheckoutQueryEvent")
-fun HandlerRoute<PreCheckoutQueryEvent>.whenPreCheckoutQueryWithPayload(
+@JvmName("whenPreCheckoutQueryEventWithPayloadPreCheckoutQueryEvent")
+fun HandlerRoute<PreCheckoutQueryEvent>.whenPreCheckoutQueryEventWithPayload(
     invoicePayload: String,
     handler: suspend HandlerBotCall<PreCheckoutQueryEvent>.() -> Unit
 ) = select({ if (it.event.preCheckoutQuery.invoicePayload == invoicePayload) it else null }) { handle(handler) }
 
-@JvmName("whenPreCheckoutQueryWithPayloadTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenPreCheckoutQueryWithPayload(
+@JvmName("whenPreCheckoutQueryEventWithPayloadTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenPreCheckoutQueryEventWithPayload(
     invoicePayload: String,
     handler: suspend HandlerBotCall<PreCheckoutQueryEvent>.() -> Unit
-) = onPreCheckoutQueryEvent { whenPreCheckoutQueryWithPayload(invoicePayload, handler) }
+) = onPreCheckoutQueryEvent { whenPreCheckoutQueryEventWithPayload(invoicePayload, handler) }
 
-// --- onPreCheckoutQueryWithCurrency (stackable) ---
+// --- onPreCheckoutQueryEventWithCurrency (stackable) ---
 
-@JvmName("onPreCheckoutQueryWithCurrencyPreCheckoutQueryEvent")
-fun HandlerRoute<PreCheckoutQueryEvent>.onPreCheckoutQueryWithCurrency(
+@JvmName("onPreCheckoutQueryEventWithCurrencyPreCheckoutQueryEvent")
+fun HandlerRoute<PreCheckoutQueryEvent>.onPreCheckoutQueryEventWithCurrency(
     currency: String,
     build: HandlerRoute<PreCheckoutQueryEvent>.() -> Unit
 ) = select({ if (it.event.preCheckoutQuery.currency == currency) it else null }, build)
 
-@JvmName("onPreCheckoutQueryWithCurrencyTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onPreCheckoutQueryWithCurrency(
+@JvmName("onPreCheckoutQueryEventWithCurrencyTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onPreCheckoutQueryEventWithCurrency(
     currency: String,
     build: HandlerRoute<PreCheckoutQueryEvent>.() -> Unit
-) = onPreCheckoutQueryEvent { onPreCheckoutQueryWithCurrency(currency, build) }
+) = onPreCheckoutQueryEvent { onPreCheckoutQueryEventWithCurrency(currency, build) }
 
-// --- whenPreCheckoutQueryWithCurrency (terminal) ---
+// --- whenPreCheckoutQueryEventWithCurrency (terminal) ---
 
-@JvmName("whenPreCheckoutQueryWithCurrencyPreCheckoutQueryEvent")
-fun HandlerRoute<PreCheckoutQueryEvent>.whenPreCheckoutQueryWithCurrency(
+@JvmName("whenPreCheckoutQueryEventWithCurrencyPreCheckoutQueryEvent")
+fun HandlerRoute<PreCheckoutQueryEvent>.whenPreCheckoutQueryEventWithCurrency(
     currency: String,
     handler: suspend HandlerBotCall<PreCheckoutQueryEvent>.() -> Unit
 ) = select({ if (it.event.preCheckoutQuery.currency == currency) it else null }) { handle(handler) }
 
-@JvmName("whenPreCheckoutQueryWithCurrencyTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenPreCheckoutQueryWithCurrency(
+@JvmName("whenPreCheckoutQueryEventWithCurrencyTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenPreCheckoutQueryEventWithCurrency(
     currency: String,
     handler: suspend HandlerBotCall<PreCheckoutQueryEvent>.() -> Unit
-) = onPreCheckoutQueryEvent { whenPreCheckoutQueryWithCurrency(currency, handler) }
+) = onPreCheckoutQueryEvent { whenPreCheckoutQueryEventWithCurrency(currency, handler) }
 
 // ==================== PurchasedPaidMediaEvent Filtered Matchers ====================
 
-// --- onPurchasedPaidMediaFromUser (stackable) ---
+// --- onPurchasedPaidMediaEventFromUser (stackable) ---
 
-@JvmName("onPurchasedPaidMediaFromUserPurchasedPaidMediaEvent")
-fun HandlerRoute<PurchasedPaidMediaEvent>.onPurchasedPaidMediaFromUser(
+@JvmName("onPurchasedPaidMediaEventFromUserPurchasedPaidMediaEvent")
+fun HandlerRoute<PurchasedPaidMediaEvent>.onPurchasedPaidMediaEventFromUser(
     userId: Long,
     build: HandlerRoute<PurchasedPaidMediaEvent>.() -> Unit
 ) = select({ if (it.event.purchasedPaidMedia.from.id == userId) it else null }, build)
 
-@JvmName("onPurchasedPaidMediaFromUserTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onPurchasedPaidMediaFromUser(
+@JvmName("onPurchasedPaidMediaEventFromUserTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onPurchasedPaidMediaEventFromUser(
     userId: Long,
     build: HandlerRoute<PurchasedPaidMediaEvent>.() -> Unit
-) = onPurchasedPaidMediaEvent { onPurchasedPaidMediaFromUser(userId, build) }
+) = onPurchasedPaidMediaEvent { onPurchasedPaidMediaEventFromUser(userId, build) }
 
-// --- whenPurchasedPaidMediaFromUser (terminal) ---
+// --- whenPurchasedPaidMediaEventFromUser (terminal) ---
 
-@JvmName("whenPurchasedPaidMediaFromUserPurchasedPaidMediaEvent")
-fun HandlerRoute<PurchasedPaidMediaEvent>.whenPurchasedPaidMediaFromUser(
+@JvmName("whenPurchasedPaidMediaEventFromUserPurchasedPaidMediaEvent")
+fun HandlerRoute<PurchasedPaidMediaEvent>.whenPurchasedPaidMediaEventFromUser(
     userId: Long,
     handler: suspend HandlerBotCall<PurchasedPaidMediaEvent>.() -> Unit
 ) = select({ if (it.event.purchasedPaidMedia.from.id == userId) it else null }) { handle(handler) }
 
-@JvmName("whenPurchasedPaidMediaFromUserTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenPurchasedPaidMediaFromUser(
+@JvmName("whenPurchasedPaidMediaEventFromUserTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenPurchasedPaidMediaEventFromUser(
     userId: Long,
     handler: suspend HandlerBotCall<PurchasedPaidMediaEvent>.() -> Unit
-) = onPurchasedPaidMediaEvent { whenPurchasedPaidMediaFromUser(userId, handler) }
+) = onPurchasedPaidMediaEvent { whenPurchasedPaidMediaEventFromUser(userId, handler) }

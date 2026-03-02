@@ -9,176 +9,176 @@ import kotlin.jvm.JvmName
 
 // ==================== BusinessConnectionEvent Filtered Matchers ====================
 
-// --- onBusinessConnectionFromUser (stackable) ---
+// --- onBusinessConnectionEventFromUser (stackable) ---
 
-@JvmName("onBusinessConnectionFromUserBusinessConnectionEvent")
-fun HandlerRoute<BusinessConnectionEvent>.onBusinessConnectionFromUser(
+@JvmName("onBusinessConnectionEventFromUserBusinessConnectionEvent")
+fun HandlerRoute<BusinessConnectionEvent>.onBusinessConnectionEventFromUser(
     userId: Long,
     build: HandlerRoute<BusinessConnectionEvent>.() -> Unit
 ) = select({ if (it.event.businessConnection.user.id == userId) it else null }, build)
 
-@JvmName("onBusinessConnectionFromUserTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onBusinessConnectionFromUser(
+@JvmName("onBusinessConnectionEventFromUserTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onBusinessConnectionEventFromUser(
     userId: Long,
     build: HandlerRoute<BusinessConnectionEvent>.() -> Unit
-) = onBusinessConnectionEvent { onBusinessConnectionFromUser(userId, build) }
+) = onBusinessConnectionEvent { onBusinessConnectionEventFromUser(userId, build) }
 
-// --- whenBusinessConnectionFromUser (terminal) ---
+// --- whenBusinessConnectionEventFromUser (terminal) ---
 
-@JvmName("whenBusinessConnectionFromUserBusinessConnectionEvent")
-fun HandlerRoute<BusinessConnectionEvent>.whenBusinessConnectionFromUser(
+@JvmName("whenBusinessConnectionEventFromUserBusinessConnectionEvent")
+fun HandlerRoute<BusinessConnectionEvent>.whenBusinessConnectionEventFromUser(
     userId: Long,
     handler: suspend HandlerBotCall<BusinessConnectionEvent>.() -> Unit
 ) = select({ if (it.event.businessConnection.user.id == userId) it else null }) { handle(handler) }
 
-@JvmName("whenBusinessConnectionFromUserTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenBusinessConnectionFromUser(
+@JvmName("whenBusinessConnectionEventFromUserTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenBusinessConnectionEventFromUser(
     userId: Long,
     handler: suspend HandlerBotCall<BusinessConnectionEvent>.() -> Unit
-) = onBusinessConnectionEvent { whenBusinessConnectionFromUser(userId, handler) }
+) = onBusinessConnectionEvent { whenBusinessConnectionEventFromUser(userId, handler) }
 
 // ==================== BusinessMessageEvent Filtered Matchers ====================
 
-// --- onBusinessMessageFromUser (stackable) ---
+// --- onBusinessMessageEventFromUser (stackable) ---
 
-@JvmName("onBusinessMessageFromUserBusinessMessageEvent")
-fun HandlerRoute<BusinessMessageEvent>.onBusinessMessageFromUser(
+@JvmName("onBusinessMessageEventFromUserBusinessMessageEvent")
+fun HandlerRoute<BusinessMessageEvent>.onBusinessMessageEventFromUser(
     userId: Long,
     build: HandlerRoute<BusinessMessageEvent>.() -> Unit
 ) = select({ if (it.event.businessMessage.from?.id == userId) it else null }, build)
 
-@JvmName("onBusinessMessageFromUserTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onBusinessMessageFromUser(
+@JvmName("onBusinessMessageEventFromUserTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onBusinessMessageEventFromUser(
     userId: Long,
     build: HandlerRoute<BusinessMessageEvent>.() -> Unit
-) = onBusinessMessageEvent { onBusinessMessageFromUser(userId, build) }
+) = onBusinessMessageEvent { onBusinessMessageEventFromUser(userId, build) }
 
-// --- whenBusinessMessageFromUser (terminal) ---
+// --- whenBusinessMessageEventFromUser (terminal) ---
 
-@JvmName("whenBusinessMessageFromUserBusinessMessageEvent")
-fun HandlerRoute<BusinessMessageEvent>.whenBusinessMessageFromUser(
+@JvmName("whenBusinessMessageEventFromUserBusinessMessageEvent")
+fun HandlerRoute<BusinessMessageEvent>.whenBusinessMessageEventFromUser(
     userId: Long,
     handler: suspend HandlerBotCall<BusinessMessageEvent>.() -> Unit
 ) = select({ if (it.event.businessMessage.from?.id == userId) it else null }) { handle(handler) }
 
-@JvmName("whenBusinessMessageFromUserTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenBusinessMessageFromUser(
+@JvmName("whenBusinessMessageEventFromUserTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenBusinessMessageEventFromUser(
     userId: Long,
     handler: suspend HandlerBotCall<BusinessMessageEvent>.() -> Unit
-) = onBusinessMessageEvent { whenBusinessMessageFromUser(userId, handler) }
+) = onBusinessMessageEvent { whenBusinessMessageEventFromUser(userId, handler) }
 
-// --- onBusinessMessageInChat (stackable) ---
+// --- onBusinessMessageEventInChat (stackable) ---
 
-@JvmName("onBusinessMessageInChatBusinessMessageEvent")
-fun HandlerRoute<BusinessMessageEvent>.onBusinessMessageInChat(
+@JvmName("onBusinessMessageEventInChatBusinessMessageEvent")
+fun HandlerRoute<BusinessMessageEvent>.onBusinessMessageEventInChat(
     chatId: Long,
     build: HandlerRoute<BusinessMessageEvent>.() -> Unit
 ) = select({ if (it.event.businessMessage.chat.id == chatId) it else null }, build)
 
-@JvmName("onBusinessMessageInChatTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onBusinessMessageInChat(
+@JvmName("onBusinessMessageEventInChatTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onBusinessMessageEventInChat(
     chatId: Long,
     build: HandlerRoute<BusinessMessageEvent>.() -> Unit
-) = onBusinessMessageEvent { onBusinessMessageInChat(chatId, build) }
+) = onBusinessMessageEvent { onBusinessMessageEventInChat(chatId, build) }
 
-// --- whenBusinessMessageInChat (terminal) ---
+// --- whenBusinessMessageEventInChat (terminal) ---
 
-@JvmName("whenBusinessMessageInChatBusinessMessageEvent")
-fun HandlerRoute<BusinessMessageEvent>.whenBusinessMessageInChat(
+@JvmName("whenBusinessMessageEventInChatBusinessMessageEvent")
+fun HandlerRoute<BusinessMessageEvent>.whenBusinessMessageEventInChat(
     chatId: Long,
     handler: suspend HandlerBotCall<BusinessMessageEvent>.() -> Unit
 ) = select({ if (it.event.businessMessage.chat.id == chatId) it else null }) { handle(handler) }
 
-@JvmName("whenBusinessMessageInChatTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenBusinessMessageInChat(
+@JvmName("whenBusinessMessageEventInChatTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenBusinessMessageEventInChat(
     chatId: Long,
     handler: suspend HandlerBotCall<BusinessMessageEvent>.() -> Unit
-) = onBusinessMessageEvent { whenBusinessMessageInChat(chatId, handler) }
+) = onBusinessMessageEvent { whenBusinessMessageEventInChat(chatId, handler) }
 
 // ==================== EditedBusinessMessageEvent Filtered Matchers ====================
 
-// --- onEditedBusinessMessageFromUser (stackable) ---
+// --- onEditedBusinessMessageEventFromUser (stackable) ---
 
-@JvmName("onEditedBusinessMessageFromUserEditedBusinessMessageEvent")
-fun HandlerRoute<EditedBusinessMessageEvent>.onEditedBusinessMessageFromUser(
+@JvmName("onEditedBusinessMessageEventFromUserEditedBusinessMessageEvent")
+fun HandlerRoute<EditedBusinessMessageEvent>.onEditedBusinessMessageEventFromUser(
     userId: Long,
     build: HandlerRoute<EditedBusinessMessageEvent>.() -> Unit
 ) = select({ if (it.event.editedBusinessMessage.from?.id == userId) it else null }, build)
 
-@JvmName("onEditedBusinessMessageFromUserTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onEditedBusinessMessageFromUser(
+@JvmName("onEditedBusinessMessageEventFromUserTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onEditedBusinessMessageEventFromUser(
     userId: Long,
     build: HandlerRoute<EditedBusinessMessageEvent>.() -> Unit
-) = onEditedBusinessMessageEvent { onEditedBusinessMessageFromUser(userId, build) }
+) = onEditedBusinessMessageEvent { onEditedBusinessMessageEventFromUser(userId, build) }
 
-// --- whenEditedBusinessMessageFromUser (terminal) ---
+// --- whenEditedBusinessMessageEventFromUser (terminal) ---
 
-@JvmName("whenEditedBusinessMessageFromUserEditedBusinessMessageEvent")
-fun HandlerRoute<EditedBusinessMessageEvent>.whenEditedBusinessMessageFromUser(
+@JvmName("whenEditedBusinessMessageEventFromUserEditedBusinessMessageEvent")
+fun HandlerRoute<EditedBusinessMessageEvent>.whenEditedBusinessMessageEventFromUser(
     userId: Long,
     handler: suspend HandlerBotCall<EditedBusinessMessageEvent>.() -> Unit
 ) = select({ if (it.event.editedBusinessMessage.from?.id == userId) it else null }) { handle(handler) }
 
-@JvmName("whenEditedBusinessMessageFromUserTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenEditedBusinessMessageFromUser(
+@JvmName("whenEditedBusinessMessageEventFromUserTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenEditedBusinessMessageEventFromUser(
     userId: Long,
     handler: suspend HandlerBotCall<EditedBusinessMessageEvent>.() -> Unit
-) = onEditedBusinessMessageEvent { whenEditedBusinessMessageFromUser(userId, handler) }
+) = onEditedBusinessMessageEvent { whenEditedBusinessMessageEventFromUser(userId, handler) }
 
-// --- onEditedBusinessMessageInChat (stackable) ---
+// --- onEditedBusinessMessageEventInChat (stackable) ---
 
-@JvmName("onEditedBusinessMessageInChatEditedBusinessMessageEvent")
-fun HandlerRoute<EditedBusinessMessageEvent>.onEditedBusinessMessageInChat(
+@JvmName("onEditedBusinessMessageEventInChatEditedBusinessMessageEvent")
+fun HandlerRoute<EditedBusinessMessageEvent>.onEditedBusinessMessageEventInChat(
     chatId: Long,
     build: HandlerRoute<EditedBusinessMessageEvent>.() -> Unit
 ) = select({ if (it.event.editedBusinessMessage.chat.id == chatId) it else null }, build)
 
-@JvmName("onEditedBusinessMessageInChatTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onEditedBusinessMessageInChat(
+@JvmName("onEditedBusinessMessageEventInChatTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onEditedBusinessMessageEventInChat(
     chatId: Long,
     build: HandlerRoute<EditedBusinessMessageEvent>.() -> Unit
-) = onEditedBusinessMessageEvent { onEditedBusinessMessageInChat(chatId, build) }
+) = onEditedBusinessMessageEvent { onEditedBusinessMessageEventInChat(chatId, build) }
 
-// --- whenEditedBusinessMessageInChat (terminal) ---
+// --- whenEditedBusinessMessageEventInChat (terminal) ---
 
-@JvmName("whenEditedBusinessMessageInChatEditedBusinessMessageEvent")
-fun HandlerRoute<EditedBusinessMessageEvent>.whenEditedBusinessMessageInChat(
+@JvmName("whenEditedBusinessMessageEventInChatEditedBusinessMessageEvent")
+fun HandlerRoute<EditedBusinessMessageEvent>.whenEditedBusinessMessageEventInChat(
     chatId: Long,
     handler: suspend HandlerBotCall<EditedBusinessMessageEvent>.() -> Unit
 ) = select({ if (it.event.editedBusinessMessage.chat.id == chatId) it else null }) { handle(handler) }
 
-@JvmName("whenEditedBusinessMessageInChatTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenEditedBusinessMessageInChat(
+@JvmName("whenEditedBusinessMessageEventInChatTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenEditedBusinessMessageEventInChat(
     chatId: Long,
     handler: suspend HandlerBotCall<EditedBusinessMessageEvent>.() -> Unit
-) = onEditedBusinessMessageEvent { whenEditedBusinessMessageInChat(chatId, handler) }
+) = onEditedBusinessMessageEvent { whenEditedBusinessMessageEventInChat(chatId, handler) }
 
 // ==================== DeletedBusinessMessagesEvent Filtered Matchers ====================
 
-// --- onDeletedBusinessMessagesInChat (stackable) ---
+// --- onDeletedBusinessMessagesEventInChat (stackable) ---
 
-@JvmName("onDeletedBusinessMessagesInChatDeletedBusinessMessagesEvent")
-fun HandlerRoute<DeletedBusinessMessagesEvent>.onDeletedBusinessMessagesInChat(
+@JvmName("onDeletedBusinessMessagesEventInChatDeletedBusinessMessagesEvent")
+fun HandlerRoute<DeletedBusinessMessagesEvent>.onDeletedBusinessMessagesEventInChat(
     chatId: Long,
     build: HandlerRoute<DeletedBusinessMessagesEvent>.() -> Unit
 ) = select({ if (it.event.deletedBusinessMessages.chat.id == chatId) it else null }, build)
 
-@JvmName("onDeletedBusinessMessagesInChatTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onDeletedBusinessMessagesInChat(
+@JvmName("onDeletedBusinessMessagesEventInChatTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onDeletedBusinessMessagesEventInChat(
     chatId: Long,
     build: HandlerRoute<DeletedBusinessMessagesEvent>.() -> Unit
-) = onDeletedBusinessMessagesEvent { onDeletedBusinessMessagesInChat(chatId, build) }
+) = onDeletedBusinessMessagesEvent { onDeletedBusinessMessagesEventInChat(chatId, build) }
 
-// --- whenDeletedBusinessMessagesInChat (terminal) ---
+// --- whenDeletedBusinessMessagesEventInChat (terminal) ---
 
-@JvmName("whenDeletedBusinessMessagesInChatDeletedBusinessMessagesEvent")
-fun HandlerRoute<DeletedBusinessMessagesEvent>.whenDeletedBusinessMessagesInChat(
+@JvmName("whenDeletedBusinessMessagesEventInChatDeletedBusinessMessagesEvent")
+fun HandlerRoute<DeletedBusinessMessagesEvent>.whenDeletedBusinessMessagesEventInChat(
     chatId: Long,
     handler: suspend HandlerBotCall<DeletedBusinessMessagesEvent>.() -> Unit
 ) = select({ if (it.event.deletedBusinessMessages.chat.id == chatId) it else null }) { handle(handler) }
 
-@JvmName("whenDeletedBusinessMessagesInChatTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenDeletedBusinessMessagesInChat(
+@JvmName("whenDeletedBusinessMessagesEventInChatTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenDeletedBusinessMessagesEventInChat(
     chatId: Long,
     handler: suspend HandlerBotCall<DeletedBusinessMessagesEvent>.() -> Unit
-) = onDeletedBusinessMessagesEvent { whenDeletedBusinessMessagesInChat(chatId, handler) }
+) = onDeletedBusinessMessagesEvent { whenDeletedBusinessMessagesEventInChat(chatId, handler) }

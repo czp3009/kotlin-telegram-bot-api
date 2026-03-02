@@ -9,198 +9,198 @@ import com.hiczp.telegram.bot.protocol.event.InlineQueryEvent
 import com.hiczp.telegram.bot.protocol.event.TelegramBotEvent
 import kotlin.jvm.JvmName
 
-// --- onInlineQuery (stackable) ---
+// --- onInlineQueryEventQuery (stackable) ---
 
-@JvmName("onInlineQueryInlineQueryEvent")
-fun HandlerRoute<InlineQueryEvent>.onInlineQuery(
+@JvmName("onInlineQueryEventQueryInlineQueryEvent")
+fun HandlerRoute<InlineQueryEvent>.onInlineQueryEventQuery(
     query: String,
     build: HandlerRoute<InlineQueryEvent>.() -> Unit
 ) = select({ if (it.event.inlineQuery.query == query) it else null }, build)
 
-@JvmName("onInlineQueryTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onInlineQuery(
+@JvmName("onInlineQueryEventQueryTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onInlineQueryEventQuery(
     query: String,
     build: HandlerRoute<InlineQueryEvent>.() -> Unit
-) = onInlineQueryEvent { onInlineQuery(query, build) }
+) = onInlineQueryEvent { onInlineQueryEventQuery(query, build) }
 
-// --- whenInlineQuery (terminal) ---
+// --- whenInlineQueryEventQuery (terminal) ---
 
-@JvmName("whenInlineQueryInlineQueryEvent")
-fun HandlerRoute<InlineQueryEvent>.whenInlineQuery(
+@JvmName("whenInlineQueryEventQueryInlineQueryEvent")
+fun HandlerRoute<InlineQueryEvent>.whenInlineQueryEventQuery(
     query: String,
     handler: suspend HandlerBotCall<InlineQueryEvent>.() -> Unit
 ) = select({ if (it.event.inlineQuery.query == query) it else null }) { handle(handler) }
 
-@JvmName("whenInlineQueryTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenInlineQuery(
+@JvmName("whenInlineQueryEventQueryTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenInlineQueryEventQuery(
     query: String,
     handler: suspend HandlerBotCall<InlineQueryEvent>.() -> Unit
-) = onInlineQueryEvent { whenInlineQuery(query, handler) }
+) = onInlineQueryEvent { whenInlineQueryEventQuery(query, handler) }
 
-// --- onInlineQueryRegex (stackable) ---
+// --- onInlineQueryEventQueryRegex (stackable) ---
 
-@JvmName("onInlineQueryRegexInlineQueryEvent")
-fun HandlerRoute<InlineQueryEvent>.onInlineQueryRegex(
+@JvmName("onInlineQueryEventQueryRegexInlineQueryEvent")
+fun HandlerRoute<InlineQueryEvent>.onInlineQueryEventQueryRegex(
     pattern: Regex,
     build: HandlerRoute<InlineQueryEvent>.() -> Unit
 ) = select({ if (it.event.inlineQuery.query.matches(pattern)) it else null }, build)
 
-@JvmName("onInlineQueryRegexTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onInlineQueryRegex(
+@JvmName("onInlineQueryEventQueryRegexTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onInlineQueryEventQueryRegex(
     pattern: Regex,
     build: HandlerRoute<InlineQueryEvent>.() -> Unit
-) = onInlineQueryEvent { onInlineQueryRegex(pattern, build) }
+) = onInlineQueryEvent { onInlineQueryEventQueryRegex(pattern, build) }
 
-// --- whenInlineQueryRegex (terminal) ---
+// --- whenInlineQueryEventQueryRegex (terminal) ---
 
-@JvmName("whenInlineQueryRegexInlineQueryEvent")
-fun HandlerRoute<InlineQueryEvent>.whenInlineQueryRegex(
+@JvmName("whenInlineQueryEventQueryRegexInlineQueryEvent")
+fun HandlerRoute<InlineQueryEvent>.whenInlineQueryEventQueryRegex(
     pattern: Regex,
     handler: suspend HandlerBotCall<InlineQueryEvent>.() -> Unit
 ) = select({ if (it.event.inlineQuery.query.matches(pattern)) it else null }) { handle(handler) }
 
-@JvmName("whenInlineQueryRegexTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenInlineQueryRegex(
+@JvmName("whenInlineQueryEventQueryRegexTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenInlineQueryEventQueryRegex(
     pattern: Regex,
     handler: suspend HandlerBotCall<InlineQueryEvent>.() -> Unit
-) = onInlineQueryEvent { whenInlineQueryRegex(pattern, handler) }
+) = onInlineQueryEvent { whenInlineQueryEventQueryRegex(pattern, handler) }
 
-// --- onInlineQueryContains (stackable) ---
+// --- onInlineQueryEventQueryContains (stackable) ---
 
-@JvmName("onInlineQueryContainsInlineQueryEvent")
-fun HandlerRoute<InlineQueryEvent>.onInlineQueryContains(
+@JvmName("onInlineQueryEventQueryContainsInlineQueryEvent")
+fun HandlerRoute<InlineQueryEvent>.onInlineQueryEventQueryContains(
     substring: String,
     ignoreCase: Boolean = false,
     build: HandlerRoute<InlineQueryEvent>.() -> Unit
 ) = select({ if (it.event.inlineQuery.query.contains(substring, ignoreCase)) it else null }, build)
 
-@JvmName("onInlineQueryContainsTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onInlineQueryContains(
+@JvmName("onInlineQueryEventQueryContainsTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onInlineQueryEventQueryContains(
     substring: String,
     ignoreCase: Boolean = false,
     build: HandlerRoute<InlineQueryEvent>.() -> Unit
-) = onInlineQueryEvent { onInlineQueryContains(substring, ignoreCase, build) }
+) = onInlineQueryEvent { onInlineQueryEventQueryContains(substring, ignoreCase, build) }
 
-// --- whenInlineQueryContains (terminal) ---
+// --- whenInlineQueryEventQueryContains (terminal) ---
 
-@JvmName("whenInlineQueryContainsInlineQueryEvent")
-fun HandlerRoute<InlineQueryEvent>.whenInlineQueryContains(
+@JvmName("whenInlineQueryEventQueryContainsInlineQueryEvent")
+fun HandlerRoute<InlineQueryEvent>.whenInlineQueryEventQueryContains(
     substring: String,
     ignoreCase: Boolean = false,
     handler: suspend HandlerBotCall<InlineQueryEvent>.() -> Unit
 ) = select({ if (it.event.inlineQuery.query.contains(substring, ignoreCase)) it else null }) { handle(handler) }
 
-@JvmName("whenInlineQueryContainsTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenInlineQueryContains(
+@JvmName("whenInlineQueryEventQueryContainsTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenInlineQueryEventQueryContains(
     substring: String,
     ignoreCase: Boolean = false,
     handler: suspend HandlerBotCall<InlineQueryEvent>.() -> Unit
-) = onInlineQueryEvent { whenInlineQueryContains(substring, ignoreCase, handler) }
+) = onInlineQueryEvent { whenInlineQueryEventQueryContains(substring, ignoreCase, handler) }
 
-// --- onInlineQueryStartsWith (stackable) ---
+// --- onInlineQueryEventQueryStartsWith (stackable) ---
 
-@JvmName("onInlineQueryStartsWithInlineQueryEvent")
-fun HandlerRoute<InlineQueryEvent>.onInlineQueryStartsWith(
+@JvmName("onInlineQueryEventQueryStartsWithInlineQueryEvent")
+fun HandlerRoute<InlineQueryEvent>.onInlineQueryEventQueryStartsWith(
     prefix: String,
     ignoreCase: Boolean = false,
     build: HandlerRoute<InlineQueryEvent>.() -> Unit
 ) = select({ if (it.event.inlineQuery.query.startsWith(prefix, ignoreCase)) it else null }, build)
 
-@JvmName("onInlineQueryStartsWithTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onInlineQueryStartsWith(
+@JvmName("onInlineQueryEventQueryStartsWithTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onInlineQueryEventQueryStartsWith(
     prefix: String,
     ignoreCase: Boolean = false,
     build: HandlerRoute<InlineQueryEvent>.() -> Unit
-) = onInlineQueryEvent { onInlineQueryStartsWith(prefix, ignoreCase, build) }
+) = onInlineQueryEvent { onInlineQueryEventQueryStartsWith(prefix, ignoreCase, build) }
 
-// --- whenInlineQueryStartsWith (terminal) ---
+// --- whenInlineQueryEventQueryStartsWith (terminal) ---
 
-@JvmName("whenInlineQueryStartsWithInlineQueryEvent")
-fun HandlerRoute<InlineQueryEvent>.whenInlineQueryStartsWith(
+@JvmName("whenInlineQueryEventQueryStartsWithInlineQueryEvent")
+fun HandlerRoute<InlineQueryEvent>.whenInlineQueryEventQueryStartsWith(
     prefix: String,
     ignoreCase: Boolean = false,
     handler: suspend HandlerBotCall<InlineQueryEvent>.() -> Unit
 ) = select({ if (it.event.inlineQuery.query.startsWith(prefix, ignoreCase)) it else null }) { handle(handler) }
 
-@JvmName("whenInlineQueryStartsWithTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenInlineQueryStartsWith(
+@JvmName("whenInlineQueryEventQueryStartsWithTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenInlineQueryEventQueryStartsWith(
     prefix: String,
     ignoreCase: Boolean = false,
     handler: suspend HandlerBotCall<InlineQueryEvent>.() -> Unit
-) = onInlineQueryEvent { whenInlineQueryStartsWith(prefix, ignoreCase, handler) }
+) = onInlineQueryEvent { whenInlineQueryEventQueryStartsWith(prefix, ignoreCase, handler) }
 
-// --- onInlineQueryFromUser (stackable) ---
+// --- onInlineQueryEventFromUser (stackable) ---
 
-@JvmName("onInlineQueryFromUserInlineQueryEvent")
-fun HandlerRoute<InlineQueryEvent>.onInlineQueryFromUser(
+@JvmName("onInlineQueryEventFromUserInlineQueryEvent")
+fun HandlerRoute<InlineQueryEvent>.onInlineQueryEventFromUser(
     userId: Long,
     build: HandlerRoute<InlineQueryEvent>.() -> Unit
 ) = select({ if (it.event.inlineQuery.from.id == userId) it else null }, build)
 
-@JvmName("onInlineQueryFromUserTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onInlineQueryFromUser(
+@JvmName("onInlineQueryEventFromUserTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onInlineQueryEventFromUser(
     userId: Long,
     build: HandlerRoute<InlineQueryEvent>.() -> Unit
-) = onInlineQueryEvent { onInlineQueryFromUser(userId, build) }
+) = onInlineQueryEvent { onInlineQueryEventFromUser(userId, build) }
 
-// --- whenInlineQueryFromUser (terminal) ---
+// --- whenInlineQueryEventFromUser (terminal) ---
 
-@JvmName("whenInlineQueryFromUserInlineQueryEvent")
-fun HandlerRoute<InlineQueryEvent>.whenInlineQueryFromUser(
+@JvmName("whenInlineQueryEventFromUserInlineQueryEvent")
+fun HandlerRoute<InlineQueryEvent>.whenInlineQueryEventFromUser(
     userId: Long,
     handler: suspend HandlerBotCall<InlineQueryEvent>.() -> Unit
 ) = select({ if (it.event.inlineQuery.from.id == userId) it else null }) { handle(handler) }
 
-@JvmName("whenInlineQueryFromUserTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenInlineQueryFromUser(
+@JvmName("whenInlineQueryEventFromUserTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenInlineQueryEventFromUser(
     userId: Long,
     handler: suspend HandlerBotCall<InlineQueryEvent>.() -> Unit
-) = onInlineQueryEvent { whenInlineQueryFromUser(userId, handler) }
+) = onInlineQueryEvent { whenInlineQueryEventFromUser(userId, handler) }
 
-// --- onChosenInlineResult (stackable) ---
+// --- onChosenInlineResultEventMatchAny (stackable) ---
 
-@JvmName("onChosenInlineResultChosenInlineResultEvent")
-fun HandlerRoute<ChosenInlineResultEvent>.onChosenInlineResult(build: HandlerRoute<ChosenInlineResultEvent>.() -> Unit) =
+@JvmName("onChosenInlineResultEventMatchAnyChosenInlineResultEvent")
+fun HandlerRoute<ChosenInlineResultEvent>.onChosenInlineResultEventMatchAny(build: HandlerRoute<ChosenInlineResultEvent>.() -> Unit) =
     select({ it }, build)
 
-@JvmName("onChosenInlineResultTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onChosenInlineResult(build: HandlerRoute<ChosenInlineResultEvent>.() -> Unit) =
-    onChosenInlineResultEvent { onChosenInlineResult(build) }
+@JvmName("onChosenInlineResultEventMatchAnyTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onChosenInlineResultEventMatchAny(build: HandlerRoute<ChosenInlineResultEvent>.() -> Unit) =
+    on<ChosenInlineResultEvent> { onChosenInlineResultEventMatchAny(build) }
 
-// --- whenChosenInlineResult (terminal) ---
+// --- whenChosenInlineResultEventMatchAny (terminal) ---
 
-@JvmName("whenChosenInlineResultChosenInlineResultEvent")
-fun HandlerRoute<ChosenInlineResultEvent>.whenChosenInlineResult(handler: suspend HandlerBotCall<ChosenInlineResultEvent>.() -> Unit) =
+@JvmName("whenChosenInlineResultEventMatchAnyChosenInlineResultEvent")
+fun HandlerRoute<ChosenInlineResultEvent>.whenChosenInlineResultEventMatchAny(handler: suspend HandlerBotCall<ChosenInlineResultEvent>.() -> Unit) =
     select({ it }) { handle(handler) }
 
-@JvmName("whenChosenInlineResultTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenChosenInlineResult(handler: suspend HandlerBotCall<ChosenInlineResultEvent>.() -> Unit) =
-    onChosenInlineResultEvent { whenChosenInlineResult(handler) }
+@JvmName("whenChosenInlineResultEventMatchAnyTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenChosenInlineResultEventMatchAny(handler: suspend HandlerBotCall<ChosenInlineResultEvent>.() -> Unit) =
+    on<ChosenInlineResultEvent> { whenChosenInlineResultEventMatchAny(handler) }
 
-// --- onChosenInlineResultFromUser (stackable) ---
+// --- onChosenInlineResultEventFromUser (stackable) ---
 
-@JvmName("onChosenInlineResultFromUserChosenInlineResultEvent")
-fun HandlerRoute<ChosenInlineResultEvent>.onChosenInlineResultFromUser(
+@JvmName("onChosenInlineResultEventFromUserChosenInlineResultEvent")
+fun HandlerRoute<ChosenInlineResultEvent>.onChosenInlineResultEventFromUser(
     userId: Long,
     build: HandlerRoute<ChosenInlineResultEvent>.() -> Unit
 ) = select({ if (it.event.chosenInlineResult.from.id == userId) it else null }, build)
 
-@JvmName("onChosenInlineResultFromUserTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onChosenInlineResultFromUser(
+@JvmName("onChosenInlineResultEventFromUserTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onChosenInlineResultEventFromUser(
     userId: Long,
     build: HandlerRoute<ChosenInlineResultEvent>.() -> Unit
-) = onChosenInlineResultEvent { onChosenInlineResultFromUser(userId, build) }
+) = on<ChosenInlineResultEvent> { onChosenInlineResultEventFromUser(userId, build) }
 
-// --- whenChosenInlineResultFromUser (terminal) ---
+// --- whenChosenInlineResultEventFromUser (terminal) ---
 
-@JvmName("whenChosenInlineResultFromUserChosenInlineResultEvent")
-fun HandlerRoute<ChosenInlineResultEvent>.whenChosenInlineResultFromUser(
+@JvmName("whenChosenInlineResultEventFromUserChosenInlineResultEvent")
+fun HandlerRoute<ChosenInlineResultEvent>.whenChosenInlineResultEventFromUser(
     userId: Long,
     handler: suspend HandlerBotCall<ChosenInlineResultEvent>.() -> Unit
 ) = select({ if (it.event.chosenInlineResult.from.id == userId) it else null }) { handle(handler) }
 
-@JvmName("whenChosenInlineResultFromUserTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenChosenInlineResultFromUser(
+@JvmName("whenChosenInlineResultEventFromUserTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenChosenInlineResultEventFromUser(
     userId: Long,
     handler: suspend HandlerBotCall<ChosenInlineResultEvent>.() -> Unit
-) = onChosenInlineResultEvent { whenChosenInlineResultFromUser(userId, handler) }
+) = on<ChosenInlineResultEvent> { whenChosenInlineResultEventFromUser(userId, handler) }

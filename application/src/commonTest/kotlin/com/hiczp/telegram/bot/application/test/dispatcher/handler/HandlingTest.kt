@@ -199,9 +199,9 @@ class HandlingTest {
     // ==================== Text Routing Tests ====================
 
     @Test
-    fun `whenText handler should match exact text`() = runTest {
+    fun `whenMessageEventText handler should match exact text`() = runTest {
         val routeNode = handling {
-            whenText("hello") {
+            whenMessageEventText("hello") {
                 invokedHandlers.add("hello")
             }
         }
@@ -214,9 +214,9 @@ class HandlingTest {
     }
 
     @Test
-    fun `whenText handler should not match different text`() = runTest {
+    fun `whenMessageEventText handler should not match different text`() = runTest {
         val routeNode = handling {
-            whenText("hello") {
+            whenMessageEventText("hello") {
                 invokedHandlers.add("hello")
             }
         }
@@ -229,9 +229,9 @@ class HandlingTest {
     }
 
     @Test
-    fun `whenText handler should not match partial text`() = runTest {
+    fun `whenMessageEventText handler should not match partial text`() = runTest {
         val routeNode = handling {
-            whenText("hello") {
+            whenMessageEventText("hello") {
                 invokedHandlers.add("hello")
             }
         }
@@ -246,9 +246,9 @@ class HandlingTest {
     // ==================== Regex Routing Tests ====================
 
     @Test
-    fun `whenTextRegex handler should match pattern`() = runTest {
+    fun `whenMessageEventTextRegex handler should match pattern`() = runTest {
         val routeNode = handling {
-            whenTextRegex(Regex("(?i)hello.*")) {
+            whenMessageEventTextRegex(Regex("(?i)hello.*")) {
                 invokedHandlers.add("hello_regex")
             }
         }
@@ -261,9 +261,9 @@ class HandlingTest {
     }
 
     @Test
-    fun `whenTextRegex handler should not match non-matching text`() = runTest {
+    fun `whenMessageEventTextRegex handler should not match non-matching text`() = runTest {
         val routeNode = handling {
-            whenTextRegex(Regex("^hello")) {
+            whenMessageEventTextRegex(Regex("^hello")) {
                 invokedHandlers.add("hello_regex")
             }
         }
@@ -276,9 +276,9 @@ class HandlingTest {
     }
 
     @Test
-    fun `whenTextRegex handler should match complex pattern`() = runTest {
+    fun `whenMessageEventTextRegex handler should match complex pattern`() = runTest {
         val routeNode = handling {
-            whenTextRegex(Regex(".*\\d{4}-\\d{2}-\\d{2}.*")) {
+            whenMessageEventTextRegex(Regex(".*\\d{4}-\\d{2}-\\d{2}.*")) {
                 invokedHandlers.add("date")
             }
         }
@@ -293,9 +293,9 @@ class HandlingTest {
     // ==================== Callback Data Routing Tests ====================
 
     @Test
-    fun `whenCallbackData handler should match exact data`() = runTest {
+    fun `whenCallbackQueryEventData handler should match exact data`() = runTest {
         val routeNode = handling {
-            whenCallbackData("confirm") {
+            whenCallbackQueryEventData("confirm") {
                 invokedHandlers.add("confirm")
             }
         }
@@ -308,9 +308,9 @@ class HandlingTest {
     }
 
     @Test
-    fun `whenCallbackData handler should not match different data`() = runTest {
+    fun `whenCallbackQueryEventData handler should not match different data`() = runTest {
         val routeNode = handling {
-            whenCallbackData("confirm") {
+            whenCallbackQueryEventData("confirm") {
                 invokedHandlers.add("confirm")
             }
         }
@@ -325,9 +325,9 @@ class HandlingTest {
     // ==================== Inline Query Routing Tests ====================
 
     @Test
-    fun `whenInlineQuery handler should match exact query`() = runTest {
+    fun `whenInlineQueryEventQuery handler should match exact query`() = runTest {
         val routeNode = handling {
-            whenInlineQuery("search") {
+            whenInlineQueryEventQuery("search") {
                 invokedHandlers.add("search")
             }
         }
@@ -340,9 +340,9 @@ class HandlingTest {
     }
 
     @Test
-    fun `whenInlineQuery handler should not match different query`() = runTest {
+    fun `whenInlineQueryEventQuery handler should not match different query`() = runTest {
         val routeNode = handling {
-            whenInlineQuery("search") {
+            whenInlineQueryEventQuery("search") {
                 invokedHandlers.add("search")
             }
         }
@@ -502,7 +502,7 @@ class HandlingTest {
         val routeNode = handling {
             onMessageEvent {
                 commandEndpoint("start") { invokedHandlers.add("start") }
-                whenText("hello") {
+                whenMessageEventText("hello") {
                     invokedHandlers.add("hello")
                 }
                 handle { invokedHandlers.add("handle_fallback") }
@@ -596,7 +596,7 @@ class HandlingTest {
                 whenMatch({ false }) {
                     invokedHandlers.add("matched_out")
                 }
-                whenText("hello") {
+                whenMessageEventText("hello") {
                     invokedHandlers.add("hello")
                 }
             }
@@ -616,7 +616,7 @@ class HandlingTest {
                 // For nested matchers, use stackable match() with build lambda
                 match({ it.event.message.chat.id == 100L }) {
                     commandEndpoint("admin") { invokedHandlers.add("admin_chat_100") }
-                    whenText("ping") {
+                    whenMessageEventText("ping") {
                         invokedHandlers.add("ping_chat_100")
                     }
                 }
@@ -662,7 +662,7 @@ class HandlingTest {
         // handle at root level catches all unhandled events (dead letter mechanism)
         val routeNode = handling {
             commandEndpoint("start") { invokedHandlers.add("start") }
-            whenText("hello") {
+            whenMessageEventText("hello") {
                 invokedHandlers.add("hello")
             }
             // Dead letter handler - catches everything else
@@ -706,7 +706,7 @@ class HandlingTest {
                 commandEndpoint("start") { invokedHandlers.add("start") }
             }
             onCallbackQueryEvent {
-                whenCallbackData("confirm") {
+                whenCallbackQueryEventData("confirm") {
                     invokedHandlers.add("confirm")
                 }
             }
@@ -794,13 +794,13 @@ class HandlingTest {
     fun `mixed event type handlers should route correctly`() = runTest {
         val routeNode = handling {
             commandEndpoint("start") { invokedHandlers.add("cmd_start") }
-            whenText("hello") {
+            whenMessageEventText("hello") {
                 invokedHandlers.add("txt_hello")
             }
-            whenCallbackData("confirm") {
+            whenCallbackQueryEventData("confirm") {
                 invokedHandlers.add("cb_confirm")
             }
-            whenInlineQuery("search") {
+            whenInlineQueryEventQuery("search") {
                 invokedHandlers.add("inline_search")
             }
         }
@@ -1034,9 +1034,9 @@ class HandlingTest {
     // ==================== Callback Data Regex Tests ====================
 
     @Test
-    fun `whenCallbackDataRegex should match pattern`() = runTest {
+    fun `whenCallbackQueryEventDataRegex should match pattern`() = runTest {
         val routeNode = handling {
-            whenCallbackDataRegex(Regex("action_\\d+")) {
+            whenCallbackQueryEventDataRegex(Regex("action_\\d+")) {
                 invokedHandlers.add("action")
             }
         }
@@ -1049,9 +1049,9 @@ class HandlingTest {
     }
 
     @Test
-    fun `whenCallbackDataRegex should not match non-matching data`() = runTest {
+    fun `whenCallbackQueryEventDataRegex should not match non-matching data`() = runTest {
         val routeNode = handling {
-            whenCallbackDataRegex(Regex("action_\\d+")) {
+            whenCallbackQueryEventDataRegex(Regex("action_\\d+")) {
                 invokedHandlers.add("action")
             }
         }
@@ -1066,9 +1066,9 @@ class HandlingTest {
     // ==================== Inline Query Regex Tests ====================
 
     @Test
-    fun `whenInlineQueryRegex should match pattern`() = runTest {
+    fun `whenInlineQueryEventQueryRegex should match pattern`() = runTest {
         val routeNode = handling {
-            whenInlineQueryRegex(Regex("search:.*")) {
+            whenInlineQueryEventQueryRegex(Regex("search:.*")) {
                 invokedHandlers.add("search")
             }
         }
@@ -1081,9 +1081,9 @@ class HandlingTest {
     }
 
     @Test
-    fun `whenInlineQueryRegex should not match non-matching query`() = runTest {
+    fun `whenInlineQueryEventQueryRegex should not match non-matching query`() = runTest {
         val routeNode = handling {
-            whenInlineQueryRegex(Regex("search:.*")) {
+            whenInlineQueryEventQueryRegex(Regex("search:.*")) {
                 invokedHandlers.add("search")
             }
         }
@@ -1172,9 +1172,9 @@ class HandlingTest {
     }
 
     @Test
-    fun `whenPhoto handler should match photo messages`() = runTest {
+    fun `whenMessageEventPhoto handler should match photo messages`() = runTest {
         val routeNode = handling {
-            whenPhoto {
+            whenMessageEventPhoto {
                 invokedHandlers.add("photo")
             }
         }
@@ -1187,9 +1187,9 @@ class HandlingTest {
     }
 
     @Test
-    fun `whenPhoto handler should not match text messages`() = runTest {
+    fun `whenMessageEventPhoto handler should not match text messages`() = runTest {
         val routeNode = handling {
-            whenPhoto {
+            whenMessageEventPhoto {
                 invokedHandlers.add("photo")
             }
         }
@@ -1202,9 +1202,9 @@ class HandlingTest {
     }
 
     @Test
-    fun `whenVideo handler should match video messages`() = runTest {
+    fun `whenMessageEventVideo handler should match video messages`() = runTest {
         val routeNode = handling {
-            whenVideo {
+            whenMessageEventVideo {
                 invokedHandlers.add("video")
             }
         }
@@ -1217,9 +1217,9 @@ class HandlingTest {
     }
 
     @Test
-    fun `whenDocument handler should match document messages`() = runTest {
+    fun `whenMessageEventDocument handler should match document messages`() = runTest {
         val routeNode = handling {
-            whenDocument {
+            whenMessageEventDocument {
                 invokedHandlers.add("document")
             }
         }
@@ -1232,9 +1232,9 @@ class HandlingTest {
     }
 
     @Test
-    fun `whenSticker handler should match sticker messages`() = runTest {
+    fun `whenMessageEventSticker handler should match sticker messages`() = runTest {
         val routeNode = handling {
-            whenSticker {
+            whenMessageEventSticker {
                 invokedHandlers.add("sticker")
             }
         }
@@ -1249,9 +1249,9 @@ class HandlingTest {
     // ==================== Chat Type Filter Tests ====================
 
     @Test
-    fun `whenPrivateChat handler should match private chat messages`() = runTest {
+    fun `whenMessageEventPrivateChat handler should match private chat messages`() = runTest {
         val routeNode = handling {
-            whenPrivateChat {
+            whenMessageEventPrivateChat {
                 invokedHandlers.add("private")
             }
         }
@@ -1264,9 +1264,9 @@ class HandlingTest {
     }
 
     @Test
-    fun `whenPrivateChat handler should not match group chat messages`() = runTest {
+    fun `whenMessageEventPrivateChat handler should not match group chat messages`() = runTest {
         val routeNode = handling {
-            whenPrivateChat {
+            whenMessageEventPrivateChat {
                 invokedHandlers.add("private")
             }
         }
@@ -1280,9 +1280,9 @@ class HandlingTest {
     }
 
     @Test
-    fun `whenGroupChat handler should match group chat messages`() = runTest {
+    fun `whenMessageEventGroupChat handler should match group chat messages`() = runTest {
         val routeNode = handling {
-            whenGroupChat {
+            whenMessageEventGroupChat {
                 invokedHandlers.add("group")
             }
         }
@@ -1296,9 +1296,9 @@ class HandlingTest {
     }
 
     @Test
-    fun `whenSupergroupChat handler should match supergroup chat messages`() = runTest {
+    fun `whenMessageEventSupergroupChat handler should match supergroup chat messages`() = runTest {
         val routeNode = handling {
-            whenSupergroupChat {
+            whenMessageEventSupergroupChat {
                 invokedHandlers.add("supergroup")
             }
         }
@@ -1312,9 +1312,9 @@ class HandlingTest {
     }
 
     @Test
-    fun `whenChannel handler should match channel messages`() = runTest {
+    fun `whenMessageEventChannel handler should match channel messages`() = runTest {
         val routeNode = handling {
-            whenChannel {
+            whenMessageEventChannel {
                 invokedHandlers.add("channel")
             }
         }
@@ -1351,9 +1351,9 @@ class HandlingTest {
     }
 
     @Test
-    fun `whenReply handler should match reply messages`() = runTest {
+    fun `whenMessageEventReply handler should match reply messages`() = runTest {
         val routeNode = handling {
-            whenReply {
+            whenMessageEventReply {
                 invokedHandlers.add("reply")
             }
         }
@@ -1366,9 +1366,9 @@ class HandlingTest {
     }
 
     @Test
-    fun `whenReply handler should not match non-reply messages`() = runTest {
+    fun `whenMessageEventReply handler should not match non-reply messages`() = runTest {
         val routeNode = handling {
-            whenReply {
+            whenMessageEventReply {
                 invokedHandlers.add("reply")
             }
         }
@@ -1381,9 +1381,9 @@ class HandlingTest {
     }
 
     @Test
-    fun `whenReplyTo handler should match replies to specific message`() = runTest {
+    fun `whenMessageEventReplyTo handler should match replies to specific message`() = runTest {
         val routeNode = handling {
-            whenReplyTo(messageId = 42L) {
+            whenMessageEventReplyTo(messageId = 42L) {
                 invokedHandlers.add("reply_to_42")
             }
         }
@@ -1415,9 +1415,9 @@ class HandlingTest {
     }
 
     @Test
-    fun `whenReplyTo handler should not match replies to different message`() = runTest {
+    fun `whenMessageEventReplyTo handler should not match replies to different message`() = runTest {
         val routeNode = handling {
-            whenReplyTo(messageId = 42L) {
+            whenMessageEventReplyTo(messageId = 42L) {
                 invokedHandlers.add("reply_to_42")
             }
         }

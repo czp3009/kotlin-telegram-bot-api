@@ -9,178 +9,178 @@ import kotlin.jvm.JvmName
 
 // ==================== ChatJoinRequestEvent Filtered Matchers ====================
 
-// --- onChatJoinRequestFromChat (stackable) ---
+// --- onChatJoinRequestEventFromChat (stackable) ---
 
-@JvmName("onChatJoinRequestFromChatChatJoinRequestEvent")
-fun HandlerRoute<ChatJoinRequestEvent>.onChatJoinRequestFromChat(
+@JvmName("onChatJoinRequestEventFromChatChatJoinRequestEvent")
+fun HandlerRoute<ChatJoinRequestEvent>.onChatJoinRequestEventFromChat(
     chatId: Long,
     build: HandlerRoute<ChatJoinRequestEvent>.() -> Unit
 ) = select({ if (it.event.chatJoinRequest.chat.id == chatId) it else null }, build)
 
-@JvmName("onChatJoinRequestFromChatTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onChatJoinRequestFromChat(
+@JvmName("onChatJoinRequestEventFromChatTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onChatJoinRequestEventFromChat(
     chatId: Long,
     build: HandlerRoute<ChatJoinRequestEvent>.() -> Unit
-) = onChatJoinRequestEvent { onChatJoinRequestFromChat(chatId, build) }
+) = onChatJoinRequestEvent { onChatJoinRequestEventFromChat(chatId, build) }
 
-// --- whenChatJoinRequestFromChat (terminal) ---
+// --- whenChatJoinRequestEventFromChat (terminal) ---
 
-@JvmName("whenChatJoinRequestFromChatChatJoinRequestEvent")
-fun HandlerRoute<ChatJoinRequestEvent>.whenChatJoinRequestFromChat(
+@JvmName("whenChatJoinRequestEventFromChatChatJoinRequestEvent")
+fun HandlerRoute<ChatJoinRequestEvent>.whenChatJoinRequestEventFromChat(
     chatId: Long,
     handler: suspend HandlerBotCall<ChatJoinRequestEvent>.() -> Unit
 ) = select({ if (it.event.chatJoinRequest.chat.id == chatId) it else null }) { handle(handler) }
 
-@JvmName("whenChatJoinRequestFromChatTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenChatJoinRequestFromChat(
+@JvmName("whenChatJoinRequestEventFromChatTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenChatJoinRequestEventFromChat(
     chatId: Long,
     handler: suspend HandlerBotCall<ChatJoinRequestEvent>.() -> Unit
-) = onChatJoinRequestEvent { whenChatJoinRequestFromChat(chatId, handler) }
+) = onChatJoinRequestEvent { whenChatJoinRequestEventFromChat(chatId, handler) }
 
-// --- onChatJoinRequestFromUser (stackable) ---
+// --- onChatJoinRequestEventFromUser (stackable) ---
 
-@JvmName("onChatJoinRequestFromUserChatJoinRequestEvent")
-fun HandlerRoute<ChatJoinRequestEvent>.onChatJoinRequestFromUser(
+@JvmName("onChatJoinRequestEventFromUserChatJoinRequestEvent")
+fun HandlerRoute<ChatJoinRequestEvent>.onChatJoinRequestEventFromUser(
     userId: Long,
     build: HandlerRoute<ChatJoinRequestEvent>.() -> Unit
 ) = select({ if (it.event.chatJoinRequest.from.id == userId) it else null }, build)
 
-@JvmName("onChatJoinRequestFromUserTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onChatJoinRequestFromUser(
+@JvmName("onChatJoinRequestEventFromUserTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onChatJoinRequestEventFromUser(
     userId: Long,
     build: HandlerRoute<ChatJoinRequestEvent>.() -> Unit
-) = onChatJoinRequestEvent { onChatJoinRequestFromUser(userId, build) }
+) = onChatJoinRequestEvent { onChatJoinRequestEventFromUser(userId, build) }
 
-// --- whenChatJoinRequestFromUser (terminal) ---
+// --- whenChatJoinRequestEventFromUser (terminal) ---
 
-@JvmName("whenChatJoinRequestFromUserChatJoinRequestEvent")
-fun HandlerRoute<ChatJoinRequestEvent>.whenChatJoinRequestFromUser(
+@JvmName("whenChatJoinRequestEventFromUserChatJoinRequestEvent")
+fun HandlerRoute<ChatJoinRequestEvent>.whenChatJoinRequestEventFromUser(
     userId: Long,
     handler: suspend HandlerBotCall<ChatJoinRequestEvent>.() -> Unit
 ) = select({ if (it.event.chatJoinRequest.from.id == userId) it else null }) { handle(handler) }
 
-@JvmName("whenChatJoinRequestFromUserTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenChatJoinRequestFromUser(
+@JvmName("whenChatJoinRequestEventFromUserTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenChatJoinRequestEventFromUser(
     userId: Long,
     handler: suspend HandlerBotCall<ChatJoinRequestEvent>.() -> Unit
-) = onChatJoinRequestEvent { whenChatJoinRequestFromUser(userId, handler) }
+) = onChatJoinRequestEvent { whenChatJoinRequestEventFromUser(userId, handler) }
 
 // ==================== ChatMemberEvent Filtered Matchers ====================
 
-// --- onChatMemberUpdatedInChat (stackable) ---
+// --- onChatMemberEventInChat (stackable) ---
 
-@JvmName("onChatMemberUpdatedInChatChatMemberEvent")
-fun HandlerRoute<ChatMemberEvent>.onChatMemberUpdatedInChat(
+@JvmName("onChatMemberEventInChatChatMemberEvent")
+fun HandlerRoute<ChatMemberEvent>.onChatMemberEventInChat(
     chatId: Long,
     build: HandlerRoute<ChatMemberEvent>.() -> Unit
 ) = select({ if (it.event.chatMember.chat.id == chatId) it else null }, build)
 
-@JvmName("onChatMemberUpdatedInChatTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onChatMemberUpdatedInChat(
+@JvmName("onChatMemberEventInChatTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onChatMemberEventInChat(
     chatId: Long,
     build: HandlerRoute<ChatMemberEvent>.() -> Unit
-) = onChatMemberEvent { onChatMemberUpdatedInChat(chatId, build) }
+) = onChatMemberEvent { onChatMemberEventInChat(chatId, build) }
 
-// --- whenChatMemberUpdatedInChat (terminal) ---
+// --- whenChatMemberEventInChat (terminal) ---
 
-@JvmName("whenChatMemberUpdatedInChatChatMemberEvent")
-fun HandlerRoute<ChatMemberEvent>.whenChatMemberUpdatedInChat(
+@JvmName("whenChatMemberEventInChatChatMemberEvent")
+fun HandlerRoute<ChatMemberEvent>.whenChatMemberEventInChat(
     chatId: Long,
     handler: suspend HandlerBotCall<ChatMemberEvent>.() -> Unit
 ) = select({ if (it.event.chatMember.chat.id == chatId) it else null }) { handle(handler) }
 
-@JvmName("whenChatMemberUpdatedInChatTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenChatMemberUpdatedInChat(
+@JvmName("whenChatMemberEventInChatTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenChatMemberEventInChat(
     chatId: Long,
     handler: suspend HandlerBotCall<ChatMemberEvent>.() -> Unit
-) = onChatMemberEvent { whenChatMemberUpdatedInChat(chatId, handler) }
+) = onChatMemberEvent { whenChatMemberEventInChat(chatId, handler) }
 
 // ==================== MyChatMemberEvent Filtered Matchers ====================
 
-// --- onMyChatMemberUpdatedInChat (stackable) ---
+// --- onMyChatMemberEventInChat (stackable) ---
 
-@JvmName("onMyChatMemberUpdatedInChatMyChatMemberEvent")
-fun HandlerRoute<MyChatMemberEvent>.onMyChatMemberUpdatedInChat(
+@JvmName("onMyChatMemberEventInChatMyChatMemberEvent")
+fun HandlerRoute<MyChatMemberEvent>.onMyChatMemberEventInChat(
     chatId: Long,
     build: HandlerRoute<MyChatMemberEvent>.() -> Unit
 ) = select({ if (it.event.myChatMember.chat.id == chatId) it else null }, build)
 
-@JvmName("onMyChatMemberUpdatedInChatTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onMyChatMemberUpdatedInChat(
+@JvmName("onMyChatMemberEventInChatTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onMyChatMemberEventInChat(
     chatId: Long,
     build: HandlerRoute<MyChatMemberEvent>.() -> Unit
-) = onMyChatMemberEvent { onMyChatMemberUpdatedInChat(chatId, build) }
+) = onMyChatMemberEvent { onMyChatMemberEventInChat(chatId, build) }
 
-// --- whenMyChatMemberUpdatedInChat (terminal) ---
+// --- whenMyChatMemberEventInChat (terminal) ---
 
-@JvmName("whenMyChatMemberUpdatedInChatMyChatMemberEvent")
-fun HandlerRoute<MyChatMemberEvent>.whenMyChatMemberUpdatedInChat(
+@JvmName("whenMyChatMemberEventInChatMyChatMemberEvent")
+fun HandlerRoute<MyChatMemberEvent>.whenMyChatMemberEventInChat(
     chatId: Long,
     handler: suspend HandlerBotCall<MyChatMemberEvent>.() -> Unit
 ) = select({ if (it.event.myChatMember.chat.id == chatId) it else null }) { handle(handler) }
 
-@JvmName("whenMyChatMemberUpdatedInChatTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenMyChatMemberUpdatedInChat(
+@JvmName("whenMyChatMemberEventInChatTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenMyChatMemberEventInChat(
     chatId: Long,
     handler: suspend HandlerBotCall<MyChatMemberEvent>.() -> Unit
-) = onMyChatMemberEvent { whenMyChatMemberUpdatedInChat(chatId, handler) }
+) = onMyChatMemberEvent { whenMyChatMemberEventInChat(chatId, handler) }
 
 // ==================== ChatBoostEvent Filtered Matchers ====================
 
-// --- onChatBoostInChat (stackable) ---
+// --- onChatBoostEventInChat (stackable) ---
 
-@JvmName("onChatBoostInChatChatBoostEvent")
-fun HandlerRoute<ChatBoostEvent>.onChatBoostInChat(
+@JvmName("onChatBoostEventInChatChatBoostEvent")
+fun HandlerRoute<ChatBoostEvent>.onChatBoostEventInChat(
     chatId: Long,
     build: HandlerRoute<ChatBoostEvent>.() -> Unit
 ) = select({ if (it.event.chatBoost.chat.id == chatId) it else null }, build)
 
-@JvmName("onChatBoostInChatTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onChatBoostInChat(
+@JvmName("onChatBoostEventInChatTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onChatBoostEventInChat(
     chatId: Long,
     build: HandlerRoute<ChatBoostEvent>.() -> Unit
-) = onChatBoostEvent { onChatBoostInChat(chatId, build) }
+) = onChatBoostEvent { onChatBoostEventInChat(chatId, build) }
 
-// --- whenChatBoostInChat (terminal) ---
+// --- whenChatBoostEventInChat (terminal) ---
 
-@JvmName("whenChatBoostInChatChatBoostEvent")
-fun HandlerRoute<ChatBoostEvent>.whenChatBoostInChat(
+@JvmName("whenChatBoostEventInChatChatBoostEvent")
+fun HandlerRoute<ChatBoostEvent>.whenChatBoostEventInChat(
     chatId: Long,
     handler: suspend HandlerBotCall<ChatBoostEvent>.() -> Unit
 ) = select({ if (it.event.chatBoost.chat.id == chatId) it else null }) { handle(handler) }
 
-@JvmName("whenChatBoostInChatTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenChatBoostInChat(
+@JvmName("whenChatBoostEventInChatTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenChatBoostEventInChat(
     chatId: Long,
     handler: suspend HandlerBotCall<ChatBoostEvent>.() -> Unit
-) = onChatBoostEvent { whenChatBoostInChat(chatId, handler) }
+) = onChatBoostEvent { whenChatBoostEventInChat(chatId, handler) }
 
 // ==================== RemovedChatBoostEvent Filtered Matchers ====================
 
-// --- onRemovedChatBoostInChat (stackable) ---
+// --- onRemovedChatBoostEventInChat (stackable) ---
 
-@JvmName("onRemovedChatBoostInChatRemovedChatBoostEvent")
-fun HandlerRoute<RemovedChatBoostEvent>.onRemovedChatBoostInChat(
+@JvmName("onRemovedChatBoostEventInChatRemovedChatBoostEvent")
+fun HandlerRoute<RemovedChatBoostEvent>.onRemovedChatBoostEventInChat(
     chatId: Long,
     build: HandlerRoute<RemovedChatBoostEvent>.() -> Unit
 ) = select({ if (it.event.removedChatBoost.chat.id == chatId) it else null }, build)
 
-@JvmName("onRemovedChatBoostInChatTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onRemovedChatBoostInChat(
+@JvmName("onRemovedChatBoostEventInChatTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onRemovedChatBoostEventInChat(
     chatId: Long,
     build: HandlerRoute<RemovedChatBoostEvent>.() -> Unit
-) = onRemovedChatBoostEvent { onRemovedChatBoostInChat(chatId, build) }
+) = onRemovedChatBoostEvent { onRemovedChatBoostEventInChat(chatId, build) }
 
-// --- whenRemovedChatBoostInChat (terminal) ---
+// --- whenRemovedChatBoostEventInChat (terminal) ---
 
-@JvmName("whenRemovedChatBoostInChatRemovedChatBoostEvent")
-fun HandlerRoute<RemovedChatBoostEvent>.whenRemovedChatBoostInChat(
+@JvmName("whenRemovedChatBoostEventInChatRemovedChatBoostEvent")
+fun HandlerRoute<RemovedChatBoostEvent>.whenRemovedChatBoostEventInChat(
     chatId: Long,
     handler: suspend HandlerBotCall<RemovedChatBoostEvent>.() -> Unit
 ) = select({ if (it.event.removedChatBoost.chat.id == chatId) it else null }) { handle(handler) }
 
-@JvmName("whenRemovedChatBoostInChatTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenRemovedChatBoostInChat(
+@JvmName("whenRemovedChatBoostEventInChatTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenRemovedChatBoostEventInChat(
     chatId: Long,
     handler: suspend HandlerBotCall<RemovedChatBoostEvent>.() -> Unit
-) = onRemovedChatBoostEvent { whenRemovedChatBoostInChat(chatId, handler) }
+) = onRemovedChatBoostEvent { whenRemovedChatBoostEventInChat(chatId, handler) }

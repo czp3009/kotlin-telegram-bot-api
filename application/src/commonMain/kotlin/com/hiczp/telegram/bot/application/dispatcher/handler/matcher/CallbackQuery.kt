@@ -8,82 +8,82 @@ import com.hiczp.telegram.bot.protocol.event.CallbackQueryEvent
 import com.hiczp.telegram.bot.protocol.event.TelegramBotEvent
 import kotlin.jvm.JvmName
 
-// --- onCallbackData (stackable) ---
+// --- onCallbackQueryEventData (stackable) ---
 
-@JvmName("onCallbackDataCallbackQueryEvent")
-fun HandlerRoute<CallbackQueryEvent>.onCallbackData(
+@JvmName("onCallbackQueryEventDataCallbackQueryEvent")
+fun HandlerRoute<CallbackQueryEvent>.onCallbackQueryEventData(
     data: String,
     build: HandlerRoute<CallbackQueryEvent>.() -> Unit
 ) = select({ if (it.event.callbackQuery.data == data) it else null }, build)
 
-@JvmName("onCallbackDataTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onCallbackData(
+@JvmName("onCallbackQueryEventDataTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onCallbackQueryEventData(
     data: String,
     build: HandlerRoute<CallbackQueryEvent>.() -> Unit
-) = on<CallbackQueryEvent> { onCallbackData(data, build) }
+) = on<CallbackQueryEvent> { onCallbackQueryEventData(data, build) }
 
-// --- whenCallbackData (terminal) ---
+// --- whenCallbackQueryEventData (terminal) ---
 
-@JvmName("whenCallbackDataCallbackQueryEvent")
-fun HandlerRoute<CallbackQueryEvent>.whenCallbackData(
+@JvmName("whenCallbackQueryEventDataCallbackQueryEvent")
+fun HandlerRoute<CallbackQueryEvent>.whenCallbackQueryEventData(
     data: String,
     handler: suspend HandlerBotCall<CallbackQueryEvent>.() -> Unit
 ) = select({ if (it.event.callbackQuery.data == data) it else null }) { handle(handler) }
 
-@JvmName("whenCallbackDataTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenCallbackData(
+@JvmName("whenCallbackQueryEventDataTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenCallbackQueryEventData(
     data: String,
     handler: suspend HandlerBotCall<CallbackQueryEvent>.() -> Unit
-) = on<CallbackQueryEvent> { whenCallbackData(data, handler) }
+) = on<CallbackQueryEvent> { whenCallbackQueryEventData(data, handler) }
 
-// --- onCallbackDataRegex (stackable) ---
+// --- onCallbackQueryEventDataRegex (stackable) ---
 
-@JvmName("onCallbackDataRegexCallbackQueryEvent")
-fun HandlerRoute<CallbackQueryEvent>.onCallbackDataRegex(
+@JvmName("onCallbackQueryEventDataRegexCallbackQueryEvent")
+fun HandlerRoute<CallbackQueryEvent>.onCallbackQueryEventDataRegex(
     pattern: Regex,
     build: HandlerRoute<CallbackQueryEvent>.() -> Unit
 ) = select({ if (it.event.callbackQuery.data?.matches(pattern) == true) it else null }, build)
 
-@JvmName("onCallbackDataRegexTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onCallbackDataRegex(
+@JvmName("onCallbackQueryEventDataRegexTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onCallbackQueryEventDataRegex(
     pattern: Regex,
     build: HandlerRoute<CallbackQueryEvent>.() -> Unit
-) = on<CallbackQueryEvent> { onCallbackDataRegex(pattern, build) }
+) = on<CallbackQueryEvent> { onCallbackQueryEventDataRegex(pattern, build) }
 
-// --- whenCallbackDataRegex (terminal) ---
+// --- whenCallbackQueryEventDataRegex (terminal) ---
 
-@JvmName("whenCallbackDataRegexCallbackQueryEvent")
-fun HandlerRoute<CallbackQueryEvent>.whenCallbackDataRegex(
+@JvmName("whenCallbackQueryEventDataRegexCallbackQueryEvent")
+fun HandlerRoute<CallbackQueryEvent>.whenCallbackQueryEventDataRegex(
     pattern: Regex,
     handler: suspend HandlerBotCall<CallbackQueryEvent>.() -> Unit
 ) = select({ if (it.event.callbackQuery.data?.matches(pattern) == true) it else null }) { handle(handler) }
 
-@JvmName("whenCallbackDataRegexTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenCallbackDataRegex(
+@JvmName("whenCallbackQueryEventDataRegexTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenCallbackQueryEventDataRegex(
     pattern: Regex,
     handler: suspend HandlerBotCall<CallbackQueryEvent>.() -> Unit
-) = on<CallbackQueryEvent> { whenCallbackDataRegex(pattern, handler) }
+) = on<CallbackQueryEvent> { whenCallbackQueryEventDataRegex(pattern, handler) }
 
-// --- onCallbackDataContains (stackable) ---
+// --- onCallbackQueryEventDataContains (stackable) ---
 
-@JvmName("onCallbackDataContainsCallbackQueryEvent")
-fun HandlerRoute<CallbackQueryEvent>.onCallbackDataContains(
+@JvmName("onCallbackQueryEventDataContainsCallbackQueryEvent")
+fun HandlerRoute<CallbackQueryEvent>.onCallbackQueryEventDataContains(
     substring: String,
     ignoreCase: Boolean = false,
     build: HandlerRoute<CallbackQueryEvent>.() -> Unit
 ) = select({ if (it.event.callbackQuery.data?.contains(substring, ignoreCase) == true) it else null }, build)
 
-@JvmName("onCallbackDataContainsTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onCallbackDataContains(
+@JvmName("onCallbackQueryEventDataContainsTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onCallbackQueryEventDataContains(
     substring: String,
     ignoreCase: Boolean = false,
     build: HandlerRoute<CallbackQueryEvent>.() -> Unit
-) = on<CallbackQueryEvent> { onCallbackDataContains(substring, ignoreCase, build) }
+) = on<CallbackQueryEvent> { onCallbackQueryEventDataContains(substring, ignoreCase, build) }
 
-// --- whenCallbackDataContains (terminal) ---
+// --- whenCallbackQueryEventDataContains (terminal) ---
 
-@JvmName("whenCallbackDataContainsCallbackQueryEvent")
-fun HandlerRoute<CallbackQueryEvent>.whenCallbackDataContains(
+@JvmName("whenCallbackQueryEventDataContainsCallbackQueryEvent")
+fun HandlerRoute<CallbackQueryEvent>.whenCallbackQueryEventDataContains(
     substring: String,
     ignoreCase: Boolean = false,
     handler: suspend HandlerBotCall<CallbackQueryEvent>.() -> Unit
@@ -95,33 +95,33 @@ fun HandlerRoute<CallbackQueryEvent>.whenCallbackDataContains(
     ) it else null
 }) { handle(handler) }
 
-@JvmName("whenCallbackDataContainsTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenCallbackDataContains(
+@JvmName("whenCallbackQueryEventDataContainsTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenCallbackQueryEventDataContains(
     substring: String,
     ignoreCase: Boolean = false,
     handler: suspend HandlerBotCall<CallbackQueryEvent>.() -> Unit
-) = on<CallbackQueryEvent> { whenCallbackDataContains(substring, ignoreCase, handler) }
+) = on<CallbackQueryEvent> { whenCallbackQueryEventDataContains(substring, ignoreCase, handler) }
 
-// --- onCallbackDataStartsWith (stackable) ---
+// --- onCallbackQueryEventDataStartsWith (stackable) ---
 
-@JvmName("onCallbackDataStartsWithCallbackQueryEvent")
-fun HandlerRoute<CallbackQueryEvent>.onCallbackDataStartsWith(
+@JvmName("onCallbackQueryEventDataStartsWithCallbackQueryEvent")
+fun HandlerRoute<CallbackQueryEvent>.onCallbackQueryEventDataStartsWith(
     prefix: String,
     ignoreCase: Boolean = false,
     build: HandlerRoute<CallbackQueryEvent>.() -> Unit
 ) = select({ if (it.event.callbackQuery.data?.startsWith(prefix, ignoreCase) == true) it else null }, build)
 
-@JvmName("onCallbackDataStartsWithTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onCallbackDataStartsWith(
+@JvmName("onCallbackQueryEventDataStartsWithTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onCallbackQueryEventDataStartsWith(
     prefix: String,
     ignoreCase: Boolean = false,
     build: HandlerRoute<CallbackQueryEvent>.() -> Unit
-) = on<CallbackQueryEvent> { onCallbackDataStartsWith(prefix, ignoreCase, build) }
+) = on<CallbackQueryEvent> { onCallbackQueryEventDataStartsWith(prefix, ignoreCase, build) }
 
-// --- whenCallbackDataStartsWith (terminal) ---
+// --- whenCallbackQueryEventDataStartsWith (terminal) ---
 
-@JvmName("whenCallbackDataStartsWithCallbackQueryEvent")
-fun HandlerRoute<CallbackQueryEvent>.whenCallbackDataStartsWith(
+@JvmName("whenCallbackQueryEventDataStartsWithCallbackQueryEvent")
+fun HandlerRoute<CallbackQueryEvent>.whenCallbackQueryEventDataStartsWith(
     prefix: String,
     ignoreCase: Boolean = false,
     handler: suspend HandlerBotCall<CallbackQueryEvent>.() -> Unit
@@ -133,65 +133,65 @@ fun HandlerRoute<CallbackQueryEvent>.whenCallbackDataStartsWith(
     ) it else null
 }) { handle(handler) }
 
-@JvmName("whenCallbackDataStartsWithTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenCallbackDataStartsWith(
+@JvmName("whenCallbackQueryEventDataStartsWithTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenCallbackQueryEventDataStartsWith(
     prefix: String,
     ignoreCase: Boolean = false,
     handler: suspend HandlerBotCall<CallbackQueryEvent>.() -> Unit
-) = on<CallbackQueryEvent> { whenCallbackDataStartsWith(prefix, ignoreCase, handler) }
+) = on<CallbackQueryEvent> { whenCallbackQueryEventDataStartsWith(prefix, ignoreCase, handler) }
 
-// --- onCallbackQueryFromUser (stackable) ---
+// --- onCallbackQueryEventFromUser (stackable) ---
 
-@JvmName("onCallbackQueryFromUserCallbackQueryEvent")
-fun HandlerRoute<CallbackQueryEvent>.onCallbackQueryFromUser(
+@JvmName("onCallbackQueryEventFromUserCallbackQueryEvent")
+fun HandlerRoute<CallbackQueryEvent>.onCallbackQueryEventFromUser(
     userId: Long,
     build: HandlerRoute<CallbackQueryEvent>.() -> Unit
 ) = select({ if (it.event.callbackQuery.from.id == userId) it else null }, build)
 
-@JvmName("onCallbackQueryFromUserTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onCallbackQueryFromUser(
+@JvmName("onCallbackQueryEventFromUserTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onCallbackQueryEventFromUser(
     userId: Long,
     build: HandlerRoute<CallbackQueryEvent>.() -> Unit
-) = on<CallbackQueryEvent> { onCallbackQueryFromUser(userId, build) }
+) = on<CallbackQueryEvent> { onCallbackQueryEventFromUser(userId, build) }
 
-// --- whenCallbackQueryFromUser (terminal) ---
+// --- whenCallbackQueryEventFromUser (terminal) ---
 
-@JvmName("whenCallbackQueryFromUserCallbackQueryEvent")
-fun HandlerRoute<CallbackQueryEvent>.whenCallbackQueryFromUser(
+@JvmName("whenCallbackQueryEventFromUserCallbackQueryEvent")
+fun HandlerRoute<CallbackQueryEvent>.whenCallbackQueryEventFromUser(
     userId: Long,
     handler: suspend HandlerBotCall<CallbackQueryEvent>.() -> Unit
 ) = select({ if (it.event.callbackQuery.from.id == userId) it else null }) { handle(handler) }
 
-@JvmName("whenCallbackQueryFromUserTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenCallbackQueryFromUser(
+@JvmName("whenCallbackQueryEventFromUserTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenCallbackQueryEventFromUser(
     userId: Long,
     handler: suspend HandlerBotCall<CallbackQueryEvent>.() -> Unit
-) = on<CallbackQueryEvent> { whenCallbackQueryFromUser(userId, handler) }
+) = on<CallbackQueryEvent> { whenCallbackQueryEventFromUser(userId, handler) }
 
-// --- onCallbackQueryInChat (stackable) ---
+// --- onCallbackQueryEventInChat (stackable) ---
 
-@JvmName("onCallbackQueryInChatCallbackQueryEvent")
-fun HandlerRoute<CallbackQueryEvent>.onCallbackQueryInChat(
+@JvmName("onCallbackQueryEventInChatCallbackQueryEvent")
+fun HandlerRoute<CallbackQueryEvent>.onCallbackQueryEventInChat(
     chatId: Long,
     build: HandlerRoute<CallbackQueryEvent>.() -> Unit
 ) = select({ if (it.event.callbackQuery.message?.chat?.id == chatId) it else null }, build)
 
-@JvmName("onCallbackQueryInChatTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onCallbackQueryInChat(
+@JvmName("onCallbackQueryEventInChatTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onCallbackQueryEventInChat(
     chatId: Long,
     build: HandlerRoute<CallbackQueryEvent>.() -> Unit
-) = on<CallbackQueryEvent> { onCallbackQueryInChat(chatId, build) }
+) = on<CallbackQueryEvent> { onCallbackQueryEventInChat(chatId, build) }
 
-// --- whenCallbackQueryInChat (terminal) ---
+// --- whenCallbackQueryEventInChat (terminal) ---
 
-@JvmName("whenCallbackQueryInChatCallbackQueryEvent")
-fun HandlerRoute<CallbackQueryEvent>.whenCallbackQueryInChat(
+@JvmName("whenCallbackQueryEventInChatCallbackQueryEvent")
+fun HandlerRoute<CallbackQueryEvent>.whenCallbackQueryEventInChat(
     chatId: Long,
     handler: suspend HandlerBotCall<CallbackQueryEvent>.() -> Unit
 ) = select({ if (it.event.callbackQuery.message?.chat?.id == chatId) it else null }) { handle(handler) }
 
-@JvmName("whenCallbackQueryInChatTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenCallbackQueryInChat(
+@JvmName("whenCallbackQueryEventInChatTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenCallbackQueryEventInChat(
     chatId: Long,
     handler: suspend HandlerBotCall<CallbackQueryEvent>.() -> Unit
-) = on<CallbackQueryEvent> { whenCallbackQueryInChat(chatId, handler) }
+) = on<CallbackQueryEvent> { whenCallbackQueryEventInChat(chatId, handler) }

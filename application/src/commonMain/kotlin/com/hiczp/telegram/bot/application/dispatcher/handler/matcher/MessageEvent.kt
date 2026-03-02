@@ -14,638 +14,638 @@ import kotlin.jvm.JvmName
 
 // ==================== Text Matchers ====================
 
-// --- onText (stackable) ---
+// --- onMessageEventText (stackable) ---
 
-@JvmName("onTextMessageEvent")
-fun HandlerRoute<MessageEvent>.onText(
+@JvmName("onMessageEventTextMessageEvent")
+fun HandlerRoute<MessageEvent>.onMessageEventText(
     exact: String,
     build: HandlerRoute<MessageEvent>.() -> Unit
 ) = select({ if (it.event.message.text == exact) it else null }, build)
 
-@JvmName("onTextTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onText(
+@JvmName("onMessageEventTextTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onMessageEventText(
     exact: String,
     build: HandlerRoute<MessageEvent>.() -> Unit
-) = onMessageEvent { onText(exact, build) }
+) = onMessageEvent { onMessageEventText(exact, build) }
 
-// --- whenText (terminal) ---
+// --- whenMessageEventText (terminal) ---
 
-@JvmName("whenTextMessageEvent")
-fun HandlerRoute<MessageEvent>.whenText(
+@JvmName("whenMessageEventTextMessageEvent")
+fun HandlerRoute<MessageEvent>.whenMessageEventText(
     exact: String,
     handler: suspend HandlerBotCall<MessageEvent>.() -> Unit
 ) = select({ if (it.event.message.text == exact) it else null }) { handle(handler) }
 
-@JvmName("whenTextTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenText(
+@JvmName("whenMessageEventTextTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenMessageEventText(
     exact: String,
     handler: suspend HandlerBotCall<MessageEvent>.() -> Unit
-) = onMessageEvent { whenText(exact, handler) }
+) = onMessageEvent { whenMessageEventText(exact, handler) }
 
-// --- onTextRegex (stackable) ---
+// --- onMessageEventTextRegex (stackable) ---
 
-@JvmName("onTextRegexMessageEvent")
-fun HandlerRoute<MessageEvent>.onTextRegex(
+@JvmName("onMessageEventTextRegexMessageEvent")
+fun HandlerRoute<MessageEvent>.onMessageEventTextRegex(
     pattern: Regex,
     build: HandlerRoute<MessageEvent>.() -> Unit
 ) = select({ if (it.event.message.text?.matches(pattern) == true) it else null }, build)
 
-@JvmName("onTextRegexTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onTextRegex(
+@JvmName("onMessageEventTextRegexTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onMessageEventTextRegex(
     pattern: Regex,
     build: HandlerRoute<MessageEvent>.() -> Unit
-) = onMessageEvent { onTextRegex(pattern, build) }
+) = onMessageEvent { onMessageEventTextRegex(pattern, build) }
 
-// --- whenTextRegex (terminal) ---
+// --- whenMessageEventTextRegex (terminal) ---
 
-@JvmName("whenTextRegexMessageEvent")
-fun HandlerRoute<MessageEvent>.whenTextRegex(
+@JvmName("whenMessageEventTextRegexMessageEvent")
+fun HandlerRoute<MessageEvent>.whenMessageEventTextRegex(
     pattern: Regex,
     handler: suspend HandlerBotCall<MessageEvent>.() -> Unit
 ) = select({ if (it.event.message.text?.matches(pattern) == true) it else null }) { handle(handler) }
 
-@JvmName("whenTextRegexTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenTextRegex(
+@JvmName("whenMessageEventTextRegexTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenMessageEventTextRegex(
     pattern: Regex,
     handler: suspend HandlerBotCall<MessageEvent>.() -> Unit
-) = onMessageEvent { whenTextRegex(pattern, handler) }
+) = onMessageEvent { whenMessageEventTextRegex(pattern, handler) }
 
-// --- onTextContains (stackable) ---
+// --- onMessageEventTextContains (stackable) ---
 
-@JvmName("onTextContainsMessageEvent")
-fun HandlerRoute<MessageEvent>.onTextContains(
+@JvmName("onMessageEventTextContainsMessageEvent")
+fun HandlerRoute<MessageEvent>.onMessageEventTextContains(
     substring: String,
     ignoreCase: Boolean = false,
     build: HandlerRoute<MessageEvent>.() -> Unit
 ) = select({ if (it.event.message.text?.contains(substring, ignoreCase) == true) it else null }, build)
 
-@JvmName("onTextContainsTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onTextContains(
+@JvmName("onMessageEventTextContainsTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onMessageEventTextContains(
     substring: String,
     ignoreCase: Boolean = false,
     build: HandlerRoute<MessageEvent>.() -> Unit
-) = onMessageEvent { onTextContains(substring, ignoreCase, build) }
+) = onMessageEvent { onMessageEventTextContains(substring, ignoreCase, build) }
 
-// --- whenTextContains (terminal) ---
+// --- whenMessageEventTextContains (terminal) ---
 
-@JvmName("whenTextContainsMessageEvent")
-fun HandlerRoute<MessageEvent>.whenTextContains(
+@JvmName("whenMessageEventTextContainsMessageEvent")
+fun HandlerRoute<MessageEvent>.whenMessageEventTextContains(
     substring: String,
     ignoreCase: Boolean = false,
     handler: suspend HandlerBotCall<MessageEvent>.() -> Unit
 ) = select({ if (it.event.message.text?.contains(substring, ignoreCase) == true) it else null }) { handle(handler) }
 
-@JvmName("whenTextContainsTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenTextContains(
+@JvmName("whenMessageEventTextContainsTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenMessageEventTextContains(
     substring: String,
     ignoreCase: Boolean = false,
     handler: suspend HandlerBotCall<MessageEvent>.() -> Unit
-) = onMessageEvent { whenTextContains(substring, ignoreCase, handler) }
+) = onMessageEvent { whenMessageEventTextContains(substring, ignoreCase, handler) }
 
-// --- onTextStartsWith (stackable) ---
+// --- onMessageEventTextStartsWith (stackable) ---
 
-@JvmName("onTextStartsWithMessageEvent")
-fun HandlerRoute<MessageEvent>.onTextStartsWith(
+@JvmName("onMessageEventTextStartsWithMessageEvent")
+fun HandlerRoute<MessageEvent>.onMessageEventTextStartsWith(
     prefix: String,
     ignoreCase: Boolean = false,
     build: HandlerRoute<MessageEvent>.() -> Unit
 ) = select({ if (it.event.message.text?.startsWith(prefix, ignoreCase) == true) it else null }, build)
 
-@JvmName("onTextStartsWithTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onTextStartsWith(
+@JvmName("onMessageEventTextStartsWithTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onMessageEventTextStartsWith(
     prefix: String,
     ignoreCase: Boolean = false,
     build: HandlerRoute<MessageEvent>.() -> Unit
-) = onMessageEvent { onTextStartsWith(prefix, ignoreCase, build) }
+) = onMessageEvent { onMessageEventTextStartsWith(prefix, ignoreCase, build) }
 
-// --- whenTextStartsWith (terminal) ---
+// --- whenMessageEventTextStartsWith (terminal) ---
 
-@JvmName("whenTextStartsWithMessageEvent")
-fun HandlerRoute<MessageEvent>.whenTextStartsWith(
+@JvmName("whenMessageEventTextStartsWithMessageEvent")
+fun HandlerRoute<MessageEvent>.whenMessageEventTextStartsWith(
     prefix: String,
     ignoreCase: Boolean = false,
     handler: suspend HandlerBotCall<MessageEvent>.() -> Unit
 ) = select({ if (it.event.message.text?.startsWith(prefix, ignoreCase) == true) it else null }) { handle(handler) }
 
-@JvmName("whenTextStartsWithTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenTextStartsWith(
+@JvmName("whenMessageEventTextStartsWithTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenMessageEventTextStartsWith(
     prefix: String,
     ignoreCase: Boolean = false,
     handler: suspend HandlerBotCall<MessageEvent>.() -> Unit
-) = onMessageEvent { whenTextStartsWith(prefix, ignoreCase, handler) }
+) = onMessageEvent { whenMessageEventTextStartsWith(prefix, ignoreCase, handler) }
 
-// --- onTextEndsWith (stackable) ---
+// --- onMessageEventTextEndsWith (stackable) ---
 
-@JvmName("onTextEndsWithMessageEvent")
-fun HandlerRoute<MessageEvent>.onTextEndsWith(
+@JvmName("onMessageEventTextEndsWithMessageEvent")
+fun HandlerRoute<MessageEvent>.onMessageEventTextEndsWith(
     suffix: String,
     ignoreCase: Boolean = false,
     build: HandlerRoute<MessageEvent>.() -> Unit
 ) = select({ if (it.event.message.text?.endsWith(suffix, ignoreCase) == true) it else null }, build)
 
-@JvmName("onTextEndsWithTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onTextEndsWith(
+@JvmName("onMessageEventTextEndsWithTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onMessageEventTextEndsWith(
     suffix: String,
     ignoreCase: Boolean = false,
     build: HandlerRoute<MessageEvent>.() -> Unit
-) = onMessageEvent { onTextEndsWith(suffix, ignoreCase, build) }
+) = onMessageEvent { onMessageEventTextEndsWith(suffix, ignoreCase, build) }
 
-// --- whenTextEndsWith (terminal) ---
+// --- whenMessageEventTextEndsWith (terminal) ---
 
-@JvmName("whenTextEndsWithMessageEvent")
-fun HandlerRoute<MessageEvent>.whenTextEndsWith(
+@JvmName("whenMessageEventTextEndsWithMessageEvent")
+fun HandlerRoute<MessageEvent>.whenMessageEventTextEndsWith(
     suffix: String,
     ignoreCase: Boolean = false,
     handler: suspend HandlerBotCall<MessageEvent>.() -> Unit
 ) = select({ if (it.event.message.text?.endsWith(suffix, ignoreCase) == true) it else null }) { handle(handler) }
 
-@JvmName("whenTextEndsWithTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenTextEndsWith(
+@JvmName("whenMessageEventTextEndsWithTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenMessageEventTextEndsWith(
     suffix: String,
     ignoreCase: Boolean = false,
     handler: suspend HandlerBotCall<MessageEvent>.() -> Unit
-) = onMessageEvent { whenTextEndsWith(suffix, ignoreCase, handler) }
+) = onMessageEvent { whenMessageEventTextEndsWith(suffix, ignoreCase, handler) }
 
 // ==================== Media Matchers ====================
 
-// --- onPhoto (stackable) ---
+// --- onMessageEventPhoto (stackable) ---
 
-@JvmName("onPhotoMessageEvent")
-fun HandlerRoute<MessageEvent>.onPhoto(build: HandlerRoute<MessageEvent>.() -> Unit) =
+@JvmName("onMessageEventPhotoMessageEvent")
+fun HandlerRoute<MessageEvent>.onMessageEventPhoto(build: HandlerRoute<MessageEvent>.() -> Unit) =
     select({ if (it.event.message.photo != null) it else null }, build)
 
-@JvmName("onPhotoTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onPhoto(build: HandlerRoute<MessageEvent>.() -> Unit) =
-    on<MessageEvent> { onPhoto(build) }
+@JvmName("onMessageEventPhotoTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onMessageEventPhoto(build: HandlerRoute<MessageEvent>.() -> Unit) =
+    on<MessageEvent> { onMessageEventPhoto(build) }
 
-// --- whenPhoto (terminal) ---
+// --- whenMessageEventPhoto (terminal) ---
 
-@JvmName("whenPhotoMessageEvent")
-fun HandlerRoute<MessageEvent>.whenPhoto(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
+@JvmName("whenMessageEventPhotoMessageEvent")
+fun HandlerRoute<MessageEvent>.whenMessageEventPhoto(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
     select({ if (it.event.message.photo != null) it else null }) { handle(handler) }
 
-@JvmName("whenPhotoTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenPhoto(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
-    on<MessageEvent> { whenPhoto(handler) }
+@JvmName("whenMessageEventPhotoTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenMessageEventPhoto(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
+    on<MessageEvent> { whenMessageEventPhoto(handler) }
 
-// --- onVideo (stackable) ---
+// --- onMessageEventVideo (stackable) ---
 
-@JvmName("onVideoMessageEvent")
-fun HandlerRoute<MessageEvent>.onVideo(build: HandlerRoute<MessageEvent>.() -> Unit) =
+@JvmName("onMessageEventVideoMessageEvent")
+fun HandlerRoute<MessageEvent>.onMessageEventVideo(build: HandlerRoute<MessageEvent>.() -> Unit) =
     select({ if (it.event.message.video != null) it else null }, build)
 
-@JvmName("onVideoTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onVideo(build: HandlerRoute<MessageEvent>.() -> Unit) =
-    on<MessageEvent> { onVideo(build) }
+@JvmName("onMessageEventVideoTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onMessageEventVideo(build: HandlerRoute<MessageEvent>.() -> Unit) =
+    on<MessageEvent> { onMessageEventVideo(build) }
 
-// --- whenVideo (terminal) ---
+// --- whenMessageEventVideo (terminal) ---
 
-@JvmName("whenVideoMessageEvent")
-fun HandlerRoute<MessageEvent>.whenVideo(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
+@JvmName("whenMessageEventVideoMessageEvent")
+fun HandlerRoute<MessageEvent>.whenMessageEventVideo(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
     select({ if (it.event.message.video != null) it else null }) { handle(handler) }
 
-@JvmName("whenVideoTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenVideo(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
-    on<MessageEvent> { whenVideo(handler) }
+@JvmName("whenMessageEventVideoTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenMessageEventVideo(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
+    on<MessageEvent> { whenMessageEventVideo(handler) }
 
-// --- onAudio (stackable) ---
+// --- onMessageEventAudio (stackable) ---
 
-@JvmName("onAudioMessageEvent")
-fun HandlerRoute<MessageEvent>.onAudio(build: HandlerRoute<MessageEvent>.() -> Unit) =
+@JvmName("onMessageEventAudioMessageEvent")
+fun HandlerRoute<MessageEvent>.onMessageEventAudio(build: HandlerRoute<MessageEvent>.() -> Unit) =
     select({ if (it.event.message.audio != null) it else null }, build)
 
-@JvmName("onAudioTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onAudio(build: HandlerRoute<MessageEvent>.() -> Unit) =
-    on<MessageEvent> { onAudio(build) }
+@JvmName("onMessageEventAudioTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onMessageEventAudio(build: HandlerRoute<MessageEvent>.() -> Unit) =
+    on<MessageEvent> { onMessageEventAudio(build) }
 
-// --- whenAudio (terminal) ---
+// --- whenMessageEventAudio (terminal) ---
 
-@JvmName("whenAudioMessageEvent")
-fun HandlerRoute<MessageEvent>.whenAudio(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
+@JvmName("whenMessageEventAudioMessageEvent")
+fun HandlerRoute<MessageEvent>.whenMessageEventAudio(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
     select({ if (it.event.message.audio != null) it else null }) { handle(handler) }
 
-@JvmName("whenAudioTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenAudio(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
-    on<MessageEvent> { whenAudio(handler) }
+@JvmName("whenMessageEventAudioTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenMessageEventAudio(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
+    on<MessageEvent> { whenMessageEventAudio(handler) }
 
-// --- onDocument (stackable) ---
+// --- onMessageEventDocument (stackable) ---
 
-@JvmName("onDocumentMessageEvent")
-fun HandlerRoute<MessageEvent>.onDocument(build: HandlerRoute<MessageEvent>.() -> Unit) =
+@JvmName("onMessageEventDocumentMessageEvent")
+fun HandlerRoute<MessageEvent>.onMessageEventDocument(build: HandlerRoute<MessageEvent>.() -> Unit) =
     select({ if (it.event.message.document != null) it else null }, build)
 
-@JvmName("onDocumentTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onDocument(build: HandlerRoute<MessageEvent>.() -> Unit) =
-    on<MessageEvent> { onDocument(build) }
+@JvmName("onMessageEventDocumentTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onMessageEventDocument(build: HandlerRoute<MessageEvent>.() -> Unit) =
+    on<MessageEvent> { onMessageEventDocument(build) }
 
-// --- whenDocument (terminal) ---
+// --- whenMessageEventDocument (terminal) ---
 
-@JvmName("whenDocumentMessageEvent")
-fun HandlerRoute<MessageEvent>.whenDocument(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
+@JvmName("whenMessageEventDocumentMessageEvent")
+fun HandlerRoute<MessageEvent>.whenMessageEventDocument(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
     select({ if (it.event.message.document != null) it else null }) { handle(handler) }
 
-@JvmName("whenDocumentTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenDocument(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
-    on<MessageEvent> { whenDocument(handler) }
+@JvmName("whenMessageEventDocumentTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenMessageEventDocument(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
+    on<MessageEvent> { whenMessageEventDocument(handler) }
 
-// --- onSticker (stackable) ---
+// --- onMessageEventSticker (stackable) ---
 
-@JvmName("onStickerMessageEvent")
-fun HandlerRoute<MessageEvent>.onSticker(build: HandlerRoute<MessageEvent>.() -> Unit) =
+@JvmName("onMessageEventStickerMessageEvent")
+fun HandlerRoute<MessageEvent>.onMessageEventSticker(build: HandlerRoute<MessageEvent>.() -> Unit) =
     select({ if (it.event.message.sticker != null) it else null }, build)
 
-@JvmName("onStickerTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onSticker(build: HandlerRoute<MessageEvent>.() -> Unit) =
-    on<MessageEvent> { onSticker(build) }
+@JvmName("onMessageEventStickerTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onMessageEventSticker(build: HandlerRoute<MessageEvent>.() -> Unit) =
+    on<MessageEvent> { onMessageEventSticker(build) }
 
-// --- whenSticker (terminal) ---
+// --- whenMessageEventSticker (terminal) ---
 
-@JvmName("whenStickerMessageEvent")
-fun HandlerRoute<MessageEvent>.whenSticker(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
+@JvmName("whenMessageEventStickerMessageEvent")
+fun HandlerRoute<MessageEvent>.whenMessageEventSticker(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
     select({ if (it.event.message.sticker != null) it else null }) { handle(handler) }
 
-@JvmName("whenStickerTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenSticker(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
-    on<MessageEvent> { whenSticker(handler) }
+@JvmName("whenMessageEventStickerTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenMessageEventSticker(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
+    on<MessageEvent> { whenMessageEventSticker(handler) }
 
-// --- onVoice (stackable) ---
+// --- onMessageEventVoice (stackable) ---
 
-@JvmName("onVoiceMessageEvent")
-fun HandlerRoute<MessageEvent>.onVoice(build: HandlerRoute<MessageEvent>.() -> Unit) =
+@JvmName("onMessageEventVoiceMessageEvent")
+fun HandlerRoute<MessageEvent>.onMessageEventVoice(build: HandlerRoute<MessageEvent>.() -> Unit) =
     select({ if (it.event.message.voice != null) it else null }, build)
 
-@JvmName("onVoiceTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onVoice(build: HandlerRoute<MessageEvent>.() -> Unit) =
-    on<MessageEvent> { onVoice(build) }
+@JvmName("onMessageEventVoiceTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onMessageEventVoice(build: HandlerRoute<MessageEvent>.() -> Unit) =
+    on<MessageEvent> { onMessageEventVoice(build) }
 
-// --- whenVoice (terminal) ---
+// --- whenMessageEventVoice (terminal) ---
 
-@JvmName("whenVoiceMessageEvent")
-fun HandlerRoute<MessageEvent>.whenVoice(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
+@JvmName("whenMessageEventVoiceMessageEvent")
+fun HandlerRoute<MessageEvent>.whenMessageEventVoice(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
     select({ if (it.event.message.voice != null) it else null }) { handle(handler) }
 
-@JvmName("whenVoiceTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenVoice(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
-    on<MessageEvent> { whenVoice(handler) }
+@JvmName("whenMessageEventVoiceTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenMessageEventVoice(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
+    on<MessageEvent> { whenMessageEventVoice(handler) }
 
-// --- onVideoNote (stackable) ---
+// --- onMessageEventVideoNote (stackable) ---
 
-@JvmName("onVideoNoteMessageEvent")
-fun HandlerRoute<MessageEvent>.onVideoNote(build: HandlerRoute<MessageEvent>.() -> Unit) =
+@JvmName("onMessageEventVideoNoteMessageEvent")
+fun HandlerRoute<MessageEvent>.onMessageEventVideoNote(build: HandlerRoute<MessageEvent>.() -> Unit) =
     select({ if (it.event.message.videoNote != null) it else null }, build)
 
-@JvmName("onVideoNoteTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onVideoNote(build: HandlerRoute<MessageEvent>.() -> Unit) =
-    on<MessageEvent> { onVideoNote(build) }
+@JvmName("onMessageEventVideoNoteTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onMessageEventVideoNote(build: HandlerRoute<MessageEvent>.() -> Unit) =
+    on<MessageEvent> { onMessageEventVideoNote(build) }
 
-// --- whenVideoNote (terminal) ---
+// --- whenMessageEventVideoNote (terminal) ---
 
-@JvmName("whenVideoNoteMessageEvent")
-fun HandlerRoute<MessageEvent>.whenVideoNote(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
+@JvmName("whenMessageEventVideoNoteMessageEvent")
+fun HandlerRoute<MessageEvent>.whenMessageEventVideoNote(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
     select({ if (it.event.message.videoNote != null) it else null }) { handle(handler) }
 
-@JvmName("whenVideoNoteTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenVideoNote(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
-    on<MessageEvent> { whenVideoNote(handler) }
+@JvmName("whenMessageEventVideoNoteTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenMessageEventVideoNote(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
+    on<MessageEvent> { whenMessageEventVideoNote(handler) }
 
-// --- onAnimation (stackable) ---
+// --- onMessageEventAnimation (stackable) ---
 
-@JvmName("onAnimationMessageEvent")
-fun HandlerRoute<MessageEvent>.onAnimation(build: HandlerRoute<MessageEvent>.() -> Unit) =
+@JvmName("onMessageEventAnimationMessageEvent")
+fun HandlerRoute<MessageEvent>.onMessageEventAnimation(build: HandlerRoute<MessageEvent>.() -> Unit) =
     select({ if (it.event.message.animation != null) it else null }, build)
 
-@JvmName("onAnimationTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onAnimation(build: HandlerRoute<MessageEvent>.() -> Unit) =
-    on<MessageEvent> { onAnimation(build) }
+@JvmName("onMessageEventAnimationTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onMessageEventAnimation(build: HandlerRoute<MessageEvent>.() -> Unit) =
+    on<MessageEvent> { onMessageEventAnimation(build) }
 
-// --- whenAnimation (terminal) ---
+// --- whenMessageEventAnimation (terminal) ---
 
-@JvmName("whenAnimationMessageEvent")
-fun HandlerRoute<MessageEvent>.whenAnimation(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
+@JvmName("whenMessageEventAnimationMessageEvent")
+fun HandlerRoute<MessageEvent>.whenMessageEventAnimation(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
     select({ if (it.event.message.animation != null) it else null }) { handle(handler) }
 
-@JvmName("whenAnimationTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenAnimation(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
-    on<MessageEvent> { whenAnimation(handler) }
+@JvmName("whenMessageEventAnimationTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenMessageEventAnimation(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
+    on<MessageEvent> { whenMessageEventAnimation(handler) }
 
-// --- onContact (stackable) ---
+// --- onMessageEventContact (stackable) ---
 
-@JvmName("onContactMessageEvent")
-fun HandlerRoute<MessageEvent>.onContact(build: HandlerRoute<MessageEvent>.() -> Unit) =
+@JvmName("onMessageEventContactMessageEvent")
+fun HandlerRoute<MessageEvent>.onMessageEventContact(build: HandlerRoute<MessageEvent>.() -> Unit) =
     select({ if (it.event.message.contact != null) it else null }, build)
 
-@JvmName("onContactTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onContact(build: HandlerRoute<MessageEvent>.() -> Unit) =
-    on<MessageEvent> { onContact(build) }
+@JvmName("onMessageEventContactTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onMessageEventContact(build: HandlerRoute<MessageEvent>.() -> Unit) =
+    on<MessageEvent> { onMessageEventContact(build) }
 
-// --- whenContact (terminal) ---
+// --- whenMessageEventContact (terminal) ---
 
-@JvmName("whenContactMessageEvent")
-fun HandlerRoute<MessageEvent>.whenContact(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
+@JvmName("whenMessageEventContactMessageEvent")
+fun HandlerRoute<MessageEvent>.whenMessageEventContact(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
     select({ if (it.event.message.contact != null) it else null }) { handle(handler) }
 
-@JvmName("whenContactTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenContact(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
-    on<MessageEvent> { whenContact(handler) }
+@JvmName("whenMessageEventContactTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenMessageEventContact(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
+    on<MessageEvent> { whenMessageEventContact(handler) }
 
-// --- onLocation (stackable) ---
+// --- onMessageEventLocation (stackable) ---
 
-@JvmName("onLocationMessageEvent")
-fun HandlerRoute<MessageEvent>.onLocation(build: HandlerRoute<MessageEvent>.() -> Unit) =
+@JvmName("onMessageEventLocationMessageEvent")
+fun HandlerRoute<MessageEvent>.onMessageEventLocation(build: HandlerRoute<MessageEvent>.() -> Unit) =
     select({ if (it.event.message.location != null) it else null }, build)
 
-@JvmName("onLocationTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onLocation(build: HandlerRoute<MessageEvent>.() -> Unit) =
-    on<MessageEvent> { onLocation(build) }
+@JvmName("onMessageEventLocationTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onMessageEventLocation(build: HandlerRoute<MessageEvent>.() -> Unit) =
+    on<MessageEvent> { onMessageEventLocation(build) }
 
-// --- whenLocation (terminal) ---
+// --- whenMessageEventLocation (terminal) ---
 
-@JvmName("whenLocationMessageEvent")
-fun HandlerRoute<MessageEvent>.whenLocation(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
+@JvmName("whenMessageEventLocationMessageEvent")
+fun HandlerRoute<MessageEvent>.whenMessageEventLocation(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
     select({ if (it.event.message.location != null) it else null }) { handle(handler) }
 
-@JvmName("whenLocationTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenLocation(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
-    on<MessageEvent> { whenLocation(handler) }
+@JvmName("whenMessageEventLocationTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenMessageEventLocation(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
+    on<MessageEvent> { whenMessageEventLocation(handler) }
 
-// --- onVenue (stackable) ---
+// --- onMessageEventVenue (stackable) ---
 
-@JvmName("onVenueMessageEvent")
-fun HandlerRoute<MessageEvent>.onVenue(build: HandlerRoute<MessageEvent>.() -> Unit) =
+@JvmName("onMessageEventVenueMessageEvent")
+fun HandlerRoute<MessageEvent>.onMessageEventVenue(build: HandlerRoute<MessageEvent>.() -> Unit) =
     select({ if (it.event.message.venue != null) it else null }, build)
 
-@JvmName("onVenueTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onVenue(build: HandlerRoute<MessageEvent>.() -> Unit) =
-    on<MessageEvent> { onVenue(build) }
+@JvmName("onMessageEventVenueTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onMessageEventVenue(build: HandlerRoute<MessageEvent>.() -> Unit) =
+    on<MessageEvent> { onMessageEventVenue(build) }
 
-// --- whenVenue (terminal) ---
+// --- whenMessageEventVenue (terminal) ---
 
-@JvmName("whenVenueMessageEvent")
-fun HandlerRoute<MessageEvent>.whenVenue(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
+@JvmName("whenMessageEventVenueMessageEvent")
+fun HandlerRoute<MessageEvent>.whenMessageEventVenue(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
     select({ if (it.event.message.venue != null) it else null }) { handle(handler) }
 
-@JvmName("whenVenueTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenVenue(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
-    on<MessageEvent> { whenVenue(handler) }
+@JvmName("whenMessageEventVenueTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenMessageEventVenue(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
+    onMessageEvent { whenMessageEventVenue(handler) }
 
-// --- onPoll (stackable) ---
+// --- onMessageEventPoll (stackable) ---
 
-@JvmName("onPollMessageEvent")
-fun HandlerRoute<MessageEvent>.onPoll(build: HandlerRoute<MessageEvent>.() -> Unit) =
+@JvmName("onMessageEventPollMessageEvent")
+fun HandlerRoute<MessageEvent>.onMessageEventPoll(build: HandlerRoute<MessageEvent>.() -> Unit) =
     select({ if (it.event.message.poll != null) it else null }, build)
 
-@JvmName("onPollTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onPoll(build: HandlerRoute<MessageEvent>.() -> Unit) =
-    on<MessageEvent> { onPoll(build) }
+@JvmName("onMessageEventPollTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onMessageEventPoll(build: HandlerRoute<MessageEvent>.() -> Unit) =
+    on<MessageEvent> { onMessageEventPoll(build) }
 
-// --- whenPoll (terminal) ---
+// --- whenMessageEventPoll (terminal) ---
 
-@JvmName("whenPollMessageEvent")
-fun HandlerRoute<MessageEvent>.whenPoll(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
+@JvmName("whenMessageEventPollMessageEvent")
+fun HandlerRoute<MessageEvent>.whenMessageEventPoll(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
     select({ if (it.event.message.poll != null) it else null }) { handle(handler) }
 
-@JvmName("whenPollTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenPoll(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
-    on<MessageEvent> { whenPoll(handler) }
+@JvmName("whenMessageEventPollTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenMessageEventPoll(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
+    on<MessageEvent> { whenMessageEventPoll(handler) }
 
-// --- onDice (stackable) ---
+// --- onMessageEventDice (stackable) ---
 
-@JvmName("onDiceMessageEvent")
-fun HandlerRoute<MessageEvent>.onDice(build: HandlerRoute<MessageEvent>.() -> Unit) =
+@JvmName("onMessageEventDiceMessageEvent")
+fun HandlerRoute<MessageEvent>.onMessageEventDice(build: HandlerRoute<MessageEvent>.() -> Unit) =
     select({ if (it.event.message.dice != null) it else null }, build)
 
-@JvmName("onDiceTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onDice(build: HandlerRoute<MessageEvent>.() -> Unit) =
-    on<MessageEvent> { onDice(build) }
+@JvmName("onMessageEventDiceTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onMessageEventDice(build: HandlerRoute<MessageEvent>.() -> Unit) =
+    on<MessageEvent> { onMessageEventDice(build) }
 
-// --- whenDice (terminal) ---
+// --- whenMessageEventDice (terminal) ---
 
-@JvmName("whenDiceMessageEvent")
-fun HandlerRoute<MessageEvent>.whenDice(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
+@JvmName("whenMessageEventDiceMessageEvent")
+fun HandlerRoute<MessageEvent>.whenMessageEventDice(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
     select({ if (it.event.message.dice != null) it else null }) { handle(handler) }
 
-@JvmName("whenDiceTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenDice(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
-    on<MessageEvent> { whenDice(handler) }
+@JvmName("whenMessageEventDiceTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenMessageEventDice(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
+    on<MessageEvent> { whenMessageEventDice(handler) }
 
-// --- onDice with emoji (stackable) ---
+// --- onMessageEventDiceWithEmoji (stackable) ---
 
-@JvmName("onDiceWithEmojiMessageEvent")
-fun HandlerRoute<MessageEvent>.onDice(
+@JvmName("onMessageEventDiceWithEmojiMessageEvent")
+fun HandlerRoute<MessageEvent>.onMessageEventDiceWithEmoji(
     emoji: String,
     build: HandlerRoute<MessageEvent>.() -> Unit
 ) = select({ if (it.event.message.dice?.emoji == emoji) it else null }, build)
 
-@JvmName("onDiceWithEmojiTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onDice(
+@JvmName("onMessageEventDiceWithEmojiTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onMessageEventDiceWithEmoji(
     emoji: String,
     build: HandlerRoute<MessageEvent>.() -> Unit
-) = onMessageEvent { onDice(emoji, build) }
+) = onMessageEvent { onMessageEventDiceWithEmoji(emoji, build) }
 
-// --- whenDice with emoji (terminal) ---
+// --- whenMessageEventDiceWithEmoji (terminal) ---
 
-@JvmName("whenDiceWithEmojiMessageEvent")
-fun HandlerRoute<MessageEvent>.whenDice(
+@JvmName("whenMessageEventDiceWithEmojiMessageEvent")
+fun HandlerRoute<MessageEvent>.whenMessageEventDiceWithEmoji(
     emoji: String,
     handler: suspend HandlerBotCall<MessageEvent>.() -> Unit
 ) = select({ if (it.event.message.dice?.emoji == emoji) it else null }) { handle(handler) }
 
-@JvmName("whenDiceWithEmojiTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenDice(
+@JvmName("whenMessageEventDiceWithEmojiTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenMessageEventDiceWithEmoji(
     emoji: String,
     handler: suspend HandlerBotCall<MessageEvent>.() -> Unit
-) = onMessageEvent { whenDice(emoji, handler) }
+) = onMessageEvent { whenMessageEventDiceWithEmoji(emoji, handler) }
 
 // ==================== Reply Matchers ====================
 
-// --- onReply (stackable) ---
+// --- onMessageEventReply (stackable) ---
 
-@JvmName("onReplyMessageEvent")
-fun HandlerRoute<MessageEvent>.onReply(build: HandlerRoute<MessageEvent>.() -> Unit) =
+@JvmName("onMessageEventReplyMessageEvent")
+fun HandlerRoute<MessageEvent>.onMessageEventReply(build: HandlerRoute<MessageEvent>.() -> Unit) =
     select({ if (it.event.message.replyToMessage != null) it else null }, build)
 
-@JvmName("onReplyTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onReply(build: HandlerRoute<MessageEvent>.() -> Unit) =
-    on<MessageEvent> { onReply(build) }
+@JvmName("onMessageEventReplyTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onMessageEventReply(build: HandlerRoute<MessageEvent>.() -> Unit) =
+    on<MessageEvent> { onMessageEventReply(build) }
 
-// --- whenReply (terminal) ---
+// --- whenMessageEventReply (terminal) ---
 
-@JvmName("whenReplyMessageEvent")
-fun HandlerRoute<MessageEvent>.whenReply(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
+@JvmName("whenMessageEventReplyMessageEvent")
+fun HandlerRoute<MessageEvent>.whenMessageEventReply(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
     select({ if (it.event.message.replyToMessage != null) it else null }) { handle(handler) }
 
-@JvmName("whenReplyTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenReply(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
-    on<MessageEvent> { whenReply(handler) }
+@JvmName("whenMessageEventReplyTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenMessageEventReply(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
+    on<MessageEvent> { whenMessageEventReply(handler) }
 
-// --- onReplyTo (stackable) ---
+// --- onMessageEventReplyTo (stackable) ---
 
-@JvmName("onReplyToMessageEvent")
-fun HandlerRoute<MessageEvent>.onReplyTo(
+@JvmName("onMessageEventReplyToMessageEvent")
+fun HandlerRoute<MessageEvent>.onMessageEventReplyTo(
     messageId: Long,
     build: HandlerRoute<MessageEvent>.() -> Unit
 ) = select({ if (it.event.message.replyToMessage?.messageId == messageId) it else null }, build)
 
-@JvmName("onReplyToTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onReplyTo(
+@JvmName("onMessageEventReplyToTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onMessageEventReplyTo(
     messageId: Long,
     build: HandlerRoute<MessageEvent>.() -> Unit
-) = onMessageEvent { onReplyTo(messageId, build) }
+) = onMessageEvent { onMessageEventReplyTo(messageId, build) }
 
-// --- whenReplyTo (terminal) ---
+// --- whenMessageEventReplyTo (terminal) ---
 
-@JvmName("whenReplyToMessageEvent")
-fun HandlerRoute<MessageEvent>.whenReplyTo(
+@JvmName("whenMessageEventReplyToMessageEvent")
+fun HandlerRoute<MessageEvent>.whenMessageEventReplyTo(
     messageId: Long,
     handler: suspend HandlerBotCall<MessageEvent>.() -> Unit
 ) = select({ if (it.event.message.replyToMessage?.messageId == messageId) it else null }) { handle(handler) }
 
-@JvmName("whenReplyToTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenReplyTo(
+@JvmName("whenMessageEventReplyToTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenMessageEventReplyTo(
     messageId: Long,
     handler: suspend HandlerBotCall<MessageEvent>.() -> Unit
-) = onMessageEvent { whenReplyTo(messageId, handler) }
+) = onMessageEvent { whenMessageEventReplyTo(messageId, handler) }
 
 // ==================== User/Chat Matchers ====================
 
-// --- onFromUser (stackable) ---
+// --- onMessageEventFromUser (stackable) ---
 
-@JvmName("onFromUserMessageEvent")
-fun HandlerRoute<MessageEvent>.onFromUser(
+@JvmName("onMessageEventFromUserMessageEvent")
+fun HandlerRoute<MessageEvent>.onMessageEventFromUser(
     userId: Long,
     build: HandlerRoute<MessageEvent>.() -> Unit
 ) = select({ if (it.event.message.from?.id == userId) it else null }, build)
 
-@JvmName("onFromUserTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onFromUser(
+@JvmName("onMessageEventFromUserTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onMessageEventFromUser(
     userId: Long,
     build: HandlerRoute<MessageEvent>.() -> Unit
-) = onMessageEvent { onFromUser(userId, build) }
+) = onMessageEvent { onMessageEventFromUser(userId, build) }
 
-// --- whenFromUser (terminal) ---
+// --- whenMessageEventFromUser (terminal) ---
 
-@JvmName("whenFromUserMessageEvent")
-fun HandlerRoute<MessageEvent>.whenFromUser(
+@JvmName("whenMessageEventFromUserMessageEvent")
+fun HandlerRoute<MessageEvent>.whenMessageEventFromUser(
     userId: Long,
     handler: suspend HandlerBotCall<MessageEvent>.() -> Unit
 ) = select({ if (it.event.message.from?.id == userId) it else null }) { handle(handler) }
 
-@JvmName("whenFromUserTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenFromUser(
+@JvmName("whenMessageEventFromUserTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenMessageEventFromUser(
     userId: Long,
     handler: suspend HandlerBotCall<MessageEvent>.() -> Unit
-) = onMessageEvent { whenFromUser(userId, handler) }
+) = onMessageEvent { whenMessageEventFromUser(userId, handler) }
 
-// --- onFromUsers (stackable) ---
+// --- onMessageEventFromUsers (stackable) ---
 
-@JvmName("onFromUsersMessageEvent")
-fun HandlerRoute<MessageEvent>.onFromUsers(
+@JvmName("onMessageEventFromUsersMessageEvent")
+fun HandlerRoute<MessageEvent>.onMessageEventFromUsers(
     userIds: Set<Long>,
     build: HandlerRoute<MessageEvent>.() -> Unit
 ) = select({ if (it.event.message.from?.id in userIds) it else null }, build)
 
-@JvmName("onFromUsersTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onFromUsers(
+@JvmName("onMessageEventFromUsersTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onMessageEventFromUsers(
     userIds: Set<Long>,
     build: HandlerRoute<MessageEvent>.() -> Unit
-) = onMessageEvent { onFromUsers(userIds, build) }
+) = onMessageEvent { onMessageEventFromUsers(userIds, build) }
 
-// --- whenFromUsers (terminal) ---
+// --- whenMessageEventFromUsers (terminal) ---
 
-@JvmName("whenFromUsersMessageEvent")
-fun HandlerRoute<MessageEvent>.whenFromUsers(
+@JvmName("whenMessageEventFromUsersMessageEvent")
+fun HandlerRoute<MessageEvent>.whenMessageEventFromUsers(
     userIds: Set<Long>,
     handler: suspend HandlerBotCall<MessageEvent>.() -> Unit
 ) = select({ if (it.event.message.from?.id in userIds) it else null }) { handle(handler) }
 
-@JvmName("whenFromUsersTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenFromUsers(
+@JvmName("whenMessageEventFromUsersTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenMessageEventFromUsers(
     userIds: Set<Long>,
     handler: suspend HandlerBotCall<MessageEvent>.() -> Unit
-) = onMessageEvent { whenFromUsers(userIds, handler) }
+) = onMessageEvent { whenMessageEventFromUsers(userIds, handler) }
 
-// --- onInChat (stackable) ---
+// --- onMessageEventInChat (stackable) ---
 
-@JvmName("onInChatMessageEvent")
-fun HandlerRoute<MessageEvent>.onInChat(
+@JvmName("onMessageEventInChatMessageEvent")
+fun HandlerRoute<MessageEvent>.onMessageEventInChat(
     chatId: Long,
     build: HandlerRoute<MessageEvent>.() -> Unit
 ) = select({ if (it.event.message.chat.id == chatId) it else null }, build)
 
-@JvmName("onInChatTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onInChat(
+@JvmName("onMessageEventInChatTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onMessageEventInChat(
     chatId: Long,
     build: HandlerRoute<MessageEvent>.() -> Unit
-) = onMessageEvent { onInChat(chatId, build) }
+) = onMessageEvent { onMessageEventInChat(chatId, build) }
 
-// --- whenInChat (terminal) ---
+// --- whenMessageEventInChat (terminal) ---
 
-@JvmName("whenInChatMessageEvent")
-fun HandlerRoute<MessageEvent>.whenInChat(
+@JvmName("whenMessageEventInChatMessageEvent")
+fun HandlerRoute<MessageEvent>.whenMessageEventInChat(
     chatId: Long,
     handler: suspend HandlerBotCall<MessageEvent>.() -> Unit
 ) = select({ if (it.event.message.chat.id == chatId) it else null }) { handle(handler) }
 
-@JvmName("whenInChatTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenInChat(
+@JvmName("whenMessageEventInChatTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenMessageEventInChat(
     chatId: Long,
     handler: suspend HandlerBotCall<MessageEvent>.() -> Unit
-) = onMessageEvent { whenInChat(chatId, handler) }
+) = onMessageEvent { whenMessageEventInChat(chatId, handler) }
 
-// --- onInChats (stackable) ---
+// --- onMessageEventInChats (stackable) ---
 
-@JvmName("onInChatsMessageEvent")
-fun HandlerRoute<MessageEvent>.onInChats(
+@JvmName("onMessageEventInChatsMessageEvent")
+fun HandlerRoute<MessageEvent>.onMessageEventInChats(
     chatIds: Set<Long>,
     build: HandlerRoute<MessageEvent>.() -> Unit
 ) = select({ if (it.event.message.chat.id in chatIds) it else null }, build)
 
-@JvmName("onInChatsTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onInChats(
+@JvmName("onMessageEventInChatsTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onMessageEventInChats(
     chatIds: Set<Long>,
     build: HandlerRoute<MessageEvent>.() -> Unit
-) = onMessageEvent { onInChats(chatIds, build) }
+) = onMessageEvent { onMessageEventInChats(chatIds, build) }
 
-// --- whenInChats (terminal) ---
+// --- whenMessageEventInChats (terminal) ---
 
-@JvmName("whenInChatsMessageEvent")
-fun HandlerRoute<MessageEvent>.whenInChats(
+@JvmName("whenMessageEventInChatsMessageEvent")
+fun HandlerRoute<MessageEvent>.whenMessageEventInChats(
     chatIds: Set<Long>,
     handler: suspend HandlerBotCall<MessageEvent>.() -> Unit
 ) = select({ if (it.event.message.chat.id in chatIds) it else null }) { handle(handler) }
 
-@JvmName("whenInChatsTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenInChats(
+@JvmName("whenMessageEventInChatsTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenMessageEventInChats(
     chatIds: Set<Long>,
     handler: suspend HandlerBotCall<MessageEvent>.() -> Unit
-) = onMessageEvent { whenInChats(chatIds, handler) }
+) = onMessageEvent { whenMessageEventInChats(chatIds, handler) }
 
 // ==================== Forwarded Matchers ====================
 
-// --- onForwarded (stackable) ---
+// --- onMessageEventForwarded (stackable) ---
 
-@JvmName("onForwardedMessageEvent")
-fun HandlerRoute<MessageEvent>.onForwarded(build: HandlerRoute<MessageEvent>.() -> Unit) =
+@JvmName("onMessageEventForwardedMessageEvent")
+fun HandlerRoute<MessageEvent>.onMessageEventForwarded(build: HandlerRoute<MessageEvent>.() -> Unit) =
     select({ if (it.event.message.forwardOrigin != null) it else null }, build)
 
-@JvmName("onForwardedTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onForwarded(build: HandlerRoute<MessageEvent>.() -> Unit) =
-    on<MessageEvent> { onForwarded(build) }
+@JvmName("onMessageEventForwardedTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onMessageEventForwarded(build: HandlerRoute<MessageEvent>.() -> Unit) =
+    on<MessageEvent> { onMessageEventForwarded(build) }
 
-// --- whenForwarded (terminal) ---
+// --- whenMessageEventForwarded (terminal) ---
 
-@JvmName("whenForwardedMessageEvent")
-fun HandlerRoute<MessageEvent>.whenForwarded(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
+@JvmName("whenMessageEventForwardedMessageEvent")
+fun HandlerRoute<MessageEvent>.whenMessageEventForwarded(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
     select({ if (it.event.message.forwardOrigin != null) it else null }) { handle(handler) }
 
-@JvmName("whenForwardedTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenForwarded(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
-    on<MessageEvent> { whenForwarded(handler) }
+@JvmName("whenMessageEventForwardedTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenMessageEventForwarded(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
+    on<MessageEvent> { whenMessageEventForwarded(handler) }
 
-// --- onForwardedFromUser (stackable) ---
+// --- onMessageEventForwardedFromUser (stackable) ---
 
-@JvmName("onForwardedFromUserMessageEvent")
-fun HandlerRoute<MessageEvent>.onForwardedFromUser(
+@JvmName("onMessageEventForwardedFromUserMessageEvent")
+fun HandlerRoute<MessageEvent>.onMessageEventForwardedFromUser(
     userId: Long,
     build: HandlerRoute<MessageEvent>.() -> Unit
 ) = select({
@@ -653,16 +653,16 @@ fun HandlerRoute<MessageEvent>.onForwardedFromUser(
     if (origin is MessageOriginUser && origin.senderUser.id == userId) it else null
 }, build)
 
-@JvmName("onForwardedFromUserTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onForwardedFromUser(
+@JvmName("onMessageEventForwardedFromUserTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onMessageEventForwardedFromUser(
     userId: Long,
     build: HandlerRoute<MessageEvent>.() -> Unit
-) = onMessageEvent { onForwardedFromUser(userId, build) }
+) = onMessageEvent { onMessageEventForwardedFromUser(userId, build) }
 
-// --- whenForwardedFromUser (terminal) ---
+// --- whenMessageEventForwardedFromUser (terminal) ---
 
-@JvmName("whenForwardedFromUserMessageEvent")
-fun HandlerRoute<MessageEvent>.whenForwardedFromUser(
+@JvmName("whenMessageEventForwardedFromUserMessageEvent")
+fun HandlerRoute<MessageEvent>.whenMessageEventForwardedFromUser(
     userId: Long,
     handler: suspend HandlerBotCall<MessageEvent>.() -> Unit
 ) = select({
@@ -670,16 +670,16 @@ fun HandlerRoute<MessageEvent>.whenForwardedFromUser(
     if (origin is MessageOriginUser && origin.senderUser.id == userId) it else null
 }) { handle(handler) }
 
-@JvmName("whenForwardedFromUserTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenForwardedFromUser(
+@JvmName("whenMessageEventForwardedFromUserTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenMessageEventForwardedFromUser(
     userId: Long,
     handler: suspend HandlerBotCall<MessageEvent>.() -> Unit
-) = onMessageEvent { whenForwardedFromUser(userId, handler) }
+) = onMessageEvent { whenMessageEventForwardedFromUser(userId, handler) }
 
-// --- onForwardedFromChat (stackable) ---
+// --- onMessageEventForwardedFromChat (stackable) ---
 
-@JvmName("onForwardedFromChatMessageEvent")
-fun HandlerRoute<MessageEvent>.onForwardedFromChat(
+@JvmName("onMessageEventForwardedFromChatMessageEvent")
+fun HandlerRoute<MessageEvent>.onMessageEventForwardedFromChat(
     chatId: Long,
     build: HandlerRoute<MessageEvent>.() -> Unit
 ) = select({
@@ -691,16 +691,16 @@ fun HandlerRoute<MessageEvent>.onForwardedFromChat(
     }
 }, build)
 
-@JvmName("onForwardedFromChatTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onForwardedFromChat(
+@JvmName("onMessageEventForwardedFromChatTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onMessageEventForwardedFromChat(
     chatId: Long,
     build: HandlerRoute<MessageEvent>.() -> Unit
-) = onMessageEvent { onForwardedFromChat(chatId, build) }
+) = onMessageEvent { onMessageEventForwardedFromChat(chatId, build) }
 
-// --- whenForwardedFromChat (terminal) ---
+// --- whenMessageEventForwardedFromChat (terminal) ---
 
-@JvmName("whenForwardedFromChatMessageEvent")
-fun HandlerRoute<MessageEvent>.whenForwardedFromChat(
+@JvmName("whenMessageEventForwardedFromChatMessageEvent")
+fun HandlerRoute<MessageEvent>.whenMessageEventForwardedFromChat(
     chatId: Long,
     handler: suspend HandlerBotCall<MessageEvent>.() -> Unit
 ) = select({
@@ -712,28 +712,28 @@ fun HandlerRoute<MessageEvent>.whenForwardedFromChat(
     }
 }) { handle(handler) }
 
-@JvmName("whenForwardedFromChatTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenForwardedFromChat(
+@JvmName("whenMessageEventForwardedFromChatTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenMessageEventForwardedFromChat(
     chatId: Long,
     handler: suspend HandlerBotCall<MessageEvent>.() -> Unit
-) = onMessageEvent { whenForwardedFromChat(chatId, handler) }
+) = onMessageEvent { whenMessageEventForwardedFromChat(chatId, handler) }
 
-// --- onForwardedHiddenUser (stackable) ---
+// --- onMessageEventForwardedHiddenUser (stackable) ---
 
-@JvmName("onForwardedHiddenUserMessageEvent")
-fun HandlerRoute<MessageEvent>.onForwardedHiddenUser(build: HandlerRoute<MessageEvent>.() -> Unit) =
+@JvmName("onMessageEventForwardedHiddenUserMessageEvent")
+fun HandlerRoute<MessageEvent>.onMessageEventForwardedHiddenUser(build: HandlerRoute<MessageEvent>.() -> Unit) =
     select({ if (it.event.message.forwardOrigin is MessageOriginHiddenUser) it else null }, build)
 
-@JvmName("onForwardedHiddenUserTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onForwardedHiddenUser(build: HandlerRoute<MessageEvent>.() -> Unit) =
-    on<MessageEvent> { onForwardedHiddenUser(build) }
+@JvmName("onMessageEventForwardedHiddenUserTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.onMessageEventForwardedHiddenUser(build: HandlerRoute<MessageEvent>.() -> Unit) =
+    on<MessageEvent> { onMessageEventForwardedHiddenUser(build) }
 
-// --- whenForwardedHiddenUser (terminal) ---
+// --- whenMessageEventForwardedHiddenUser (terminal) ---
 
-@JvmName("whenForwardedHiddenUserMessageEvent")
-fun HandlerRoute<MessageEvent>.whenForwardedHiddenUser(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
+@JvmName("whenMessageEventForwardedHiddenUserMessageEvent")
+fun HandlerRoute<MessageEvent>.whenMessageEventForwardedHiddenUser(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
     select({ if (it.event.message.forwardOrigin is MessageOriginHiddenUser) it else null }) { handle(handler) }
 
-@JvmName("whenForwardedHiddenUserTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenForwardedHiddenUser(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
-    on<MessageEvent> { whenForwardedHiddenUser(handler) }
+@JvmName("whenMessageEventForwardedHiddenUserTelegramBotEvent")
+fun HandlerRoute<TelegramBotEvent>.whenMessageEventForwardedHiddenUser(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
+    on<MessageEvent> { whenMessageEventForwardedHiddenUser(handler) }
