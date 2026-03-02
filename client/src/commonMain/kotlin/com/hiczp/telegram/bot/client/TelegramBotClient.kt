@@ -129,13 +129,16 @@ class TelegramBotClient private constructor(
                     }
                 }
                 install(HttpTimeout) {
-                    requestTimeoutMillis = 15_000
-                    connectTimeoutMillis = 10_000
+                    requestTimeoutMillis = 10_000
+                    connectTimeoutMillis = 5_000
                     socketTimeoutMillis = 10_000
                 }
                 install(TelegramLongPollingPlugin)
                 install(TelegramFileDownloadPlugin)
                 additionalConfiguration()
+                //engine { 
+                //    proxy = ProxyBuilder.http(Url("http://127.0.0.1:10809"))
+                //}
             }
             val httpClient = if (httpClientEngine == null) {
                 HttpClient(config)

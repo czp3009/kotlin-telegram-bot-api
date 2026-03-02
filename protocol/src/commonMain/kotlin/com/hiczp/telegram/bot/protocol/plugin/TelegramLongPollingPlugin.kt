@@ -7,7 +7,7 @@ import io.ktor.client.plugins.api.*
  * A Ktor client plugin that configures long polling timeout for the Telegram Bot API.
  *
  * This plugin automatically increases the timeout for the [getUpdates][com.hiczp.telegram.bot.protocol.TelegramBotApi.getUpdates]
- * method to 60 seconds. Long polling allows the bot to receive updates in real-time while reducing server load
+ * method to 50 seconds. Long polling allows the bot to receive updates in real-time while reducing server load
  * by keeping the connection open until new messages are available or the timeout is reached.
  *
  * **Usage:**
@@ -19,8 +19,9 @@ import io.ktor.client.plugins.api.*
  *
  * **Important notes:**
  * - This plugin only affects the `getUpdates` method; all other API requests use the default timeout settings
- * - The 60-second timeout is set for both [requestTimeoutMillis][io.ktor.client.plugins.HttpTimeoutConfig.requestTimeoutMillis]
+ * - The 50-second timeout is set for both [requestTimeoutMillis][io.ktor.client.plugins.HttpTimeoutConfig.requestTimeoutMillis]
  *   and [socketTimeoutMillis][io.ktor.client.plugins.HttpTimeoutConfig.socketTimeoutMillis]
+ * - A 5-second [connectTimeoutMillis][io.ktor.client.plugins.HttpTimeoutConfig.connectTimeoutMillis] is also set
  * - Without this plugin, the default timeout may cause the connection to close before Telegram sends updates,
  *   resulting in empty responses and unnecessary polling cycles
  *
@@ -32,8 +33,9 @@ val TelegramLongPollingPlugin = createClientPlugin("TelegramLongPollingPlugin") 
         val methodName = request.url.pathSegments.lastOrNull()
         if (methodName == "getUpdates") {
             request.timeout {
-                requestTimeoutMillis = 60_000
-                socketTimeoutMillis = 60_000
+                requestTimeoutMillis = 50_000
+                connectTimeoutMillis = 5_000
+                socketTimeoutMillis = 50_000
             }
         }
         proceed(request)

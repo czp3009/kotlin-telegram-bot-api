@@ -162,16 +162,20 @@ open class LongPollingTelegramUpdateSource(
             while (isRunning.value && isActive) {
                 // If there are no new updates for at least 6 days, then the identifier of the next update will be chosen randomly instead of sequentially.
                 if (Clock.System.now() - latestTimeReceivedUpdate > IDLE_RESET) {
+                    if (latestTimeReceivedUpdate != Instant.DISTANT_PAST) logger.debug { "Not received updates for a long time, resetting offset to 0" }
                     nextOffset = 0L
                 }
 
                 val updates = try {
                     fetchScope.async { fetchFromNetwork() }.await()
                 } catch (_: CancellationException) {
-                    emptyList() // fetchScope cancelled by stop(), return empty to proceed to the loop end
+                    continue
                 }
 
-                if (updates.isEmpty()) continue
+                if (updates.isEmpty()) {
+                    logger.trace { "No new updates" }
+                    continue
+                }
                 latestTimeReceivedUpdate = Clock.System.now()
 
                 // Rely on native coroutine features for extremely concise dispatch logic
@@ -257,7 +261,7 @@ open class LongPollingTelegramUpdateSource(
     }
 
     companion object {
-        private const val TIMEOUT = 50L
+        private const val TIMEOUT = 30L
         private val IDLE_RESET = 6.days
     }
 }

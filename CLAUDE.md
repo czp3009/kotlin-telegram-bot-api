@@ -514,6 +514,29 @@ app.join()  // Suspend until stopped
 // app.stop(5.seconds) for graceful shutdown
 ```
 
+### Event Dispatchers
+
+Two dispatcher implementations are available:
+
+- **`HandlerTelegramEventDispatcher`** - Type-safe routing DSL with matchers (recommended for complex bots)
+- **`SimpleTelegramEventDispatcher`** - Single lambda handler for simple use cases:
+
+```kotlin
+val eventDispatcher = SimpleTelegramEventDispatcher { context ->
+  val event = context.event
+  if (event is MessageEvent) {
+    context.client.sendMessage(
+      chatId = event.message.chat.id.toString(),
+      text = event.message.text ?: "No text"
+    )
+  }
+}
+```
+
+### Sample Module
+
+A basic echo bot sample is available in `:sample:basic` demonstrating a simple long-polling bot.
+
 ### Supported Platforms
 
 All modules target: JVM, Android, JS, WASM, Linux, macOS, Windows, iOS, watchOS, tvOS, Android Native.

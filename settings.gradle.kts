@@ -21,3 +21,6 @@ include(":protocol")
 include(":protocol-update-codegen")
 include(":client")
 include(":application")
+
+//samples
+include(":sample:basic")
