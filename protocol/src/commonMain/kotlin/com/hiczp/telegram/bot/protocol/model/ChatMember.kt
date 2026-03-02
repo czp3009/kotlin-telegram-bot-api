@@ -137,6 +137,11 @@ public data class ChatMemberAdministrator(
     @SerialName("can_manage_direct_messages")
     public val canManageDirectMessages: Boolean? = null,
     /**
+     * *Optional*. *True*, if the administrator can edit the tags of regular members; for groups and supergroups only. If omitted defaults to the value of can_pin_messages.
+     */
+    @SerialName("can_manage_tags")
+    public val canManageTags: Boolean? = null,
+    /**
      * *Optional*. Custom title for this user
      */
     @SerialName("custom_title")
@@ -149,6 +154,10 @@ public data class ChatMemberAdministrator(
 @Serializable
 @SerialName("member")
 public data class ChatMemberMember(
+    /**
+     * *Optional*. Tag of the member
+     */
+    public val tag: String? = null,
     /**
      * Information about the user
      */
@@ -166,6 +175,10 @@ public data class ChatMemberMember(
 @Serializable
 @SerialName("restricted")
 public data class ChatMemberRestricted(
+    /**
+     * *Optional*. Tag of the member
+     */
+    public val tag: String? = null,
     /**
      * Information about the user
      */
@@ -225,6 +238,11 @@ public data class ChatMemberRestricted(
      */
     @SerialName("can_add_web_page_previews")
     public val canAddWebPagePreviews: Boolean,
+    /**
+     * *True*, if the user is allowed to edit their own tag
+     */
+    @SerialName("can_edit_tag")
+    public val canEditTag: Boolean,
     /**
      * *True*, if the user is allowed to change the chat title, photo and other settings
      */

@@ -44,7 +44,7 @@ public data class SendChecklistRequest(
     @SerialName("reply_parameters")
     public val replyParameters: ReplyParameters? = null,
     /**
-     * A JSON-serialized object for an inline keyboard
+     * A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards)
      */
     @SerialName("reply_markup")
     public val replyMarkup: InlineKeyboardMarkup? = null,

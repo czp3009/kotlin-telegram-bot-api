@@ -106,6 +106,7 @@ import com.hiczp.telegram.bot.protocol.model.SetBusinessAccountNameRequest
 import com.hiczp.telegram.bot.protocol.model.SetBusinessAccountUsernameRequest
 import com.hiczp.telegram.bot.protocol.model.SetChatAdministratorCustomTitleRequest
 import com.hiczp.telegram.bot.protocol.model.SetChatDescriptionRequest
+import com.hiczp.telegram.bot.protocol.model.SetChatMemberTagRequest
 import com.hiczp.telegram.bot.protocol.model.SetChatMenuButtonRequest
 import com.hiczp.telegram.bot.protocol.model.SetChatPermissionsRequest
 import com.hiczp.telegram.bot.protocol.model.SetChatStickerSetRequest
@@ -344,7 +345,7 @@ public interface TelegramBotApi {
     public suspend fun sendDice(@Body body: SendDiceRequest): TelegramResponse<Message>
 
     /**
-     * Use this method to stream a partial message to a user while the message is being generated; supported only for bots with forum topic mode enabled. Returns True on success.
+     * Use this method to stream a partial message to a user while the message is being generated. Returns True on success.
      */
     @POST("sendMessageDraft")
     public suspend fun sendMessageDraft(@Body body: SendMessageDraftRequest): TelegramResponse<Boolean>
@@ -435,6 +436,12 @@ public interface TelegramBotApi {
      */
     @POST("setChatAdministratorCustomTitle")
     public suspend fun setChatAdministratorCustomTitle(@Body body: SetChatAdministratorCustomTitleRequest): TelegramResponse<Boolean>
+
+    /**
+     * Use this method to set a tag for a regular member in a group or a supergroup. The bot must be an administrator in the chat for this to work and must have the can_manage_tags administrator right. Returns True on success.
+     */
+    @POST("setChatMemberTag")
+    public suspend fun setChatMemberTag(@Body body: SetChatMemberTagRequest): TelegramResponse<Boolean>
 
     /**
      * Use this method to ban a channel chat in a supergroup or a channel. Until the chat is unbanned, the owner of the banned chat won't be able to send messages on behalf of any of their channels. The bot must be an administrator in the supergroup or channel for this to work and must have the appropriate administrator rights. Returns True on success.

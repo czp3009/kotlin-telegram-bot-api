@@ -99,4 +99,9 @@ public data class PromoteChatMemberRequest(
      */
     @SerialName("can_manage_direct_messages")
     public val canManageDirectMessages: Boolean? = null,
+    /**
+     * Pass *True* if the administrator can edit the tags of regular members; for groups and supergroups only
+     */
+    @SerialName("can_manage_tags")
+    public val canManageTags: Boolean? = null,
 )

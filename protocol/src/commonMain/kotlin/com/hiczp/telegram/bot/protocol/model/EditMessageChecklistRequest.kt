@@ -28,7 +28,7 @@ public data class EditMessageChecklistRequest(
      */
     public val checklist: InputChecklist,
     /**
-     * A JSON-serialized object for the new inline keyboard for the message
+     * A JSON-serialized object for the new [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) for the message
      */
     @SerialName("reply_markup")
     public val replyMarkup: InlineKeyboardMarkup? = null,

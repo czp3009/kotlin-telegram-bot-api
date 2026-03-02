@@ -61,6 +61,11 @@ public data class ChatPermissions(
     @SerialName("can_add_web_page_previews")
     public val canAddWebPagePreviews: Boolean? = null,
     /**
+     * *Optional*. *True*, if the user is allowed to edit their own tag
+     */
+    @SerialName("can_edit_tag")
+    public val canEditTag: Boolean? = null,
+    /**
      * *Optional*. *True*, if the user is allowed to change the chat title, photo and other settings. Ignored in public supergroups
      */
     @SerialName("can_change_info")

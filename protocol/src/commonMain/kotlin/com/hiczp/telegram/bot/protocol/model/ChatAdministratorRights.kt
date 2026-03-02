@@ -90,4 +90,9 @@ public data class ChatAdministratorRights(
      */
     @SerialName("can_manage_direct_messages")
     public val canManageDirectMessages: Boolean? = null,
+    /**
+     * *Optional*. *True*, if the administrator can edit the tags of regular members; for groups and supergroups only. If omitted defaults to the value of can_pin_messages.
+     */
+    @SerialName("can_manage_tags")
+    public val canManageTags: Boolean? = null,
 )

@@ -38,7 +38,7 @@ Code is generated from the
     - Serialize non-primitive query values (for example `List<String>`, `BotCommandScope`) via `Json.encodeToString`
     - Keep call sites strongly typed while delegating to generated `TelegramBotApi` string-based query methods
 
-- **JSON body extensions** (`model/Queries.kt`)
+- **JSON body extensions** (`model/Bodies.kt`)
     - Auto-generated scatter extensions for POST methods with JSON request bodies
     - Accept individual parameters matching request class fields instead of requiring pre-constructed request objects
     - Provide an ergonomic API with named parameters and default values
@@ -161,7 +161,7 @@ These extensions perform serialization and call the underlying generated `Telegr
 
 ### JSON Body Extension Usage
 
-For POST methods with JSON request bodies, `model/Queries.kt` extensions allow calling with scattered parameters:
+For POST methods with JSON request bodies, `model/Bodies.kt` extensions allow calling with scattered parameters:
 
 ```kotlin
 // Instead of constructing Request objects:

@@ -624,7 +624,7 @@ public data class InlineQueryResultDocument(
      */
     public val description: String? = null,
     /**
-     * *Optional*. Inline keyboard attached to the message
+     * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
     public val replyMarkup: InlineKeyboardMarkup? = null,

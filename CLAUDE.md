@@ -95,7 +95,7 @@ The core module containing:
 - Sealed interfaces for union types (`ReplyMarkup`, `BackgroundFill`, etc.)
 - Multipart form wrappers for file uploads
 - Query extensions for JSON-serialized GET parameters
-- JSON body extensions for parameter-scattered API calls (in `model/Queries.kt`)
+- JSON body extensions for parameter-scattered API calls (in `model/Bodies.kt`)
 
 #### Generated Events (`protocol-update-codegen`)
 
@@ -120,7 +120,7 @@ including `InputFile` types, convert them to multipart `FormPart`, and call the 
 For GET operations whose query parameters require JSON serialization, extension functions
 keep call sites strongly typed while delegating to generated methods.
 
-#### JSON Body Extensions (`model/Queries.kt`)
+#### JSON Body Extensions (`model/Bodies.kt`)
 
 For POST operations with JSON request bodies, extension functions accept individual parameters
 matching the Request class fields instead of requiring a pre-constructed Request object:
@@ -210,13 +210,32 @@ The `TelegramBotEventContext` provides access to:
 - `applicationScope` - Coroutine scope for launching concurrent tasks
 - `attributes` - Type-safe storage for sharing data between interceptors
 
+#### Built-in Interceptors
+
+The application module provides built-in interceptors in `interceptor/builtin/`:
+
+- **LoggingInterceptor** (`logging/LoggingInterceptor.kt`) - Logs all received events with configurable log level and
+  formatter. Useful for debugging and monitoring.
+
+```kotlin
+import com.hiczp.telegram.bot.application.interceptor.builtin.logging.loggingInterceptor
+
+val app = TelegramBotApplication.longPolling(
+    botToken = "YOUR_TOKEN",
+    interceptors = listOf(loggingInterceptor()),
+    eventDispatcher = eventDispatcher
+)
+```
+
+- **ConversationInterceptor** (`conversation/`) - Enables multi-turn conversation support. See Conversations section.
+
 ### Handler DSL (Application Module)
 
-The `HandlerTelegramEventDispatcher` provides a type-safe routing DSL for event handling. The DSL is organized into
-specialized matcher files in
-`application/src/commonMain/kotlin/com/hiczp/telegram/bot/application/dispatcher/handler/matcher/`:
+The `HandlerTelegramEventDispatcher` provides a type-safe routing DSL for event handling. Core routing functions are in
+`application/src/commonMain/kotlin/com/hiczp/telegram/bot/application/dispatcher/handler/Handling.kt`, and specialized
+matchers are in `handler/matcher/`:
 
-- **Handling.kt** - Core DSL (`handling`, `match`, `whenMatch`, `include`, `select`)
+- **Handling.kt** - Core DSL (`handling`, `match`, `whenMatch`, `include`, `select`, `middleware`, `whenMiddleware`)
 - **Composite.kt** - Logic combinators (`allOf`, `anyOf`, `not`, `whenAllOf`, `whenAnyOf`, `whenNot`)
 - **EventType.kt** - Event type matchers (`on<MessageEvent>`, `on<CallbackQueryEvent>`, `on<InlineQueryEvent>`, etc.)
 - **MessageEvent.kt** - Message handlers (`whenText`, `whenTextRegex`, `whenTextContains`, `whenTextStartsWith`,
@@ -285,6 +304,11 @@ val dispatcher = HandlerTelegramEventDispatcher(handling {
         val duration = ctx.arguments.duration
     }
 
+    // Command with typed arguments and automatic help on errors
+    command("kick", ::KickArgs, sendHelpOnError = true) { ctx ->
+        // If arguments fail to parse, automatically sends help message to user
+    }
+
     // Command with subcommands
     command("admin") {
         handle { ctx -> /* Show admin help */ }
@@ -338,6 +362,14 @@ val dispatcher = HandlerTelegramEventDispatcher(handling {
 
     whenNot({ it.event.message.text?.startsWith("/") == true }) {
             println("Not a command")
+        }
+
+        // Middleware for authentication/authorization guards
+        middleware(
+            predicate = { ctx -> ctx.event.message.from?.id in adminUserIds },
+            onRejected = { client.sendMessage(event.message.chat.id, "Unauthorized") }
+        ) {
+            handle { println("Admin only area") }
         }
     }
 
@@ -454,10 +486,12 @@ The `ConversationId` is a data class with `chatId`, `userId` (optional), and `th
 Use the factory method for simple long-polling bots:
 
 ```kotlin
+import com.hiczp.telegram.bot.application.interceptor.builtin.logging.loggingInterceptor
+
 val app = TelegramBotApplication.longPolling(
     botToken = "YOUR_TOKEN",
     eventDispatcher = dispatcher,
-    interceptors = listOf(loggingInterceptor)
+    interceptors = listOf(loggingInterceptor())
 )
 app.start()
 app.join()  // Suspend until stopped

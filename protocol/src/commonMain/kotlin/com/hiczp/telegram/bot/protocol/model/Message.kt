@@ -49,6 +49,11 @@ public data class Message(
     @SerialName("sender_business_bot")
     public val senderBusinessBot: User? = null,
     /**
+     * *Optional*. Tag or custom title of the sender of the message; for supergroups only
+     */
+    @SerialName("sender_tag")
+    public val senderTag: String? = null,
+    /**
      * Date the message was sent in Unix time. It is always a positive number, representing a valid date.
      */
     public val date: Long,
@@ -126,7 +131,7 @@ public data class Message(
     @SerialName("is_paid_post")
     public val isPaidPost: Boolean? = null,
     /**
-     * *Optional*. The unique identifier of a media message group this message belongs to
+     * *Optional*. The unique identifier inside this chat of a media message group this message belongs to
      */
     @SerialName("media_group_id")
     public val mediaGroupId: String? = null,
@@ -510,7 +515,7 @@ public data class Message(
     @SerialName("web_app_data")
     public val webAppData: WebAppData? = null,
     /**
-     * *Optional*. Inline keyboard attached to the message. `login_url` buttons are represented as ordinary `url` buttons.
+     * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message. `login_url` buttons are represented as ordinary `url` buttons.
      */
     @SerialName("reply_markup")
     public val replyMarkup: InlineKeyboardMarkup? = null,

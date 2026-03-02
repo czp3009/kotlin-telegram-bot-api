@@ -48,7 +48,7 @@ import java.io.File
  * generated `TelegramBotApi` methods that accept serialized `String`/`String?` query values.
  *
  * ### JSON Body Extensions (`model/` package)
- * Generates `Queries.kt` with scatter extension functions for POST operations that accept JSON
+ * Generates `Bodies.kt` with scatter extension functions for POST operations that accept JSON
  * request bodies (using `@Body` annotation). These functions accept individual parameters matching
  * the Request class fields, construct the Request object internally, and call the original method.
  * This allows users to call API methods with named parameters instead of constructing Request objects manually.
@@ -158,7 +158,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
      * Output directory for generated Kotlin code.
      *
      * Generated files are organized under this directory:
-     * - `com/hiczp/telegram/bot/protocol/model/` - Data model classes (100+ files) and JSON body scatter extensions (Queries.kt)
+     * - `com/hiczp/telegram/bot/protocol/model/` - Data model classes (100+ files) and JSON body scatter extensions (Bodies.kt)
      * - `com/hiczp/telegram/bot/protocol/form/` - Form wrapper classes (*Form.kt) and Forms.kt extension functions
      * - `com/hiczp/telegram/bot/protocol/query/Queries.kt` - Query extension functions for JSON-serialized GET parameters
      * - `com/hiczp/telegram/bot/protocol/TelegramBotApi.kt` - Ktorfit HTTP interface
@@ -223,7 +223,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
      * 7. **Generates data models**: Creates all data classes for API entities (excluding InputFile)
      * 8. **Generates API interface**: Creates the Ktorfit HTTP interface with all endpoints
      * 9. **Generates query extensions**: Creates typed query helper extensions in `query/Queries.kt`
-     * 10. **Generates JSON body extensions**: Creates scatter extension functions in `model/Queries.kt`
+     * 10. **Generates JSON body extensions**: Creates scatter extension functions in `model/Bodies.kt`
      *
      * ## Output Structure
      *
@@ -235,7 +235,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
      * │   ├── *Form.kt                # Wrapper classes with InputFile upload fields
      * │   └── Forms.kt                # Multipart extension functions (scatter + form overloads)
      * ├── model/                      # Data model classes (100+ files)
-     * │   ├── Queries.kt              # Scatter extensions for JSON body operations
+     * │   ├── Bodies.kt              # Scatter extensions for JSON body operations
      * │   ├── ReplyMarkup.kt          # Sealed interface with @JsonClassDiscriminator
      * │   └── *.kt                    # All other data classes and sealed interfaces
      * ├── query/                      # Query extension functions for JSON-serialized GET params
@@ -1722,7 +1722,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             .returns(ClassName(KTOR_STATEMENT_PACKAGE, HTTP_STATEMENT_TYPE))
             .addKdoc("Downloads a file from Telegram servers.")
             .build()
-        
+
         interfaceBuilder.addFunction(downloadFileFunction)
 
         fileSpec.addType(interfaceBuilder.build())
@@ -1928,7 +1928,8 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         // Add annotation based on a parameter location
         when (paramIn) {
             "query" -> {
-                val queryAnnotationBuilder = AnnotationSpec.builder(ClassName("de.jensklingenberg.ktorfit.http", "Query"))
+                val queryAnnotationBuilder =
+                    AnnotationSpec.builder(ClassName("de.jensklingenberg.ktorfit.http", "Query"))
                 if (camelName != name) {
                     queryAnnotationBuilder.addMember("%S", name)
                 }
@@ -2700,7 +2701,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     private fun generateJsonBodyExtensions(outputDir: File) {
         val fileSpec = createFileSpec(
             MODEL_PACKAGE,
-            "Queries",
+            "Bodies",
             """
                     Scatter extension functions for Telegram Bot API JSON body operations.
                     
