@@ -218,70 +218,43 @@ specialized matcher files in
 
 - **Handling.kt** - Core DSL (`handling`, `match`, `whenMatch`, `include`, `select`)
 - **Composite.kt** - Logic combinators (`allOf`, `anyOf`, `not`, `whenAllOf`, `whenAnyOf`, `whenNot`)
-- **EventType.kt** - Event type matchers (`onMessageEvent`, `whenMessageEvent`, `onChannelPostEvent`,
-  `whenChannelPostEvent`, `onEditedMessageEvent`, `whenEditedMessageEvent`, `onEditedChannelPostEvent`,
-  `whenEditedChannelPostEvent`, etc.)
-- **MessageEvent.kt** - Message handlers (`onText`, `whenText`, `onTextRegex`, `whenTextRegex`, `onTextContains`,
-  `whenTextContains`, `onTextStartsWith`, `whenTextStartsWith`, `onTextEndsWith`, `whenTextEndsWith`, `onPhoto`,
-  `whenPhoto`, `onVideo`, `whenVideo`, `onAudio`, `whenAudio`, `onDocument`, `whenDocument`, `onSticker`, `whenSticker`,
-  `onVoice`, `whenVoice`, `onVideoNote`, `whenVideoNote`, `onAnimation`, `whenAnimation`, `onContact`, `whenContact`,
-  `onLocation`, `whenLocation`, `onVenue`, `whenVenue`, `onPoll`, `whenPoll`, `onDice`, `whenDice`, `onReply`,
-  `whenReply`,
-  `onReplyTo`, `whenReplyTo`, `onFromUser`, `whenFromUser`, `onFromUsers`, `whenFromUsers`, `onInChat`, `whenInChat`,
-  `onInChats`, `whenInChats`, `onForwarded`, `whenForwarded`, `onForwardedFromUser`, `whenForwardedFromUser`,
-  `onForwardedFromChat`, `whenForwardedFromChat`, `onForwardedHiddenUser`, `whenForwardedHiddenUser`)
-- **CallbackQuery.kt** - Callback query handlers (`onCallbackData`, `whenCallbackData`, `onCallbackDataRegex`,
-  `whenCallbackDataRegex`, `onCallbackDataContains`, `whenCallbackDataContains`, `onCallbackDataStartsWith`,
-  `whenCallbackDataStartsWith`, `onCallbackQueryFromUser`, `whenCallbackQueryFromUser`, `onCallbackQueryInChat`,
-  `whenCallbackQueryInChat`)
-- **InlineQuery.kt** - Inline query handlers (`onInlineQuery`, `whenInlineQuery`, `onInlineQueryRegex`,
-  `whenInlineQueryRegex`, `onInlineQueryContains`, `whenInlineQueryContains`, `onInlineQueryStartsWith`,
-  `whenInlineQueryStartsWith`, `onInlineQueryFromUser`, `whenInlineQueryFromUser`, `onChosenInlineResult`,
-  `whenChosenInlineResult`, `onChosenInlineResultFromUser`, `whenChosenInlineResultFromUser`)
-- **ChatType.kt** - Chat type filters (`onPrivateChat`, `whenPrivateChat`, `onGroupChat`, `whenGroupChat`,
-  `onSupergroupChat`, `whenSupergroupChat`, `onChannel`, `whenChannel`)
-- **EditedMessage.kt** - Edited message handlers (`onEditedText`, `whenEditedText`, `onEditedTextRegex`,
-  `whenEditedText`, `onEditedTextRegex`, `whenEditedTextRegex`, `onEditedTextContains`, `whenEditedTextContains`,
-  `onEditedTextStartsWith`, `whenEditedTextStartsWith`, `onEditedTextEndsWith`, `whenEditedTextEndsWith`,
-  `onEditedPhoto`, `whenEditedPhoto`, `onEditedVideo`, `whenEditedVideo`, `onEditedDocument`, `whenEditedDocument`,
-  `onEditedAudio`, `whenEditedAudio`, `onEditedFromUser`, `whenEditedFromUser`, `onEditedInChat`, `whenEditedInChat`,
-  `onEditedChannelPost`, `whenEditedChannelPost`, `onEditedChannelPostText`, `whenEditedChannelPostText`,
-  `onEditedChannelPostTextRegex`, `whenEditedChannelPostTextRegex`, `onEditedChannelPostFromChat`,
-  `whenEditedChannelPostFromChat`)
-- **ChatEvent.kt** - Chat event handlers (`onChatJoinRequest`, `whenChatJoinRequest`, `onChatJoinRequestFromChat`,
-  `whenChatJoinRequestFromChat`, `onChatJoinRequestFromUser`, `whenChatJoinRequestFromUser`, `onChatMemberUpdated`,
-  `whenChatMemberUpdated`, `onChatMemberUpdatedInChat`, `whenChatMemberUpdatedInChat`, `onMyChatMemberUpdated`,
-  `whenMyChatMemberUpdated`, `onMyChatMemberUpdatedInChat`, `whenMyChatMemberUpdatedInChat`, `onChatBoost`,
-  `whenChatBoost`, `onChatBoostInChat`, `whenChatBoostInChat`, `onRemovedChatBoost`, `whenRemovedChatBoost`,
-  `onRemovedChatBoostInChat`, `whenRemovedChatBoostInChat`)
-- **ServiceMessage.kt** - Service message handlers (`onNewChatMembers`, `whenNewChatMembers`, `onLeftChatMember`,
-  `whenLeftChatMember`, `onNewChatTitle`, `whenNewChatTitle`, `onNewChatPhoto`, `whenNewChatPhoto`,
-  `onDeleteChatPhoto`, `whenDeleteChatPhoto`, `onPinnedMessage`, `whenPinnedMessage`, `onGroupCreated`,
-  `whenGroupCreated`, `onSupergroupCreated`, `whenSupergroupCreated`, `onChannelCreated`, `whenChannelCreated`,
-  `onVideoChatStarted`, `whenVideoChatStarted`, `onVideoChatEnded`, `whenVideoChatEnded`, `onVideoChatScheduled`,
-  `whenVideoChatScheduled`, `onVideoChatParticipantsInvited`, `whenVideoChatParticipantsInvited`, `onForumTopicCreated`,
-  `whenForumTopicCreated`, `onForumTopicEdited`, `whenForumTopicEdited`, `onForumTopicClosed`, `whenForumTopicClosed`,
-  `onForumTopicReopened`, `whenForumTopicReopened`, `onGeneralForumTopicHidden`, `whenGeneralForumTopicHidden`,
-  `onGeneralForumTopicUnhidden`, `whenGeneralForumTopicUnhidden`, `onGiveawayCreated`, `whenGiveawayCreated`,
-  `onGiveawayCompleted`, `whenGiveawayCompleted`, `onBoostAdded`, `whenBoostAdded`, `onMigrateToSupergroup`,
-  `whenMigrateToSupergroup`, `onMigrateFromGroup`, `whenMigrateFromGroup`, `onMessageAutoDeleteTimerChanged`,
-  `whenMessageAutoDeleteTimerChanged`, `onWebAppData`, `whenWebAppData`)
-- **Poll.kt** - Poll and reaction handlers (`onPollUpdate`, `whenPollUpdate`, `onPollAnswer`, `whenPollAnswer`,
-  `onPollAnswerFromUser`, `whenPollAnswerFromUser`, `onMessageReaction`, `whenMessageReaction`,
-  `onMessageReactionInChat`,
-  `whenMessageReactionInChat`, `onMessageReactionToMessage`, `whenMessageReactionToMessage`, `onMessageReactionCount`,
-  `whenMessageReactionCount`, `onMessageReactionCountInChat`, `whenMessageReactionCountInChat`)
-- **Payment.kt** - Payment event handlers (`onShippingQuery`, `whenShippingQuery`, `onShippingQueryFromUser`,
-  `whenShippingQueryFromUser`, `onShippingQueryWithPayload`, `whenShippingQueryWithPayload`, `onPreCheckoutQuery`,
-  `whenPreCheckoutQuery`, `onPreCheckoutQueryFromUser`, `whenPreCheckoutQueryFromUser`, `onPreCheckoutQueryWithPayload`,
-  `whenPreCheckoutQueryWithPayload`, `onPreCheckoutQueryWithCurrency`, `whenPreCheckoutQueryWithCurrency`,
-  `onPurchasedPaidMedia`, `whenPurchasedPaidMedia`, `onPurchasedPaidMediaFromUser`, `whenPurchasedPaidMediaFromUser`)
-- **Business.kt** - Business event handlers (`onBusinessConnection`, `whenBusinessConnection`,
-  `onBusinessConnectionFromUser`, `whenBusinessConnectionFromUser`, `onBusinessMessage`, `whenBusinessMessage`,
-  `onBusinessMessageFromUser`, `whenBusinessMessageFromUser`, `onBusinessMessageInChat`, `whenBusinessMessageInChat`,
-  `onEditedBusinessMessage`, `whenEditedBusinessMessage`, `onEditedBusinessMessageFromUser`,
-  `whenEditedBusinessMessageFromUser`, `onEditedBusinessMessageInChat`, `whenEditedBusinessMessageInChat`,
-  `onDeletedBusinessMessages`, `whenDeletedBusinessMessages`, `onDeletedBusinessMessagesInChat`,
+- **EventType.kt** - Event type matchers (`on<MessageEvent>`, `on<CallbackQueryEvent>`, `on<InlineQueryEvent>`, etc.)
+- **MessageEvent.kt** - Message handlers (`whenText`, `whenTextRegex`, `whenTextContains`, `whenTextStartsWith`,
+  `whenTextEndsWith`, `whenPhoto`, `whenVideo`, `whenAudio`, `whenDocument`, `whenSticker`, `whenVoice`,
+  `whenVideoNote`, `whenAnimation`, `whenContact`, `whenLocation`, `whenVenue`, `whenPoll`, `whenDice`, `whenReply`,
+  `whenReplyTo`, `whenFromUser`, `whenFromUsers`, `whenInChat`, `whenInChats`, `whenForwarded`, `whenForwardedFromUser`,
+  `whenForwardedFromChat`, `whenForwardedHiddenUser`)
+- **CallbackQuery.kt** - Callback query handlers (`whenCallbackData`, `whenCallbackDataRegex`,
+  `whenCallbackDataContains`,
+  `whenCallbackDataStartsWith`, `whenCallbackQueryFromUser`, `whenCallbackQueryInChat`)
+- **InlineQuery.kt** - Inline query handlers (`whenInlineQuery`, `whenInlineQueryRegex`, `whenInlineQueryContains`,
+  `whenInlineQueryStartsWith`, `whenInlineQueryFromUser`, `whenChosenInlineResult`, `whenChosenInlineResultFromUser`)
+- **ChatType.kt** - Chat type filters (`whenPrivateChat`, `whenGroupChat`, `whenSupergroupChat`, `whenChannel`)
+- **EditedMessage.kt** - Edited message handlers (`whenEditedText`, `whenEditedTextRegex`, `whenEditedTextContains`,
+  `whenEditedTextStartsWith`, `whenEditedTextEndsWith`, `whenEditedPhoto`, `whenEditedVideo`, `whenEditedDocument`,
+  `whenEditedAudio`, `whenEditedFromUser`, `whenEditedInChat`, `whenEditedChannelPost`, `whenEditedChannelPostText`,
+  `whenEditedChannelPostTextRegex`, `whenEditedChannelPostFromChat`)
+- **ChatEvent.kt** - Chat event handlers (`whenChatJoinRequest`, `whenChatJoinRequestFromChat`,
+  `whenChatJoinRequestFromUser`, `whenChatMemberUpdated`, `whenChatMemberUpdatedInChat`, `whenMyChatMemberUpdated`,
+  `whenMyChatMemberUpdatedInChat`, `whenChatBoost`, `whenChatBoostInChat`, `whenRemovedChatBoost`,
+  `whenRemovedChatBoostInChat`)
+- **ServiceMessage.kt** - Service message handlers (`whenNewChatMembers`, `whenLeftChatMember`, `whenNewChatTitle`,
+  `whenNewChatPhoto`, `whenDeleteChatPhoto`, `whenPinnedMessage`, `whenGroupCreated`, `whenSupergroupCreated`,
+  `whenChannelCreated`, `whenVideoChatStarted`, `whenVideoChatEnded`, `whenVideoChatScheduled`,
+  `whenVideoChatParticipantsInvited`, `whenForumTopicCreated`, `whenForumTopicEdited`, `whenForumTopicClosed`,
+  `whenForumTopicReopened`, `whenGeneralForumTopicHidden`, `whenGeneralForumTopicUnhidden`, `whenGiveawayCreated`,
+  `whenGiveawayCompleted`, `whenBoostAdded`, `whenMigrateToSupergroup`, `whenMigrateFromGroup`,
+  `whenMessageAutoDeleteTimerChanged`, `whenWebAppData`)
+- **Poll.kt** - Poll and reaction handlers (`whenPollUpdate`, `whenPollAnswer`, `whenPollAnswerFromUser`,
+  `whenMessageReaction`, `whenMessageReactionInChat`, `whenMessageReactionToMessage`, `whenMessageReactionCount`,
+  `whenMessageReactionCountInChat`)
+- **Payment.kt** - Payment event handlers (`whenShippingQuery`, `whenShippingQueryFromUser`,
+  `whenShippingQueryWithPayload`,
+  `whenPreCheckoutQuery`, `whenPreCheckoutQueryFromUser`, `whenPreCheckoutQueryWithPayload`,
+  `whenPreCheckoutQueryWithCurrency`, `whenPurchasedPaidMedia`, `whenPurchasedPaidMediaFromUser`)
+- **Business.kt** - Business event handlers (`whenBusinessConnection`, `whenBusinessConnectionFromUser`,
+  `whenBusinessMessage`, `whenBusinessMessageFromUser`, `whenBusinessMessageInChat`, `whenEditedBusinessMessage`,
+  `whenEditedBusinessMessageFromUser`, `whenEditedBusinessMessageInChat`, `whenDeletedBusinessMessages`,
   `whenDeletedBusinessMessagesInChat`)
 
 **Naming Convention:**
@@ -291,7 +264,7 @@ specialized matcher files in
 - Functions without `when` prefix (e.g., `match`, `allOf`, `anyOf`, `not`) are **composable** and take a build lambda
   for further nesting.
 
-Each matcher provides two variants: one for the specific event type scope (e.g., inside `onMessageEvent`) and one
+Each matcher provides two variants: one for the specific event type scope (e.g., inside `on<MessageEvent>`) and one
 for the root level that auto-wraps with event type.
 
 ```kotlin
@@ -323,65 +296,65 @@ val dispatcher = HandlerTelegramEventDispatcher(handling {
     }
 
     // Event type matching
-    onMessageEvent {
-        whenText("hello") { ctx -> /* exact text match */ }
-        whenTextRegex(Regex("(?i)^hello")) { ctx -> /* regex match */ }
-        whenTextContains("help", ignoreCase = true) { ctx -> /* substring match */ }
-        whenTextStartsWith("/admin") { ctx -> /* prefix match */ }
+  on<MessageEvent> {
+    whenText("hello") { /* exact text match */ }
+    whenTextRegex(Regex("(?i)^hello")) { /* regex match */ }
+    whenTextContains("help", ignoreCase = true) { /* substring match */ }
+    whenTextStartsWith("/admin") { /* prefix match */ }
 
         // Media type handlers
-        whenPhoto { ctx -> /* photo message */ }
-        whenVideo { ctx -> /* video message */ }
-        whenDocument { ctx -> /* document message */ }
-        whenSticker { ctx -> /* sticker message */ }
+    whenPhoto { /* photo message */ }
+    whenVideo { /* video message */ }
+    whenDocument { /* document message */ }
+    whenSticker { /* sticker message */ }
 
         // User/chat filters
-        whenFromUser(123456L) { ctx -> /* from specific user */ }
-        whenInChat(-100123456L) { ctx -> /* in specific chat */ }
+    whenFromUser(123456L) { /* from specific user */ }
+    whenInChat(-100123456L) { /* in specific chat */ }
 
         // Reply detection
-        whenReply { ctx -> /* is a reply */ }
-        whenReplyTo(messageId = 42L) { ctx -> /* reply to specific message */ }
+    whenReply { /* is a reply */ }
+    whenReplyTo(messageId = 42L) { /* reply to specific message */ }
 
         // Forwarded messages
-        whenForwarded { ctx -> /* forwarded message */ }
-        whenForwardedFromChat(-100123L) { ctx -> /* forwarded from specific chat */ }
+    whenForwarded { /* forwarded message */ }
+    whenForwardedFromChat(-100123L) { /* forwarded from specific chat */ }
 
         // Conditional handler with whenMatch
-        whenMatch({ (it.event.message.text?.length ?: 0) > 10 }) { ctx ->
-            ctx.client.sendMessage(ctx.event.message.chat.id, "Long message!")
+    whenMatch({ (it.event.message.text?.length ?: 0) > 10 }) {
+      client.sendMessage(event.message.chat.id, "Long message!")
         }
 
         // Composite matchers - terminal versions that take handler directly
         whenAllOf(
             { it.event.message.text != null },
             { it.event.message.chat.id == 100L }
-        ) { ctx -> println("Private text message in chat 100") }
+        ) { println("Private text message in chat 100") }
 
         whenAnyOf(
             { it.event.message.photo != null },
             { it.event.message.video != null }
-        ) { ctx -> println("Photo or video") }
+        ) { println("Photo or video") }
 
-        whenNot({ it.event.message.text?.startsWith("/") == true }) { ctx ->
+    whenNot({ it.event.message.text?.startsWith("/") == true }) {
             println("Not a command")
         }
     }
 
     // Chat type filters
-    whenPrivateChat { ctx -> /* private chat only */ }
-    whenGroupChat { ctx -> /* group chat only */ }
-    whenSupergroupChat { ctx -> /* supergroup only */ }
-    whenChannel { ctx -> /* channel only */ }
+  whenPrivateChat { /* private chat only */ }
+  whenGroupChat { /* group chat only */ }
+  whenSupergroupChat { /* supergroup only */ }
+  whenChannel { /* channel only */ }
 
-    onCallbackQueryEvent {
-        whenCallbackData("confirm") { ctx -> /* callback handling */ }
-        whenCallbackDataRegex(Regex("action_\\d+")) { ctx -> /* pattern match */ }
+  on<CallbackQueryEvent> {
+    whenCallbackData("confirm") { /* callback handling */ }
+    whenCallbackDataRegex(Regex("action_\\d+")) { /* pattern match */ }
     }
 
-    onInlineQueryEvent {
-        whenInlineQuery("search") { ctx -> /* exact query match */ }
-        whenInlineQueryStartsWith("find:") { ctx -> /* prefix match */ }
+  on<InlineQueryEvent> {
+    whenInlineQuery("search") { /* exact query match */ }
+    whenInlineQueryStartsWith("find:") { /* prefix match */ }
     }
 
     // Include routes from other modules
@@ -401,11 +374,11 @@ inside a handler will be awaited before the dispatch completes:
 
 ```kotlin
 command("process") {
-    handle { ctx ->
+  handle {
         // Launch concurrent operations
         launch {
             val result = slowOperation()
-            ctx.client.sendMessage(ctx.event.message.chat.id, "Result: $result")
+          client.sendMessage(event.message.chat.id, "Result: $result")
         }
         launch {
             anotherAsyncTask()
@@ -422,13 +395,13 @@ dead letter mechanism:
 
 ```kotlin
 handling {
-    command("start") { handle { /* ... */ } }
-    command("help") { handle { /* ... */ } }
+  commandEndpoint("start") { /* ... */ }
+  commandEndpoint("help") { /* ... */ }
 
     // Catches all unhandled events (unknown commands, other event types, etc.)
-    handle { ctx ->
-        ctx.client.sendMessage(
-            ctx.event.extractChatId()!!,
+  handle {
+    client.sendMessage(
+      event.extractChatId()!!,
             "Unknown command. Type /help for available commands."
         )
     }
@@ -441,32 +414,31 @@ Multi-turn conversations are supported via the `conversationInterceptor` and `st
 
 ```kotlin
 // Install the conversation interceptor
-val interceptors = listOf(conversationInterceptor)
+val interceptors = listOf(conversationInterceptor())
 
 // In a handler, start a conversation
-command("survey") {
-  handle { ctx ->
-        startConversation(
-            timeout = 5.minutes,
-          onTimeout = {
+commandEndpoint("survey") {
+  startConversation(
+    timeout = 5.minutes,
+    onTimeout = {
             val chatId = event.extractChatId()
             if (chatId != null) {
               client.sendMessage(chatId.toString(), "Survey timed out.")
             }
-          },
-          onCancel = {
+    },
+    onCancel = {
             val chatId = event.extractChatId()
             if (chatId != null) {
               client.sendMessage(chatId.toString(), "Survey cancelled.")
             }
-          }
-        ) {
-          // Use id.chatId to send messages in the conversation
-            val name = awaitTextMessage().event.message.text
-          client.sendMessage(id.chatId.toString(), "Hello, $name!")
-            val age = awaitTextMessage().event.message.text
-          client.sendMessage(id.chatId.toString(), "Thanks! You are $age years old.")
-        }
+    }
+  ) {
+    // Use reply() for convenience or id.chatId to send messages in the conversation
+    reply("What is your name?")
+    val name = awaitText()
+    reply("Hello, $name! How old are you?")
+    val age = awaitText()
+    reply("Thanks! You are $age years old.")
     }
 }
 ```

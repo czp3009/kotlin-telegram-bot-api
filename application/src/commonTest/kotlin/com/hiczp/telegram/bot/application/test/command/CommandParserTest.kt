@@ -72,4 +72,69 @@ class CommandParserTest {
         val result = CommandParser.parse("start")
         assertNull(result)
     }
+
+    // Deep linking tests
+    @Test
+    fun `parse deep linking command with deepLinkingEncoded disabled`() {
+        val result = CommandParser.parse("/start arg1_arg2", deepLinkingEncoded = false)
+
+        assertNotNull(result)
+        assertEquals("start", result.command)
+        assertEquals("arg1_arg2", result.rawArgs)
+        assertEquals(listOf("arg1_arg2"), result.args)
+    }
+
+    @Test
+    fun `parse deep linking command with base64 encoded argument`() {
+        // "hello" encoded in base64 is "aGVsbG8="
+        val result = CommandParser.parse("/start aGVsbG8=", deepLinkingEncoded = true)
+
+        assertNotNull(result)
+        assertEquals("start", result.command)
+        assertEquals("aGVsbG8=", result.rawArgs)
+        assertEquals(listOf("hello"), result.args)
+    }
+
+    @Test
+    fun `parse deep linking command with base64 encoded json`() {
+        // {"hello":"world"} encoded in base64 is "eyJoZWxsbyI6IndvcmxkIn0="
+        // Note: tokenize() will interpret the quotes in the decoded JSON, so the result
+        // will be a single argument without the quotes (treated as a quoted string)
+        val result = CommandParser.parse("/start eyJoZWxsbyI6IndvcmxkIn0=", deepLinkingEncoded = true)
+
+        assertNotNull(result)
+        assertEquals("start", result.command)
+        assertEquals("eyJoZWxsbyI6IndvcmxkIn0=", result.rawArgs)
+        assertEquals(listOf("{hello:world}"), result.args)
+    }
+
+    @Test
+    fun `parse deep linking command with invalid base64 preserves original`() {
+        // Invalid base64 string should be preserved as-is
+        val result = CommandParser.parse("/start not_valid_base64!!!", deepLinkingEncoded = true)
+
+        assertNotNull(result)
+        assertEquals("start", result.command)
+        assertEquals("not_valid_base64!!!", result.rawArgs)
+        assertEquals(listOf("not_valid_base64!!!"), result.args)
+    }
+
+    @Test
+    fun `parse deep linking command with additional arguments`() {
+        // "hello" encoded in base64 is "aGVsbG8=", additional arg preserved
+        val result = CommandParser.parse("/start aGVsbG8= extra", deepLinkingEncoded = true)
+
+        assertNotNull(result)
+        assertEquals("start", result.command)
+        assertEquals("aGVsbG8= extra", result.rawArgs)
+        assertEquals(listOf("hello", "extra"), result.args)
+    }
+
+    @Test
+    fun `default deepLinkingEncoded is false`() {
+        val result = CommandParser.parse("/start aGVsbG8=")
+
+        assertNotNull(result)
+        assertEquals(listOf("aGVsbG8="), result.args)
+    }
 }

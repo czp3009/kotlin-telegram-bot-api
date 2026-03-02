@@ -1,16 +1,24 @@
 package com.hiczp.telegram.bot.application.interceptor.builtin.conversation
 
+import com.hiczp.telegram.bot.application.command.CommandParser
+import com.hiczp.telegram.bot.application.command.ParsedCommand
 import com.hiczp.telegram.bot.application.command.matchesCommand
-import com.hiczp.telegram.bot.application.context.*
+import com.hiczp.telegram.bot.application.command.usernameMatched
+import com.hiczp.telegram.bot.application.context.TelegramBotEventContext
+import com.hiczp.telegram.bot.application.context.extractChatId
+import com.hiczp.telegram.bot.application.context.extractThreadId
+import com.hiczp.telegram.bot.application.context.extractUserId
 import com.hiczp.telegram.bot.protocol.event.BusinessMessageEvent
 import com.hiczp.telegram.bot.protocol.event.MessageEvent
 import com.hiczp.telegram.bot.protocol.event.TelegramBotEvent
+import com.hiczp.telegram.bot.protocol.model.Message
 import com.hiczp.telegram.bot.protocol.model.ReplyParameters
 import com.hiczp.telegram.bot.protocol.model.sendMessage
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
+import kotlin.jvm.JvmName
 import kotlin.time.Duration
 
 private val logger = KotlinLogging.logger("ConversationFSM")
@@ -22,26 +30,26 @@ private val logger = KotlinLogging.logger("ConversationFSM")
  * Each await method suspends until the user sends an appropriate event.
  *
  * @param id The [ConversationId] identifying this conversation session.
- * @param channel The channel to receive event contexts from.
- * @param cancelPredicate A function that determines if an event should cancel the conversation.
+ * @param channel The channel to receive event contexts from. **Should not be used directly; use [awaitEvent] instead.**
+ * @param cancelPredicate A function that determines if an event should cancel the conversation. **Should not be used directly.**
  */
 class ConversationScope(
     val id: ConversationId,
-    private val channel: ReceiveChannel<TelegramBotEventContext<TelegramBotEvent>>,
-    private val cancelPredicate: suspend (TelegramBotEventContext<TelegramBotEvent>) -> Boolean,
+    val channel: ReceiveChannel<TelegramBotEventContext<TelegramBotEvent>>,
+    val cancelPredicate: suspend (TelegramBotEventContext<TelegramBotEvent>) -> Boolean,
 ) {
     /**
      * Awaits the next event from the user.
      *
-     * @return The event context containing the user's response.
+     * @return The event from the user.
      * @throws ConversationCancelledException if the received event matches the cancel predicate.
      */
-    suspend fun awaitEvent(): TelegramBotEventContext<TelegramBotEvent> {
+    suspend fun awaitEvent(): TelegramBotEvent {
         val context = channel.receive()
         if (cancelPredicate(context)) {
             throw ConversationCancelledException(context)
         }
-        return context
+        return context.event
     }
 
     /**
@@ -52,18 +60,19 @@ class ConversationScope(
      *
      * Example usage:
      * ```kotlin
-     * val messageContext = await<MessageEvent>()
-     * val chatId = messageContext.event.message.chat.id
+     * val message = await<MessageEvent>()
+     * val chatId = message.chat.id
      * ```
      *
      * @param T The specific event type to wait for.
-     * @return The event context containing the matching event.
+     * @return The matching event.
      * @throws ConversationCancelledException if a received event matches the cancel predicate.
      */
-    suspend inline fun <reified T : TelegramBotEvent> await(): TelegramBotEventContext<T> {
+    @JvmName("awaitEventReified")
+    suspend inline fun <reified T : TelegramBotEvent> awaitEvent(): T {
         while (true) {
-            val context = awaitEvent()
-            context.castOrNull<T>()?.let { return it }
+            val event = awaitEvent()
+            if (event is T) return event
         }
     }
 
@@ -72,38 +81,40 @@ class ConversationScope(
      *
      * Non-message events are ignored.
      *
-     * @return The event context containing the user's message.
+     * @return The message event from the user.
      * @throws ConversationCancelledException if the received event matches the cancel predicate.
      */
-    suspend fun awaitMessage(): TelegramBotEventContext<MessageEvent> = await()
+    suspend fun awaitMessage(): Message = awaitEvent<MessageEvent>().message
 
     /**
-     * Awaits the next text message event from the user.
+     * Awaits the next text message event from the user and returns the text content.
      *
      * Messages without text content (e.g., photos, stickers) are ignored.
      *
-     * @return The event context containing the user's text message.
+     * @return The text content of the user's message.
      * @throws ConversationCancelledException if the received event matches the cancel predicate.
      */
-    suspend fun awaitTextMessage(): TelegramBotEventContext<MessageEvent> {
+    suspend fun awaitText(): String {
         while (true) {
-            val context = awaitMessage()
-            if (context.event.message.text != null) return context
+            awaitMessage().text?.let { return it }
         }
     }
 
     /**
-     * Awaits the next command message from the user.
+     * Awaits the next command message from the user and returns the command text.
      *
      * A command is a text message starting with "/".
      *
-     * @return The event context containing the user's command message.
+     * @return The command text from the user's message.
      * @throws ConversationCancelledException if the received event matches the cancel predicate.
      */
-    suspend fun awaitCommand(): TelegramBotEventContext<MessageEvent> {
+    context(telegramBotEventContext: TelegramBotEventContext<*>)
+    suspend fun awaitCommand(): ParsedCommand {
+        val username = telegramBotEventContext.me().username
         while (true) {
-            val context = awaitTextMessage()
-            if (context.event.message.text!!.startsWith("/")) return context
+            CommandParser.parse(awaitText())?.takeIf {
+                if (username == null) true else it.usernameMatched(username)
+            }?.let { return it }
         }
     }
 }
@@ -125,10 +136,11 @@ class ConversationScope(
  *     // Simple reply to the conversation's chat
  *     reply("What is your name?")
  *
- *     val name = awaitTextMessage().event.message.text
+ *     val name = awaitText()
+ *     reply("Hello, $name! How old are you?")
  *
- *     // Reply to a specific message
- *     reply("Hello, $name!", replyToMessageId = message.messageId)
+ *     val age = awaitText()
+ *     reply("Thanks! You are $age years old.")
  * }
  * ```
  *
@@ -181,9 +193,9 @@ suspend fun reply(text: String, replyToMessageId: Long? = null) =
  *     ) {
  *         // Use reply() for convenience
  *         reply("What is your name?")
- *         val name = awaitTextMessage().event.message.text
+ *         val name = awaitText()
  *         reply("Hello, $name! How old are you?")
- *         val age = awaitTextMessage().event.message.text
+ *         val age = awaitText()
  *         reply("Thanks! You are $age years old.")
  *     }
  * }
@@ -203,7 +215,7 @@ suspend fun reply(text: String, replyToMessageId: Long? = null) =
  *          is not waiting (e.g., during processing) is dropped. Use this when you only care about events
  *          that arrive while actively listening.
  * @param interceptPredicate A function that determines which events should be intercepted for the conversation.
- *        Defaults to intercepting [MessageEvent].
+ *        Defaults to intercepting [MessageEvent] and [BusinessMessageEvent].
  * @param cancelPredicate A function that determines if an event should cancel the conversation.
  *        Defaults to checking if the event is a message matching the "/cancel" command.
  *        The default uses [matchesCommand], which recognizes both `/cancel` and `/cancel@bot_username` formats.

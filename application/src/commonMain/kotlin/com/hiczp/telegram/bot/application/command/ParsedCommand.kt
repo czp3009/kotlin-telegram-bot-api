@@ -29,30 +29,43 @@ data class ParsedCommand(
  * Checks if this parsed command matches the expected command and optional bot username.
  *
  * The comparison is case-insensitive for both command and username.
- * If the parsed command has a username, it will only match if [username] is provided and matches,
- * or if [username] is null (meaning any bot username is acceptable).
- * If the parsed command does not have a username, it always matches regardless of [username].
+ * - If [username] is `null`, only the command name is checked.
+ * - If [username] is provided and the parsed command has a username, they must match.
+ * - If [username] is provided but the parsed command has no username, it always matches.
  *
  * @param command The expected command name (without leading `/`), case-insensitive.
- * @param username The expected bot username, or null to accept any username. Case-insensitive.
+ * @param username The expected bot username, or `null` to skip username validation. Case-insensitive.
  * @return `true` if the command and username (if applicable) match, `false` otherwise.
  */
 fun ParsedCommand.matchesCommand(command: String, username: String? = null): Boolean {
-    val parsedCommand = this
-    val commandMatched = parsedCommand.command.equals(command, ignoreCase = true)
-    val usernameMatched = if (parsedCommand.username == null) {
-        //no username in command
+    val commandMatched = this.command.equals(command, ignoreCase = true)
+    val usernameMatched = if (username == null) {
         true
     } else {
-        if (username == null) {
-            //don't need to check username
-            true
-        } else {
-            parsedCommand.username.equals(username, ignoreCase = true)
-        }
+        this.usernameMatched(username)
     }
     return commandMatched && usernameMatched
 }
+
+/**
+ * Checks if the bot username in this parsed command matches the expected username.
+ *
+ * This function handles two scenarios:
+ * 1. If the command was sent without a username (e.g., `/start`), it always returns `true`
+ *    because the command is addressed to any bot in the chat.
+ * 2. If the command includes a username (e.g., `/start@mybot`), it performs
+ *    a case-insensitive comparison with the provided [username].
+ *
+ * @param username The expected bot username to match against.
+ * @return `true` if the username matches or the command has no username, `false` otherwise.
+ */
+fun ParsedCommand.usernameMatched(username: String): Boolean =
+    if (this.username == null) {
+        //no username in command
+        true
+    } else {
+        this.username.equals(username, ignoreCase = true)
+    }
 
 fun MessageEvent.parseCommand(): ParsedCommand? = CommandParser.parse(this.message.text)
 
