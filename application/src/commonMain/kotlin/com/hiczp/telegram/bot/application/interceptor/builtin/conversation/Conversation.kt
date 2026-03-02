@@ -19,8 +19,8 @@ private val logger = KotlinLogging.logger("ConversationInterceptor")
  *
  * Used to route events to the correct active conversation. The ID is composed of:
  * - [chatId]: The chat where the conversation takes place (required)
- * - [userId]: The user participating in the conversation (optional, for per-user conversations in group chats)
  * - [threadId]: The thread/topic within a chat (optional, for forum topics or message threads)
+ * - [userId]: The user participating in the conversation (optional, for per-user conversations in group chats)
  *
  * Common patterns:
  * - Whole chat: `ConversationId(chatId = 123)` - all users share one conversation

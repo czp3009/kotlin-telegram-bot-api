@@ -160,7 +160,7 @@ open class LongPollingTelegramUpdateSource(
 
         supervisorScope {
             while (isRunning.value && isActive) {
-                // If there are no new updates for at least a week, then the identifier of the next update will be chosen randomly instead of sequentially.
+                // If there are no new updates for at least 6 days, then the identifier of the next update will be chosen randomly instead of sequentially.
                 if (Clock.System.now() - latestTimeReceivedUpdate > IDLE_RESET) {
                     nextOffset = 0L
                 }
@@ -240,13 +240,13 @@ open class LongPollingTelegramUpdateSource(
     /**
      * Processing modes for controlling update processing strategy and delivery semantics.
      *
-     * @property SEQUENTIAL Updates are processed strictly one at a time. Provides natural flow control
+     * @param SEQUENTIAL Updates are processed strictly one at a time. Provides natural flow control
      * and strict ordering. Guarantees **At-Least-Once** delivery.
-     * @property CONCURRENT_BATCH Updates in a batch are processed concurrently, but the fetcher waits
+     * @param CONCURRENT_BATCH Updates in a batch are processed concurrently, but the fetcher waits
      * for the entire batch to complete before fetching the next one.
      * Provides batch-level backpressure and guarantees **At-Least-Once** delivery.
      * (Recommended for most use cases requiring high throughput and data safety).
-     * @property CONCURRENT Updates are launched individually for fully detached concurrent processing.
+     * @param CONCURRENT Updates are launched individually for fully detached concurrent processing.
      * Provides maximum throughput with no backpressure.
      * Provides **At-Most-Once** delivery (In-flight updates may be lost during abrupt shutdown).
      */
