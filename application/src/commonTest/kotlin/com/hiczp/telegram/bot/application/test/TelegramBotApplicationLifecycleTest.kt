@@ -149,19 +149,22 @@ class TelegramBotApplicationLifecycleTest {
     @Test
     fun `stop should call updateSource onFinalize`() = runTest {
         val finalizeCalled = CompletableDeferred<Boolean>()
-        val sourceStarted = CompletableDeferred<Unit>()
+        val updateConsumed = CompletableDeferred<Unit>()
 
         /**
          * A MockTelegramUpdateSource that tracks whether onFinalize() was called.
          */
         class FinalizeTrackingMockUpdateSource(
             channel: Channel<Update>,
-            private val startedSignal: CompletableDeferred<Unit>,
+            private val updateConsumedSignal: CompletableDeferred<Unit>,
             private val finalizeSignal: CompletableDeferred<Boolean>
         ) : MockTelegramUpdateSource(channel) {
             override suspend fun start(consume: suspend (Update) -> Unit) {
-                startedSignal.complete(Unit)
-                super.start(consume)
+                // Call parent's start with wrapped consume that signals when an update is processed
+                super.start { update ->
+                    updateConsumedSignal.complete(Unit)
+                    consume(update)
+                }
             }
 
             override suspend fun onFinalize() {
@@ -170,7 +173,7 @@ class TelegramBotApplicationLifecycleTest {
         }
 
         val channel = Channel<Update>(Channel.UNLIMITED)
-        val updateSource = FinalizeTrackingMockUpdateSource(channel, sourceStarted, finalizeCalled)
+        val updateSource = FinalizeTrackingMockUpdateSource(channel, updateConsumed, finalizeCalled)
         val dispatcher = SimpleTelegramEventDispatcher { }
 
         val app = TelegramBotApplication(
@@ -182,8 +185,11 @@ class TelegramBotApplicationLifecycleTest {
 
         app.start()
 
-        // Wait for the update source to actually start
-        sourceStarted.await()
+        // Send an update to ensure the source has started and is actively processing
+        channel.send(createTestUpdate(1, "test"))
+
+        // Wait for the update to be consumed - this confirms the source is fully running
+        updateConsumed.await()
 
         // Use stopSuspend to ensure complete shutdown
         app.stopSuspend(100.milliseconds)
