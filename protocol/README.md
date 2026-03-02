@@ -101,7 +101,9 @@ Factory methods:
 
 ### Multipart Usage Examples
 
-#### 1) Reference an existing file (`file_id`) with a scatter function
+#### File Upload
+
+##### 1) Reference an existing file (`file_id`) with a scatter function
 
 ```kotlin
 api.sendPhoto(
@@ -110,7 +112,7 @@ api.sendPhoto(
 )
 ```
 
-#### 2) Upload binary content with a scatter function
+##### 2) Upload binary content with a scatter function
 
 ```kotlin
 api.sendDocument(
@@ -124,7 +126,7 @@ api.sendDocument(
 )
 ```
 
-#### 3) Use form wrapper overload
+##### 3) Use form wrapper overload
 
 ```kotlin
 val form = SendVideoForm(
@@ -136,11 +138,66 @@ val form = SendVideoForm(
 api.sendVideo(form)
 ```
 
-### Dynamic multipart attachments (`attach://...`)
+##### 4) Dynamic multipart attachments (`attach://...`)
 
 Some multipart form wrappers include an `attachments: List<FormPart<ChannelProvider>>?` property.
-
 Use this when request payload fields reference dynamically attached files through `attach://<file_attach_name>`.
+
+Example: Sending multiple photos in a media group:
+
+```kotlin
+api.sendMediaGroup(
+  chatId = "123456789",
+  media = listOf(
+    InputMediaPhoto(media = "attach://photo1"),
+    InputMediaPhoto(media = "attach://photo2"),
+  ),
+  attachments = listOf(
+    InputFile.binary { ByteReadChannel(photo1Bytes) }.toFormPart("photo1"),
+    InputFile.binary { ByteReadChannel(photo2Bytes) }.toFormPart("photo2"),
+  )
+)
+```
+
+Example: Setting bot profile photo with dynamic attachment:
+
+```kotlin
+api.setMyProfilePhoto(
+  photo = InputProfilePhotoStatic(photo = "attach://photo1"),
+  attachments = listOf(
+    InputFile.binary(
+      fileName = "profile.jpg",
+      contentType = ContentType.Image.Jpeg
+    ) { ByteReadChannel(imageBytes) }.toFormPart("photo1")
+  )
+)
+```
+
+#### File Download
+
+Use `downloadFile` method with `HttpStatement` to download files from Telegram servers.
+The `TelegramFileDownloadPlugin` must be installed for correct URL transformation.
+
+```kotlin
+// First get file info from Telegram
+val fileInfo = api.getFile(fileId).getOrThrow()
+val filePath = fileInfo.filePath ?: error("No file path available")
+
+// Download the file
+api.downloadFile(filePath).execute { response ->
+  val byteReadChannel = response.bodyAsChannel()
+  val buffer = ByteArray(4096)
+  var totalBytes = 0L
+
+  while (!byteReadChannel.exhausted()) {
+    val bytesRead = byteReadChannel.readAvailable(buffer)
+    totalBytes += bytesRead
+    // Process bytes...
+  }
+
+  println("Downloaded $totalBytes bytes")
+}
+```
 
 ### Query Extension Usage
 
@@ -180,25 +237,37 @@ These extensions construct the Request object internally and call the underlying
 
 ## Ktor Client Setup
 
-A typical production client setup:
+A typical production client setup using the `HttpClient` directly:
 
 ```kotlin
-val httpClient = HttpClient(CIO) {
+val httpClient = HttpClient(createKtorEngine()) {
+  install(ContentNegotiation) {
+    json(Json(DefaultJson) {
+      ignoreUnknownKeys = true
+      encodeDefaults = true
+      explicitNulls = false
+    })
+  }
+  install(DefaultRequest) {
+    headers.appendIfNameAbsent(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+  }
     install(TelegramLongPollingPlugin)
+  install(TelegramFileDownloadPlugin)
     install(TelegramServerErrorPlugin)
-    install(HttpRequestRetry) {
-        retryOnExceptionIf { _, _, cause ->
-            cause is TelegramErrorResponseException && cause.isRetryable
-        }
-        delayMillis {
-            (cause as? TelegramErrorResponseException)?.parameters?.retryAfter?.times(1000) ?: 1_000
-        }
-    }
 }
+
+val api = Ktorfit.Builder()
+  .httpClient(httpClient)
+  .baseUrl("https://api.telegram.org/bot${botToken}/")
+  .build()
+  .createTelegramBotApi()
 ```
 
 Important: Telegram can return error payloads with HTTP 200 status. Do not enable Ktor `expectSuccess` when using
 `TelegramServerErrorPlugin`.
+
+For a simpler setup with sensible defaults, consider using the [Client Module](../client) which provides
+`TelegramBotClient` with pre-configured HTTP client settings.
 
 ## Exception Handling
 
