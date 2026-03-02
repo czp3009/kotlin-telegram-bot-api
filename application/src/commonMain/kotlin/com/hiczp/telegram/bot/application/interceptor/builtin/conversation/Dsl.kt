@@ -101,11 +101,17 @@ class ConversationScope(
     }
 
     /**
-     * Awaits the next command message from the user and returns the command text.
+     * Awaits the next command message from the user and returns the parsed command.
      *
      * A command is a text message starting with "/".
      *
-     * @return The command text from the user's message.
+     * This function validates that the command is intended for this bot by checking
+     * the username suffix (e.g., `/command@bot_username`). Commands targeted at
+     * other bots are ignored.
+     *
+     * @param telegramBotEventContext The event context used to retrieve the bot's username
+     *        for command validation.
+     * @return The [ParsedCommand] containing the parsed command name, arguments, and metadata.
      * @throws ConversationCancelledException if the received event matches the cancel predicate.
      */
     context(telegramBotEventContext: TelegramBotEventContext<*>)
