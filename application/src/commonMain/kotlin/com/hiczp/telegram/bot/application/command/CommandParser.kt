@@ -56,7 +56,7 @@ object CommandParser {
             text = text,
             command = command,
             username = username,
-            rawArgs = rawArgs,
+            rawArgs = processedRawArgs,
             args = args,
         )
     }
