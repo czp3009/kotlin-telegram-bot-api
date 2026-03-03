@@ -320,7 +320,8 @@ val app = TelegramBotApplication.longPolling(
 | `CONCURRENT_BATCH` | Concurrent within batch | Batch-level                    | At-Least-Once (Recommended) |
 | `CONCURRENT`       | Fully concurrent        | None (use `maxPendingUpdates`) | At-Most-Once                |
 
-**Default mode is `CONCURRENT`**, meaning handlers are invoked concurrently. **Global mutable state is NOT safe**without
+**Default mode is `CONCURRENT`**, meaning handlers are invoked concurrently. **Global mutable state is NOT safe**
+without
 synchronization:
 
 ```kotlin

@@ -25,7 +25,7 @@ private val logger = KotlinLogging.logger {}
  * - [ProcessingMode.CONCURRENT_BATCH]: Each batch is processed concurrently, but producer waits for batch completion.
  * - [ProcessingMode.CONCURRENT]: Updates launched individually for concurrent processing without waiting.
  *
- * Graceful shutdown and Exception semantics:
+ * Graceful shutdown and exception semantics:
  * - [TelegramBotShuttingDownException]: Signals framework shutdown. The batch is aborted and the offset is NOT advanced (Zero Data Loss).
  * - [CancellationException] / [Exception]: Signals business logic failure (e.g., timeout). The update is skipped and the offset is advanced to prevent infinite loops.
  *
@@ -244,15 +244,15 @@ open class LongPollingTelegramUpdateSource(
     /**
      * Processing modes for controlling update processing strategy and delivery semantics.
      *
-     * @param SEQUENTIAL Updates are processed strictly one at a time. Provides natural flow control
-     * and strict ordering. Guarantees **At-Least-Once** delivery.
-     * @param CONCURRENT_BATCH Updates in a batch are processed concurrently, but the fetcher waits
-     * for the entire batch to complete before fetching the next one.
-     * Provides batch-level backpressure and guarantees **At-Least-Once** delivery.
-     * (Recommended for most use cases requiring high throughput and data safety).
-     * @param CONCURRENT Updates are launched individually for fully detached concurrent processing.
-     * Provides maximum throughput with no backpressure.
-     * Provides **At-Most-Once** delivery (In-flight updates may be lost during abrupt shutdown).
+     * - **SEQUENTIAL**: Updates are processed strictly one at a time. Provides natural flow control
+     *   and strict ordering. Guarantees **At-Least-Once** delivery.
+     * - **CONCURRENT_BATCH**: Updates in a batch are processed concurrently, but the fetcher waits
+     *   for the entire batch to complete before fetching the next one.
+     *   Provides batch-level backpressure and guarantees **At-Least-Once** delivery.
+     *   (Recommended for most use cases requiring high throughput and data safety).
+     * - **CONCURRENT**: Updates are launched individually for fully detached concurrent processing.
+     *   Provides maximum throughput with no backpressure.
+     *   Provides **At-Most-Once** delivery (In-flight updates may be lost during abrupt shutdown).
      */
     enum class ProcessingMode {
         SEQUENTIAL,
