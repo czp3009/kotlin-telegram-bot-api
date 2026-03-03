@@ -130,7 +130,7 @@ class TelegramBotClient private constructor(
                 }
                 install(TelegramLongPollingPlugin)
                 install(HttpTimeout) {
-                    requestTimeoutMillis = 10_000
+                    requestTimeoutMillis = 15_000
                     connectTimeoutMillis = 5_000
                     socketTimeoutMillis = 10_000
                 }
