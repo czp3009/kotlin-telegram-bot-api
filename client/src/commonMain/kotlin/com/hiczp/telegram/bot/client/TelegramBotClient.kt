@@ -133,9 +133,9 @@ class TelegramBotClient private constructor(
                 }
                 install(TelegramFileDownloadPlugin)
                 additionalConfiguration()
-                //engine { 
-                //    proxy = ProxyBuilder.http(Url("http://127.0.0.1:10809"))
-                //}
+//                engine { 
+//                    proxy = ProxyBuilder.http(Url("http://127.0.0.1:10809"))
+//                }
             }
             val httpClient = if (httpClientEngine == null) {
                 HttpClient(config)

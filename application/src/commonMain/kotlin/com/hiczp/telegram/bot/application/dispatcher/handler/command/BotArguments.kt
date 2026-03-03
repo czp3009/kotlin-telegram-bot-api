@@ -76,6 +76,18 @@ abstract class BotArguments(val commandDescription: String = "") {
         }
         alreadyParsed = true
         parsedValues.clear()
+
+        if (arguments.size > schema.size) {
+            throw CommandParseException(
+                context = context,
+                commandPath = commandPath,
+                commandDescription = commandDescription,
+                schema = schema,
+                argumentName = null,
+                message = "Too many parameters. Maximum expected: ${schema.size}, received: ${arguments.size}."
+            )
+        }
+
         var index = 0
         for (definition in schema) {
             val rawValue = arguments.getOrNull(index)
@@ -121,17 +133,6 @@ abstract class BotArguments(val commandDescription: String = "") {
                     cause = e
                 )
             }
-        }
-
-        if (index < arguments.size) {
-            throw CommandParseException(
-                context = context,
-                commandPath = commandPath,
-                commandDescription = commandDescription,
-                schema = schema,
-                argumentName = null,
-                message = "Too many parameters. Maximum expected: ${schema.size}, received: ${arguments.size}."
-            )
         }
     }
 }

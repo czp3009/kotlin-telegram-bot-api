@@ -56,40 +56,45 @@ class CommandParseException(
      *   role (String) (Default: member) - The user's role
      * ```
      */
-    fun generateHelpText(): String {
-        val stringBuilder = StringBuilder().append("❌ ").append(message).append("\n\n")
-        stringBuilder.append("📝 Usage:\n/").append(commandPath)
+    fun generateHelpText() = buildString {
+        append("❌ ")
+        if (argumentName != null) {
+            append("Parameter '$argumentName'").append(" - ")
+        }
+        append(message)
+        append("\n\n")
+
+        append("📝 Usage:\n")
+        append("/").append(commandPath)
         schema.forEach { argument ->
             if (argument.isOptional) {
-                stringBuilder.append(" [").append(argument.name).append("]")
+                append(" [").append(argument.name).append("]")
             } else {
-                stringBuilder.append(" <").append(argument.name).append(">")
+                append(" <").append(argument.name).append(">")
             }
         }
-        stringBuilder.append("\n\n")
+        append("\n\n")
 
         if (commandDescription.isNotBlank()) {
-            stringBuilder.append(commandDescription).append("\n\n")
+            append(commandDescription).append("\n\n")
         }
 
         if (schema.isNotEmpty()) {
-            stringBuilder.append("⚙️ Parameters:\n")
+            append("⚙️ Parameters:\n")
             schema.forEach { argument ->
                 val isErrorArg = argument.name == argumentName
-                val prefix = if (isErrorArg) "  ⚠️ " else "  "
-                stringBuilder.append(prefix).append(argument.name).append(" (").append(argument.typeName)
-                    .append(")")
+                if (isErrorArg) append("  ⚠️ ") else append("  ")
+                append(argument.name).append(" (").append(argument.typeName).append(")")
                 if (argument.description.isNotBlank()) {
-                    stringBuilder.append(" - ").append(argument.description)
+                    append(" - ").append(argument.description)
                 }
                 if (argument.isOptional && argument.defaultValue != null) {
-                    stringBuilder.append(" (Default: ").append(argument.defaultValue).append(")")
+                    append(" (Default: ").append(argument.defaultValue).append(")")
                 } else if (argument.isOptional) {
-                    stringBuilder.append(" (Optional)")
+                    append(" (Optional)")
                 }
-                stringBuilder.append("\n")
+                append("\n")
             }
         }
-        return stringBuilder.toString().trimEnd()
-    }
+    }.trimEnd()
 }
