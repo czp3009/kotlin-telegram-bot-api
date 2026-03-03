@@ -4,6 +4,7 @@ import com.hiczp.telegram.bot.protocol.TelegramBotApi
 import com.hiczp.telegram.bot.protocol.createTelegramBotApi
 import com.hiczp.telegram.bot.protocol.exception.TelegramErrorResponseException
 import com.hiczp.telegram.bot.protocol.exception.isRetryable
+import com.hiczp.telegram.bot.protocol.plugin.NoRetryRequestAttributeKey
 import com.hiczp.telegram.bot.protocol.plugin.TelegramFileDownloadPlugin
 import com.hiczp.telegram.bot.protocol.plugin.TelegramLongPollingPlugin
 import com.hiczp.telegram.bot.protocol.plugin.TelegramServerErrorPlugin
@@ -102,31 +103,27 @@ class TelegramBotClient private constructor(
                 install(DefaultRequest) {
                     headers.appendIfNameAbsent(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 }
+                install(HttpRequestRetry) {
+                    retryIf(maxRetries = 3) { _, response ->
+                        val statusCode = response.status.value
+                        TelegramErrorResponseException.isRetryable(statusCode)
+                    }
+                    retryOnExceptionIf(maxRetries = 3) { request, throwable ->
+                        val cause = throwable.unwrapCancellationException()
+                        if (cause is HttpRequestTimeoutException || cause is ConnectTimeoutException || cause is SocketTimeoutException) {
+                            return@retryOnExceptionIf !request.attributes.contains(NoRetryRequestAttributeKey)
+                        }
+                        if (cause is TelegramErrorResponseException) return@retryOnExceptionIf cause.isRetryable
+                        if (throwable is CancellationException) return@retryOnExceptionIf false
+                        true
+                    }
+                    delayMillis {
+                        (cause as? TelegramErrorResponseException)?.parameters?.retryAfter?.times(1000)
+                            ?: (1_000 + Random.nextLong(1_000L))
+                    }
+                }
                 if (throwOnErrorResponse) {
-                    install(HttpRequestRetry) {
-                        retryOnExceptionIf(maxRetries = 3) { _, throwable ->
-                            val cause = throwable.unwrapCancellationException()
-                            if (cause is HttpRequestTimeoutException || cause is ConnectTimeoutException || cause is SocketTimeoutException) return@retryOnExceptionIf true
-                            if (cause is TelegramErrorResponseException) return@retryOnExceptionIf cause.isRetryable
-                            if (throwable is CancellationException) return@retryOnExceptionIf false
-                            true
-                        }
-                        delayMillis {
-                            (cause as? TelegramErrorResponseException)?.parameters?.retryAfter?.times(1000)
-                                ?: (1_000 + Random.nextLong(1_000L))
-                        }
-                    }
                     install(TelegramServerErrorPlugin)
-                } else {
-                    install(HttpRequestRetry) {
-                        retryIf(maxRetries = 3) { _, response ->
-                            val statusCode = response.status.value
-                            TelegramErrorResponseException.isRetryable(statusCode)
-                        }
-                        retryOnException(maxRetries = 3, retryOnTimeout = true)
-                        //Telegram server always returns Retry-After header
-                        constantDelay(millis = 1_000, respectRetryAfterHeader = true)
-                    }
                 }
                 install(TelegramLongPollingPlugin)
                 install(HttpTimeout) {
