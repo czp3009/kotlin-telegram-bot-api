@@ -128,12 +128,12 @@ class TelegramBotClient private constructor(
                         constantDelay(millis = 1_000, respectRetryAfterHeader = true)
                     }
                 }
+                install(TelegramLongPollingPlugin)
                 install(HttpTimeout) {
                     requestTimeoutMillis = 10_000
                     connectTimeoutMillis = 5_000
                     socketTimeoutMillis = 10_000
                 }
-                install(TelegramLongPollingPlugin)
                 install(TelegramFileDownloadPlugin)
                 additionalConfiguration()
                 //engine { 
