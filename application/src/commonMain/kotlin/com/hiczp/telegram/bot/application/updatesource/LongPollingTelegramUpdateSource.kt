@@ -36,6 +36,7 @@ private val logger = KotlinLogging.logger {}
  * @param processingMode The processing mode for handling updates. Defaults to [ProcessingMode.CONCURRENT].
  * @param maxPendingUpdates Maximum number of concurrent updates being processed. Only applies to concurrent modes.
  *                          Must be positive if specified. Defaults(null) to no limit.
+ * @param getUpdatesTimeout Timeout in seconds for long polling requests. Defaults to 30 seconds.
  * @param fastFail If `true`, exceptions during polling will be propagated. If `false` (default),
  *                 errors are logged and polling continues with retry.
  * @param coroutineDispatcher The [CoroutineDispatcher] used for the internal fetch scope.
@@ -47,6 +48,7 @@ open class LongPollingTelegramUpdateSource(
     private val allowedUpdates: List<String>? = null,
     private val processingMode: ProcessingMode = ProcessingMode.CONCURRENT,
     maxPendingUpdates: Int? = null,
+    private val getUpdatesTimeout: Int = 30,
     private val fastFail: Boolean = false,
     coroutineDispatcher: CoroutineDispatcher? = null,
 ) : TelegramUpdateSource {
@@ -188,7 +190,7 @@ open class LongPollingTelegramUpdateSource(
         return try {
             client.getUpdates(
                 offset = nextOffset,
-                timeout = TIMEOUT,
+                timeout = getUpdatesTimeout.toLong(),
                 allowedUpdates = allowedUpdates,
             ).getOrThrow()
         } catch (e: CancellationException) {
@@ -261,7 +263,6 @@ open class LongPollingTelegramUpdateSource(
     }
 
     companion object {
-        private const val TIMEOUT = 30L
         private val IDLE_RESET = 6.days
     }
 }

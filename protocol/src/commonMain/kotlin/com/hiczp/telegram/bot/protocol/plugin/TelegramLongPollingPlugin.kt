@@ -33,9 +33,9 @@ val TelegramLongPollingPlugin = createClientPlugin("TelegramLongPollingPlugin") 
         val methodName = request.url.pathSegments.lastOrNull()
         if (methodName == "getUpdates") {
             request.timeout {
-                requestTimeoutMillis = 50_000
+                requestTimeoutMillis = 35_000
                 connectTimeoutMillis = 5_000
-                socketTimeoutMillis = 50_000
+                socketTimeoutMillis = 35_000
             }
         }
         proceed(request)
