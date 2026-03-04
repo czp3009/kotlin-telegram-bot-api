@@ -68,15 +68,17 @@ kotlin-telegram-bot-api/
 ├── protocol-update-codegen/ # KSP processor that generates TelegramBotEvent sealed interface from Update model
 ├── client/                # High-level client wrapper
 │   └── TelegramBotClient.kt
-└── application/           # Bot application framework with lifecycle management
-    ├── TelegramBotApplication.kt      # Main orchestrator
-    ├── updatesource/                  # Update sources (long polling, mock)
-    ├── interceptor/                   # Interceptor infrastructure and built-in interceptors
-    │   └── builtin/conversation/      # Conversation FSM support
-    ├── dispatcher/                    # Event dispatching
-    │   └── handler/                   # Handler DSL (handling {}, command(), etc.)
-    ├── context/                       # Event context and helper extensions
-    └── command/                       # Command parsing utilities
+├── application/           # Bot application framework with lifecycle management
+│   ├── TelegramBotApplication.kt      # Main orchestrator
+│   ├── updatesource/                  # Update sources (long polling, mock)
+│   ├── interceptor/                   # Interceptor infrastructure and built-in interceptors
+│   │   └── builtin/conversation/      # Conversation FSM support
+│   ├── dispatcher/                    # Event dispatching
+│   │   └── handler/                   # Handler DSL (handling {}, command(), etc.)
+│   ├── context/                       # Event context and helper extensions
+│   └── command/                       # Command parsing utilities
+└── sample/               # Example bot implementations
+    └── basic/            # EchoBot and CommandBot samples
 ```
 
 ### Key Dependencies
@@ -389,7 +391,21 @@ val dispatcher = HandlerTelegramEventDispatcher(handling {
         }
     }
 
-    // Chat type filters
+  // Custom reusable authentication DSL with async predicate
+  // See sample/basic/src/commonMain/kotlin/com/hiczp/telegram/bot/sample/dsl/AuthDsl.kt
+  on<MessageEvent> {
+    requireAuth(
+      authService = authService,
+      onRejected = { replyMessage("Unauthorized: Admin access required") }
+    ) {
+      command("admin") {
+        handle { replyMessage("Admin panel") }
+        subCommandEndpoint("status") { replyMessage("System status: OK") }
+      }
+    }
+  }
+
+  // Chat type filters
   whenMessageEventPrivateChat { /* private chat only */ }
   whenMessageEventGroupChat { /* group chat only */ }
   whenMessageEventSupergroupChat { /* supergroup only */ }
@@ -535,7 +551,12 @@ val eventDispatcher = SimpleTelegramEventDispatcher { context ->
 
 ### Sample Module
 
-A basic echo bot sample is available in `:sample:basic` demonstrating a simple long-polling bot.
+Example bot implementations in `:sample:basic`:
+
+- **EchoBot.kt** - Minimal echo bot demonstrating basic long-polling setup
+- **CommandBot.kt** - Comprehensive command handling demo with typed arguments (`BotArguments`), subcommands, and
+  the `requireAuth` DSL pattern for async authorization
+- **AuthDsl.kt** - Reusable authentication DSL using `middleware` with suspend predicates for async database/API lookups
 
 ### Supported Platforms
 
