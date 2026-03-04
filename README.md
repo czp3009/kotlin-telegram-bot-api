@@ -354,6 +354,59 @@ val routes = handling {
 }
 ```
 
+#### Custom Middleware DSL
+
+Since `middleware` supports suspend predicates, you can build reusable authentication DSLs that perform async
+authorization checks (e.g., querying a database or external service):
+
+```kotlin
+// AuthService.kt - Your authentication service
+class AuthService {
+   private val adminUserIds = setOf(123456L, 789012L)
+
+   // Simulates async database/API call to check permissions
+   suspend fun isAdmin(userId: Long?): Boolean {
+      if (userId == null) return false
+      // In real app: query database or external API
+      return userId in adminUserIds
+   }
+}
+
+// AuthDsl.kt - Reusable authentication DSL
+fun HandlerRoute<MessageEvent>.requireAuth(
+   authService: AuthService,
+   onRejected: suspend HandlerBotCall<MessageEvent>.() -> Unit,
+   build: HandlerRoute<MessageEvent>.() -> Unit
+) = middleware(
+   predicate = { context ->
+      authService.isAdmin(context.event.message.from?.id)  // suspend call
+   },
+   onRejected = onRejected,
+   build = build
+)
+
+// Usage in your bot
+val authService = AuthService()
+
+val routes = handling {
+   onMessageEvent {
+      requireAuth(
+         authService = authService,
+         onRejected = { replyMessage("Unauthorized: Admin access required") }
+      ) {
+         command("admin") {
+            handle { replyMessage("Admin Commands: status, ban, user") }
+            subCommandEndpoint("status") { replyMessage("System status: OK") }
+            subCommandEndpoint("ban") { /* ... */ }
+         }
+      }
+   }
+}
+```
+
+This pattern enables clean separation of authentication logic from business logic, with full support for async
+operations.
+
 ### Conversations (Multi-turn)
 
 ```kotlin
