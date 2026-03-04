@@ -22,7 +22,7 @@
  * @see TelegramBotApplication
  * @see SimpleTelegramEventDispatcher
  */
-package com.hiczp.telegram.bot.sample.basic
+package com.hiczp.telegram.bot.sample.echo
 
 import com.hiczp.telegram.bot.application.TelegramBotApplication
 import com.hiczp.telegram.bot.application.dispatcher.SimpleTelegramEventDispatcher

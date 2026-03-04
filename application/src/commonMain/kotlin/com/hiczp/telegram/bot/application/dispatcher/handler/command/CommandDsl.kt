@@ -4,6 +4,7 @@ import com.hiczp.telegram.bot.application.command.matchesCommand
 import com.hiczp.telegram.bot.application.command.parseCommand
 import com.hiczp.telegram.bot.application.command.usernameMatched
 import com.hiczp.telegram.bot.application.context.TelegramBotEventContext
+import com.hiczp.telegram.bot.application.context.action.replyMessage
 import com.hiczp.telegram.bot.application.dispatcher.handler.*
 import com.hiczp.telegram.bot.protocol.event.MessageEvent
 import com.hiczp.telegram.bot.protocol.event.TelegramBotEvent
@@ -128,22 +129,32 @@ fun HandlerRoute<TelegramBotEvent>.command(name: String, build: CommandRoute.() 
  * }
  * ```
  *
+ * Error handling example:
+ * ```kotlin
+ * // Custom error handler
+ * command("ban", ::BanArgs, onError = { e ->
+ *     replyMessage("Error: ${e.message}")
+ * }) { ... }
+ *
+ * // Default behavior: send help message on error
+ * command("ban", ::BanArgs) { ... }
+ * ```
+ *
  * @param A The type of [BotArguments].
  * @param name The command name (without leading `/`).
  * @param argumentsFactory A function that creates a new [BotArguments] instance for each invocation.
  *        Use a constructor reference (e.g., `::EchoArgs`) or a lambda (e.g., `{ EchoArgs() }`).
  *        Do not reuse the same instance across invocations.
- * @param sendHelpOnError Whether to automatically send a help message on parsing errors.
- *        If `false` (the default), throws [CommandParseException] instead, allowing custom
- *        error handling in interceptors or outer handlers.
+ * @param onError An error handler invoked when argument parsing fails.
+ *        Defaults to sending a formatted help message via [replyMessage].
  * @param handler The handler to invoke with the structured context.
  */
 fun <A : BotArguments> HandlerRoute<MessageEvent>.command(
     name: String,
     argumentsFactory: () -> A,
-    sendHelpOnError: Boolean = false,
+    onError: suspend CommandBotCall.(CommandParseException) -> Unit = { replyMessage(text = it.generateHelpText()).getOrThrow() },
     handler: suspend StructuredCommandBotCall<A>.() -> Unit
-) = command(name, build = { executeEndpoint(argumentsFactory, sendHelpOnError, handler) })
+) = command(name, build = { executeEndpoint(argumentsFactory, onError, handler) })
 
 /**
  * Registers a root command with typed arguments on any event route.
@@ -155,18 +166,17 @@ fun <A : BotArguments> HandlerRoute<MessageEvent>.command(
  * @param argumentsFactory A function that creates a new [BotArguments] instance for each invocation.
  *        Use a constructor reference (e.g., `::EchoArgs`) or a lambda (e.g., `{ EchoArgs() }`).
  *        Do not reuse the same instance across invocations.
- * @param sendHelpOnError Whether to automatically send a help message on parsing errors.
- *        If `false` (the default), throws [CommandParseException] instead, allowing custom
- *        error handling in interceptors or outer handlers.
+ * @param onError An error handler invoked when argument parsing fails.
+ *        Defaults to sending a formatted help message via [replyMessage].
  * @param handler The handler to invoke with the structured context.
  */
 @JvmName("commandWithArgsOnEvent")
 fun <A : BotArguments> HandlerRoute<TelegramBotEvent>.command(
     name: String,
     argumentsFactory: () -> A,
-    sendHelpOnError: Boolean = false,
+    onError: suspend CommandBotCall.(CommandParseException) -> Unit = { replyMessage(text = it.generateHelpText()).getOrThrow() },
     handler: suspend StructuredCommandBotCall<A>.() -> Unit
-) = on<MessageEvent> { command(name, build = { executeEndpoint(argumentsFactory, sendHelpOnError, handler) }) }
+) = on<MessageEvent> { command(name, build = { executeEndpoint(argumentsFactory, onError, handler) }) }
 
 /**
  * Registers a root command with a handler (terminal mode).
@@ -270,20 +280,31 @@ fun CommandRoute.subCommand(name: String, build: CommandRoute.() -> Unit) {
  * }
  * ```
  *
+ * Error handling example:
+ * ```kotlin
+ * // Custom error handler
+ * subCommand("ban", ::BanArgs, onError = { e ->
+ *     replyMessage("Error: ${e.message}")
+ * }) { ... }
+ *
+ * // Default behavior: send help message on error
+ * subCommand("ban", ::BanArgs) { ... }
+ * ```
+ *
  * @param A The type of [BotArguments].
  * @param name The subcommand name.
  * @param argumentsFactory A function that creates a new [BotArguments] instance for each invocation.
  *        Use a constructor reference (e.g., `::BanArgs`) or a lambda (e.g., `{ BanArgs() }`).
- * @param sendHelpOnError Whether to automatically send a help message on parsing errors.
- *        If `false` (the default), throws [CommandParseException] instead.
+ * @param onError An error handler invoked when argument parsing fails.
+ *        Defaults to sending a formatted help message via [replyMessage].
  * @param handler The handler to invoke with the structured context.
  */
 fun <A : BotArguments> CommandRoute.subCommand(
     name: String,
     argumentsFactory: () -> A,
-    sendHelpOnError: Boolean = false,
+    onError: suspend CommandBotCall.(CommandParseException) -> Unit = { replyMessage(text = it.generateHelpText()).getOrThrow() },
     handler: suspend StructuredCommandBotCall<A>.() -> Unit
-) = subCommand(name) { executeEndpoint(argumentsFactory, sendHelpOnError, handler) }
+) = subCommand(name) { executeEndpoint(argumentsFactory, onError, handler) }
 
 /**
  * Registers a subcommand with a handler (terminal mode).

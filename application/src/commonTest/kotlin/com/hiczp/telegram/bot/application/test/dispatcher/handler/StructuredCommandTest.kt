@@ -211,7 +211,7 @@ class StructuredCommandTest {
         args.parse(listOf("Alice"), "test")
         assertEquals("Alice", args.name)
 
-        // Second call should throw IllegalStateException
+        // The second call should throw IllegalStateException
         val exception = assertFailsWith<IllegalStateException> {
             args.parse(listOf("Bob"), "test")
         }
@@ -615,14 +615,14 @@ class StructuredCommandTest {
     }
 
     @Test
-    fun `validation failure should throw exception by default`() = runTest {
+    fun `validation failure should throw exception when onError throws`() = runTest {
         class StrictArgs : BotArguments() {
             val value: Int by requireArgument<Int>("Value")
                 .validate { require(it in 1..10) { "Value must be 1-10" } }
         }
 
         val routeNode = handling {
-            command("strict", ::StrictArgs, sendHelpOnError = false) {
+            command("strict", ::StrictArgs, onError = { throw it }) {
                 invokedHandlers.add("strict:${arguments.value}")
             }
         }
@@ -681,12 +681,27 @@ class StructuredCommandTest {
         assertEquals(listOf("greet:Alice"), invokedHandlers)
     }
 
-    // ==================== sendHelpOnError Tests ====================
+    // ==================== Error Handling Tests ====================
 
     @Test
-    fun `sendHelpOnError=false should throw on missing required argument`() = runTest {
+    fun `custom onError can swallow parsing error and skip handler`() = runTest {
+        // This test verifies custom error handling behavior.
+        // A real default onError test would require a client that can observe replyMessage side effects.
         val routeNode = handling {
-            command("test", ::SimpleArgs, sendHelpOnError = false) {
+            command("test", ::SimpleArgs, onError = { /* silently swallow for this test */ }) {
+                invokedHandlers.add("test:${arguments.name}")
+            }
+        }
+
+        // Missing argument: onError swallows parse error, so dispatch succeeds and handler is not invoked.
+        assertTrue(routeNode.execute(createContext("/test")))
+        assertTrue(invokedHandlers.isEmpty())  // Handler not invoked due to parse error
+    }
+
+    @Test
+    fun `custom onError can throw exception`() = runTest {
+        val routeNode = handling {
+            command("test", ::SimpleArgs, onError = { throw it }) {
                 invokedHandlers.add("test:${arguments.name}")
             }
         }
@@ -700,10 +715,10 @@ class StructuredCommandTest {
     }
 
     @Test
-    fun `subCommand with sendHelpOnError=false should throw on error`() = runTest {
+    fun `subCommand with custom onError that throws`() = runTest {
         val routeNode = handling {
             command("admin") {
-                subCommand("user", ::SimpleArgs, sendHelpOnError = false) {
+                subCommand("user", ::SimpleArgs, onError = { throw it }) {
                     invokedHandlers.add("admin:user:${arguments.name}")
                 }
             }
@@ -719,7 +734,7 @@ class StructuredCommandTest {
     // ==================== Handler-level Exception Catching Tests ====================
 
     @Test
-    fun `handler can catch CommandParseException with sendHelpOnError=false`() = runTest {
+    fun `handler can catch CommandParseException with manual parsing`() = runTest {
         var capturedException: CommandParseException? = null
 
         val routeNode = handling {
@@ -775,7 +790,7 @@ class StructuredCommandTest {
         var capturedException: CommandParseException? = null
 
         val routeNode = handling {
-            command("test", ::SimpleArgs, sendHelpOnError = false) {
+            command("test", ::SimpleArgs, onError = { throw it }) {
                 invokedHandlers.add("test:${arguments.name}")
             }
         }
@@ -798,7 +813,7 @@ class StructuredCommandTest {
         var sentMessage: String? = null
 
         val routeNode = handling {
-            command("test", ::SimpleArgs, sendHelpOnError = false) {
+            command("test", ::SimpleArgs, onError = { throw it }) {
                 invokedHandlers.add("test:${arguments.name}")
             }
         }
@@ -819,7 +834,7 @@ class StructuredCommandTest {
         var generatedHelp: String? = null
 
         val routeNode = handling {
-            command("test", ::SimpleArgs, sendHelpOnError = false) {
+            command("test", ::SimpleArgs, onError = { throw it }) {
                 invokedHandlers.add("test:${arguments.name}")
             }
         }
@@ -833,7 +848,7 @@ class StructuredCommandTest {
         }
 
         assertNotNull(generatedHelp)
-        assertTrue(generatedHelp.contains("❌ Missing required parameter"))
+        assertTrue(generatedHelp.contains("Missing required parameter"))
         assertTrue(generatedHelp.contains("/test <name>"))
     }
 
@@ -842,7 +857,7 @@ class StructuredCommandTest {
         var capturedChatId: Long? = null
 
         val routeNode = handling {
-            command("test", ::SimpleArgs, sendHelpOnError = false) {
+            command("test", ::SimpleArgs, onError = { throw it }) {
                 invokedHandlers.add("test:${arguments.name}")
             }
         }
@@ -861,7 +876,7 @@ class StructuredCommandTest {
     @Test
     fun `interceptor can swallow exception to continue processing`() = runTest {
         val routeNode = handling {
-            command("test", ::SimpleArgs, sendHelpOnError = false) {
+            command("test", ::SimpleArgs, onError = { throw it }) {
                 invokedHandlers.add("test:${arguments.name}")
             }
         }

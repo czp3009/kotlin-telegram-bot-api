@@ -721,25 +721,34 @@ class ValidatedArgs : BotArguments("Validated arguments") {
 
 ### Error Handling
 
-By default, `CommandParseException` is thrown on parsing errors:
+By default, when argument parsing fails, a formatted help message is automatically sent to the user:
 
 ```kotlin
-command("test", ::SimpleArgs, sendHelpOnError = false) {
-    // Throws on missing required argument
+command("ban", ::BanArgs) {
+  // If arguments fail to parse, help message is sent automatically
+  val username = arguments.username
+  val duration = arguments.duration
+  sendMessage("Banned $username")
 }
 ```
 
-Use `sendHelpOnError = true` to automatically send help messages:
+To customize error handling, provide an `onError` callback:
 
 ```kotlin
-command("ban", ::BanArgs, sendHelpOnError = true) {
-    // Automatically sends help if arguments fail to parse
+command("ban", ::BanArgs, onError = { e ->
+  sendMessage("Error: ${e.message}")
+}) {
+  // Custom error handling
 }
 ```
 
-Or catch exceptions at the interceptor level:
+To catch exceptions at the interceptor level, rethrow from `onError`:
 
 ```kotlin
+command("ban", ::BanArgs, onError = { e -> throw e }) {
+  // ...
+}
+
 val interceptor: TelegramEventInterceptor = { context ->
     try {
         this.process(context)

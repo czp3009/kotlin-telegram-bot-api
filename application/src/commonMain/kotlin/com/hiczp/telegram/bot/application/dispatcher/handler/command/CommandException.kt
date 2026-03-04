@@ -3,7 +3,7 @@ package com.hiczp.telegram.bot.application.dispatcher.handler.command
 /**
  * Thrown when an argument value fails validation or transformation.
  *
- * This exception is caught by [CommandRoute.executeEndpoint] and converted to a help message.
+ * This exception is caught by [CommandRoute.executeEndpoint] and converted to a [CommandParseException].
  *
  * @property argumentName The name of the argument that failed validation, or null if not available.
  */
@@ -15,7 +15,18 @@ class InvalidArgumentValueException(
 
 /**
  * Thrown when command argument parsing fails, containing all information needed
- * to generate contextual help text or send an error response.
+ * to generate contextual help text or custom error responses.
+ *
+ * This exception is handled automatically by default in [command] and [subCommand] functions,
+ * which send a formatted help message to the user. You can customize this behavior by
+ * providing an `onError` callback:
+ *
+ * ```kotlin
+ * // Custom error handler
+ * command("ban", ::BanArgs, onError = { e ->
+ *     replyMessage("Error: ${e.message}")
+ * }) { ... }
+ * ```
  *
  * @property context The command context, providing access to the client and event for sending responses.
  * @property commandPath The full command path (e.g., "admin user add").
@@ -43,7 +54,7 @@ class CommandParseException(
      *
      * Example output:
      * ```
-     * ❌ Missing required parameter
+     * ❌ Parameter 'email' - Missing required parameter
      *
      * 📝 Usage:
      * /admin user add <name> <email> [role]

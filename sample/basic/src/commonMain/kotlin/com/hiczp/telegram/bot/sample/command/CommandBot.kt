@@ -18,7 +18,6 @@
  * - Typed command arguments using [BotArguments]
  * - Enum argument parsing with [enumArgument]
  * - Nested subcommands with [subCommand] and [subCommandEndpoint]
- * - Automatic help generation on argument errors (`sendHelpOnError = true`)
  * - Access control with custom DSL ([requireAuth])
  * - Request logging via [loggingInterceptor]
  *
@@ -35,7 +34,7 @@
  * @see command
  * @see commandEndpoint
  */
-package com.hiczp.telegram.bot.sample.basic
+package com.hiczp.telegram.bot.sample.command
 
 import com.hiczp.telegram.bot.application.TelegramBotApplication
 import com.hiczp.telegram.bot.application.context.action.replyMessage
@@ -84,7 +83,7 @@ private class UserInfoArgs : BotArguments("Show user information") {
  * - Simple command with [commandEndpoint]
  * - Command with typed arguments using [BotArguments]
  * - Nested subcommands
- * - Automatic help generation on argument errors
+ * - Access control with [requireAuth]
  */
 private suspend fun runCommandBot(botToken: String) {
     // Mock authentication service (in a real app, this would be a database/API service)
@@ -119,15 +118,15 @@ private suspend fun runCommandBot(botToken: String) {
             replyMessage("Pong!")
         }
 
-        // Command with typed arguments
-        command("echo", ::EchoArgs, sendHelpOnError = true) {
+        // Command with typed arguments (using default error handling - sends help message on error)
+        command("echo", ::EchoArgs) {
             repeat(arguments.count) {
                 replyMessage(arguments.message)
             }
         }
 
-        // Command with enum argument
-        command("calc", ::CalcArgs, sendHelpOnError = true) {
+        // Command with enum argument (using default error handling)
+        command("calc", ::CalcArgs) {
             val result = when (arguments.operation) {
                 Operation.ADD -> arguments.a + arguments.b
                 Operation.SUB -> arguments.a - arguments.b
@@ -168,7 +167,8 @@ private suspend fun runCommandBot(botToken: String) {
                         )
                     }
 
-                    subCommand("ban", ::BanArgs, sendHelpOnError = true) {
+                    // Subcommand with typed arguments (using default error handling)
+                    subCommand("ban", ::BanArgs) {
                         val reason = arguments.reason ?: "No reason provided"
                         replyMessage("Banned user ${arguments.userId}. Reason: $reason")
                     }
@@ -189,7 +189,8 @@ private suspend fun runCommandBot(botToken: String) {
                             )
                         }
 
-                        subCommand("info", ::UserInfoArgs, sendHelpOnError = true) {
+                        // Subcommand with typed arguments (using default error handling)
+                        subCommand("info", ::UserInfoArgs) {
                             replyMessage("User ${arguments.userId}: Status=Active, Joined=2024-01-01")
                         }
                     }

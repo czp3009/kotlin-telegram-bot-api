@@ -174,9 +174,22 @@ val routes = handling {
         }
     }
 
-    // Command with automatic help on parsing errors
-    command("kick", ::BanArgs, sendHelpOnError = true) {
-        // If arguments fail to parse, automatically sends help message to user
+   // Command with default error handling (automatically sends help on parsing errors)
+   command("kick", ::BanArgs) {
+      // If arguments fail to parse, help message is sent automatically
+      kickUser(arguments.username)
+   }
+
+   // Command with custom parse-error handling
+   command("mute", ::BanArgs, onError = { e ->
+      sendMessage("Invalid command: ${e.message}")
+   }) {
+      muteUser(arguments.username)
+   }
+
+   // If you want to catch CommandParseException in an interceptor,
+   // rethrow it from onError first.
+   command("strict", ::BanArgs, onError = { e -> throw e }) {
         kickUser(arguments.username)
     }
 }

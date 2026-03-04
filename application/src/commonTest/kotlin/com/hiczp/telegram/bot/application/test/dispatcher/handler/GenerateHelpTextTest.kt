@@ -760,7 +760,7 @@ class GenerateHelpTextTest {
         val help = exception.generateHelpText()
 
         // Check all parts are present
-        assertTrue(help.contains("❌ Invalid email format"))
+        assertTrue(help.contains("❌ Parameter 'email' - Invalid email format"))
         assertTrue(help.contains("📝 Usage:"))
         assertTrue(help.contains("/admin user create <username> <email> [role] [sendWelcome]"))
         assertTrue(help.contains("Create a new user in the system with specified roles and permissions"))
@@ -833,7 +833,7 @@ class GenerateHelpTextTest {
 
         val help = exception.generateHelpText()
 
-        assertTrue(help.contains("❌ Missing required parameter"))
+        assertTrue(help.contains("❌ Parameter 'reason' - Missing required parameter"))
         assertTrue(help.contains("/ban <userId> <reason> [duration]"))
         assertTrue(help.contains("Ban a user from the server"))
         assertTrue(help.contains("userId (Long) - The ID of the user to ban"))
@@ -891,7 +891,7 @@ class GenerateHelpTextTest {
 
         val help = exception.generateHelpText()
 
-        assertTrue(help.contains("❌ Port must be between 1 and 65535"))
+        assertTrue(help.contains("❌ Parameter 'port' - Port must be between 1 and 65535"))
         assertTrue(help.contains("/setPort <port>"))
         assertTrue(help.contains("⚠️ port (Int) - Port number (1-65535)"))
     }
@@ -928,7 +928,7 @@ class GenerateHelpTextTest {
 
         val help = exception.generateHelpText()
 
-        assertTrue(help.contains("❌ Invalid format: For input string: \"abc\""))
+        assertTrue(help.contains("❌ Parameter 'b' - Invalid format: For input string: \"abc\""))
         assertTrue(help.contains("/add <a> <b>"))
         assertTrue(help.contains("a (Int) - First number"))
         assertTrue(help.contains("⚠️ b (Int) - Second number"))

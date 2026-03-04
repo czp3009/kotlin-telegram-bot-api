@@ -337,9 +337,18 @@ val dispatcher = HandlerTelegramEventDispatcher(handling {
         val duration = ctx.arguments.duration
     }
 
-    // Command with typed arguments and automatic help on errors
-    command("kick", ::KickArgs, sendHelpOnError = true) { ctx ->
-        // If arguments fail to parse, automatically sends help message to user
+  // Command with typed arguments and default error handling (sends help message on error)
+  command("ban", ::BanArgs) { ctx ->
+    // ctx.arguments.username and ctx.arguments.duration are typed
+    val username = ctx.arguments.username
+    val duration = ctx.arguments.duration
+  }
+
+  // Command with custom error handling
+  command("kick", ::KickArgs, onError = { e ->
+    replyMessage("Error: ${e.message}")
+  }) { ctx ->
+    // Custom error response
     }
 
     // Command with subcommands
