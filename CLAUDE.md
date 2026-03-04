@@ -238,6 +238,7 @@ The `HandlerTelegramEventDispatcher` provides a type-safe routing DSL for event 
 matchers are in `handler/matcher/`:
 
 - **Handling.kt** - Core DSL (`handling`, `match`, `whenMatch`, `include`, `select`, `middleware`, `whenMiddleware`)
+- **CommandDsl.kt** - Command routing (`onCommand`, `command`, `commandEndpoint`, `subCommand`, `subCommandEndpoint`)
 - **Composite.kt** - Logic combinators (`allOf`, `anyOf`, `not`, `whenAllOf`, `whenAnyOf`, `whenNot`)
 - **EventType.kt** - Event type matchers (`on<MessageEvent>`, `on<CallbackQueryEvent>`, `on<InlineQueryEvent>`, etc.)
 - **MessageEvent.kt** - Message handlers (`whenMessageEventText`, `whenMessageEventTextRegex`,
@@ -300,6 +301,20 @@ matchers are in `handler/matcher/`:
   for further nesting.
 - All matcher functions follow the pattern: `on/when` + `EventName` + `Content` (e.g., `whenMessageEventText`,
   `whenCallbackQueryEventData`).
+
+**Command Scoping:**
+
+Use `onCommand` to create a child route that only accepts command messages addressed to this bot. This is useful for
+scoping authentication middleware to commands only, preventing rejection of non-command text messages:
+
+```kotlin
+// Without onCommand, requireAuth would reject ALL non-admin messages, including regular text
+onCommand {
+  requireAuth(authService, onRejected = { replyMessage("Unauthorized") }) {
+    command("admin") { /* protected commands */ }
+  }
+}
+```
 
 Each matcher provides two variants: one for the specific event type scope (e.g., inside `on<MessageEvent>`) and one
 for the root level that auto-wraps with event type.
@@ -393,7 +408,9 @@ val dispatcher = HandlerTelegramEventDispatcher(handling {
 
   // Custom reusable authentication DSL with async predicate
   // See sample/basic/src/commonMain/kotlin/com/hiczp/telegram/bot/sample/dsl/AuthDsl.kt
-  on<MessageEvent> {
+  // Use onCommand to scope auth checks to command messages only
+  // This prevents requireAuth from rejecting non-command text messages
+  onCommand {
     requireAuth(
       authService = authService,
       onRejected = { replyMessage("Unauthorized: Admin access required") }
