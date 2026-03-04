@@ -135,7 +135,14 @@ private suspend fun runCommandBot(botToken: String) {
                         }
 
                         subCommandEndpoint("list") {
-                            replyMessage("Users:\n- User1 (ID: 123)\n- User2 (ID: 456)\n- User3 (ID: 789)")
+                            replyMessage(
+                                """
+                                Users:
+                                - User1 (ID: 123)
+                                - User2 (ID: 456)
+                                - User3 (ID: 789)
+                                """.trimIndent()
+                            )
                         }
 
                         subCommand("info", ::UserInfoArgs, sendHelpOnError = true) {
