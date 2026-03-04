@@ -1,3 +1,40 @@
+/**
+ * Command Bot Sample
+ *
+ * A Telegram bot demonstrating advanced command handling features including typed arguments,
+ * subcommands, and access control. This sample uses [HandlerTelegramEventDispatcher] with
+ * the handler DSL for type-safe routing.
+ *
+ * ## Usage
+ *
+ * Run with bot token as command line argument:
+ * ```
+ * ./gradlew :sample:basic:jvmRun --args="YOUR_BOT_TOKEN" -DmainClass="com.hiczp.telegram.bot.sample.basic.CommandBotKt" --quiet
+ * ```
+ *
+ * ## Features Demonstrated
+ *
+ * - Simple command handling with [commandEndpoint]
+ * - Typed command arguments using [BotArguments]
+ * - Enum argument parsing with [enumArgument]
+ * - Nested subcommands with [subCommand] and [subCommandEndpoint]
+ * - Automatic help generation on argument errors (`sendHelpOnError = true`)
+ * - Access control with custom DSL ([requireAuth])
+ * - Request logging via [loggingInterceptor]
+ *
+ * ## Available Commands
+ *
+ * - `/start` - Show help message
+ * - `/ping` - Health check
+ * - `/echo <message> [count]` - Echo a message (with optional repeat count)
+ * - `/calc <a> <op> <b>` - Calculator (op: ADD, SUB, MUL, DIV)
+ * - `/admin` - Admin commands (restricted access)
+ *
+ * @see HandlerTelegramEventDispatcher
+ * @see handling
+ * @see command
+ * @see commandEndpoint
+ */
 package com.hiczp.telegram.bot.sample.basic
 
 import com.hiczp.telegram.bot.application.TelegramBotApplication
@@ -53,6 +90,13 @@ private suspend fun runCommandBot(botToken: String) {
     // Mock authentication service (in a real app, this would be a database/API service)
     val authService = MockAuthService()
 
+    // Performance note: The handler uses short-circuit evaluation for efficiency.
+    // Each request stops at the first matching handler without traversing the entire tree.
+    // This means the framework cannot provide a command tree at runtime.
+    //
+    // If you need to dynamically list available subcommands at each level (e.g., for
+    // interactive help or autocomplete), you should maintain a separate command tree
+    // structure outside the handler DSL, then generate handlers from it programmatically.
     val eventDispatcher = HandlerTelegramEventDispatcher(handling {
         // Simple command without arguments
         commandEndpoint("start") {
