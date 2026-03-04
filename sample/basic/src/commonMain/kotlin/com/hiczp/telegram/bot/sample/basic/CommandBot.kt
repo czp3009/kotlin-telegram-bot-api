@@ -6,6 +6,9 @@ import com.hiczp.telegram.bot.application.dispatcher.handler.HandlerTelegramEven
 import com.hiczp.telegram.bot.application.dispatcher.handler.command.*
 import com.hiczp.telegram.bot.application.dispatcher.handler.handling
 import com.hiczp.telegram.bot.application.interceptor.builtin.logging.loggingInterceptor
+import com.hiczp.telegram.bot.protocol.event.MessageEvent
+import com.hiczp.telegram.bot.sample.dsl.MockAuthService
+import com.hiczp.telegram.bot.sample.dsl.requireAuth
 
 // Enum for calc command - must be defined at top level (not local)
 private enum class Operation {
@@ -48,8 +51,8 @@ private class UserInfoArgs : BotArguments("Show user information") {
  * - Automatic help generation on argument errors
  */
 private suspend fun runCommandBot(botToken: String) {
-    // Admin user IDs for access control (replace with actual admin user IDs)
-    val adminUserIds = setOf(196664407L)
+    // Mock authentication service (in a real app, this would be a database/API service)
+    val authService = MockAuthService()
 
     val eventDispatcher = HandlerTelegramEventDispatcher(handling {
         // Simple command without arguments
@@ -91,69 +94,54 @@ private suspend fun runCommandBot(botToken: String) {
             replyMessage("${arguments.a} ${arguments.operation} ${arguments.b} = $result")
         }
 
-        // Nested subcommands with access control in handler
-        command("admin") {
-            // Default handler for /admin with access control
-            handle {
-                if (event.message.from?.id !in adminUserIds) {
-                    replyMessage("Unauthorized: Admin access required.")
-                    return@handle
-                }
-                replyMessage(
-                    """
-                    Admin Commands:
-                    /admin status - Show system status
-                    /admin ban <userId> [reason] - Ban a user
-                    /admin user list - List users
-                    /admin user info <userId> - Show user info
-                    """.trimIndent()
-                )
-            }
-
-            // Simple subcommand with access control
-            subCommandEndpoint("status") {
-                if (event.message.from?.id !in adminUserIds) {
-                    replyMessage("Unauthorized: Admin access required.")
-                    return@subCommandEndpoint
-                }
-                replyMessage("System status: OK\nUptime: 1234 seconds\nMemory: 256MB used")
-            }
-
-            // Subcommand with typed arguments and access control
-            subCommand("ban", ::BanArgs, sendHelpOnError = true) {
-                if (event.message.from?.id !in adminUserIds) {
-                    replyMessage("Unauthorized: Admin access required.")
-                    return@subCommand
-                }
-                val reason = arguments.reason ?: "No reason provided"
-                replyMessage("Banned user ${arguments.userId}. Reason: $reason")
-                // In real bot, you would call: client.banChatMember(chatId, arguments.userId)
-            }
-
-            // Nested subcommands (two levels deep)
-            subCommand("user") {
-                handle {
-                    if (event.message.from?.id !in adminUserIds) {
-                        replyMessage("Unauthorized: Admin access required.")
-                        return@handle
+        // Admin commands with access control using requireAuth DSL
+        // This demonstrates async authorization check via MockAuthService
+        on<MessageEvent> {
+            requireAuth(
+                authService = authService,
+                onRejected = { replyMessage("Unauthorized: Admin access required") }
+            ) {
+                command("admin") {
+                    handle {
+                        replyMessage(
+                            """
+                            Admin Commands:
+                            /admin status - Show system status
+                            /admin ban <userId> [reason] - Ban a user
+                            /admin user list - List users
+                            /admin user info <userId> - Show user info
+                            """.trimIndent()
+                        )
                     }
-                    replyMessage("User subcommands: list, info")
-                }
 
-                subCommandEndpoint("list") {
-                    if (event.message.from?.id !in adminUserIds) {
-                        replyMessage("Unauthorized: Admin access required.")
-                        return@subCommandEndpoint
+                    subCommandEndpoint("status") {
+                        replyMessage(
+                            """
+                            System status: OK
+                            Uptime: 1234 seconds
+                            Memory: 256MB used
+                            """.trimIndent()
+                        )
                     }
-                    replyMessage("Users:\n- User1 (ID: 123)\n- User2 (ID: 456)\n- User3 (ID: 789)")
-                }
 
-                subCommand("info", ::UserInfoArgs, sendHelpOnError = true) {
-                    if (event.message.from?.id !in adminUserIds) {
-                        replyMessage("Unauthorized: Admin access required.")
-                        return@subCommand
+                    subCommand("ban", ::BanArgs, sendHelpOnError = true) {
+                        val reason = arguments.reason ?: "No reason provided"
+                        replyMessage("Banned user ${arguments.userId}. Reason: $reason")
                     }
-                    replyMessage("User ${arguments.userId}: Status=Active, Joined=2024-01-01")
+
+                    subCommand("user") {
+                        handle {
+                            replyMessage("User subcommands: list, info")
+                        }
+
+                        subCommandEndpoint("list") {
+                            replyMessage("Users:\n- User1 (ID: 123)\n- User2 (ID: 456)\n- User3 (ID: 789)")
+                        }
+
+                        subCommand("info", ::UserInfoArgs, sendHelpOnError = true) {
+                            replyMessage("User ${arguments.userId}: Status=Active, Joined=2024-01-01")
+                        }
+                    }
                 }
             }
         }
