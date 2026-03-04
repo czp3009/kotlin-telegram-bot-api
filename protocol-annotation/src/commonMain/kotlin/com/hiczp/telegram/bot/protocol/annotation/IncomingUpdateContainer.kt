@@ -6,5 +6,5 @@ package com.hiczp.telegram.bot.protocol.annotation
  * to generate event classes.
  */
 @Target(AnnotationTarget.CLASS)
-@Retention(AnnotationRetention.SOURCE)
+@Retention(AnnotationRetention.RUNTIME)
 annotation class IncomingUpdateContainer

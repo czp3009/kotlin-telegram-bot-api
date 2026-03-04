@@ -132,6 +132,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         private const val MESSAGE_TYPE = "Message"
         private const val MAYBE_INACCESSIBLE_MESSAGE_TYPE = "MaybeInaccessibleMessage"
         private const val TELEGRAM_FILE_DOWNLOAD_ANNOTATION = "TelegramFileDownload"
+        private const val TELEGRAM_BOT_API_VERSION_ANNOTATION = "TelegramBotApiVersion"
         private const val HTTP_STATEMENT_TYPE = "HttpStatement"
 
         // Ktorfit HTTP annotation names
@@ -1678,6 +1679,17 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         )
 
         val interfaceBuilder = TypeSpec.interfaceBuilder(className)
+
+        // Add @TelegramBotApiVersion annotation with version from swagger spec
+        val apiVersion = swagger.get("info")?.get("version")?.asText()
+        if (apiVersion != null) {
+            interfaceBuilder.addAnnotation(
+                AnnotationSpec.builder(ClassName(ANNOTATION_PACKAGE, TELEGRAM_BOT_API_VERSION_ANNOTATION))
+                    .addMember("%S", apiVersion)
+                    .build()
+            )
+            logger.lifecycle("Generated TelegramBotApi with API version: $apiVersion")
+        }
 
         // Parse paths
         val paths = swagger.get("paths") ?: return

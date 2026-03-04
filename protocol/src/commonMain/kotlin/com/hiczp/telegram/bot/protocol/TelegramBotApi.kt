@@ -8,6 +8,7 @@
 
 package com.hiczp.telegram.bot.protocol
 
+import com.hiczp.telegram.bot.protocol.`annotation`.TelegramBotApiVersion
 import com.hiczp.telegram.bot.protocol.model.AnswerCallbackQueryRequest
 import com.hiczp.telegram.bot.protocol.model.AnswerInlineQueryRequest
 import com.hiczp.telegram.bot.protocol.model.AnswerPreCheckoutQueryRequest
@@ -167,6 +168,7 @@ import kotlin.String
 import kotlin.Suppress
 import kotlin.collections.List
 
+@TelegramBotApiVersion("9.5")
 public interface TelegramBotApi {
     /**
      * Use this method to receive incoming updates using long polling (wiki). Returns an Array of Update objects.
