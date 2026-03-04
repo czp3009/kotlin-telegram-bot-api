@@ -389,7 +389,9 @@ fun HandlerRoute<MessageEvent>.requireAuth(
 val authService = AuthService()
 
 val routes = handling {
-   onMessageEvent {
+   // Use onCommand to scope auth checks to command messages only
+   // This prevents requireAuth from rejecting non-command text messages
+   onCommand {
       requireAuth(
          authService = authService,
          onRejected = { replyMessage("Unauthorized: Admin access required") }

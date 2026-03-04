@@ -2,14 +2,60 @@ package com.hiczp.telegram.bot.application.dispatcher.handler.command
 
 import com.hiczp.telegram.bot.application.command.matchesCommand
 import com.hiczp.telegram.bot.application.command.parseCommand
+import com.hiczp.telegram.bot.application.command.usernameMatched
 import com.hiczp.telegram.bot.application.context.TelegramBotEventContext
-import com.hiczp.telegram.bot.application.dispatcher.handler.CommandBotCall
-import com.hiczp.telegram.bot.application.dispatcher.handler.HandlerRoute
-import com.hiczp.telegram.bot.application.dispatcher.handler.RouteNode
-import com.hiczp.telegram.bot.application.dispatcher.handler.StructuredCommandBotCall
+import com.hiczp.telegram.bot.application.dispatcher.handler.*
 import com.hiczp.telegram.bot.protocol.event.MessageEvent
 import com.hiczp.telegram.bot.protocol.event.TelegramBotEvent
 import kotlin.jvm.JvmName
+
+// ==================== Command Scope ====================
+
+/**
+ * Creates a child route that only accepts command messages addressed to this bot.
+ *
+ * A command is considered addressed to this bot if:
+ * - The command has no username (e.g., `/start`), meaning it's addressed to any bot in the chat.
+ * - The command includes a username that matches this bot's username (e.g., `/start@mybot`).
+ *
+ * Use this to scope command-related logic, such as authentication middleware
+ * that should only apply to commands, not regular text messages.
+ *
+ * Example:
+ * ```kotlin
+ * handling {
+ *     // Regular commands without auth
+ *     commandEndpoint("start") { ... }
+ *     commandEndpoint("help") { ... }
+ *
+ *     // Auth-protected commands
+ *     onCommand {
+ *         requireAuth(authService) {
+ *             command("admin") { ... }
+ *         }
+ *     }
+ * }
+ * ```
+ *
+ * @param build A builder lambda for configuring the child route.
+ */
+fun HandlerRoute<MessageEvent>.onCommand(build: HandlerRoute<MessageEvent>.() -> Unit) =
+    match({ ctx ->
+        val parsedCommand = ctx.event.parseCommand() ?: return@match false
+        val username = ctx.me().username ?: return@match true
+        parsedCommand.usernameMatched(username)
+    }, build)
+
+/**
+ * Creates a child route for command messages from any event type.
+ *
+ * Convenience overload that combines [HandlerRoute.on] with [onCommand].
+ *
+ * @param build A builder lambda for configuring the child route.
+ */
+@JvmName("onCommandOnEvent")
+fun HandlerRoute<TelegramBotEvent>.onCommand(build: HandlerRoute<MessageEvent>.() -> Unit) =
+    on<MessageEvent> { onCommand(build) }
 
 // ==================== Root Command Registration ====================
 

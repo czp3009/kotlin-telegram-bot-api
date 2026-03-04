@@ -6,7 +6,6 @@ import com.hiczp.telegram.bot.application.dispatcher.handler.HandlerTelegramEven
 import com.hiczp.telegram.bot.application.dispatcher.handler.command.*
 import com.hiczp.telegram.bot.application.dispatcher.handler.handling
 import com.hiczp.telegram.bot.application.interceptor.builtin.logging.loggingInterceptor
-import com.hiczp.telegram.bot.protocol.event.MessageEvent
 import com.hiczp.telegram.bot.sample.dsl.MockAuthService
 import com.hiczp.telegram.bot.sample.dsl.requireAuth
 
@@ -95,8 +94,9 @@ private suspend fun runCommandBot(botToken: String) {
         }
 
         // Admin commands with access control using requireAuth DSL
-        // This demonstrates async authorization check via MockAuthService
-        on<MessageEvent> {
+        // Use onCommand to scope auth checks to command messages only
+        // This prevents requireAuth from rejecting non-command text messages
+        onCommand {
             requireAuth(
                 authService = authService,
                 onRejected = { replyMessage("Unauthorized: Admin access required") }
