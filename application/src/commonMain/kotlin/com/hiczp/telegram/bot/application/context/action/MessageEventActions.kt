@@ -2,6 +2,8 @@ package com.hiczp.telegram.bot.application.context.action
 
 import com.hiczp.telegram.bot.application.context.TelegramBotEventContext
 import com.hiczp.telegram.bot.protocol.event.MessageEvent
+import com.hiczp.telegram.bot.protocol.extension.InlineKeyboardBuilder
+import com.hiczp.telegram.bot.protocol.extension.inlineKeyboard
 import com.hiczp.telegram.bot.protocol.form.*
 import com.hiczp.telegram.bot.protocol.model.*
 import com.hiczp.telegram.bot.protocol.type.InputFile
@@ -951,3 +953,111 @@ suspend fun TelegramBotEventContext<MessageEvent>.sendChatAction(
     messageThreadId = event.message.messageThreadId,
     action = action,
 ).getOrThrow()
+
+suspend fun TelegramBotEventContext<MessageEvent>.sendMessageWithKeyboard(
+    text: String,
+    parseMode: String? = null,
+    entities: List<MessageEntity>? = null,
+    linkPreviewOptions: LinkPreviewOptions? = null,
+    disableNotification: Boolean? = null,
+    protectContent: Boolean? = null,
+    allowPaidBroadcast: Boolean? = null,
+    messageEffectId: String? = null,
+    suggestedPostParameters: SuggestedPostParameters? = null,
+    replyParameters: ReplyParameters? = null,
+    keyboard: InlineKeyboardBuilder.() -> Unit,
+) = sendMessage(
+    text = text,
+    parseMode = parseMode,
+    entities = entities,
+    linkPreviewOptions = linkPreviewOptions,
+    disableNotification = disableNotification,
+    protectContent = protectContent,
+    allowPaidBroadcast = allowPaidBroadcast,
+    messageEffectId = messageEffectId,
+    suggestedPostParameters = suggestedPostParameters,
+    replyParameters = replyParameters,
+    replyMarkup = inlineKeyboard(keyboard),
+)
+
+suspend fun TelegramBotEventContext<MessageEvent>.replyMessageWithKeyboard(
+    text: String,
+    parseMode: String? = null,
+    entities: List<MessageEntity>? = null,
+    linkPreviewOptions: LinkPreviewOptions? = null,
+    disableNotification: Boolean? = null,
+    protectContent: Boolean? = null,
+    allowPaidBroadcast: Boolean? = null,
+    messageEffectId: String? = null,
+    suggestedPostParameters: SuggestedPostParameters? = null,
+    keyboard: InlineKeyboardBuilder.() -> Unit,
+) = replyMessage(
+    text = text,
+    parseMode = parseMode,
+    entities = entities,
+    linkPreviewOptions = linkPreviewOptions,
+    disableNotification = disableNotification,
+    protectContent = protectContent,
+    allowPaidBroadcast = allowPaidBroadcast,
+    messageEffectId = messageEffectId,
+    suggestedPostParameters = suggestedPostParameters,
+    replyMarkup = inlineKeyboard(keyboard),
+)
+
+suspend fun TelegramBotEventContext<MessageEvent>.sendPhotoWithKeyboard(
+    photo: InputFile,
+    caption: String? = null,
+    parseMode: String? = null,
+    captionEntities: List<MessageEntity>? = null,
+    showCaptionAboveMedia: Boolean? = null,
+    hasSpoiler: Boolean? = null,
+    disableNotification: Boolean? = null,
+    protectContent: Boolean? = null,
+    allowPaidBroadcast: Boolean? = null,
+    messageEffectId: String? = null,
+    suggestedPostParameters: SuggestedPostParameters? = null,
+    replyParameters: ReplyParameters? = null,
+    keyboard: InlineKeyboardBuilder.() -> Unit,
+) = sendPhoto(
+    photo = photo,
+    caption = caption,
+    parseMode = parseMode,
+    captionEntities = captionEntities,
+    showCaptionAboveMedia = showCaptionAboveMedia,
+    hasSpoiler = hasSpoiler,
+    disableNotification = disableNotification,
+    protectContent = protectContent,
+    allowPaidBroadcast = allowPaidBroadcast,
+    messageEffectId = messageEffectId,
+    suggestedPostParameters = suggestedPostParameters,
+    replyParameters = replyParameters,
+    replyMarkup = inlineKeyboard(keyboard),
+)
+
+suspend fun TelegramBotEventContext<MessageEvent>.replyPhotoWithKeyboard(
+    photo: InputFile,
+    caption: String? = null,
+    parseMode: String? = null,
+    captionEntities: List<MessageEntity>? = null,
+    showCaptionAboveMedia: Boolean? = null,
+    hasSpoiler: Boolean? = null,
+    disableNotification: Boolean? = null,
+    protectContent: Boolean? = null,
+    allowPaidBroadcast: Boolean? = null,
+    messageEffectId: String? = null,
+    suggestedPostParameters: SuggestedPostParameters? = null,
+    keyboard: InlineKeyboardBuilder.() -> Unit,
+) = replyPhoto(
+    photo = photo,
+    caption = caption,
+    parseMode = parseMode,
+    captionEntities = captionEntities,
+    showCaptionAboveMedia = showCaptionAboveMedia,
+    hasSpoiler = hasSpoiler,
+    disableNotification = disableNotification,
+    protectContent = protectContent,
+    allowPaidBroadcast = allowPaidBroadcast,
+    messageEffectId = messageEffectId,
+    suggestedPostParameters = suggestedPostParameters,
+    replyMarkup = inlineKeyboard(keyboard),
+)
