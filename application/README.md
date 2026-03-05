@@ -85,12 +85,27 @@ val app = TelegramBotApplication.longPolling(
 // Start the bot (can only be started once)
 app.start()
 
+// Wait for the bot to stop (only waits for main job, not applicationScope coroutines)
+app.join()
+
 // Graceful shutdown with max 5 seconds wait
 app.stop(5.seconds)
 
-// Or suspending version that waits for all coroutines
+// Or suspending version that waits for all coroutines including applicationScope
 app.stopSuspend(5.seconds)
 ```
+
+**Automatic Shutdown:**
+
+When the `updateSource` exits (normally, with exception, or cancelled), graceful shutdown is triggered automatically.
+This ensures the bot stops cleanly even if the update source fails due to network errors or authentication issues.
+
+**`join()` vs `stopSuspend()`:**
+
+- `join()` - Only waits for the main update processing job to complete. Coroutines launched in `applicationScope` may
+  still be running when this returns.
+- `stopSuspend()` - Waits for both the main job AND all `applicationScope` coroutines to complete. Use this when you
+  need to ensure all background work is finished.
 
 ### Graceful Shutdown Flow
 

@@ -22,8 +22,7 @@ private val logger = KotlinLogging.logger {}
  * Responsibilities:
  * - Lifecycle management (start/stop)
  * - Update consumption and processing
- * - Exception handling (log and continue)
- * - Graceful shutdown with CancellationException
+ * - Graceful shutdown on explicit stop or update source exit
  *
  * Graceful shutdown flow:
  * 1. Transition state to STOPPING → new updates rejected with [TelegramBotShuttingDownException]
@@ -32,7 +31,7 @@ private val logger = KotlinLogging.logger {}
  * 4. Force cancel if timeout
  * 5. Call [TelegramUpdateSource.onFinalize] for final cleanup (e.g., Final ACK)
  *
- * Exception Handling & Offset Advancement Strategy:
+ * Exception handling in [updateSource]:
  * - [TelegramBotShuttingDownException]: Framework shutdown. Instantly aborts processing WITHOUT advancing the offset to prevent data loss.
  * - [CancellationException]: Local business cancellation (e.g., `withTimeout`). Warns and advances the offset to prevent infinite retry loops (Stuck Bot).
  * - [Exception]: Unhandled business exception. Logs error and advances the offset to skip the poisonous update.
@@ -93,6 +92,9 @@ class TelegramBotApplication(
      *
      * The bot can only be started once. Subsequent calls will throw an exception.
      *
+     * When the [updateSource] exits (normally or with exception), graceful shutdown
+     * is triggered automatically.
+     *
      * @throws IllegalStateException if the bot has already been started.
      */
     fun start() {
@@ -103,18 +105,27 @@ class TelegramBotApplication(
         logger.debug { "Starting Telegram Bot Application..." }
 
         val mainJob = applicationScope.launch {
-            updateSource.start { update ->
-                // Shutdown interceptor: Reject new updates when the bot is stopping.
-                // Throwing a CancellationException subclass ensures it silently cancels 
-                // the current processing task without causing the parent scope to crash.
-                if (state.value != State.RUNNING) {
-                    throw TelegramBotShuttingDownException()
-                }
+            try {
+                updateSource.start { update ->
+                    // Shutdown interceptor: Reject new updates when the bot is stopping.
+                    // Throwing a CancellationException subclass ensures it silently cancels 
+                    // the current processing task without causing the parent scope to crash.
+                    if (state.value != State.RUNNING) {
+                        throw TelegramBotShuttingDownException()
+                    }
 
-                // Normal dispatch
-                val event = update.toTelegramBotEvent()
-                pipeline.execute(event)
+                    // Normal dispatch
+                    val event = update.toTelegramBotEvent()
+                    pipeline.execute(event)
+                }
+            } catch (e: Exception) {
+                if (e !is CancellationException) {
+                    logger.error(e) { "UpdateSource threw exception, exiting..." }
+                }
             }
+            // After updateSource.start() completes (normally, with exception, or cancelled),
+            // trigger shutdown. stop() is idempotent and handles race conditions internally.
+            stop()
         }
         // Publish the main job. This synchronizes state and prevents 
         // race conditions between start(), join(), and stop() methods.
@@ -125,6 +136,10 @@ class TelegramBotApplication(
      * Suspends until the bot's main job completes.
      *
      * This method can be used to keep the application alive until the bot stops.
+     *
+     * **Note**: This method only waits for the main job to complete, not for other coroutines
+     * launched within the [applicationScope]. If you need to ensure all coroutines have completed,
+     * call [stopSuspend] after this method returns.
      */
     suspend fun join() {
         mainJobDeferred.await().join()
@@ -149,7 +164,11 @@ class TelegramBotApplication(
      * [Job] is cancelled. Cancelling the returned [Job] only stops waiting for the shutdown to complete,
      * not the shutdown itself.
      *
+     * **Note**: When the bot stops, coroutines created via [applicationScope] may not have all completed.
+     * If you need to wait for all coroutines on [applicationScope] to complete, use [stopSuspend] instead.
+     *
      * @param gracePeriod Maximum time to wait for the graceful shutdown. Defaults to 10 seconds.
+     * @see stopSuspend For a suspending version that waits for all application scope coroutines.
      */
     fun stop(gracePeriod: Duration = 10.seconds): Job {
         if (state.compareAndSet(State.RUNNING, State.STOPPING)) {

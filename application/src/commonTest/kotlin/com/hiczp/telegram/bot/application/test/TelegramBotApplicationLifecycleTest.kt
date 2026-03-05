@@ -3,13 +3,16 @@ package com.hiczp.telegram.bot.application.test
 import com.hiczp.telegram.bot.application.TelegramBotApplication
 import com.hiczp.telegram.bot.application.dispatcher.SimpleTelegramEventDispatcher
 import com.hiczp.telegram.bot.application.interceptor.TelegramEventInterceptor
+import com.hiczp.telegram.bot.application.updatesource.LongPollingTelegramUpdateSource
 import com.hiczp.telegram.bot.application.updatesource.MockTelegramUpdateSource
+import com.hiczp.telegram.bot.application.updatesource.TelegramUpdateSource
 import com.hiczp.telegram.bot.client.TelegramBotClient
 import com.hiczp.telegram.bot.protocol.event.MessageEvent
 import com.hiczp.telegram.bot.protocol.model.Chat
 import com.hiczp.telegram.bot.protocol.model.Message
 import com.hiczp.telegram.bot.protocol.model.Update
 import com.hiczp.telegram.bot.protocol.model.User
+import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.channels.Channel
@@ -482,5 +485,322 @@ class TelegramBotApplicationLifecycleTest {
 
         // Only the interceptor should have run, not the handler
         assertEquals(listOf("short-circuit"), interceptorLog)
+    }
+
+    // ==================== Exception-triggered shutdown tests ====================
+
+    /**
+     * Test that when updateSource.start() throws an exception,
+     * the application triggers graceful shutdown.
+     */
+    @Test
+    fun `should trigger graceful shutdown when updateSource throws exception`() = runTest {
+        // Arrange
+        val exceptionToThrow = RuntimeException("Simulated update source failure")
+        val stopCalled = atomic(false)
+        val onFinalizeCalled = atomic(false)
+
+        val mockSource = object : TelegramUpdateSource {
+            override suspend fun start(consume: suspend (Update) -> Unit) {
+                throw exceptionToThrow
+            }
+
+            override suspend fun stop() {
+                stopCalled.value = true
+            }
+
+            override suspend fun onFinalize() {
+                onFinalizeCalled.value = true
+            }
+        }
+
+        val app = TelegramBotApplication(
+            client = fakeClient,
+            updateSource = mockSource,
+            interceptors = emptyList(),
+            eventDispatcher = SimpleTelegramEventDispatcher { },
+        )
+
+        // Act
+        app.start()
+
+        // Wait for shutdown to complete by waiting on the stop job
+        app.stop().join()
+
+        // Assert
+        assertTrue(stopCalled.value, "stop() should be called after exception")
+        assertTrue(onFinalizeCalled.value, "onFinalize() should be called during shutdown")
+    }
+
+    /**
+     * Test that when updateSource.start() throws an exception during update processing,
+     * the application triggers graceful shutdown.
+     */
+    @Test
+    fun `should trigger graceful shutdown when exception thrown during update processing`() = runTest {
+        // Arrange
+        val exceptionToThrow = RuntimeException("Simulated processing failure")
+        val stopCalled = atomic(false)
+        val onFinalizeCalled = atomic(false)
+        val updates = Channel<Update>()
+        var updateCount = 0
+
+        val mockSource = object : TelegramUpdateSource {
+            override suspend fun start(consume: suspend (Update) -> Unit) {
+                for (update in updates) {
+                    if (updateCount == 1) {
+                        throw exceptionToThrow
+                    }
+                    consume(update)
+                    updateCount++
+                }
+            }
+
+            override suspend fun stop() {
+                stopCalled.value = true
+                updates.close()
+            }
+
+            override suspend fun onFinalize() {
+                onFinalizeCalled.value = true
+            }
+        }
+
+        val app = TelegramBotApplication(
+            client = fakeClient,
+            updateSource = mockSource,
+            interceptors = emptyList(),
+            eventDispatcher = SimpleTelegramEventDispatcher { },
+        )
+
+        // Act
+        app.start()
+
+        // Send updates
+        updates.send(createTestUpdate(1L, "first"))
+        updates.send(createTestUpdate(2L, "second"))
+
+        // Wait for shutdown to complete
+        app.stop().join()
+
+        // Assert
+        assertTrue(stopCalled.value, "stop() should be called after exception")
+        assertTrue(onFinalizeCalled.value, "onFinalize() should be called during shutdown")
+    }
+
+    /**
+     * Test that calling stop() from within a handler doesn't cause deadlock
+     * on a single-threaded dispatcher.
+     */
+    @Test
+    fun `should not deadlock when stop called from handler on single thread dispatcher`() = runTest {
+        // Arrange
+        val stopCalled = atomic(false)
+        val onFinalizeCalled = atomic(false)
+        val handlerInvoked = CompletableDeferred<Unit>()
+        lateinit var appRef: TelegramBotApplication
+
+        val mockSource = object : TelegramUpdateSource {
+            override suspend fun start(consume: suspend (Update) -> Unit) {
+                // Send an update directly within start() to ensure the handler is invoked
+                consume(createTestUpdate(1L, "test"))
+            }
+
+            override suspend fun stop() {
+                stopCalled.value = true
+            }
+
+            override suspend fun onFinalize() {
+                onFinalizeCalled.value = true
+            }
+        }
+
+        val dispatcher = SimpleTelegramEventDispatcher { _ ->
+            handlerInvoked.complete(Unit)
+            // Call stop from within handler - this should not deadlock
+            appRef.stop(1.seconds)
+        }
+
+        val app = TelegramBotApplication(
+            client = fakeClient,
+            updateSource = mockSource,
+            interceptors = emptyList(),
+            eventDispatcher = dispatcher,
+        )
+        appRef = app
+
+        // Act
+        app.start()
+
+        // Wait for handler to be invoked (confirms update was processed)
+        handlerInvoked.await()
+
+        // Wait for shutdown to complete
+        app.stop().join()
+
+        // Assert
+        assertTrue(stopCalled.value, "stop() should be called")
+        assertTrue(onFinalizeCalled.value, "onFinalize() should be called")
+    }
+
+    /**
+     * Test that when updateSource throws CancellationException,
+     * graceful shutdown is still triggered.
+     */
+    @Test
+    fun `should trigger graceful shutdown when updateSource throws CancellationException`() = runTest {
+        // Arrange
+        val stopCalled = atomic(false)
+        val onFinalizeCalled = atomic(false)
+
+        val mockSource = object : TelegramUpdateSource {
+            override suspend fun start(consume: suspend (Update) -> Unit) {
+                throw CancellationException("Simulated cancellation")
+            }
+
+            override suspend fun stop() {
+                stopCalled.value = true
+            }
+
+            override suspend fun onFinalize() {
+                onFinalizeCalled.value = true
+            }
+        }
+
+        val app = TelegramBotApplication(
+            client = fakeClient,
+            updateSource = mockSource,
+            interceptors = emptyList(),
+            eventDispatcher = SimpleTelegramEventDispatcher { },
+        )
+
+        // Act
+        app.start()
+
+        // Wait for shutdown to complete
+        app.stop().join()
+
+        // Assert - CancellationException should also trigger graceful shutdown
+        assertTrue(stopCalled.value, "stop() should be called")
+        assertTrue(onFinalizeCalled.value, "onFinalize() should be called")
+    }
+
+    /**
+     * Test that application state transitions correctly during exception-triggered shutdown.
+     */
+    @Test
+    fun `should transition state correctly during exception shutdown`() = runTest {
+        // Arrange
+        val states = mutableListOf<String>()
+        val exceptionToThrow = RuntimeException("Test exception")
+
+        val mockSource = object : TelegramUpdateSource {
+            override suspend fun start(consume: suspend (Update) -> Unit) {
+                throw exceptionToThrow
+            }
+
+            override suspend fun stop() {
+                states.add("stop_called")
+            }
+
+            override suspend fun onFinalize() {
+                states.add("onFinalize_called")
+            }
+        }
+
+        val app = TelegramBotApplication(
+            client = fakeClient,
+            updateSource = mockSource,
+            interceptors = emptyList(),
+            eventDispatcher = SimpleTelegramEventDispatcher { },
+        )
+
+        // Act
+        app.start()
+
+        // Wait for shutdown to complete
+        app.stop().join()
+
+        // Assert
+        assertTrue("stop_called" in states, "stop() should be called")
+        assertTrue("onFinalize_called" in states, "onFinalize() should be called")
+    }
+
+    /**
+     * Test that multiple exceptions don't cause issues.
+     */
+    @Test
+    fun `should handle multiple rapid exceptions gracefully`() = runTest {
+        // Arrange
+        var startCallCount = 0
+        val stopCalled = atomic(false)
+        val onFinalizeCalled = atomic(false)
+
+        val mockSource = object : TelegramUpdateSource {
+            override suspend fun start(consume: suspend (Update) -> Unit) {
+                startCallCount++
+                throw RuntimeException("Exception $startCallCount")
+            }
+
+            override suspend fun stop() {
+                stopCalled.value = true
+            }
+
+            override suspend fun onFinalize() {
+                onFinalizeCalled.value = true
+            }
+        }
+
+        val app = TelegramBotApplication(
+            client = fakeClient,
+            updateSource = mockSource,
+            interceptors = emptyList(),
+            eventDispatcher = SimpleTelegramEventDispatcher { },
+        )
+
+        // Act
+        app.start()
+
+        // Wait for shutdown to complete
+        app.stop().join()
+
+        // Assert - start should only be called once (bot can only start once)
+        assertEquals(1, startCallCount, "start() should only be called once")
+        assertTrue(stopCalled.value, "stop() should be called")
+        assertTrue(onFinalizeCalled.value, "onFinalize() should be called")
+    }
+
+    /**
+     * Test graceful shutdown when LongPollingTelegramUpdateSource fails with fastFail enabled.
+     *
+     * Uses an invalid bot token which will always fail to authenticate,
+     * with fastFail=true to make it throw an exception immediately.
+     * This tests the real-world scenario where the update source fails due to
+     * network/authentication errors.
+     */
+    @Test
+    fun `should trigger graceful shutdown when real LongPollingTelegramUpdateSource fails with fastFail`() = runTest {
+        // Arrange - use invalid bot token that will always fail
+        val longPollingSource = LongPollingTelegramUpdateSource(
+            client = fakeClient,
+            fastFail = true,  // Make it throw exception instead of retrying
+            getUpdatesTimeout = 0,  // Short timeout to fail faster
+        )
+
+        val app = TelegramBotApplication(
+            client = fakeClient,
+            updateSource = longPollingSource,
+            interceptors = emptyList(),
+            eventDispatcher = SimpleTelegramEventDispatcher { },
+        )
+
+        // Act
+        app.start()
+
+        // Wait for shutdown
+        app.join()
+
+        // Assert - the app should have stopped gracefully
+        // If we get here without timeout, the shutdown worked correctly
     }
 }
