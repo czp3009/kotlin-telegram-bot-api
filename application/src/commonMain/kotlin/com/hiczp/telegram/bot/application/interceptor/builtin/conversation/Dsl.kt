@@ -29,9 +29,17 @@ private val logger = KotlinLogging.logger("ConversationFSM")
  * Provides methods to await specific types of events from the user during a conversation.
  * Each await method suspends until the user sends an appropriate event.
  *
+ * The [channel] can be used directly for advanced use cases, such as implementing
+ * custom await logic or integrating with other coroutine-based APIs.
+ *
+ * The [cancelPredicate] can be used to implement custom cancellation logic by
+ * checking it against incoming events.
+ *
  * @param id The [ConversationId] identifying this conversation session.
- * @param channel The channel to receive event contexts from. **Should not be used directly; use [awaitEvent] instead.**
- * @param cancelPredicate A function that determines if an event should cancel the conversation. **Should not be used directly.**
+ * @param channel The channel that receives event contexts for this conversation.
+ *        Events are intercepted by the conversation interceptor and routed here.
+ * @param cancelPredicate A function that determines if an event should cancel the conversation.
+ *        Used internally by [awaitEvent] to check for cancellation.
  */
 class ConversationScope(
     val id: ConversationId,

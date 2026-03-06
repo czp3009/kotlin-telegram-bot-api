@@ -13,6 +13,66 @@ using [Ktorfit](https://github.com/Foso/Ktorfit).
 - **Coroutine-based**: Built with Kotlin coroutines for asynchronous operations
 - **Modular architecture**: Use only what you need
 
+## Architecture
+
+```mermaid
+graph TB
+    subgraph "User Application"
+        Routes["Routes (Handler DSL)"]
+        Interceptors["Interceptors"]
+    end
+
+    subgraph "Application Module"
+        App["TelegramBotApplication"]
+        UpdateSource["UpdateSource"]
+        Dispatcher["EventDispatcher"]
+        ConvInterceptor["ConversationInterceptor"]
+        LoggingInterceptor["LoggingInterceptor"]
+    end
+
+    subgraph "Client Module"
+        Client["TelegramBotClient"]
+    end
+
+    subgraph "Protocol Module"
+        API["TelegramBotApi (Ktorfit)"]
+        Models["Models (Message, User, ...)"]
+        Events["Events (TelegramBotEvent)"]
+        Plugins["Plugins (LongPolling, ...)"]
+    end
+
+    subgraph "External"
+        Telegram["Telegram Bot API"]
+    end
+
+    Routes --> Dispatcher
+    Interceptors --> App
+    App --> UpdateSource
+    App --> Dispatcher
+    App --> Interceptors
+    ConvInterceptor --> Interceptors
+    LoggingInterceptor --> Interceptors
+    
+    UpdateSource --> Client
+    Dispatcher --> Client
+    
+    Client --> API
+    Client --> Plugins
+    API --> Models
+    API --> Telegram
+    Events --> Models
+    
+    UpdateSource -.->|fetches updates| Events
+```
+
+### Request Flow
+
+1. **Update Fetching**: `UpdateSource` (e.g., long polling) fetches updates from Telegram via `TelegramBotClient`
+2. **Event Conversion**: Raw `Update` objects are converted to typed `TelegramBotEvent` subclasses
+3. **Interceptor Pipeline**: Events pass through the interceptor chain (onion model)
+4. **Event Dispatching**: `EventDispatcher` routes events to matching handlers
+5. **Response**: Handlers use `TelegramBotClient` to send responses back to Telegram
+
 ## Modules
 
 ### [protocol](protocol)

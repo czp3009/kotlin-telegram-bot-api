@@ -8,6 +8,8 @@ import com.hiczp.telegram.bot.application.updatesource.LongPollingTelegramUpdate
 import com.hiczp.telegram.bot.application.updatesource.TelegramUpdateSource
 import com.hiczp.telegram.bot.client.TelegramBotClient
 import com.hiczp.telegram.bot.protocol.event.toTelegramBotEvent
+import com.hiczp.telegram.bot.protocol.exception.UnrecognizedUpdateException
+import com.hiczp.telegram.bot.protocol.model.Update
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.*
@@ -41,6 +43,23 @@ private val logger = KotlinLogging.logger {}
  * - In concurrent mode (launch): silently cancels individual child tasks
  * - This leverages Kotlin's native coroutine cancellation semantics
  *
+ * Handling unrecognized updates:
+ * When Telegram introduces new update types that are not yet supported by this library,
+ * [Update.toTelegramBotEvent] throws [UnrecognizedUpdateException]. By default, these updates
+ * are logged as warnings and skipped. You can customize this behavior by providing [onUnrecognizedUpdate]:
+ * ```kotlin
+ * val app = TelegramBotApplication(
+ *     client = client,
+ *     updateSource = LongPollingTelegramUpdateSource(client),
+ *     interceptors = listOf(loggingInterceptor),
+ *     eventDispatcher = eventDispatcher,
+ *     onUnrecognizedUpdate = { client, update ->
+ *         // Custom handling: send alert, store for later analysis, etc.
+ *         logger.warn { "Received unrecognized update: $update" }
+ *     }
+ * )
+ * ```
+ *
  * Example:
  * ```kotlin
  * val client = TelegramBotClient("YOUR_TOKEN")
@@ -67,6 +86,11 @@ private val logger = KotlinLogging.logger {}
  * @param eventDispatcher The dispatcher that handles the final event routing to business logic.
  * @param coroutineDispatcher The [CoroutineDispatcher] for the application scope.
  *   Defaults to `null`, which uses [Dispatchers.Default].
+ * @param onUnrecognizedUpdate Optional callback invoked when an update cannot be converted to a
+ *   [TelegramBotEvent][com.hiczp.telegram.bot.protocol.event.TelegramBotEvent]. This happens when Telegram
+ *   introduces new update types that are not yet supported by the library. The callback receives the
+ *   [TelegramBotClient] and the unrecognized [Update]. If `null`, unrecognized updates are logged as warnings
+ *   and skipped. Throwing an exception from this callback will propagate to the update source's error handling.
  */
 class TelegramBotApplication(
     val client: TelegramBotClient,
@@ -74,6 +98,7 @@ class TelegramBotApplication(
     interceptors: List<TelegramEventInterceptor>,
     eventDispatcher: TelegramEventDispatcher,
     coroutineDispatcher: CoroutineDispatcher? = null,
+    private val onUnrecognizedUpdate: (suspend (TelegramBotClient, Update) -> Unit)? = null,
 ) {
     private val applicationScope = CoroutineScope(SupervisorJob() + (coroutineDispatcher ?: Dispatchers.Default))
     private val mainJobDeferred = CompletableDeferred<Job>()
@@ -114,8 +139,19 @@ class TelegramBotApplication(
                         throw TelegramBotShuttingDownException()
                     }
 
+                    // Convert update to event
+                    val event = try {
+                        update.toTelegramBotEvent()
+                    } catch (_: UnrecognizedUpdateException) {
+                        if (onUnrecognizedUpdate != null) {
+                            onUnrecognizedUpdate.invoke(client, update)
+                        } else {
+                            logger.warn { "Received unrecognized update: $update" }
+                        }
+                        return@start
+                    }
+
                     // Normal dispatch
-                    val event = update.toTelegramBotEvent()
                     pipeline.execute(event)
                 }
             } catch (e: Exception) {
@@ -267,6 +303,7 @@ class TelegramBotApplication(
             eventDispatcher: TelegramEventDispatcher,
             interceptors: List<TelegramEventInterceptor> = emptyList(),
             coroutineDispatcher: CoroutineDispatcher? = null,
+            onUnrecognizedUpdate: (suspend (TelegramBotClient, Update) -> Unit)? = null,
         ): TelegramBotApplication {
             val client = TelegramBotClient(botToken, coroutineDispatcher = coroutineDispatcher)
             return TelegramBotApplication(
@@ -275,6 +312,7 @@ class TelegramBotApplication(
                 interceptors = interceptors,
                 eventDispatcher = eventDispatcher,
                 coroutineDispatcher = coroutineDispatcher,
+                onUnrecognizedUpdate = onUnrecognizedUpdate,
             )
         }
     }
