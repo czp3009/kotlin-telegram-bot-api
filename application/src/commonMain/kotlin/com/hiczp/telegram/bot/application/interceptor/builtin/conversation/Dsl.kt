@@ -301,7 +301,7 @@ fun <T : TelegramBotEvent> TelegramBotEventContext<T>.startConversation(
             e.context.onCancel()
         } catch (e: CancellationException) {
             throw e
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             logger.error(e) { "Unhandled exception in Conversation FSM: ${e.message}" }
         } finally {
             manager.activeConversations.remove(id)?.close()

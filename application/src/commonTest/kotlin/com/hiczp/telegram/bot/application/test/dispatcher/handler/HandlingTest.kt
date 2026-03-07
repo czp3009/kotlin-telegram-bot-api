@@ -248,7 +248,7 @@ class HandlingTest {
     @Test
     fun `whenMessageEventTextRegex handler should match pattern`() = runTest {
         val routeNode = handling {
-            whenMessageEventTextRegex(Regex("(?i)hello.*")) {
+            whenMessageEventTextRegex(Regex("hello.*", RegexOption.IGNORE_CASE)) {
                 invokedHandlers.add("hello_regex")
             }
         }

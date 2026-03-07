@@ -101,7 +101,7 @@ open class LongPollingTelegramUpdateSource(
                         // Business timeout/cancellation. Advance offset to prevent stuck bot
                         logger.warn(e) { "Update processing cancelled: $update" }
                         nextOffset = update.updateId + 1
-                    } catch (e: Exception) {
+                    } catch (e: Throwable) {
                         // Normal business exception. Advance offset to skip poisonous update
                         logger.error(e) { "Update process error: $update" }
                         nextOffset = update.updateId + 1
@@ -125,7 +125,7 @@ open class LongPollingTelegramUpdateSource(
                                 }
                                 // If consume throws CancellationException, launch silently cancels this child task
                                 throw e
-                            } catch (e: Exception) {
+                            } catch (e: Throwable) {
                                 logger.error(e) { "Update process error: $update" }
                             }
                         }
@@ -149,7 +149,7 @@ open class LongPollingTelegramUpdateSource(
                                 logger.warn(e) { "Update processing cancelled: $update" }
                             }
                             throw e
-                        } catch (e: Exception) {
+                        } catch (e: Throwable) {
                             logger.error(e) { "Update process error: $update" }
                         }
                     }.invokeOnCompletion {
@@ -195,7 +195,7 @@ open class LongPollingTelegramUpdateSource(
             ).getOrThrow()
         } catch (e: CancellationException) {
             throw e
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             if (fastFail) throw e
             logger.warn(e) { "getUpdates failed, retrying..." }
             (e as? TelegramErrorResponseException)?.parameters?.retryAfter?.let {

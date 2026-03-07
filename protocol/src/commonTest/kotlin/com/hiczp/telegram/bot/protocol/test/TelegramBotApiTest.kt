@@ -15,6 +15,8 @@ import com.hiczp.telegram.bot.protocol.test.extension.toInputFile
 import com.hiczp.telegram.bot.protocol.type.InputFile
 import de.jensklingenberg.ktorfit.Ktorfit
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLoggingConfiguration
+import io.github.oshai.kotlinlogging.Level
 import io.ktor.client.*
 import io.ktor.client.network.sockets.*
 import io.ktor.client.plugins.*
@@ -51,6 +53,10 @@ private val txtFilePath = Path("../resources/telegram.txt")
  * Tests will fail with an exception if these environment variables are not set.
  */
 class TelegramBotApiTest {
+    init {
+        KotlinLoggingConfiguration.direct.logLevel = Level.DEBUG
+    }
+    
     private val botToken by lazy {
         checkNotNull(getBotToken()) { "Failed to get ${EnvVars.BOT_TOKEN}" }
     }

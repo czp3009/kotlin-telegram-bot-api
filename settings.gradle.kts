@@ -21,6 +21,7 @@ include(":protocol")
 include(":protocol-update-codegen")
 include(":client")
 include(":application")
+include(":application-updatesource-webhook")
 
 //samples
 include(":sample:basic")

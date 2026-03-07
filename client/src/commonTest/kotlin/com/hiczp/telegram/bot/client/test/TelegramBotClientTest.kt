@@ -2,6 +2,8 @@ package com.hiczp.telegram.bot.client.test
 
 import com.hiczp.telegram.bot.client.TelegramBotClient
 import com.hiczp.telegram.bot.protocol.exception.TelegramErrorResponseException
+import io.github.oshai.kotlinlogging.KotlinLoggingConfiguration
+import io.github.oshai.kotlinlogging.Level
 import io.ktor.client.*
 import io.ktor.client.plugins.logging.*
 import kotlinx.coroutines.test.runTest
@@ -9,6 +11,10 @@ import kotlin.test.Test
 import kotlin.test.assertFailsWith
 
 class TelegramBotClientTest {
+    init {
+        KotlinLoggingConfiguration.direct.logLevel = Level.DEBUG
+    }
+    
     private val engine by lazy { createKtorEngine() }
     private val botToken by lazy { getBotToken() ?: error("Bot token not found") }
     private val additionalConfiguration: HttpClientConfig<*>.() -> Unit = {

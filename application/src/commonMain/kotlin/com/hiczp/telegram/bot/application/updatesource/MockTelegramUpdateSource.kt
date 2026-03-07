@@ -75,7 +75,7 @@ open class MockTelegramUpdateSource(
                                 throw e
                             }
                             logger.warn(e) { "Update processing cancelled: $update" }
-                        } catch (e: Exception) {
+                        } catch (e: Throwable) {
                             logger.error(e) { "Update process error: $update" }
                         }
                     }

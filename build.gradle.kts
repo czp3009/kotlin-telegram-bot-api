@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.targets.js.testing.KotlinJsTest
+
 plugins {
     alias(libs.plugins.kotlinMultiplatform) apply false
     alias(libs.plugins.kotlinJvm) apply false
@@ -10,4 +12,28 @@ version = "0.0.1"
 subprojects {
     group = rootProject.group
     version = rootProject.version
+
+    tasks.withType<AbstractTestTask>().configureEach {
+        testLogging {
+            events("passed", "skipped", "failed")
+            showStandardStreams = true
+            exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+            showExceptions = true
+            showCauses = true
+            showStackTraces = true
+        }
+
+        afterSuite(KotlinClosure2({ description: TestDescriptor, result: TestResult ->
+            if (description.parent == null) {
+                println()
+                println("Test Summary: ${result.testCount} tests, ${result.successfulTestCount} passed, ${result.failedTestCount} failed, ${result.skippedTestCount} skipped")
+            }
+        }))
+    }
+
+    tasks.withType<KotlinJsTest>().configureEach {
+        useMocha {
+            timeout = "60s"
+        }
+    }
 }

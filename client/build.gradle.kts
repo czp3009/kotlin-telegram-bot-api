@@ -22,6 +22,7 @@ kotlin {
             implementation(kotlin("test"))
             implementation(libs.kotlinx.coroutines.test)
             implementation(libs.ktor.client.logging)
+            implementation(libs.kotlin.logging)
         }
 
         jvmTest.dependencies {

@@ -42,7 +42,7 @@ fun loggingInterceptor(
         process(context)
         val duration = startTime.elapsedNow()
         logger.at(level) { message = "Processed event: $formattedEvent (took ${formatDuration(duration)})" }
-    } catch (e: Exception) {
+    } catch (e: Throwable) {
         val duration = startTime.elapsedNow()
         logger.error(e) { "Failed to process event: $formattedEvent (took ${formatDuration(duration)})" }
         throw e

@@ -12,6 +12,8 @@ import com.hiczp.telegram.bot.protocol.model.Chat
 import com.hiczp.telegram.bot.protocol.model.Message
 import com.hiczp.telegram.bot.protocol.model.Update
 import com.hiczp.telegram.bot.protocol.model.User
+import io.github.oshai.kotlinlogging.KotlinLoggingConfiguration
+import io.github.oshai.kotlinlogging.Level
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
@@ -24,6 +26,10 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 class TelegramBotApplicationLifecycleTest {
+    init {
+        KotlinLoggingConfiguration.direct.logLevel = Level.DEBUG
+    }
+
     // Fake client that doesn't make real API calls
     private val fakeClient = TelegramBotClient(botToken = "xxx")
 

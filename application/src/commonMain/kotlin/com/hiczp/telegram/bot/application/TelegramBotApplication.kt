@@ -154,7 +154,7 @@ class TelegramBotApplication(
                     // Normal dispatch
                     pipeline.execute(event)
                 }
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
                 if (e !is CancellationException) {
                     logger.error(e) { "UpdateSource threw exception, exiting..." }
                 }
