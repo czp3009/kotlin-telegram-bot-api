@@ -25,7 +25,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
  */
 @Suppress("OPT_IN_USAGE", "NOTHING_TO_INLINE")
 inline fun KotlinMultiplatformExtension.configureAllTargets(namespace: String) {
-    jvmToolchain(21)
+    jvmToolchain(17)
 
     applyDefaultHierarchyTemplate()
 
