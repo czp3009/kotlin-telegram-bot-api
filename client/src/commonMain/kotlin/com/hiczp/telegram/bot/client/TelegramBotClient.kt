@@ -109,10 +109,9 @@ class TelegramBotClient private constructor(
                         TelegramErrorResponseException.isRetryable(statusCode)
                     }
                     retryOnExceptionIf(maxRetries = 3) { request, throwable ->
+                        if (request.attributes.contains(NoRetryRequestAttributeKey)) return@retryOnExceptionIf false
                         val cause = throwable.unwrapCancellationException()
-                        if (cause is HttpRequestTimeoutException || cause is ConnectTimeoutException || cause is SocketTimeoutException) {
-                            return@retryOnExceptionIf !request.attributes.contains(NoRetryRequestAttributeKey)
-                        }
+                        if (cause is HttpRequestTimeoutException || cause is ConnectTimeoutException || cause is SocketTimeoutException) return@retryOnExceptionIf true
                         if (cause is TelegramErrorResponseException) return@retryOnExceptionIf cause.isRetryable
                         if (throwable is CancellationException) return@retryOnExceptionIf false
                         true

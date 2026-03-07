@@ -33,7 +33,7 @@ subprojects {
 
     tasks.withType<KotlinJsTest>().configureEach {
         useMocha {
-            timeout = "60s"
+            timeout = "20s"
         }
     }
 }
