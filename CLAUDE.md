@@ -77,6 +77,8 @@ kotlin-telegram-bot-api/
 │   │   └── handler/                   # Handler DSL (handling {}, command(), etc.)
 │   ├── context/                       # Event context and helper extensions
 │   └── command/                       # Command parsing utilities
+├── application-updatesource-webhook/  # Webhook update source module
+│   └── WebhookTelegramUpdateSource.kt # Webhook-based update source using embedded Ktor server
 └── sample/               # Example bot implementations
     └── basic/            # EchoBot and CommandBot samples
 ```

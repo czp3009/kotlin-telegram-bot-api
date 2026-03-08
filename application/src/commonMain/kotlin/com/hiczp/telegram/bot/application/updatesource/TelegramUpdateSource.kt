@@ -1,6 +1,7 @@
 package com.hiczp.telegram.bot.application.updatesource
 
 import com.hiczp.telegram.bot.protocol.model.Update
+import kotlin.time.Duration
 
 /**
  * Source of Telegram updates using the callback-based pattern.
@@ -34,8 +35,10 @@ interface TelegramUpdateSource {
      *
      * Immediately cuts off the source (stops network polling/closes port).
      * Called by [com.hiczp.telegram.bot.application.TelegramBotApplication.stop] before waiting for handlers.
+     *
+     * @param gracePeriod The grace period for graceful shutdown. Implementation may ignore this parameter.
      */
-    suspend fun stop()
+    suspend fun stop(gracePeriod: Duration)
 
     /**
      * Perform final cleanup work.

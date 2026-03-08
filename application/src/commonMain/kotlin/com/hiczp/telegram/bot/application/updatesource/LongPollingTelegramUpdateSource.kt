@@ -11,6 +11,7 @@ import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Semaphore
 import kotlin.time.Clock
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
@@ -210,8 +211,10 @@ open class LongPollingTelegramUpdateSource(
      *
      * Immediately cancels the fetch scope, cutting off any pending long polling requests.
      * Called by [com.hiczp.telegram.bot.application.TelegramBotApplication.stop] before waiting for handlers.
+     *
+     * @param gracePeriod Ignored for long polling. The fetch is cancelled immediately.
      */
-    override suspend fun stop() {
+    override suspend fun stop(gracePeriod: Duration) {
         logger.debug { "Received stop signal, cutting off fetch..." }
         isRunning.value = false
         fetchScope.cancel()

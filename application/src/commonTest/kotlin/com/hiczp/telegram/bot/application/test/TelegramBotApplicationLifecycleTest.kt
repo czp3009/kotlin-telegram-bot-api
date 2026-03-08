@@ -22,6 +22,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlin.test.*
 import kotlin.time.Clock
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
@@ -511,7 +512,7 @@ class TelegramBotApplicationLifecycleTest {
                 throw exceptionToThrow
             }
 
-            override suspend fun stop() {
+            override suspend fun stop(gracePeriod: Duration) {
                 stopCalled.value = true
             }
 
@@ -562,7 +563,7 @@ class TelegramBotApplicationLifecycleTest {
                 }
             }
 
-            override suspend fun stop() {
+            override suspend fun stop(gracePeriod: Duration) {
                 stopCalled.value = true
                 updates.close()
             }
@@ -612,7 +613,7 @@ class TelegramBotApplicationLifecycleTest {
                 consume(createTestUpdate(1L, "test"))
             }
 
-            override suspend fun stop() {
+            override suspend fun stop(gracePeriod: Duration) {
                 stopCalled.value = true
             }
 
@@ -664,7 +665,7 @@ class TelegramBotApplicationLifecycleTest {
                 throw CancellationException("Simulated cancellation")
             }
 
-            override suspend fun stop() {
+            override suspend fun stop(gracePeriod: Duration) {
                 stopCalled.value = true
             }
 
@@ -705,7 +706,7 @@ class TelegramBotApplicationLifecycleTest {
                 throw exceptionToThrow
             }
 
-            override suspend fun stop() {
+            override suspend fun stop(gracePeriod: Duration) {
                 states.add("stop_called")
             }
 
@@ -748,7 +749,7 @@ class TelegramBotApplicationLifecycleTest {
                 throw RuntimeException("Exception $startCallCount")
             }
 
-            override suspend fun stop() {
+            override suspend fun stop(gracePeriod: Duration) {
                 stopCalled.value = true
             }
 

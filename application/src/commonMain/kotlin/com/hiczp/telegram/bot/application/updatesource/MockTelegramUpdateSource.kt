@@ -7,6 +7,8 @@ import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 
+import kotlin.time.Duration
+
 private val logger = KotlinLogging.logger {}
 
 /**
@@ -96,8 +98,10 @@ open class MockTelegramUpdateSource(
      *
      * Cancels the current consumption job, breaking the loop instantly, 
      * but **does not** close the underlying [source] channel.
+     *
+     * @param gracePeriod Ignored for mock source.
      */
-    override suspend fun stop() {
+    override suspend fun stop(gracePeriod: Duration) {
         if (isRunning.value) {
             logger.debug { "Received stop command, cancelling current run job..." }
             currentRunJob.value?.cancel()
@@ -106,6 +110,6 @@ open class MockTelegramUpdateSource(
     }
 
     override suspend fun onFinalize() {
-        // No final ACK needed for mock
+        logger.debug { "onFinalize invoked" }
     }
 }

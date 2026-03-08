@@ -101,7 +101,7 @@ A high-level Telegram Bot API client wrapper for making HTTP requests.
 A Telegram bot framework with lifecycle management. **Generally, this is all you need.**
 
 - **Lifecycle management**: Start/stop with graceful shutdown
-- **Update sources**: Long polling, mock (for testing)
+- **Update sources**: Long polling, webhook (separate module), mock (for testing)
 - **Handler DSL**: Type-safe routing for events (commands, messages, callbacks, etc.)
 - **Command DSL**: Structured command parsing with typed arguments and subcommands
 - **Interceptor pipeline**: Onion-model middleware for cross-cutting concerns

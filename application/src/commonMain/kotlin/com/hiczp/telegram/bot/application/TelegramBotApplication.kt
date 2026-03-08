@@ -213,7 +213,7 @@ class TelegramBotApplication(
             val shutdownJob = applicationScope.launch {
                 withContext(NonCancellable) {
                     // Instantly cut off the source
-                    runCatching { updateSource.stop() }.onFailure {
+                    runCatching { updateSource.stop(gracePeriod) }.onFailure {
                         logger.error(it) { "Failed to cut off update source" }
                     }
 

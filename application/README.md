@@ -10,6 +10,7 @@ DSL, Command DSL, and interceptor pipeline.
 - [Update Sources](#update-sources)
     - [LongPollingTelegramUpdateSource](#longpollingtelegramupdatesource)
     - [MockTelegramUpdateSource](#mocktelegramupdatesource)
+  - [WebhookTelegramUpdateSource](#webhooktelegramupdatesource)
 - [Event Dispatchers](#event-dispatchers)
     - [SimpleTelegramEventDispatcher](#simpletelegrameventdispatcher)
     - [HandlerTelegramEventDispatcher](#handlertelegrameventdispatcher)
@@ -141,7 +142,8 @@ interface TelegramUpdateSource {
     suspend fun start(consume: suspend (Update) -> Unit)
 
     // Trigger source shutdown (cuts off network polling)
-    suspend fun stop()
+    // gracePeriod: The grace period for graceful shutdown. Implementation may ignore this parameter.
+    suspend fun stop(gracePeriod: Duration)
 
     // Perform final cleanup (e.g., sending Final ACK)
     suspend fun onFinalize()
@@ -188,7 +190,7 @@ val app = TelegramBotApplication(
 
 **Graceful Shutdown:**
 
-1. `stop()` cancels the fetch scope immediately
+1. `stop(gracePeriod)` cancels the fetch scope immediately (gracePeriod is ignored for long polling)
 2. `onFinalize()` sends a final `getUpdates` with the last offset as ACK
 
 ### MockTelegramUpdateSource
@@ -226,9 +228,62 @@ testChannel.trySend(testUpdate3)
 **Key Features:**
 
 - Supports infinite start/stop cycles (unlike network-based sources)
-- `stop()` suspends consumption but keeps the channel open
+- `stop(gracePeriod)` suspends consumption but keeps the channel open (gracePeriod is ignored)
 - Resumes from where it left off on restart
 - Naturally completes when the source channel is closed
+
+### WebhookTelegramUpdateSource
+
+A webhook-based update source available in the `application-updatesource-webhook` module. It receives updates via an
+embedded Ktor server.
+
+```kotlin
+// Add dependency: com.hiczp.telegram.bot:application-updatesource-webhook
+
+val webhookSource = WebhookTelegramUpdateSource(
+  applicationEngineFactory = CIO,  // or Netty, Jetty, etc.
+  path = "/webhook",
+  configureEngine = {
+    connector {
+      port = 8443
+      host = "0.0.0.0"
+    }
+    // SSL configuration for production
+  }
+)
+
+val app = TelegramBotApplication(
+  botToken = "YOUR_TOKEN",
+  updateSource = webhookSource,
+  eventDispatcher = dispatcher
+)
+```
+
+**Parameters:**
+
+| Parameter                  | Description                                         |
+|----------------------------|-----------------------------------------------------|
+| `applicationEngineFactory` | Ktor engine factory (CIO, Netty, Jetty, etc.)       |
+| `path`                     | Webhook endpoint path (default: "/")                |
+| `configureEngine`          | Engine configuration lambda (port, host, SSL, etc.) |
+| `configureApplication`     | Additional Ktor application configuration           |
+
+**Exception Handling:**
+
+- `CancellationException` - Re-thrown to propagate coroutine cancellation
+- `Exception` - Business exceptions are logged and a 200 OK is returned to prevent Telegram retries
+
+**Graceful Shutdown:**
+
+1. `stop(gracePeriod)` stops the embedded server with the specified grace period
+2. Pending HTTP handlers are cancelled via Ktor's lifecycle
+3. `onFinalize()` is called after the server has stopped
+
+**Key Differences from LongPolling:**
+
+- Updates are processed synchronously within the HTTP request handler
+- No retry logic - all responses return 200 OK to Telegram
+- Requires public HTTPS endpoint with valid certificate (or local tunnel for development)
 
 ## Event Dispatchers
 
