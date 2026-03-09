@@ -81,7 +81,7 @@ open class LongPollingTelegramUpdateSource(
      */
     override suspend fun start(consume: suspend (Update) -> Unit) {
         check(isRunning.compareAndSet(expect = false, update = true)) {
-            "${this::class.simpleName} can only be started once"
+            "${this::class.simpleName} already started"
         }
         nextOffset = 0L
 

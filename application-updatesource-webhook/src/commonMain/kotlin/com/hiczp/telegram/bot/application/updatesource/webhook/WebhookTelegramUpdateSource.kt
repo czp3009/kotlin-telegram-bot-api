@@ -75,7 +75,7 @@ open class WebhookTelegramUpdateSource<out TEngine : ApplicationEngine, TConfigu
      */
     override suspend fun start(consume: suspend (Update) -> Unit) {
         check(isRunning.compareAndSet(expect = false, update = true)) {
-            "${this::class.simpleName} can only be started once"
+            "${this::class.simpleName} already started"
         }
 
         logger.debug { "${this::class.simpleName} started on path $path" }
