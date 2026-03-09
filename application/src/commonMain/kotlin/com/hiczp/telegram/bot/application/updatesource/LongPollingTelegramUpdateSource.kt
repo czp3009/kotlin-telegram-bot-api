@@ -84,6 +84,7 @@ open class LongPollingTelegramUpdateSource(
             "${this::class.simpleName} already started"
         }
         nextOffset = 0L
+        latestTimeReceivedUpdate = Instant.DISTANT_PAST
 
         logger.debug { "${this::class.simpleName} started (mode: $processingMode)" }
         val updatesProcessor: suspend CoroutineScope.(List<Update>) -> Unit = when (processingMode) {
