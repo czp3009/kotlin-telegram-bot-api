@@ -541,6 +541,30 @@ The `ConversationId` is a data class with `chatId`, `userId` (optional), and `th
 - `ConversationId(chatId, userId = userId)` - per-user conversation in a group
 - `ConversationId(chatId, threadId = threadId)` - per-thread conversation
 
+### Webhook Update Source (`:application-updatesource-webhook`)
+
+A separate module providing webhook-based update receiving. Uses an embedded Ktor server:
+
+```kotlin
+implementation("com.hiczp.telegram.bot:application-updatesource-webhook:$version")
+
+// Usage with Netty engine
+val updateSource = WebhookTelegramUpdateSource(
+  applicationEngineFactory = Netty,
+  path = "/webhook",
+  configureEngine = {
+    port = 8443
+    // SSL configuration for production
+  }
+)
+
+val app = TelegramBotApplication(
+  client = client,
+  updateSource = updateSource,
+  eventDispatcher = dispatcher
+)
+```
+
 ### Quick Start (Application Module)
 
 Use the factory method for simple long-polling bots:
