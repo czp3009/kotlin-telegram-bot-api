@@ -172,7 +172,7 @@ open class LongPollingTelegramUpdateSource(
                 val updates = try {
                     fetchScope.async { fetchFromNetwork() }.await()
                 } catch (_: CancellationException) {
-                    continue
+                    break
                 }
 
                 if (updates.isEmpty()) {
