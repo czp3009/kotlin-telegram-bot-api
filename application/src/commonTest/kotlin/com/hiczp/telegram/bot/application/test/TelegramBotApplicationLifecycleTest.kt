@@ -15,16 +15,13 @@ import com.hiczp.telegram.bot.protocol.model.User
 import io.github.oshai.kotlinlogging.KotlinLoggingConfiguration
 import io.github.oshai.kotlinlogging.Level
 import kotlinx.atomicfu.atomic
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlin.test.*
 import kotlin.time.Clock
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.ZERO
 
 class TelegramBotApplicationLifecycleTest {
     init {
@@ -99,7 +96,7 @@ class TelegramBotApplicationLifecycleTest {
         assertEquals("Bot can only be started once", exception.message)
 
         // Cleanup
-        app.stop(100.milliseconds).join()
+        app.stop(ZERO).join()
         channel.close()
     }
 
@@ -125,9 +122,9 @@ class TelegramBotApplicationLifecycleTest {
         app.join()
 
         // Call stop multiple times - all should complete immediately since app already stopped
-        val stopJob1 = app.stop(100.milliseconds)
-        val stopJob2 = app.stop(100.milliseconds)
-        val stopJob3 = app.stop(100.milliseconds)
+        val stopJob1 = app.stop(ZERO)
+        val stopJob2 = app.stop(ZERO)
+        val stopJob3 = app.stop(ZERO)
 
         // All should complete without error
         stopJob1.join()
@@ -149,7 +146,7 @@ class TelegramBotApplicationLifecycleTest {
         )
 
         // Don't start the app, just call stop
-        val stopJob = app.stop(100.milliseconds)
+        val stopJob = app.stop(ZERO)
 
         // Should complete immediately
         assertTrue(stopJob.isCompleted)
@@ -202,7 +199,7 @@ class TelegramBotApplicationLifecycleTest {
         updateConsumed.await()
 
         // Use stopSuspend to ensure complete shutdown
-        app.stopSuspend(100.milliseconds)
+        app.stopSuspend(ZERO)
         channel.close()
 
         // Verify onFinalize was called
@@ -247,7 +244,7 @@ class TelegramBotApplicationLifecycleTest {
         handlerStarted.await()
 
         // Initiate graceful shutdown with short timeout
-        val stopJob = app.stop(100.milliseconds)
+        val stopJob = app.stop(ZERO)
         stopJob.join()
         channel.close()
 
@@ -291,7 +288,7 @@ class TelegramBotApplicationLifecycleTest {
 
         // Close channel and use stopSuspend to ensure complete shutdown
         channel.close()
-        app.stopSuspend(100.milliseconds)
+        app.stopSuspend(ZERO)
 
         assertEquals(listOf("hello", "world", "test"), processedTexts)
     }
@@ -327,7 +324,7 @@ class TelegramBotApplicationLifecycleTest {
         assertFalse(joinCompleted.isCompleted)
 
         // Stop the app
-        app.stop(100.milliseconds).join()
+        app.stop(ZERO).join()
         channel.close()
 
         // Now join should complete
@@ -384,7 +381,7 @@ class TelegramBotApplicationLifecycleTest {
 
         // Close channel and use stopSuspend to ensure complete shutdown
         channel.close()
-        app.stopSuspend(100.milliseconds)
+        app.stopSuspend(ZERO)
 
         // Interceptors should be applied in onion model order
         assertEquals(
@@ -435,7 +432,7 @@ class TelegramBotApplicationLifecycleTest {
         // Start stopSuspend in a separate coroutine
         val stopSuspendCompleted = CompletableDeferred<Unit>()
         launch {
-            app.stopSuspend(1.seconds)
+            app.stopSuspend(ZERO)
             stopSuspendCompleted.complete(Unit)
         }
 
@@ -488,7 +485,7 @@ class TelegramBotApplicationLifecycleTest {
 
         // Close channel and use stopSuspend to ensure complete shutdown
         channel.close()
-        app.stopSuspend(100.milliseconds)
+        app.stopSuspend(ZERO)
 
         // Only the interceptor should have run, not the handler
         assertEquals(listOf("short-circuit"), interceptorLog)
@@ -625,7 +622,7 @@ class TelegramBotApplicationLifecycleTest {
         val dispatcher = SimpleTelegramEventDispatcher { _ ->
             handlerInvoked.complete(Unit)
             // Call stop from within handler - this should not deadlock
-            appRef.stop(1.seconds)
+            appRef.stop(ZERO)
         }
 
         val app = TelegramBotApplication(
@@ -775,6 +772,129 @@ class TelegramBotApplicationLifecycleTest {
         assertEquals(1, startCallCount, "start() should only be called once")
         assertTrue(stopCalled.value, "stop() should be called")
         assertTrue(onFinalizeCalled.value, "onFinalize() should be called")
+    }
+
+    // ==================== Race condition tests ====================
+
+    /**
+     * Test that concurrent stop() calls on a NEW application all return immediately completed jobs.
+     * This tests the race condition fix where multiple stop() calls before start() should all succeed.
+     */
+    @Test
+    fun `concurrent stop calls on NEW application should all return completed jobs`() = runTest {
+        val channel = Channel<Update>(Channel.UNLIMITED)
+        val updateSource = MockTelegramUpdateSource(channel)
+        val dispatcher = SimpleTelegramEventDispatcher { }
+
+        val app = TelegramBotApplication(
+            client = fakeClient,
+            updateSource = updateSource,
+            interceptors = emptyList(),
+            eventDispatcher = dispatcher
+        )
+
+        // Launch multiple concurrent stop() calls before start()
+        val stopJobs = (1..10).map {
+            launch {
+                app.stop(ZERO)
+            }
+        }
+
+        // All stop jobs should complete
+        stopJobs.joinAll()
+
+        // All should be completed
+        assertTrue(stopJobs.all { it.isCompleted }, "All stop jobs should be completed")
+
+        channel.close()
+    }
+
+    /**
+     * Test that calling start() after stop() on a NEW application should fail.
+     * This verifies the state transition NEW -> STOPPING is irreversible.
+     */
+    @Test
+    fun `start after stop on NEW application should throw`() = runTest {
+        val channel = Channel<Update>(Channel.UNLIMITED)
+        val updateSource = MockTelegramUpdateSource(channel)
+        val dispatcher = SimpleTelegramEventDispatcher { }
+
+        val app = TelegramBotApplication(
+            client = fakeClient,
+            updateSource = updateSource,
+            interceptors = emptyList(),
+            eventDispatcher = dispatcher
+        )
+
+        // Stop before start
+        val stopJob = app.stop(ZERO)
+        assertTrue(stopJob.isCompleted, "Stop on NEW should return completed job")
+
+        // Now try to start - should fail because state is STOPPING
+        val exception = assertFailsWith<IllegalStateException> {
+            app.start()
+        }
+
+        assertEquals("Bot can only be started once", exception.message)
+
+        channel.close()
+    }
+
+    /**
+     * Test race condition between start() and stop() calls.
+     * Either:
+     * - start() wins: state becomes RUNNING, then stop() triggers normal shutdown
+     * - stop() wins: state becomes STOPPING, then start() throws exception
+     */
+    @Test
+    fun `race between start and stop should be handled correctly`() = runTest {
+        repeat(10) {
+            val channel = Channel<Update>(Channel.UNLIMITED)
+            val updateSource = MockTelegramUpdateSource(channel)
+            val dispatcher = SimpleTelegramEventDispatcher { }
+
+            val app = TelegramBotApplication(
+                client = fakeClient,
+                updateSource = updateSource,
+                interceptors = emptyList(),
+                eventDispatcher = dispatcher
+            )
+
+            val startResult = CompletableDeferred<Result<Unit>>()
+            val stopResult = CompletableDeferred<Job>()
+
+            // Launch start and stop concurrently
+            launch {
+                try {
+                    app.start()
+                    startResult.complete(Result.success(Unit))
+                } catch (e: IllegalStateException) {
+                    startResult.complete(Result.failure(e))
+                }
+            }
+
+            launch {
+                stopResult.complete(app.stop(ZERO))
+            }
+
+            val startOutcome = startResult.await()
+            val stopJob = stopResult.await()
+
+            if (startOutcome.isSuccess) {
+                // start() won: app is running, stop() should trigger normal shutdown
+                // Wait for shutdown
+                channel.close()
+                stopJob.join()
+            } else {
+                // stop() won: state is STOPPING, start() should have thrown
+                assertTrue(startOutcome.isFailure, "start should have failed when stop won the race")
+                val exception = startOutcome.exceptionOrNull()
+                assertTrue(exception is IllegalStateException, "Should throw IllegalStateException")
+                assertEquals("Bot can only be started once", exception.message)
+                assertTrue(stopJob.isCompleted, "Stop job should be completed immediately when stop won")
+                channel.close()
+            }
+        }
     }
 
     /**

@@ -173,6 +173,9 @@ class TelegramBotApplication(
      *
      * This method can be used to keep the application alive until the bot stops.
      *
+     * **Warning**: This method must be called after [start], otherwise it may never return.
+     * The caller is responsible for correct usage.
+     *
      * **Note**: This method only waits for the main job to complete, not for other coroutines
      * launched within the [applicationScope]. If you need to ensure all coroutines have completed,
      * call [stopSuspend] after this method returns.
@@ -207,6 +210,16 @@ class TelegramBotApplication(
      * @see stopSuspend For a suspending version that waits for all application scope coroutines.
      */
     fun stop(gracePeriod: Duration = 10.seconds): Job {
+        // Try NEW -> STOPPING first: bot was never started, return an immediately completed job
+        if (state.compareAndSet(State.NEW, State.STOPPING)) {
+            applicationScope.cancel()
+            state.value = State.STOPPED
+            val completedJob = Job().apply { complete() }
+            shutdownJobDeferred.complete(completedJob)
+            return completedJob
+        }
+
+        // Try RUNNING -> STOPPING: normal shutdown flow
         if (state.compareAndSet(State.RUNNING, State.STOPPING)) {
             logger.debug { "Received shutdown signal, starting graceful shutdown..." }
 
@@ -243,9 +256,7 @@ class TelegramBotApplication(
             return shutdownJob
         }
 
-        if (state.value == State.NEW) {
-            return Job().apply { complete() }
-        }
+        // Already STOPPING or STOPPED: wait for the existing shutdown job
         return applicationScope.launch {
             shutdownJobDeferred.await().join()
         }

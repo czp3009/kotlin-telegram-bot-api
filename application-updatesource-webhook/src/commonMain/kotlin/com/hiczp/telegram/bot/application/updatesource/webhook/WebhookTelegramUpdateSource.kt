@@ -30,6 +30,21 @@ private val logger = KotlinLogging.logger {}
  * - [CancellationException]: Re-thrown to propagate coroutine cancellation.
  * - [Exception]: Business exceptions are logged and a 200 OK is returned to Telegram to prevent retries.
  *
+ * ## Usage Example
+ *
+ * ```kotlin
+ * val updateSource = WebhookTelegramUpdateSource(
+ *     applicationEngineFactory = CIO,
+ *     path = "/webhook",
+ *     configureEngine = {
+ *         connector {
+ *             host = "0.0.0.0"
+ *             port = 8080
+ *         }
+ *     }
+ * )
+ * ```
+ *
  * @param TEngine The type of application engine.
  * @param TConfiguration The type of engine configuration.
  * @param applicationEngineFactory The Ktor application engine factory to use (e.g., Netty, CIO).
@@ -37,6 +52,7 @@ private val logger = KotlinLogging.logger {}
  * @param configureEngine Configuration lambda for the application engine. Use this to configure port,
  *   host, SSL, connection settings, and other engine-specific options.
  * @param configureApplication Additional configuration for the Ktor application.
+ * @see <a href="https://ktor.io/docs/server-engines.html">Ktor Server Engines documentation</a>
  */
 open class WebhookTelegramUpdateSource<out TEngine : ApplicationEngine, TConfiguration : ApplicationEngine.Configuration>(
     private val applicationEngineFactory: ApplicationEngineFactory<TEngine, TConfiguration>,
@@ -64,7 +80,7 @@ open class WebhookTelegramUpdateSource<out TEngine : ApplicationEngine, TConfigu
 
         logger.debug { "${this::class.simpleName} started on path $path" }
 
-        server = embeddedServer(
+        val embeddedServer = embeddedServer(
             factory = applicationEngineFactory,
             configure = configureEngine,
         ) {
@@ -101,7 +117,9 @@ open class WebhookTelegramUpdateSource<out TEngine : ApplicationEngine, TConfigu
                 }
             }
             configureApplication()
-        }.startSuspend(wait = true)
+        }
+        server = embeddedServer
+        embeddedServer.startSuspend(wait = true)
     }
 
     /**
