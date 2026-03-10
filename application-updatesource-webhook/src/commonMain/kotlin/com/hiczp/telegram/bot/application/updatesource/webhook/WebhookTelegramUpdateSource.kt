@@ -14,8 +14,10 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.utils.io.*
 import kotlinx.atomicfu.atomic
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.isActive
 import kotlinx.serialization.json.Json
+import kotlin.concurrent.Volatile
 import kotlin.time.Duration
 
 private val logger = KotlinLogging.logger {}
@@ -60,8 +62,11 @@ open class WebhookTelegramUpdateSource<out TEngine : ApplicationEngine, TConfigu
     private val configureEngine: TConfiguration.() -> Unit = {},
     private val configureApplication: Application.() -> Unit = {},
 ) : TelegramUpdateSource {
-    private val isRunning = atomic(false)
+    private val state = atomic(State.NEW)
+
+    @Volatile
     private var server: EmbeddedServer<TEngine, TConfiguration>? = null
+    private val startedSignal = CompletableDeferred<Unit>()
 
     /**
      * Start the webhook server.
@@ -71,60 +76,80 @@ open class WebhookTelegramUpdateSource<out TEngine : ApplicationEngine, TConfigu
      * This method can only be called once per instance.
      *
      * @param consume Suspended function to process each update.
-     * @throws IllegalStateException if this method has already been called.
+     * @throws IllegalStateException if this method has already been called or the source has been stopped.
      */
     override suspend fun start(consume: suspend (Update) -> Unit) {
-        check(isRunning.compareAndSet(expect = false, update = true)) {
-            "${this::class.simpleName} already started"
+        check(state.compareAndSet(expect = State.NEW, update = State.RUNNING)) {
+            "${this::class.simpleName} can only be started once"
         }
 
         logger.debug { "${this::class.simpleName} started on path $path" }
 
-        val embeddedServer = embeddedServer(
-            factory = applicationEngineFactory,
-            configure = configureEngine,
-        ) {
-            install(ContentNegotiation) {
-                json(Json {
-                    ignoreUnknownKeys = true
-                    encodeDefaults = true
-                    explicitNulls = false
-                })
-            }
-            routing {
-                post(path) {
-                    val update = try {
-                        call.receive<Update>()
-                    } catch (e: ContentTransformationException) {
-                        logger.error(e) { "Failed to parse Update from webhook" }
-                        return@post call.respond(HttpStatusCode.BadRequest)
-                    }
-
-                    try {
-                        consume(update)
-                    } catch (e: TelegramBotShuttingDownException) {
-                        throw e
-                    } catch (e: CancellationException) {
-                        if (isActive) {
-                            logger.warn(e) { "Update processing cancelled: $update" }
-                        }
-                        throw e
-                    } catch (e: Throwable) {
-                        logger.error(e) { "Update process error: $update" }
-                        throw e
-                    }
-                    call.respond(HttpStatusCode.OK)
+        val embeddedServer = try {
+            embeddedServer(
+                factory = applicationEngineFactory,
+                configure = configureEngine,
+            ) {
+                // Signal that the server has started
+                monitor.subscribe(ApplicationStarted) {
+                    startedSignal.complete(Unit)
                 }
+                install(ContentNegotiation) {
+                    json(Json {
+                        ignoreUnknownKeys = true
+                        encodeDefaults = true
+                        explicitNulls = false
+                    })
+                }
+                routing {
+                    post(path) {
+                        val update = try {
+                            call.receive<Update>()
+                        } catch (e: ContentTransformationException) {
+                            logger.error(e) { "Failed to parse Update from webhook" }
+                            return@post call.respond(HttpStatusCode.BadRequest)
+                        }
+
+                        try {
+                            consume(update)
+                        } catch (e: TelegramBotShuttingDownException) {
+                            throw e
+                        } catch (e: CancellationException) {
+                            if (isActive) {
+                                logger.warn(e) { "Update processing cancelled: $update" }
+                            }
+                            throw e
+                        } catch (e: Throwable) {
+                            logger.error(e) { "Update process error: $update" }
+                            throw e
+                        }
+                        call.respond(HttpStatusCode.OK)
+                    }
+                }
+                configureApplication()
             }
-            configureApplication()
+        } catch (e: Throwable) {
+            // If embeddedServer construction fails, set state to STOPPED and complete startedSignal
+            state.value = State.STOPPED
+            startedSignal.complete(Unit)
+            throw e
         }
         server = embeddedServer
-        embeddedServer.startSuspend(wait = true)
+        try {
+            embeddedServer.startSuspend(wait = true)
+        } finally {
+            // Set state to STOPPED first, then complete the signal
+            // This ensures stop() sees consistent state when it resumes from await()
+            state.value = State.STOPPED
+            startedSignal.complete(Unit)
+        }
     }
 
     /**
      * Trigger source shutdown.
      *
+     * If [start] was called and the server is still starting, waits for the server to be fully
+     * started before initiating shutdown. If [start] was not called, this method returns immediately.
      * Stops the embedded server. All pending handlers will be cancelled via Ktor's lifecycle.
      * Called by [com.hiczp.telegram.bot.application.TelegramBotApplication.stop] before waiting for handlers.
      *
@@ -132,10 +157,16 @@ open class WebhookTelegramUpdateSource<out TEngine : ApplicationEngine, TConfigu
      *   as both gracePeriodMillis and timeoutMillis.
      */
     override suspend fun stop(gracePeriod: Duration) {
-        logger.debug { "Received stop signal, shutting down webhook server..." }
-        isRunning.value = false
+        // Check if start was called - if not, nothing to stop
+        if (!state.compareAndSet(expect = State.RUNNING, update = State.STOPPED)) {
+            logger.debug { "Received stop signal, but server was never started or already stopped" }
+            return
+        }
+        logger.debug { "Received stop signal, waiting for server to be started..." }
+        startedSignal.await()
+        logger.debug { "Server started, shutting down webhook server..." }
         val gracePeriodMillis = gracePeriod.inWholeMilliseconds
-        server?.stop(gracePeriodMillis = gracePeriodMillis, timeoutMillis = gracePeriodMillis)
+        server?.stopSuspend(gracePeriodMillis = gracePeriodMillis, timeoutMillis = gracePeriodMillis)
     }
 
     /**
@@ -147,4 +178,6 @@ open class WebhookTelegramUpdateSource<out TEngine : ApplicationEngine, TConfigu
     override suspend fun onFinalize() {
         logger.debug { "onFinalize invoked" }
     }
+
+    private enum class State { NEW, RUNNING, STOPPED }
 }
