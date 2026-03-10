@@ -6,8 +6,8 @@ import io.ktor.server.engine.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -37,7 +37,7 @@ class WebhookTelegramUpdateSourceTest {
         val exception = assertFailsWith<IllegalStateException> {
             updateSource.start { /* no-op */ }
         }
-        assertTrue(exception.message?.contains("can only be started once") == true)
+        assertEquals(exception.message?.contains("can only be started once"), true)
 
         // Cleanup
         firstStartJob.cancel()
@@ -167,7 +167,7 @@ class WebhookTelegramUpdateSourceTest {
         val exception = assertFailsWith<IllegalStateException> {
             updateSource.start { /* no-op */ }
         }
-        assertTrue(exception.message?.contains("can only be started once") == true)
+        assertEquals(exception.message?.contains("can only be started once"), true)
 
         // Cleanup
         startJob.cancel()
