@@ -63,7 +63,7 @@ open class LongPollingTelegramUpdateSource(
     // Semaphore for limiting concurrent update processing
     private val semaphore = maxPendingUpdates?.let { Semaphore(it) }
 
-    private val isRunning = atomic(false)
+    private val state = atomic(State.NEW)
     private var nextOffset = 0L
     private var latestTimeReceivedUpdate = Instant.DISTANT_PAST
 
@@ -77,14 +77,12 @@ open class LongPollingTelegramUpdateSource(
      * This method can only be called once per instance.
      *
      * @param consume Suspended function to process each update.
-     * @throws IllegalStateException if this method has already been called.
+     * @throws IllegalStateException if this method has already been called or the source has been stopped.
      */
     override suspend fun start(consume: suspend (Update) -> Unit) {
-        check(isRunning.compareAndSet(expect = false, update = true)) {
-            "${this::class.simpleName} already started"
+        check(state.compareAndSet(expect = State.NEW, update = State.RUNNING)) {
+            "${this::class.simpleName} can only be started once"
         }
-        nextOffset = 0L
-        latestTimeReceivedUpdate = Instant.DISTANT_PAST
 
         logger.debug { "${this::class.simpleName} started (mode: $processingMode)" }
         val updatesProcessor: suspend CoroutineScope.(List<Update>) -> Unit = when (processingMode) {
@@ -163,7 +161,7 @@ open class LongPollingTelegramUpdateSource(
         }
 
         supervisorScope {
-            while (isRunning.value && isActive) {
+            while (state.value == State.RUNNING && isActive) {
                 // If there are no new updates for at least 6 days, then the identifier of the next update will be chosen randomly instead of sequentially.
                 if (Clock.System.now() - latestTimeReceivedUpdate > IDLE_RESET) {
                     if (latestTimeReceivedUpdate != Instant.DISTANT_PAST) logger.debug { "Not received updates for a long time, resetting offset to 0" }
@@ -217,7 +215,7 @@ open class LongPollingTelegramUpdateSource(
      */
     override suspend fun stop(gracePeriod: Duration) {
         logger.debug { "Received stop signal, cutting off fetch..." }
-        isRunning.value = false
+        state.value = State.STOPPED
         fetchScope.cancel()
     }
 
@@ -265,6 +263,8 @@ open class LongPollingTelegramUpdateSource(
         CONCURRENT_BATCH,
         CONCURRENT,
     }
+
+    private enum class State { NEW, RUNNING, STOPPED }
 
     companion object {
         private val IDLE_RESET = 6.days
