@@ -2,6 +2,7 @@ package com.hiczp.telegram.bot.protocol.plugin
 
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.api.*
+import io.ktor.client.request.*
 import io.ktor.util.*
 
 val NoRetryRequestAttributeKey = AttributeKey<Unit>("NoRetryRequestAttributeKey")
@@ -33,12 +34,13 @@ val NoRetryRequestAttributeKey = AttributeKey<Unit>("NoRetryRequestAttributeKey"
  */
 val TelegramLongPollingPlugin = createClientPlugin("TelegramLongPollingPlugin") {
     onRequest { request, _ ->
-        request.attributes.put(NoRetryRequestAttributeKey, Unit)
+        if (request.isGetUpdates()) {
+            request.attributes.put(NoRetryRequestAttributeKey, Unit)
+        }
     }
     
     on(Send) { request ->
-        val methodName = request.url.pathSegments.lastOrNull()
-        if (methodName == "getUpdates") {
+        if (request.isGetUpdates()) {
             request.timeout {
                 requestTimeoutMillis = 35_000
                 connectTimeoutMillis = 5_000
@@ -48,3 +50,5 @@ val TelegramLongPollingPlugin = createClientPlugin("TelegramLongPollingPlugin") 
         proceed(request)
     }
 }
+
+private fun HttpRequestBuilder.isGetUpdates() = url.pathSegments.lastOrNull() == "getUpdates"
