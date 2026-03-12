@@ -304,6 +304,22 @@ matchers are in `handler/matcher/`:
 - All matcher functions follow the pattern: `on/when` + `EventName` + `Content` (e.g., `whenMessageEventText`,
   `whenCallbackQueryEventData`).
 
+**Event Type Scoping:**
+
+There are two equivalent ways to scope to an event type:
+
+```kotlin
+// Generic reified type parameter
+on<MessageEvent> { /* handlers */ }
+on<CallbackQueryEvent> { /* handlers */ }
+
+// Convenience shorthand (only available at root level)
+onMessageEvent { /* handlers */ }
+onCallbackQueryEvent { /* handlers */ }
+```
+
+Inside an already-scoped route, use `on<T>` for further type narrowing.
+
 **Command Scoping:**
 
 Use `onCommand` to create a child route that only accepts command messages addressed to this bot. This is useful for
@@ -338,13 +354,6 @@ val dispatcher = HandlerTelegramEventDispatcher(handling {
         val username = ctx.arguments.username
         val duration = ctx.arguments.duration
     }
-
-  // Command with typed arguments and default error handling (sends help message on error)
-  command("ban", ::BanArgs) { ctx ->
-    // ctx.arguments.username and ctx.arguments.duration are typed
-    val username = ctx.arguments.username
-    val duration = ctx.arguments.duration
-  }
 
   // Command with custom error handling
   command("kick", ::KickArgs, onError = { e ->
@@ -480,6 +489,19 @@ command("process") {
 }
 ```
 
+For fire-and-forget tasks that should outlive the current handler, use `applicationScope`:
+
+```kotlin
+commandEndpoint("background") {
+  // In application scope - continues after handler returns
+  applicationScope.launch {
+    delay(10.seconds)
+    sendMessage("Delayed message")
+  }
+  // Handler returns immediately
+}
+```
+
 #### Dead Letter Handler
 
 A root-level `handle` acts as a fallback for all unhandled events, replacing the need for a separate
@@ -547,14 +569,44 @@ A separate module providing webhook-based update receiving. Uses an embedded Kto
 
 ```kotlin
 implementation("com.hiczp.telegram.bot:application-updatesource-webhook:$version")
+```
 
-// Usage with Netty engine
+#### Quick Start with Webhook
+
+Use the `webhook` factory method for simple webhook-based bots:
+
+```kotlin
+val app = TelegramBotApplication.webhook(
+  botToken = "YOUR_TOKEN",
+  applicationEngineFactory = Netty,
+  path = "/webhook",
+  configureEngine = {
+    connector {
+      host = "0.0.0.0"
+      port = 8443
+    }
+  },
+  eventDispatcher = dispatcher,
+  interceptors = listOf(loggingInterceptor())
+)
+app.start()
+app.join()  // Suspend until stopped
+// app.stop(5.seconds) for graceful shutdown
+```
+
+#### Manual Webhook Setup
+
+For more control, manually create `WebhookTelegramUpdateSource`:
+
+```kotlin
 val updateSource = WebhookTelegramUpdateSource(
   applicationEngineFactory = Netty,
   path = "/webhook",
   configureEngine = {
-    port = 8443
-    // SSL configuration for production
+    connector {
+      host = "0.0.0.0"
+      port = 8443
+    }
   }
 )
 
@@ -564,6 +616,11 @@ val app = TelegramBotApplication(
   eventDispatcher = dispatcher
 )
 ```
+
+#### SSL Configuration
+
+Telegram requires HTTPS. Use a reverse proxy (nginx) for SSL termination, or configure SSL directly in Ktor.
+See `application-updatesource-webhook/README.md` for detailed SSL configuration.
 
 ### Quick Start (Application Module)
 
