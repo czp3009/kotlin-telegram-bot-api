@@ -1,7 +1,11 @@
 package com.hiczp.telegram.bot.application.updatesource.webhook
 
+import com.hiczp.telegram.bot.application.TelegramBotApplication
+import com.hiczp.telegram.bot.application.dispatcher.TelegramEventDispatcher
 import com.hiczp.telegram.bot.application.exception.TelegramBotShuttingDownException
+import com.hiczp.telegram.bot.application.interceptor.TelegramEventInterceptor
 import com.hiczp.telegram.bot.application.updatesource.TelegramUpdateSource
+import com.hiczp.telegram.bot.client.TelegramBotClient
 import com.hiczp.telegram.bot.protocol.model.Update
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.*
@@ -180,4 +184,75 @@ open class WebhookTelegramUpdateSource<out TEngine : ApplicationEngine, TConfigu
     }
 
     private enum class State { NEW, RUNNING, STOPPED }
+}
+
+/**
+ * Creates a [TelegramBotApplication] with webhook-based update receiving.
+ *
+ * This is a convenience extension function on [TelegramBotApplication.Companion] that creates a
+ * [TelegramBotClient] and a [WebhookTelegramUpdateSource], then combines them into a [TelegramBotApplication].
+ *
+ * ## Usage Example
+ *
+ * ```kotlin
+ * import com.hiczp.telegram.bot.application.updatesource.webhook.webhook
+ *
+ * val app = TelegramBotApplication.webhook(
+ *     botToken = "YOUR_TOKEN",
+ *     applicationEngineFactory = Netty,
+ *     path = "/webhook",
+ *     configureEngine = {
+ *         connector {
+ *             host = "0.0.0.0"
+ *             port = 8443
+ *         }
+ *     },
+ *     eventDispatcher = eventDispatcher,
+ *     interceptors = listOf(loggingInterceptor())
+ * )
+ * app.start()
+ * app.join()
+ * ```
+ *
+ * @param botToken The Telegram bot token.
+ * @param applicationEngineFactory The Ktor application engine factory to use (e.g., Netty, CIO).
+ * @param path The webhook endpoint path. Defaults to "/".
+ * @param configureEngine Configuration lambda for the application engine. Use this to configure port,
+ *   host, SSL, connection settings, and other engine-specific options.
+ * @param configureApplication Additional configuration for the Ktor application.
+ * @param eventDispatcher The dispatcher that handles the final event routing to business logic.
+ * @param interceptors List of interceptors to apply to each event, in order from outermost to innermost.
+ * @param coroutineDispatcher The [kotlinx.coroutines.CoroutineDispatcher] for the application scope.
+ *   Defaults to `null`, which uses [kotlinx.coroutines.Dispatchers.Default].
+ * @param onUnrecognizedUpdate Optional callback invoked when an update cannot be converted to a
+ *   [TelegramBotEvent][com.hiczp.telegram.bot.protocol.event.TelegramBotEvent].
+ * @return A configured [TelegramBotApplication] instance.
+ * @see TelegramBotApplication
+ * @see WebhookTelegramUpdateSource
+ */
+fun <TEngine : ApplicationEngine, TConfiguration : ApplicationEngine.Configuration> TelegramBotApplication.Companion.webhook(
+    botToken: String,
+    applicationEngineFactory: ApplicationEngineFactory<TEngine, TConfiguration>,
+    path: String = "/",
+    configureEngine: TConfiguration.() -> Unit = {},
+    configureApplication: Application.() -> Unit = {},
+    eventDispatcher: TelegramEventDispatcher,
+    interceptors: List<TelegramEventInterceptor> = emptyList(),
+    coroutineDispatcher: kotlinx.coroutines.CoroutineDispatcher? = null,
+    onUnrecognizedUpdate: (suspend (TelegramBotClient, Update) -> Unit)? = null,
+): TelegramBotApplication {
+    val client = TelegramBotClient(botToken, coroutineDispatcher = coroutineDispatcher)
+    return TelegramBotApplication(
+        client = client,
+        updateSource = WebhookTelegramUpdateSource(
+            applicationEngineFactory = applicationEngineFactory,
+            path = path,
+            configureEngine = configureEngine,
+            configureApplication = configureApplication,
+        ),
+        interceptors = interceptors,
+        eventDispatcher = eventDispatcher,
+        coroutineDispatcher = coroutineDispatcher,
+        onUnrecognizedUpdate = onUnrecognizedUpdate,
+    )
 }

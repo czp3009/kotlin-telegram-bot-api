@@ -8,6 +8,7 @@ implementation of `TelegramUpdateSource` that receives updates via HTTP webhook 
 - **Embedded Ktor Server**: Uses Ktor's embedded server to receive webhook requests
 - **Flexible Engine Support**: Works with any Ktor application engine (Netty, CIO, Jetty, etc.)
 - **Graceful Shutdown**: Proper lifecycle management with graceful shutdown support
+- **Convenient Factory Method**: One-liner setup with `TelegramBotApplication.webhook()`
 - **Multiplatform**: Supports JVM, Android, JS (Node.js), WASM (Node.js), and native targets
 
 ## Installation
@@ -25,7 +26,33 @@ See [Ktor Server Engines](https://ktor.io/docs/server-engines.html) for availabl
 
 ## Usage
 
-### Basic Setup
+### Quick Start
+
+Use the `webhook` factory function for simple webhook-based bots:
+
+```kotlin
+val app = TelegramBotApplication.webhook(
+    botToken = "YOUR_TOKEN",
+    applicationEngineFactory = Netty,
+    path = "/webhook",
+    configureEngine = {
+        connector {
+            host = "0.0.0.0"
+            port = 8443
+        }
+    },
+    eventDispatcher = eventDispatcher,
+    interceptors = listOf(loggingInterceptor())
+)
+
+app.start()
+app.join() // Suspend until stopped
+// app.stop(5.seconds) for graceful shutdown
+```
+
+### Manual Setup
+
+For more control, you can manually create the `WebhookTelegramUpdateSource` and `TelegramBotApplication`:
 
 ```kotlin
 val updateSource = WebhookTelegramUpdateSource(
@@ -186,7 +213,8 @@ The webhook update source handles exceptions as follows:
 
 - **CancellationException**: Re-thrown to propagate coroutine cancellation
 - **TelegramBotShuttingDownException**: Re-thrown during graceful shutdown
-- **Other exceptions**: Logged and result in a 500 Internal Server Error response
+- **ContentTransformationException**: Returns 400 Bad Request when the request body cannot be parsed as `Update`
+- **Other exceptions**: Logged and re-thrown
 
 Telegram will retry failed webhook requests, so ensure your handlers are idempotent if needed.
 
