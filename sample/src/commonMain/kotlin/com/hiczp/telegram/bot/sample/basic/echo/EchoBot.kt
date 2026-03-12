@@ -9,7 +9,7 @@
  *
  * Run with bot token as command line argument:
  * ```
- * ./gradlew :sample:basic:jvmRun --args="YOUR_BOT_TOKEN" -DmainClass="com.hiczp.telegram.bot.sample.echo.EchoBotKt" --quiet
+ * ./gradlew :sample:jvmRun --args="YOUR_BOT_TOKEN" -DmainClass="com.hiczp.telegram.bot.sample.echo.EchoBotKt" --quiet
  * ```
  *
  * ## Features Demonstrated
@@ -22,7 +22,7 @@
  * @see TelegramBotApplication
  * @see SimpleTelegramEventDispatcher
  */
-package com.hiczp.telegram.bot.sample.echo
+package com.hiczp.telegram.bot.sample.basic.echo
 
 import com.hiczp.telegram.bot.application.TelegramBotApplication
 import com.hiczp.telegram.bot.application.dispatcher.SimpleTelegramEventDispatcher

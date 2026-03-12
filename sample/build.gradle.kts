@@ -6,7 +6,7 @@ plugins {
 }
 
 kotlin {
-    configureAllTargets("com.hiczp.telegram.bot.sample.basic")
+    configureAllTargets("com.hiczp.telegram.bot.sample")
 
     sourceSets {
         commonMain.dependencies {

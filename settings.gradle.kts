@@ -24,4 +24,4 @@ include(":application")
 include(":application-updatesource-webhook")
 
 //samples
-include(":sample:basic")
+include(":sample")
