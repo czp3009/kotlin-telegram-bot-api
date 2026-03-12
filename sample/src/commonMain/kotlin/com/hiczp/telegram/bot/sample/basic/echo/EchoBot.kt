@@ -76,6 +76,15 @@ private suspend fun runEchoBot(botToken: String) {
         botToken = botToken,
         eventDispatcher = eventDispatcher
     )
+    // Or create a webhook-based bot application (requires application-updatesource-webhook dependency)
+    // val app = TelegramBotApplication.webhook(
+    //     botToken = botToken,
+    //     eventDispatcher = eventDispatcher,
+    //     path = "/webhook",
+    //     configureEngine = {
+    //         port = 8443
+    //     }
+    // )
 
     println("Starting echo bot...")
     app.start()  // Start the bot

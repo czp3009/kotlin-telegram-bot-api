@@ -11,6 +11,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(project(":application"))
+            implementation(project(":application-updatesource-webhook"))
             implementation(libs.kotlin.logging)
         }
 
