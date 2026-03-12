@@ -7,7 +7,7 @@
  *
  * ## Usage
  *
- * Run with bot token as command line argument:
+ * Run with bot token as the command line argument:
  * ```
  * ./gradlew :sample:jvmRun --args="YOUR_BOT_TOKEN" -DmainClass="com.hiczp.telegram.bot.sample.basic.command.CommandBotKt" --quiet
  * ```
