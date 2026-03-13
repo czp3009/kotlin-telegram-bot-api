@@ -15,17 +15,20 @@ package com.hiczp.telegram.bot.sample.advanced.file
 import com.hiczp.telegram.bot.application.TelegramBotApplication
 import com.hiczp.telegram.bot.application.context.action.replyMessage
 import com.hiczp.telegram.bot.application.context.action.replyPhoto
+import com.hiczp.telegram.bot.application.context.action.sendChatAction
 import com.hiczp.telegram.bot.application.dispatcher.handler.HandlerTelegramEventDispatcher
 import com.hiczp.telegram.bot.application.dispatcher.handler.command.commandEndpoint
 import com.hiczp.telegram.bot.application.dispatcher.handler.handling
 import com.hiczp.telegram.bot.application.dispatcher.handler.matcher.onMessageEventPrivateChat
 import com.hiczp.telegram.bot.application.dispatcher.handler.matcher.whenMessageEventPhoto
 import com.hiczp.telegram.bot.application.dispatcher.handler.matcher.whenMessageEventSticker
+import com.hiczp.telegram.bot.protocol.constant.ChatAction
 import com.hiczp.telegram.bot.protocol.type.InputFile
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.utils.io.*
+import kotlinx.coroutines.launch
 import kotlinx.io.buffered
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
@@ -78,7 +81,8 @@ private suspend fun runFileBot(botToken: String) {
             // Echo sticker - send back the sticker photo
             whenMessageEventSticker {
                 val sticker = event.message.sticker!!
-                println("Received sticker: $sticker")
+                // Send chat action to provide user feedback during processing
+                launch { sendChatAction(ChatAction.TYPING) }
                 val filePath = client.getFile(sticker.fileId).getOrThrow().filePath
                 checkNotNull(filePath) { "Can't resolve filePath for sticker: ${sticker.fileId}" }
                 client.downloadFile(filePath).execute { response ->
