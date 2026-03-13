@@ -32,8 +32,10 @@ subprojects {
     }
 
     tasks.withType<KotlinJsTest>().configureEach {
-        useMocha {
-            timeout = "20s"
+        if (compilation.wasmTarget == null) {
+            useMocha {
+                timeout = "20s"
+            }
         }
     }
 }
