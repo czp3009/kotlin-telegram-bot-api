@@ -74,6 +74,44 @@ fun TelegramBotEvent.extractThreadId(): Long? = when (this) {
 }
 
 /**
+ * Extracts the message ID from this Telegram event.
+ *
+ * This function returns the message ID for event types that are associated with a specific message.
+ * For events without an associated message (e.g., inline queries, polls, chat member updates), it returns null.
+ *
+ * Note: For [DeletedBusinessMessagesEvent], this returns null because it contains multiple message IDs.
+ * For [CallbackQueryEvent], this returns null if the callback is from an inline message (no chat message).
+ *
+ * @return The message ID, or null if the event has no associated message.
+ * @see extractChatId
+ */
+fun TelegramBotEvent.extractMessageId(): Long? = when (this) {
+    is MessageEvent -> message.messageId
+    is EditedMessageEvent -> editedMessage.messageId
+    is ChannelPostEvent -> channelPost.messageId
+    is EditedChannelPostEvent -> editedChannelPost.messageId
+    is BusinessConnectionEvent -> null
+    is BusinessMessageEvent -> businessMessage.messageId
+    is EditedBusinessMessageEvent -> editedBusinessMessage.messageId
+    is DeletedBusinessMessagesEvent -> null
+    is MessageReactionEvent -> messageReaction.messageId
+    is MessageReactionCountEvent -> messageReactionCount.messageId
+    is InlineQueryEvent -> null
+    is ChosenInlineResultEvent -> null
+    is CallbackQueryEvent -> callbackQuery.message?.messageId
+    is ShippingQueryEvent -> null
+    is PreCheckoutQueryEvent -> null
+    is PurchasedPaidMediaEvent -> null
+    is PollEvent -> null
+    is PollAnswerEvent -> null
+    is MyChatMemberEvent -> null
+    is ChatMemberEvent -> null
+    is ChatJoinRequestEvent -> null
+    is ChatBoostEvent -> null
+    is RemovedChatBoostEvent -> null
+}
+
+/**
  * Extracts the user ID from this Telegram event.
  *
  * This function returns the user ID for event types that are associated with a user.

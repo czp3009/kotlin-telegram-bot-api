@@ -25,7 +25,14 @@ Telegram Bot API OpenAPI specification using Ktorfit.
 
 # Run a specific test class
 ./gradlew :protocol:jvmTest --tests "com.hiczp.telegram.bot.protocol.test.TelegramBotApiTest"
+
+# Run a sample bot (JVM)
+./gradlew :sample:jvmRun --args="YOUR_BOT_TOKEN" -DmainClass="com.hiczp.telegram.bot.sample.basic.echo.EchoBotKt" --quiet
 ```
+
+## Code Style
+
+This project uses `kotlin.code.style=official`. Follow the official Kotlin coding conventions.
 
 ## Code Generation
 
@@ -80,7 +87,8 @@ kotlin-telegram-bot-api/
 ├── application-updatesource-webhook/  # Webhook update source module
 │   └── WebhookTelegramUpdateSource.kt # Webhook-based update source using embedded Ktor server
 └── sample/               # Example bot implementations
-    └── basic/            # EchoBot and CommandBot samples
+    ├── basic/            # EchoBot and CommandBot samples
+    └── advanced/         # FileBot and ConversationBot samples
 ```
 
 ### Key Dependencies
@@ -89,6 +97,11 @@ kotlin-telegram-bot-api/
 - **kotlinx.serialization**: JSON serialization
 - **Ktor**: HTTP client engine
 - **KSP**: Kotlin Symbol Processing for code generation
+
+### Compiler Options
+
+The sample module uses `-Xcontext-parameters` for context parameters. When adding new code that uses context parameters,
+ensure this compiler flag is enabled.
 
 ### Protocol Module (`:protocol`)
 
@@ -535,25 +548,73 @@ commandEndpoint("survey") {
   startConversation(
     timeout = 5.minutes,
     onTimeout = {
-            val chatId = event.extractChatId()
-            if (chatId != null) {
-              client.sendMessage(chatId.toString(), "Survey timed out.")
-            }
+      val chatId = event.extractChatId()
+      if (chatId != null) {
+        client.sendMessage(chatId.toString(), "Survey timed out.")
+      }
     },
     onCancel = {
-            val chatId = event.extractChatId()
-            if (chatId != null) {
-              client.sendMessage(chatId.toString(), "Survey cancelled.")
-            }
+      val chatId = event.extractChatId()
+      if (chatId != null) {
+        client.sendMessage(chatId.toString(), "Survey cancelled.")
+      }
     }
   ) {
-    // Use reply() for convenience or id.chatId to send messages in the conversation
-    reply("What is your name?")
+    // Use send() for simple messages
+    send("What is your name?")
     val name = awaitText()
+
+    // Use reply() to respond to the most recent user message
     reply("Hello, $name! How old are you?")
     val age = awaitText()
+
+    // reply() automatically responds to the last awaited message
     reply("Thanks! You are $age years old.")
-    }
+  }
+}
+```
+
+**Messaging Functions:**
+
+- `send(text)` - Sends a message to the conversation's chat without replying to any specific message
+- `reply(text, replyToMessageId?)` - Sends a message as a reply. If `replyToMessageId` is null, uses
+  `lastAwaitedMessageId` to automatically reply to the most recent user input. If no message ID is available,
+  behaves like `send()`.
+
+**Await Functions:**
+
+- `awaitEvent<T>()` - Awaits any event of type T
+- `awaitMessage()` - Awaits the next message event and updates `lastAwaitedMessageId`
+- `awaitText()` - Awaits the next text message and updates `lastAwaitedMessageId`
+- `awaitCommand()` - Awaits the next command and updates `lastAwaitedMessageId`
+- `awaitCallbackQuery()` - Awaits the next callback query event and updates `lastAwaitedMessageId` (if the callback
+  has an associated message)
+
+**ConversationScope Properties:**
+
+- `lastAwaitedMessageId` - Automatically updated after `awaitMessage()`, `awaitText()`, `awaitCommand()`, and
+  `awaitCallbackQuery()` to track the most recent user input. Used by `reply()` for automatic reply targeting.
+- `id` - The `ConversationId` identifying this conversation
+- `channel` - The channel receiving events for this conversation
+
+**Coroutine Support:**
+
+The `ConversationScope` implements `CoroutineScope`, allowing you to launch child coroutines that are tied to the
+conversation's lifecycle. When the conversation ends (completes, times out, or is cancelled), all child coroutines
+are automatically cancelled.
+
+**Intercepted Event Types:**
+
+By default, conversations intercept `MessageEvent`, `BusinessMessageEvent`, and `CallbackQueryEvent`. You can customize
+this with the `interceptPredicate` parameter:
+
+```kotlin
+startConversation(
+  interceptPredicate = { context ->
+    context.event is MessageEvent || context.event is CallbackQueryEvent
+  }
+) {
+  // ...
 }
 ```
 
@@ -660,15 +721,51 @@ val eventDispatcher = SimpleTelegramEventDispatcher { context ->
 
 ### Sample Module
 
-Example bot implementations in `:sample:basic`:
+Example bot implementations:
+
+**Basic Samples (`:sample:basic`):**
 
 - **EchoBot.kt** - Minimal echo bot demonstrating basic long-polling setup
 - **CommandBot.kt** - Comprehensive command handling demo with typed arguments (`BotArguments`), subcommands, and
   the `requireAuth` DSL pattern for async authorization
 - **AuthDsl.kt** - Reusable authentication DSL using `middleware` with suspend predicates for async database/API lookups
 
+**Advanced Samples (`:sample:advanced`):**
+
+- **FileBot.kt** - File upload, download, and sticker echo handling with progress indicators
+- **ConversationBot.kt** - Multi-turn conversation demo with surveys, quizzes, and registration wizards using
+  `conversationInterceptor`, `startConversation`, `send`, `reply`, `awaitText`, and `awaitCallbackQuery`
+
 ### Supported Platforms
 
 All modules target: JVM, Android, JS, WASM, Linux, macOS, Windows, iOS, watchOS, tvOS, Android Native.
 
 Tests only run on JVM and desktop native targets (Linux, macOS, Windows).
+
+## Concurrency Model
+
+### Update Processing Modes
+
+The `LongPollingTelegramUpdateSource` supports three processing modes:
+
+| Mode               | Concurrency             | Backpressure                   | Delivery Guarantee          |
+|--------------------|-------------------------|--------------------------------|-----------------------------|
+| `SEQUENTIAL`       | One at a time           | Natural flow control           | At-Least-Once               |
+| `CONCURRENT_BATCH` | Concurrent within batch | Batch-level                    | At-Least-Once (Recommended) |
+| `CONCURRENT`       | Fully concurrent        | None (use `maxPendingUpdates`) | At-Most-Once                |
+
+**Default mode is `CONCURRENT`**. Global mutable state is NOT safe without synchronization.
+
+### Thread Safety
+
+In concurrent mode, use thread-safe collections or synchronization:
+
+```kotlin
+// DANGEROUS: Race condition in concurrent mode
+val processedTexts = mutableListOf<String>()
+
+// SAFE: Use thread-safe collections
+val processedTexts = ConcurrentLinkedQueue<String>()
+
+// Or use SEQUENTIAL mode for strict ordering
+```

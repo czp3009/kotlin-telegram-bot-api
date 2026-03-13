@@ -13,8 +13,10 @@ import com.hiczp.telegram.bot.protocol.model.Update
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.*
+import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
 
 private val logger = KotlinLogging.logger {}
 
@@ -113,6 +115,15 @@ class TelegramBotApplication(
     private val state = atomic(State.NEW)
 
     /**
+     * The time when the bot was started.
+     *
+     * This value is `null` before [start] is called, and set to the current instant
+     * when the bot starts.
+     */
+    var startTime: Instant? = null
+        private set
+
+    /**
      * Start the bot.
      *
      * The bot can only be started once. Subsequent calls will throw an exception.
@@ -126,7 +137,7 @@ class TelegramBotApplication(
         check(state.compareAndSet(State.NEW, State.RUNNING)) {
             "Bot can only be started once"
         }
-
+        startTime = Clock.System.now()
         logger.debug { "Starting Telegram Bot Application..." }
 
         val mainJob = applicationScope.launch {

@@ -69,7 +69,10 @@ suspend fun TelegramBotEventContext<MessageEvent>.replyPhoto(
     allowPaidBroadcast = allowPaidBroadcast,
     messageEffectId = messageEffectId,
     suggestedPostParameters = suggestedPostParameters,
-    replyParameters = ReplyParameters(messageId = event.message.messageId),
+    replyParameters = ReplyParameters(
+        messageId = event.message.messageId,
+        chatId = event.message.chat.id.toString()
+    ),
     replyMarkup = replyMarkup,
 )
 
@@ -140,7 +143,10 @@ suspend fun TelegramBotEventContext<MessageEvent>.replyAudio(
     allowPaidBroadcast = allowPaidBroadcast,
     messageEffectId = messageEffectId,
     suggestedPostParameters = suggestedPostParameters,
-    replyParameters = ReplyParameters(messageId = event.message.messageId),
+    replyParameters = ReplyParameters(
+        messageId = event.message.messageId,
+        chatId = event.message.chat.id.toString()
+    ),
     replyMarkup = replyMarkup,
 )
 
@@ -203,7 +209,10 @@ suspend fun TelegramBotEventContext<MessageEvent>.replyDocument(
     allowPaidBroadcast = allowPaidBroadcast,
     messageEffectId = messageEffectId,
     suggestedPostParameters = suggestedPostParameters,
-    replyParameters = ReplyParameters(messageId = event.message.messageId),
+    replyParameters = ReplyParameters(
+        messageId = event.message.messageId,
+        chatId = event.message.chat.id.toString()
+    ),
     replyMarkup = replyMarkup,
 )
 
@@ -294,7 +303,10 @@ suspend fun TelegramBotEventContext<MessageEvent>.replyVideo(
     allowPaidBroadcast = allowPaidBroadcast,
     messageEffectId = messageEffectId,
     suggestedPostParameters = suggestedPostParameters,
-    replyParameters = ReplyParameters(messageId = event.message.messageId),
+    replyParameters = ReplyParameters(
+        messageId = event.message.messageId,
+        chatId = event.message.chat.id.toString()
+    ),
     replyMarkup = replyMarkup,
 )
 
@@ -373,7 +385,10 @@ suspend fun TelegramBotEventContext<MessageEvent>.replyAnimation(
     allowPaidBroadcast = allowPaidBroadcast,
     messageEffectId = messageEffectId,
     suggestedPostParameters = suggestedPostParameters,
-    replyParameters = ReplyParameters(messageId = event.message.messageId),
+    replyParameters = ReplyParameters(
+        messageId = event.message.messageId,
+        chatId = event.message.chat.id.toString()
+    ),
     replyMarkup = replyMarkup,
 )
 
@@ -432,7 +447,10 @@ suspend fun TelegramBotEventContext<MessageEvent>.replyVoice(
     allowPaidBroadcast = allowPaidBroadcast,
     messageEffectId = messageEffectId,
     suggestedPostParameters = suggestedPostParameters,
-    replyParameters = ReplyParameters(messageId = event.message.messageId),
+    replyParameters = ReplyParameters(
+        messageId = event.message.messageId,
+        chatId = event.message.chat.id.toString()
+    ),
     replyMarkup = replyMarkup,
 )
 
@@ -487,7 +505,10 @@ suspend fun TelegramBotEventContext<MessageEvent>.replyVideoNote(
     allowPaidBroadcast = allowPaidBroadcast,
     messageEffectId = messageEffectId,
     suggestedPostParameters = suggestedPostParameters,
-    replyParameters = ReplyParameters(messageId = event.message.messageId),
+    replyParameters = ReplyParameters(
+        messageId = event.message.messageId,
+        chatId = event.message.chat.id.toString()
+    ),
     replyMarkup = replyMarkup,
 )
 
@@ -526,7 +547,10 @@ suspend fun TelegramBotEventContext<MessageEvent>.replyMediaGroup(
     protectContent = protectContent,
     allowPaidBroadcast = allowPaidBroadcast,
     messageEffectId = messageEffectId,
-    replyParameters = ReplyParameters(messageId = event.message.messageId),
+    replyParameters = ReplyParameters(
+        messageId = event.message.messageId,
+        chatId = event.message.chat.id.toString()
+    ),
     attachments = attachments,
 )
 
@@ -589,7 +613,10 @@ suspend fun TelegramBotEventContext<MessageEvent>.replyLocation(
     allowPaidBroadcast = allowPaidBroadcast,
     messageEffectId = messageEffectId,
     suggestedPostParameters = suggestedPostParameters,
-    replyParameters = ReplyParameters(messageId = event.message.messageId),
+    replyParameters = ReplyParameters(
+        messageId = event.message.messageId,
+        chatId = event.message.chat.id.toString()
+    ),
     replyMarkup = replyMarkup,
 )
 
@@ -660,7 +687,10 @@ suspend fun TelegramBotEventContext<MessageEvent>.replyVenue(
     allowPaidBroadcast = allowPaidBroadcast,
     messageEffectId = messageEffectId,
     suggestedPostParameters = suggestedPostParameters,
-    replyParameters = ReplyParameters(messageId = event.message.messageId),
+    replyParameters = ReplyParameters(
+        messageId = event.message.messageId,
+        chatId = event.message.chat.id.toString()
+    ),
     replyMarkup = replyMarkup,
 )
 
@@ -715,7 +745,10 @@ suspend fun TelegramBotEventContext<MessageEvent>.replyContact(
     allowPaidBroadcast = allowPaidBroadcast,
     messageEffectId = messageEffectId,
     suggestedPostParameters = suggestedPostParameters,
-    replyParameters = ReplyParameters(messageId = event.message.messageId),
+    replyParameters = ReplyParameters(
+        messageId = event.message.messageId,
+        chatId = event.message.chat.id.toString()
+    ),
     replyMarkup = replyMarkup,
 )
 
@@ -805,7 +838,10 @@ suspend fun TelegramBotEventContext<MessageEvent>.replyPoll(
     protectContent = protectContent,
     allowPaidBroadcast = allowPaidBroadcast,
     messageEffectId = messageEffectId,
-    replyParameters = ReplyParameters(messageId = event.message.messageId),
+    replyParameters = ReplyParameters(
+        messageId = event.message.messageId,
+        chatId = event.message.chat.id.toString()
+    ),
     replyMarkup = replyMarkup,
 )
 
@@ -848,7 +884,10 @@ suspend fun TelegramBotEventContext<MessageEvent>.replyDice(
     allowPaidBroadcast = allowPaidBroadcast,
     messageEffectId = messageEffectId,
     suggestedPostParameters = suggestedPostParameters,
-    replyParameters = ReplyParameters(messageId = event.message.messageId),
+    replyParameters = ReplyParameters(
+        messageId = event.message.messageId,
+        chatId = event.message.chat.id.toString()
+    ),
     replyMarkup = replyMarkup,
 )
 
@@ -886,7 +925,10 @@ suspend fun TelegramBotEventContext<MessageEvent>.replyGame(
     protectContent = protectContent,
     allowPaidBroadcast = allowPaidBroadcast,
     messageEffectId = messageEffectId,
-    replyParameters = ReplyParameters(messageId = event.message.messageId),
+    replyParameters = ReplyParameters(
+        messageId = event.message.messageId,
+        chatId = event.message.chat.id.toString()
+    ),
     replyMarkup = replyMarkup,
 )
 
@@ -941,7 +983,10 @@ suspend fun TelegramBotEventContext<MessageEvent>.replyMessage(
     allowPaidBroadcast = allowPaidBroadcast,
     messageEffectId = messageEffectId,
     suggestedPostParameters = suggestedPostParameters,
-    replyParameters = ReplyParameters(messageId = event.message.messageId),
+    replyParameters = ReplyParameters(
+        messageId = event.message.messageId,
+        chatId = event.message.chat.id.toString()
+    ),
     replyMarkup = replyMarkup,
 )
 

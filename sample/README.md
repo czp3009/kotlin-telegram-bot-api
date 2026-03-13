@@ -75,11 +75,44 @@ A bot demonstrating file upload and download capabilities.
 
 - `/start` - Show help
 - `/photo` - Send a sample photo from local file
-- Auto-echo: photos, documents, videos, audio, animations
-- Sticker echo: sends back the sticker as a photo
+- `/sticker` - Send a sticker to get its image echoed back
+
+**Auto-echo:**
+
+- Photo -> echo photo
 
 ```bash
 ./gradlew :sample:jvmRun --args="YOUR_BOT_TOKEN" -DmainClass="com.hiczp.telegram.bot.sample.advanced.file.FileBotKt" --quiet
+```
+
+### [ConversationBot](src/commonMain/kotlin/com/hiczp/telegram/bot/sample/advanced/conversation/ConversationBot.kt)
+
+A bot demonstrating multi-turn conversation support for interactive flows like surveys, quizzes, and wizards.
+
+**Demonstrates:**
+
+- Installing `conversationInterceptor` for conversation support
+- Starting conversations with `startConversation`
+- Using `send` and `reply` for messaging within conversations
+- Awaiting user input with `awaitText()` and `awaitCallbackQuery()`
+- Handling conversation timeout with `onTimeout`
+- Handling user cancellation with `onCancel`
+- Using inline keyboard buttons in conversations
+
+**Available Commands:**
+
+- `/start` - Show help message
+- `/survey` - Multi-question survey (name, age, favorite color)
+- `/quiz` - Interactive quiz game with inline buttons (3 questions with scoring)
+- `/register` - Registration wizard with validation
+
+**During conversations:**
+
+- Type `/cancel` to cancel any conversation
+- Conversations timeout after 2-3 minutes of inactivity
+
+```bash
+./gradlew :sample:jvmRun --args="YOUR_BOT_TOKEN" -DmainClass="com.hiczp.telegram.bot.sample.advanced.conversation.ConversationBotKt" --quiet
 ```
 
 ## DSL Utilities
@@ -106,8 +139,10 @@ sample/
     │   └── command/
     │       └── CommandBot.kt     # Command handling demo
     ├── advanced/
-    │   └── file/
-    │       └── FileBot.kt        # File operations demo
+    │   ├── file/
+    │   │   └── FileBot.kt        # File operations demo
+    │   └── conversation/
+    │       └── ConversationBot.kt # Multi-turn conversation demo
     └── dsl/
         └── AuthDsl.kt            # Reusable auth DSL
 ```

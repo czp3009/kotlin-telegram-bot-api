@@ -987,16 +987,46 @@ handling {
                 sendMessage("Survey timed out")
             }
         ) {
-            sendMessage("What is your name?")
+          // Use send() for simple messages
+          send("What is your name?")
             val name = awaitText()
 
-            sendMessage("How old are you?")
+          // Use reply() to respond to the most recent user message
+          reply("How old are you, $name?")
             val age = awaitText()
 
-            sendMessage("Thanks $name, you are $age years old")
+          // reply() automatically responds to the last awaited message
+          reply("Thanks $name, you are $age years old")
         }
     }
 }
+```
+
+**Messaging Functions:**
+
+- `send(text)` - Sends a message without replying to any specific message
+- `reply(text, replyToMessageId?)` - Sends a message as a reply. Uses `lastAwaitedMessageId` if `replyToMessageId` is
+  null
+
+**Await Functions:**
+
+- `awaitEvent<T>()` - Awaits any event of type T
+- `awaitMessage()` - Awaits the next message event
+- `awaitText()` - Awaits the next text message
+- `awaitCommand()` - Awaits the next command
+- `awaitCallbackQuery()` - Awaits the next callback query event
+
+**ConversationScope:**
+
+- `lastAwaitedMessageId` - Tracks the most recent user input for automatic reply targeting
+- `id` - The `ConversationId` (chatId, userId, threadId)
+- Implements `CoroutineScope` for structured concurrency
+
+**Intercepted Events:**
+
+By default, intercepts `MessageEvent`, `BusinessMessageEvent`, and `CallbackQueryEvent`. Customize with
+`interceptPredicate`.
+
 ```
 
 ### Middleware

@@ -4,11 +4,9 @@ import com.hiczp.telegram.bot.application.command.CommandParser
 import com.hiczp.telegram.bot.application.command.ParsedCommand
 import com.hiczp.telegram.bot.application.command.matchesCommand
 import com.hiczp.telegram.bot.application.command.usernameMatched
-import com.hiczp.telegram.bot.application.context.TelegramBotEventContext
-import com.hiczp.telegram.bot.application.context.extractChatId
-import com.hiczp.telegram.bot.application.context.extractThreadId
-import com.hiczp.telegram.bot.application.context.extractUserId
+import com.hiczp.telegram.bot.application.context.*
 import com.hiczp.telegram.bot.protocol.event.BusinessMessageEvent
+import com.hiczp.telegram.bot.protocol.event.CallbackQueryEvent
 import com.hiczp.telegram.bot.protocol.event.MessageEvent
 import com.hiczp.telegram.bot.protocol.event.TelegramBotEvent
 import com.hiczp.telegram.bot.protocol.model.Message
@@ -35,17 +33,38 @@ private val logger = KotlinLogging.logger("ConversationFSM")
  * The [cancelPredicate] can be used to implement custom cancellation logic by
  * checking it against incoming events.
  *
+ * This scope implements [CoroutineScope], allowing you to launch child coroutines
+ * that are tied to the conversation's lifecycle. When the conversation ends
+ * (completes, times out, or is cancelled), all child coroutines are automatically cancelled.
+ *
  * @param id The [ConversationId] identifying this conversation session.
+ * @param initialLastAwaitedMessageId The initial message ID that [reply] will respond to by default.
+ *        Typically set to the message ID of the event that triggered the conversation.
  * @param channel The channel that receives event contexts for this conversation.
  *        Events are intercepted by the conversation interceptor and routed here.
  * @param cancelPredicate A function that determines if an event should cancel the conversation.
  *        Used internally by [awaitEvent] to check for cancellation.
+ * @param coroutineScope The [CoroutineScope] that this conversation scope delegates to.
+ *        Child coroutines launched within this scope will be cancelled when the conversation ends.
  */
 class ConversationScope(
     val id: ConversationId,
+    initialLastAwaitedMessageId: Long?,
     val channel: ReceiveChannel<TelegramBotEventContext<TelegramBotEvent>>,
     val cancelPredicate: suspend (TelegramBotEventContext<TelegramBotEvent>) -> Boolean,
-) {
+    private val coroutineScope: CoroutineScope,
+) : CoroutineScope by coroutineScope {
+    /**
+     * The message ID that [reply] will respond to by default.
+     *
+     * This value is initialized to the message ID of the event that triggered the conversation
+     * (via [startConversation]), and is updated each time [awaitMessage] or [awaitText] successfully returns.
+     *
+     * This allows [reply] to automatically respond to the most recent user message in the conversation.
+     */
+    var lastAwaitedMessageId: Long? = initialLastAwaitedMessageId
+        private set
+
     /**
      * Awaits the next event from the user.
      *
@@ -89,15 +108,21 @@ class ConversationScope(
      *
      * Non-message events are ignored.
      *
+     * After this method returns, [lastAwaitedMessageId] is updated to the received message's ID.
+     *
      * @return The message event from the user.
      * @throws ConversationCancelledException if the received event matches the cancel predicate.
      */
-    suspend fun awaitMessage(): Message = awaitEvent<MessageEvent>().message
+    suspend fun awaitMessage(): Message = awaitEvent<MessageEvent>().message.also {
+        this.lastAwaitedMessageId = it.messageId
+    }
 
     /**
      * Awaits the next text message event from the user and returns the text content.
      *
      * Messages without text content (e.g., photos, stickers) are ignored.
+     *
+     * After this method returns, [lastAwaitedMessageId] is updated to the received message.
      *
      * @return The text content of the user's message.
      * @throws ConversationCancelledException if the received event matches the cancel predicate.
@@ -117,6 +142,8 @@ class ConversationScope(
      * the username suffix (e.g., `/command@bot_username`). Commands targeted at
      * other bots are ignored.
      *
+     * After this method returns, [lastAwaitedMessageId] is updated to the received message.
+     *
      * @param telegramBotEventContext The event context used to retrieve the bot's username
      *        for command validation.
      * @return The [ParsedCommand] containing the parsed command name, arguments, and metadata.
@@ -130,6 +157,20 @@ class ConversationScope(
                 if (username == null) true else it.usernameMatched(username)
             }?.let { return it }
         }
+    }
+
+    /**
+     * Awaits the next callback query event from the user.
+     *
+     * Non-callback-query events are ignored.
+     *
+     * After this method returns, [lastAwaitedMessageId] is updated to the callback query's message ID (if present).
+     *
+     * @return The callback query event from the user.
+     * @throws ConversationCancelledException if the received event matches the cancel predicate.
+     */
+    suspend fun awaitCallbackQuery(): CallbackQueryEvent = awaitEvent<CallbackQueryEvent>().also {
+        this.lastAwaitedMessageId = it.callbackQuery.message?.messageId
     }
 }
 
@@ -147,35 +188,96 @@ class ConversationScope(
  * Example usage inside a conversation:
  * ```kotlin
  * startConversation {
- *     // Simple reply to the conversation's chat
- *     reply("What is your name?")
+ *     // Send a message to the conversation's chat
+ *     send("What is your name?")
  *
  *     val name = awaitText()
- *     reply("Hello, $name! How old are you?")
+ *     send("Hello, $name! How old are you?")
  *
  *     val age = awaitText()
- *     reply("Thanks! You are $age years old.")
+ *     send("Thanks! You are $age years old.")
  * }
  * ```
  *
  * @param text The text of the message to send.
- * @param replyToMessageId Optional message ID to reply to. If provided, the message will be sent
- *        as a reply to the specified message.
  * @see ConversationScope
  * @see startConversation
  */
 context(telegramBotEventContext: TelegramBotEventContext<*>, conversationScope: ConversationScope)
-suspend fun reply(text: String, replyToMessageId: Long? = null) =
+suspend fun send(text: String) =
     telegramBotEventContext.client.sendMessage(
         chatId = conversationScope.id.chatId.toString(),
         messageThreadId = conversationScope.id.threadId,
         text = text,
-        replyParameters = if (replyToMessageId != null) {
-            ReplyParameters(messageId = replyToMessageId, chatId = conversationScope.id.chatId.toString())
-        } else {
-            null
-        }
     )
+
+/**
+ * Sends a text message as a reply within a conversation context.
+ *
+ * This is a convenience function that can be used inside a [ConversationScope] to send reply messages.
+ * It automatically uses the conversation's [ConversationId.chatId] and [ConversationId.threadId].
+ *
+ * The reply behavior is determined by the `replyToMessageId` parameter and follows this priority:
+ * 1. If `replyToMessageId` is provided (non-null), replies to that specific message.
+ * 2. If [ConversationScope.lastAwaitedMessageId] is available, replies to that message.
+ *    This allows `reply()` to automatically respond to the most recent user input.
+ * 3. If no message ID can be determined, sends a regular message (same as [send]).
+ *
+ * This function requires two context receivers:
+ * - [TelegramBotEventContext]: Provides access to the Telegram client for sending messages.
+ * - [ConversationScope]: Provides the conversation's ID (chatId, threadId) for addressing.
+ *
+ * Example usage inside a conversation:
+ * ```kotlin
+ * startConversation {
+ *     // Reply to the message that triggered this conversation
+ *     reply("What is your name?")
+ *
+ *     val name = awaitText()
+ *     // reply() will automatically reply to the message containing the name
+ *     reply("Hello, $name! How old are you?")
+ *
+ *     val ageString = awaitText()
+ *     val age = ageString.toIntOrNull()
+ *     if (age == null) {
+ *         // reply() will automatically reply to the invalid age message
+ *         reply("That doesn't seem like a valid age. Please try again.")
+ *     }
+ *
+ *     // Reply to a specific message by ID
+ *     reply("This is a reply to message 123", replyToMessageId = 123)
+ * }
+ * ```
+ *
+ * @param text The text of the message to send.
+ * @param replyToMessageId Optional message ID to reply to. If null, attempts to use
+ *        [ConversationScope.lastAwaitedMessageId]. If that is also null, sends a regular message.
+ * @see ConversationScope
+ * @see ConversationScope.lastAwaitedMessageId
+ * @see startConversation
+ * @see send
+ */
+context(telegramBotEventContext: TelegramBotEventContext<*>, conversationScope: ConversationScope)
+suspend fun reply(text: String, replyToMessageId: Long? = null) {
+    val effectiveReplyToMessageId = replyToMessageId
+        ?: conversationScope.lastAwaitedMessageId
+
+    if (effectiveReplyToMessageId == null) {
+        // Fallback to send behavior when no message ID is available
+        send(text)
+        return
+    }
+
+    telegramBotEventContext.client.sendMessage(
+        chatId = conversationScope.id.chatId.toString(),
+        messageThreadId = conversationScope.id.threadId,
+        text = text,
+        replyParameters = ReplyParameters(
+            messageId = effectiveReplyToMessageId,
+            chatId = conversationScope.id.chatId.toString()
+        )
+    )
+}
 
 /**
  * Starts a multi-turn conversation with the user.
@@ -252,7 +354,7 @@ fun <T : TelegramBotEvent> TelegramBotEventContext<T>.startConversation(
     capacity: Int = Channel.UNLIMITED,
     interceptPredicate: suspend (TelegramBotEventContext<TelegramBotEvent>) -> Boolean = { context ->
         val event = context.event
-        event is MessageEvent || event is BusinessMessageEvent
+        event is MessageEvent || event is BusinessMessageEvent || event is CallbackQueryEvent
     },
     cancelPredicate: suspend (TelegramBotEventContext<TelegramBotEvent>) -> Boolean = { context ->
         val event = context.event
@@ -288,12 +390,21 @@ fun <T : TelegramBotEvent> TelegramBotEventContext<T>.startConversation(
 
     return applicationScope.launch {
         try {
-            if (timeout != null) {
-                withTimeout(timeout) {
-                    ConversationScope(id, record.channel, cancelPredicate).block()
+            val action = suspend {
+                supervisorScope {
+                    ConversationScope(
+                        id = id,
+                        initialLastAwaitedMessageId = this@startConversation.event.extractMessageId(),
+                        channel = record.channel,
+                        cancelPredicate = cancelPredicate,
+                        coroutineScope = this,
+                    ).block()
                 }
+            }
+            if (timeout != null) {
+                withTimeout(timeout) { action() }
             } else {
-                ConversationScope(id, record.channel, cancelPredicate).block()
+                action()
             }
         } catch (_: TimeoutCancellationException) {
             this@startConversation.onTimeout()
