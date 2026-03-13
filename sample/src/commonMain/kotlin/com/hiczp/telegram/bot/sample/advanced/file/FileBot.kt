@@ -43,20 +43,20 @@ private suspend fun runFileBot(botToken: String) {
             commandEndpoint("start") {
                 replyMessage(
                     """
-                Welcome to FileBot!
-
-                **Commands:**
-                /start - Show this help
-                /photo - Send a sample photo (telegram.jpg)
-                /sticker - When you send a sticker, I'll echo back its image
-
-                **Auto-echo:**
-                - Photo -> echo photo
-                - Document -> echo document
-                - Video -> echo video
-                - Audio -> echo audio
-                - Animation -> echo animation
-                """.trimIndent()
+                    Welcome to FileBot!
+    
+                    **Commands:**
+                    /start - Show this help
+                    /photo - Send a sample photo (telegram.jpg)
+                    /sticker - When you send a sticker, I'll echo back its image
+    
+                    **Auto-echo:**
+                    - Photo -> echo photo
+                    - Document -> echo document
+                    - Video -> echo video
+                    - Audio -> echo audio
+                    - Animation -> echo animation
+                    """.trimIndent()
                 )
             }
 
