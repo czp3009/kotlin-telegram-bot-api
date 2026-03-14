@@ -242,11 +242,11 @@ class InlineKeyboardBuilder {
  * ```kotlin
  * val keyboard = inlineKeyboard {
  *     row {
- *         callbackButton("确认", "confirm")
- *         callbackButton("取消", "cancel", InlineKeyboardButtonStyle.DANGER)
+ *         callbackButton("Confirm", "confirm")
+ *         callbackButton("Cancel", "cancel", InlineKeyboardButtonStyle.DANGER)
  *     }
  *     callbackRow("Yes" to "yes", "No" to "no")
- *     urlButton("帮助", "https://example.com/help")
+ *     urlButton("Help", "https://example.com/help")
  * }
  * ```
  */
