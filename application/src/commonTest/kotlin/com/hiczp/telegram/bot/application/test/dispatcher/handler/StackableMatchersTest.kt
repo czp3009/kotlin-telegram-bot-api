@@ -7,6 +7,7 @@ import com.hiczp.telegram.bot.application.dispatcher.handler.matcher.*
 import com.hiczp.telegram.bot.client.TelegramBotClient
 import com.hiczp.telegram.bot.protocol.constant.ChatType
 import com.hiczp.telegram.bot.protocol.event.*
+import com.hiczp.telegram.bot.protocol.extension.isCommand
 import com.hiczp.telegram.bot.protocol.model.*
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
@@ -784,7 +785,7 @@ class StackableMatchersTest {
     fun `not matcher should be stackable`() = runTest {
         val routeNode = handling {
             onMessageEvent {
-                not({ it.event.message.text?.startsWith("/") == true }) {
+                not({ it.event.message.isCommand }) {
                     not({ it.event.message.text?.length?.let { l -> l > 100 } == true }) {
                         handle { invokedHandlers.add("not_command_not_long") }
                     }

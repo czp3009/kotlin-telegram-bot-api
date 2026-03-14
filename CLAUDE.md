@@ -426,7 +426,7 @@ val dispatcher = HandlerTelegramEventDispatcher(handling {
             { it.event.message.video != null }
         ) { println("Photo or video") }
 
-    whenNot({ it.event.message.text?.startsWith("/") == true }) {
+    whenNot({ it.event.message.isCommand }) {
             println("Not a command")
         }
 
@@ -729,6 +729,8 @@ Example bot implementations:
 - **CommandBot.kt** - Comprehensive command handling demo with typed arguments (`BotArguments`), subcommands, and
   the `requireAuth` DSL pattern for async authorization
 - **AuthDsl.kt** - Reusable authentication DSL using `middleware` with suspend predicates for async database/API lookups
+- **InterceptorBot.kt** - Custom interceptor demo showing localization, timeout, exception catching, and blacklist
+  interceptors. Demonstrates how to use `attributes` for sharing data between interceptors and handlers.
 
 **Advanced Samples (`:sample:advanced`):**
 

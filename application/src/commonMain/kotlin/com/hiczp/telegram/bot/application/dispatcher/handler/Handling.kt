@@ -75,7 +75,7 @@ fun HandlerRoute<*>.include(other: RouteNode) {
  * ```kotlin
  * handling {
  *     onMessageEvent {
- *         match({ it.event.message.text?.startsWith("/") == true }) {
+ *         match({ it.event.message.isCommand }) {
  *             handle { println("Received command: ${event.message.text}") }
  *         }
  *     }

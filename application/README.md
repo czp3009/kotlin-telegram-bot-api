@@ -631,7 +631,7 @@ onMessageEvent {
     }
 
     // Condition must be false
-    whenNot({ it.event.message.text?.startsWith("/") == true }) {
+  whenNot({ it.event.message.isCommand }) {
         println("Not a command")
     }
 
@@ -641,7 +641,7 @@ onMessageEvent {
             { it.event.message.chat.id == 100L },
             { it.event.message.from?.id == 1L }
         ) {
-            whenNot({ it.event.message.text?.startsWith("/") == true }) {
+          whenNot({ it.event.message.isCommand }) {
                 println("Complex condition matched")
             }
         }

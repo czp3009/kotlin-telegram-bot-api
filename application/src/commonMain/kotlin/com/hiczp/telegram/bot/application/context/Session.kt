@@ -147,3 +147,38 @@ fun TelegramBotEvent.extractUserId(): Long? = when (this) {
     is ChatBoostEvent -> null
     is RemovedChatBoostEvent -> null
 }
+
+/**
+ * Extracts the language code from this Telegram event.
+ *
+ * This function returns the IETF language tag (e.g., "en", "zh", "ja") from the user object
+ * in supported event types. For events without an associated user or language code, it returns null.
+ *
+ * @return The language code, or null if the event has no associated language code.
+ * @see extractUserId
+ */
+fun TelegramBotEvent.extractLanguageCode(): String? = when (this) {
+    is MessageEvent -> message.from?.languageCode
+    is EditedMessageEvent -> editedMessage.from?.languageCode
+    is ChannelPostEvent -> channelPost.from?.languageCode
+    is EditedChannelPostEvent -> editedChannelPost.from?.languageCode
+    is BusinessConnectionEvent -> businessConnection.user.languageCode
+    is BusinessMessageEvent -> businessMessage.from?.languageCode
+    is EditedBusinessMessageEvent -> editedBusinessMessage.from?.languageCode
+    is DeletedBusinessMessagesEvent -> null
+    is MessageReactionEvent -> messageReaction.user?.languageCode
+    is MessageReactionCountEvent -> null
+    is InlineQueryEvent -> inlineQuery.from.languageCode
+    is ChosenInlineResultEvent -> chosenInlineResult.from.languageCode
+    is CallbackQueryEvent -> callbackQuery.from.languageCode
+    is ShippingQueryEvent -> shippingQuery.from.languageCode
+    is PreCheckoutQueryEvent -> preCheckoutQuery.from.languageCode
+    is PurchasedPaidMediaEvent -> purchasedPaidMedia.from.languageCode
+    is PollEvent -> null
+    is PollAnswerEvent -> pollAnswer.user?.languageCode
+    is MyChatMemberEvent -> myChatMember.from.languageCode
+    is ChatMemberEvent -> chatMember.from.languageCode
+    is ChatJoinRequestEvent -> chatJoinRequest.from.languageCode
+    is ChatBoostEvent -> null
+    is RemovedChatBoostEvent -> null
+}

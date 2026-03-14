@@ -308,7 +308,7 @@ onMessageEvent {
         sendMessage("Photo or video!")
     }
 
-    not({ it.event.message.text?.startsWith("/") == true }) {
+   not({ it.event.message.isCommand }) {
         sendMessage("Not a command")
     }
 
@@ -327,7 +327,7 @@ onMessageEvent {
         sendMessage("Media message")
     }
 
-    whenNot({ it.event.message.text?.startsWith("/") == true }) {
+   whenNot({ it.event.message.isCommand }) {
         sendMessage("Not a command")
     }
 }

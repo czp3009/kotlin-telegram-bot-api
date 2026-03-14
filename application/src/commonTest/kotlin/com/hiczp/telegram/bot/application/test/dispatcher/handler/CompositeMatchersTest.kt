@@ -7,6 +7,7 @@ import com.hiczp.telegram.bot.application.dispatcher.handler.matcher.*
 import com.hiczp.telegram.bot.client.TelegramBotClient
 import com.hiczp.telegram.bot.protocol.event.MessageEvent
 import com.hiczp.telegram.bot.protocol.event.TelegramBotEvent
+import com.hiczp.telegram.bot.protocol.extension.isCommand
 import com.hiczp.telegram.bot.protocol.model.Chat
 import com.hiczp.telegram.bot.protocol.model.Message
 import com.hiczp.telegram.bot.protocol.model.User
@@ -183,7 +184,7 @@ class CompositeMatchersTest {
     fun `not should match when predicate is false`() = runTest {
         val routeNode = handling {
             onMessageEvent {
-                whenNot({ it.event.message.text?.startsWith("/") == true }) {
+                whenNot({ it.event.message.isCommand }) {
                     invokedHandlers.add("not_command")
                 }
             }
@@ -200,7 +201,7 @@ class CompositeMatchersTest {
     fun `not should not match when predicate is true`() = runTest {
         val routeNode = handling {
             onMessageEvent {
-                whenNot({ it.event.message.text?.startsWith("/") == true }) {
+                whenNot({ it.event.message.isCommand }) {
                     invokedHandlers.add("not_command")
                 }
             }
@@ -288,7 +289,7 @@ class CompositeMatchersTest {
                         text?.contains("hello", ignoreCase = true) == true ||
                                 text?.contains("hi", ignoreCase = true) == true
                     },
-                    { it.event.message.text?.startsWith("/") != true }
+                    { !it.event.message.isCommand }
                 ) {
                     invokedHandlers.add("greeting:${event.message.text}")
                 }
@@ -374,7 +375,7 @@ class CompositeMatchersTest {
                         { it.event.message.chat.id == 100L },
                         { it.event.message.from?.id == 1L }
                     ) {
-                        whenNot({ it.event.message.text?.startsWith("/") == true }) {
+                        whenNot({ it.event.message.isCommand }) {
                             invokedHandlers.add("chained:${event.message.text}")
                         }
                     }
