@@ -134,6 +134,30 @@ class ConversationCancelledException(
  * Multiple installations will cause conversations to malfunction as each instance
  * uses its own [ConversationManager] and overwrites the attribute key.
  *
+ * **State Persistence Limitations:**
+ * This implementation uses an in-memory state machine. All active conversation states are stored
+ * in memory within the [ConversationManager.activeConversations] map. This means:
+ * - Conversation states are lost when the bot restarts or crashes
+ * - This implementation is not suitable for distributed environments where multiple bot instances
+ *   need to share conversation state
+ * - Long-running conversations may be interrupted if the bot process is terminated
+ *
+ * If you need persistent conversation state that survives restarts or works in distributed
+ * deployments, you will need to implement a custom state machine backed by a persistent store
+ * (e.g., Redis, database) and create a corresponding interceptor that uses that store instead
+ * of the in-memory [ConversationManager].
+ *
+ * **Message Handling Behavior:**
+ * - Messages routed to a conversation that are not consumed (e.g., not awaited via [awaitMessage])
+ *   will be discarded when the conversation ends. They will NOT be passed to other handlers
+ *   in the event dispatcher.
+ *
+ * **Concurrency Model Implications:**
+ * - From the perspective of upper-layer interceptors and [UpdateSource], events routed to a
+ *   conversation appear to be processed immediately (the interceptor returns without waiting
+ *   for the conversation to complete). This may break the concurrency model of certain
+ *   [UpdateSource] implementations that expect sequential or controlled concurrent processing.
+ *
  * Example usage:
  * ```kotlin
  * val app = TelegramBotApplication.longPolling(
