@@ -144,6 +144,26 @@ class TelegramBotApiTest {
     }
 
     @Test
+    fun editMessageText() = runTest {
+        // Send a message first
+        val message = telegramBotApi.sendMessage(
+            chatId = testChatId,
+            text = "Original message"
+        ).getOrThrow()
+
+        // Edit the message
+        val edited = telegramBotApi.editMessageText(
+            chatId = message.chat.id.toString(),
+            messageId = message.messageId,
+            text = "Edited message"
+        ).getOrThrow()
+        assertTrue(edited)
+
+        // Clean up
+        assertTrue(telegramBotApi.deleteMessage(message).getOrThrow())
+    }
+
+    @Test
     fun sendChatAction() = runTest {
         val sent = telegramBotApi.sendChatAction(
             SendChatActionRequest(
