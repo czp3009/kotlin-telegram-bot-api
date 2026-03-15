@@ -77,7 +77,7 @@ kotlin-telegram-bot-api/
 │   └── TelegramBotClient.kt
 ├── application/           # Bot application framework with lifecycle management
 │   ├── TelegramBotApplication.kt      # Main orchestrator
-│   ├── updatesource/                  # Update sources (long polling, mock)
+│   ├── updatesource/                  # Update sources (long polling, mock, simple)
 │   ├── interceptor/                   # Interceptor infrastructure and built-in interceptors
 │   │   └── builtin/conversation/      # Conversation FSM support
 │   ├── dispatcher/                    # Event dispatching
@@ -623,6 +623,63 @@ The `ConversationId` is a data class with `chatId`, `userId` (optional), and `th
 - `ConversationId(chatId)` - whole chat shares one conversation
 - `ConversationId(chatId, userId = userId)` - per-user conversation in a group
 - `ConversationId(chatId, threadId = threadId)` - per-thread conversation
+
+### Simple Update Source
+
+A stateless update source that allows external injection of updates via `push()`. Designed for distributed systems
+where updates are received by one component and processed by another:
+
+```kotlin
+// Create the source
+val source = SimpleTelegramUpdateSource()
+
+// Use with TelegramBotApplication
+val app = TelegramBotApplication(
+  client = client,
+  updateSource = source,
+  eventDispatcher = dispatcher
+)
+app.start()
+
+// Push updates from external source (e.g., message queue consumer)
+messageQueue.consume { update ->
+  // This processes the update synchronously
+  source.push(update)
+}
+
+// Graceful shutdown
+app.stop()
+```
+
+**Architecture Pattern:**
+
+```
+┌─────────────────┐     ┌─────────────────┐     ┌──────────────────────────────┐
+│  Webhook Server │────>│  Message Queue  │────>│  Worker Node                 │
+│  (Bot Instance) │     │  (Kafka/Rabbit) │     │  SimpleTelegramUpdateSource  │
+└─────────────────┘     └─────────────────┘     └──────────────────────────────┘
+```
+
+**Key Features:**
+
+- Stateless design - supports multiple start/stop cycles
+- `push(update)` processes updates synchronously via the consumer callback
+- Thread-safe - safe for concurrent use from multiple threads
+- Exceptions from the consumer propagate to the caller
+
+**Exception Semantics:**
+
+| Exception                          | Behavior                                         |
+|------------------------------------|--------------------------------------------------|
+| `TelegramBotShuttingDownException` | Propagates to caller, signals framework shutdown |
+| `CancellationException`            | Propagates if coroutine is being cancelled       |
+| Other `Throwable`                  | Logged and re-thrown to the caller               |
+
+**Graceful Shutdown:**
+
+1. `stop(gracePeriod)` clears the consumer callback (gracePeriod is ignored)
+2. Source can be restarted by calling `start()` again
+3. `onFinalize()` is a no-op since all state is in-memory
 
 ### Webhook Update Source (`:application-updatesource-webhook`)
 

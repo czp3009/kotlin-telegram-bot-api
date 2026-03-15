@@ -16,6 +16,8 @@ import kotlin.time.Duration
  * In concurrent mode (launched with `launch`), the exception is handled silently by the coroutine framework.
  *
  * @see LongPollingTelegramUpdateSource
+ * @see MockTelegramUpdateSource
+ * @see SimpleTelegramUpdateSource
  */
 interface TelegramUpdateSource {
     /**

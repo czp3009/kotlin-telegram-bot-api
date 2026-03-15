@@ -10,6 +10,7 @@ DSL, Command DSL, and interceptor pipeline.
 - [Update Sources](#update-sources)
     - [LongPollingTelegramUpdateSource](#longpollingtelegramupdatesource)
     - [MockTelegramUpdateSource](#mocktelegramupdatesource)
+  - [SimpleTelegramUpdateSource](#simpletelegramupdatesource)
   - [WebhookTelegramUpdateSource](#webhooktelegramupdatesource)
 - [Event Dispatchers](#event-dispatchers)
     - [SimpleTelegramEventDispatcher](#simpletelegrameventdispatcher)
@@ -231,6 +232,55 @@ testChannel.trySend(testUpdate3)
 - `stop(gracePeriod)` suspends consumption but keeps the channel open (gracePeriod is ignored)
 - Resumes from where it left off on restart
 - Naturally completes when the source channel is closed
+
+### SimpleTelegramUpdateSource
+
+A stateless update source that allows external injection of updates via `push()`. Designed for distributed systems
+where updates are received by one component and processed by another:
+
+```kotlin
+// Architecture pattern:
+// Webhook Server → Message Queue (Kafka/RabbitMQ) → Worker Node (SimpleTelegramUpdateSource)
+
+val source = SimpleTelegramUpdateSource()
+
+val app = TelegramBotApplication(
+  botToken = "YOUR_TOKEN",
+  updateSource = source,
+  eventDispatcher = dispatcher
+)
+app.start()
+
+// Push updates from external source (e.g., message queue consumer)
+messageQueue.consume { update ->
+  // This processes the update synchronously
+  source.push(update)
+}
+
+// Graceful shutdown
+app.stop()
+```
+
+**Key Features:**
+
+- Stateless design with support for multiple start/stop cycles
+- `push(update)` processes updates synchronously via the consumer callback
+- Thread-safe for concurrent use from multiple threads
+- Exceptions from the consumer are propagated to the caller
+
+**Exception Semantics:**
+
+| Exception                          | Behavior                                         |
+|------------------------------------|--------------------------------------------------|
+| `TelegramBotShuttingDownException` | Propagates to caller, signals framework shutdown |
+| `CancellationException`            | Propagates if coroutine is being cancelled       |
+| Other `Throwable`                  | Logged and re-thrown to the caller               |
+
+**Graceful Shutdown:**
+
+1. `stop(gracePeriod)` clears the consumer callback (gracePeriod is ignored)
+2. Source can be restarted by calling `start()` again
+3. `onFinalize()` is a no-op since all state is in-memory
 
 ### WebhookTelegramUpdateSource
 
