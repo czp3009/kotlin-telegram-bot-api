@@ -251,9 +251,9 @@ val app = TelegramBotApplication(
 )
 app.start()
 
-// Push updates from external source (e.g., message queue consumer)
-messageQueue.consume { update ->
-  // This processes the update synchronously
+// Push updates from external source (e.g., pubsub subscriber)
+pubSubSubscriber.subscribe { message ->
+  val update = parseUpdate(message)
   source.push(update)
 }
 
@@ -266,19 +266,78 @@ app.stop()
 - Stateless design with support for multiple start/stop cycles
 - `push(update)` processes updates synchronously via the consumer callback
 - Thread-safe for concurrent use from multiple threads
-- Exceptions from the consumer are propagated to the caller
+- `start()` suspends until `stop()` is called
 
-**Exception Semantics:**
+**Pub/Sub Acknowledgment Strategy:**
 
-| Exception                          | Behavior                                         |
-|------------------------------------|--------------------------------------------------|
-| `TelegramBotShuttingDownException` | Propagates to caller, signals framework shutdown |
-| `CancellationException`            | Propagates if coroutine is being cancelled       |
-| Other `Throwable`                  | Logged and re-thrown to the caller               |
+When consuming from a message queue, use the exception type to decide whether to ack or nack:
+
+| Exception                          | Action     | Reason                                                         |
+|------------------------------------|------------|----------------------------------------------------------------|
+| Success (no exception)             | Ack        | Message processed successfully                                 |
+| `TelegramBotShuttingDownException` | Nack/Retry | Bot is shutting down; redeliver to another worker              |
+| `CancellationException`            | Nack/Retry | Coroutine cancelled; message may be partially processed        |
+| `IllegalStateException`            | Nack/Retry | Source not started; retry after source is ready                |
+| Other `Throwable`                  | Depends    | Business error; ack to avoid retry loop, or nack for transient |
+
+**Example with Google PubSub:**
+
+```kotlin
+val subscriber = pubSubSubscriber.subscribe { message ->
+  val update = parseUpdate(message)
+  try {
+    source.push(update)
+    message.ack()  // Success
+  } catch (e: TelegramBotShuttingDownException) {
+    message.nack()  // Redeliver to another worker
+  } catch (e: CancellationException) {
+    message.nack()  // Redeliver later
+  } catch (e: IllegalStateException) {
+    message.nack()  // Source not ready, retry
+  } catch (e: Throwable) {
+    logger.error(e) { "Business error processing update" }
+    message.ack()  // Ack to avoid retry loop for permanent errors
+  }
+}
+```
+
+**Concurrent Push with Backpressure:**
+
+When receiving updates concurrently, use a `Semaphore` to limit concurrency. Manage the external scope
+independently to allow graceful shutdown:
+
+```kotlin
+val source = SimpleTelegramUpdateSource()
+val app = TelegramBotApplication(client, source, dispatcher)
+app.start()
+
+// External scope for consuming from pubsub
+val consumerScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+val semaphore = Semaphore(permits = 10)  // Max 10 concurrent updates
+
+val consumerJob = consumerScope.launch {
+  pubSubSubscriber.subscribe { message ->
+    semaphore.withPermit {
+      val update = parseUpdate(message)
+      source.push(update)
+    }
+  }
+}
+
+// Graceful shutdown: stop subscriber first, then cancel scope, then stop app
+pubSubSubscriber.stop()  // Stop receiving new messages
+consumerJob.join()       // Wait for in-flight messages to complete processing
+app.stop()               // Then stop the application
+```
+
+**Important:** Calling `stop()` does NOT cancel coroutines that are currently executing `push()`.
+If external code calls `push()` from its own coroutines (not managed by `TelegramBotApplication`),
+those coroutines will continue running until they complete naturally. Callers are responsible for
+managing their own coroutine lifecycle and cancellation.
 
 **Graceful Shutdown:**
 
-1. `stop(gracePeriod)` clears the consumer callback (gracePeriod is ignored)
+1. `stop(gracePeriod)` clears the consumer callback and signals `start()` to return
 2. Source can be restarted by calling `start()` again
 3. `onFinalize()` is a no-op since all state is in-memory
 
