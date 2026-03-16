@@ -34,6 +34,7 @@ import com.hiczp.telegram.bot.protocol.model.SuggestedPostParameters
 import com.hiczp.telegram.bot.protocol.type.InputFile
 import com.hiczp.telegram.bot.protocol.type.TelegramResponse
 import com.hiczp.telegram.bot.protocol.type.toFormPart
+import com.hiczp.telegram.bot.protocol.union.OneOf
 import io.ktor.client.request.forms.ChannelProvider
 import io.ktor.client.request.forms.FormPart
 import io.ktor.client.request.forms.MultiPartFormDataContent
@@ -1407,7 +1408,7 @@ public suspend fun TelegramBotApi.editMessageMedia(
     media: InputMedia,
     replyMarkup: InlineKeyboardMarkup? = null,
     attachments: List<FormPart<ChannelProvider>>? = null,
-): TelegramResponse<Boolean> {
+): TelegramResponse<OneOf<Message, Boolean>> {
     val formData = MultiPartFormDataContent(formData {
         businessConnectionId?.let {
             append("business_connection_id", it)
@@ -1435,7 +1436,7 @@ public suspend fun TelegramBotApi.editMessageMedia(
  *
  * @param form Multipart form object for this operation
  */
-public suspend fun TelegramBotApi.editMessageMedia(form: EditMessageMediaForm): TelegramResponse<Boolean> = editMessageMedia(
+public suspend fun TelegramBotApi.editMessageMedia(form: EditMessageMediaForm): TelegramResponse<OneOf<Message, Boolean>> = editMessageMedia(
     businessConnectionId = form.businessConnectionId,
     chatId = form.chatId,
     messageId = form.messageId,

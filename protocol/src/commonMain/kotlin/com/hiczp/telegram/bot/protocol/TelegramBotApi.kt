@@ -154,6 +154,7 @@ import com.hiczp.telegram.bot.protocol.model.VerifyUserRequest
 import com.hiczp.telegram.bot.protocol.model.WebhookInfo
 import com.hiczp.telegram.bot.protocol.plugin.TelegramFileDownload
 import com.hiczp.telegram.bot.protocol.type.TelegramResponse
+import com.hiczp.telegram.bot.protocol.union.OneOf
 import de.jensklingenberg.ktorfit.http.Body
 import de.jensklingenberg.ktorfit.http.GET
 import de.jensklingenberg.ktorfit.http.POST
@@ -1046,31 +1047,31 @@ public interface TelegramBotApi {
      * Use this method to edit text and game messages. On success, if the edited message is not an inline message, the edited Message is returned, otherwise True is returned. Note that business messages that were not sent by the bot and do not contain an inline keyboard can only be edited within 48 hours from the time they were sent.
      */
     @POST("editMessageText")
-    public suspend fun editMessageText(@Body body: EditMessageTextRequest): TelegramResponse<Boolean>
+    public suspend fun editMessageText(@Body body: EditMessageTextRequest): TelegramResponse<OneOf<Message, Boolean>>
 
     /**
      * Use this method to edit captions of messages. On success, if the edited message is not an inline message, the edited Message is returned, otherwise True is returned. Note that business messages that were not sent by the bot and do not contain an inline keyboard can only be edited within 48 hours from the time they were sent.
      */
     @POST("editMessageCaption")
-    public suspend fun editMessageCaption(@Body body: EditMessageCaptionRequest): TelegramResponse<Boolean>
+    public suspend fun editMessageCaption(@Body body: EditMessageCaptionRequest): TelegramResponse<OneOf<Message, Boolean>>
 
     /**
      * Use this method to edit animation, audio, document, photo, or video messages, or to add media to text messages. If a message is part of a message album, then it can be edited only to an audio for audio albums, only to a document for document albums and to a photo or a video otherwise. When an inline message is edited, a new file can't be uploaded; use a previously uploaded file via its file_id or specify a URL. On success, if the edited message is not an inline message, the edited Message is returned, otherwise True is returned. Note that business messages that were not sent by the bot and do not contain an inline keyboard can only be edited within 48 hours from the time they were sent.
      */
     @POST("editMessageMedia")
-    public suspend fun editMessageMedia(@Body formData: MultiPartFormDataContent): TelegramResponse<Boolean>
+    public suspend fun editMessageMedia(@Body formData: MultiPartFormDataContent): TelegramResponse<OneOf<Message, Boolean>>
 
     /**
      * Use this method to edit live location messages. A location can be edited until its live_period expires or editing is explicitly disabled by a call to stopMessageLiveLocation. On success, if the edited message is not an inline message, the edited Message is returned, otherwise True is returned.
      */
     @POST("editMessageLiveLocation")
-    public suspend fun editMessageLiveLocation(@Body body: EditMessageLiveLocationRequest): TelegramResponse<Boolean>
+    public suspend fun editMessageLiveLocation(@Body body: EditMessageLiveLocationRequest): TelegramResponse<OneOf<Message, Boolean>>
 
     /**
      * Use this method to stop updating a live location message before live_period expires. On success, if the message is not an inline message, the edited Message is returned, otherwise True is returned.
      */
     @POST("stopMessageLiveLocation")
-    public suspend fun stopMessageLiveLocation(@Body body: StopMessageLiveLocationRequest): TelegramResponse<Boolean>
+    public suspend fun stopMessageLiveLocation(@Body body: StopMessageLiveLocationRequest): TelegramResponse<OneOf<Message, Boolean>>
 
     /**
      * Use this method to edit a checklist on behalf of a connected business account. On success, the edited Message is returned.
@@ -1082,7 +1083,7 @@ public interface TelegramBotApi {
      * Use this method to edit only the reply markup of messages. On success, if the edited message is not an inline message, the edited Message is returned, otherwise True is returned. Note that business messages that were not sent by the bot and do not contain an inline keyboard can only be edited within 48 hours from the time they were sent.
      */
     @POST("editMessageReplyMarkup")
-    public suspend fun editMessageReplyMarkup(@Body body: EditMessageReplyMarkupRequest): TelegramResponse<Boolean>
+    public suspend fun editMessageReplyMarkup(@Body body: EditMessageReplyMarkupRequest): TelegramResponse<OneOf<Message, Boolean>>
 
     /**
      * Use this method to stop a poll which was sent by the bot. On success, the stopped Poll is returned.
@@ -1300,7 +1301,7 @@ public interface TelegramBotApi {
      * Use this method to set the score of the specified user in a game message. On success, if the message is not an inline message, the Message is returned, otherwise True is returned. Returns an error, if the new score is not greater than the user's current score in the chat and force is False.
      */
     @POST("setGameScore")
-    public suspend fun setGameScore(@Body body: SetGameScoreRequest): TelegramResponse<Boolean>
+    public suspend fun setGameScore(@Body body: SetGameScoreRequest): TelegramResponse<OneOf<Message, Boolean>>
 
     /**
      * Use this method to get data for high score tables. Will return the score of the specified user and several of their neighbors in a game. Returns an Array of GameHighScore objects.

@@ -119,6 +119,8 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         private const val TYPE_PACKAGE = "$BASE_PACKAGE.type"
         private const val ANNOTATION_PACKAGE = "$BASE_PACKAGE.annotation"
         private const val PLUGIN_PACKAGE = "$BASE_PACKAGE.plugin"
+        private const val UNION_PACKAGE = "$BASE_PACKAGE.union"
+        private const val POLYMORPHIC_PACKAGE = "$BASE_PACKAGE.polymorphic"
         private const val KTORFIT_HTTP_PACKAGE = "de.jensklingenberg.ktorfit.http"
         private const val KTOR_STATEMENT_PACKAGE = "io.ktor.client.statement"
 
@@ -211,6 +213,53 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     private val updateFieldTypes = mutableSetOf<String>() // Types used in Update's optional non-primitive fields
 
     /**
+     * Represents a member of a response union type.
+     * Can be either a reference to a schema type or a primitive type (boolean, string, number, integer).
+     */
+    private data class ResponseUnionMember(
+        val refTypeName: String?, // Schema reference name (e.g., "Message"), null for primitives
+        val primitiveType: String? // Primitive type name (e.g., "boolean", "string"), null for refs
+    ) {
+        /**
+         * Returns the Kotlin type name for this member.
+         * For refs: the schema name (e.g., "Message")
+         * For primitives: the Kotlin type name (e.g., "Boolean", "String")
+         */
+        fun kotlinTypeName(): String = when {
+            refTypeName != null -> refTypeName
+            primitiveType != null -> when (primitiveType) {
+                "boolean" -> "Boolean"
+                "string" -> "String"
+                "number" -> "Double"
+                "integer" -> "Long"
+                else -> primitiveType.replaceFirstChar { it.uppercase() }
+            }
+
+            else -> "Any"
+        }
+
+        /**
+         * Returns true if this is a primitive type member.
+         */
+        fun isPrimitive(): Boolean = primitiveType != null
+    }
+
+    /**
+     * Information about a response union type collected from API response oneOf.
+     * Uses generic OneOf<T1, T2>, OneOf3<T1, T2, T3>, etc. structures.
+     *
+     * @property members The list of possible types in this union
+     * @property operationIds The list of operation IDs that use this union type
+     */
+    private data class ResponseUnionInfo(
+        val members: List<ResponseUnionMember>,
+        val operationIds: MutableList<String> = mutableListOf()
+    )
+
+    // Set of unique member type combinations (by size) for generating OneOf classes
+    private val responseUnionSizes = mutableSetOf<Int>()
+
+    /**
      * The main entry point for code generation from the OpenAPI specification.
      *
      * This method orchestrates the entire code generation process:
@@ -279,11 +328,15 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         val modelDir = File(apiDir, "model")
         val formDir = File(apiDir, "form")
         val queryDir = File(apiDir, "query")
+        val unionDir = File(apiDir, "union")
+        val polymorphicDir = File(apiDir, "polymorphic")
 
-        // Delete model, form and query directories, but keep the type directory
+        // Delete model, form, query, union and polymorphic directories, but keep the type directory
         modelDir.deleteRecursively()
         formDir.deleteRecursively()
         queryDir.deleteRecursively()
+        unionDir.deleteRecursively()
+        polymorphicDir.deleteRecursively()
 
         // Delete the API interface file
         File(apiDir, "TelegramBotApi.kt").delete()
@@ -304,6 +357,15 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         // Collect all types used in Update's optional non-primitive fields
         collectUpdateFieldTypes()
         logger.lifecycle("Detected Update field types: $updateFieldTypes")
+
+        // Collect all response union types from API paths
+        collectResponseUnionTypes(swagger)
+        logger.lifecycle("Detected response union sizes: $responseUnionSizes, operations: ${responseUnionOperations.keys}")
+
+        // Generate OneOf generic classes as needed
+        if (responseUnionSizes.isNotEmpty()) {
+            generateOneOfClasses(outputDirectory, responseUnionSizes)
+        }
 
         // Generate ReplyMarkup sealed interface if we found any types
         if (replyMarkupTypes.isNotEmpty()) {
@@ -401,6 +463,79 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             }
         }
     }
+
+    /**
+     * Collects all response union types from API paths.
+     *
+     * This method scans all API paths for response schemas that have a `result` property
+     * with a `oneOf` containing mixed types (schema references and primitives).
+     *
+     * For each unique combination, we store the member count to generate the appropriate
+     * OneOf<T1, T2>, OneOf3<T1, T2, T3>, etc. classes as needed.
+     *
+     * The collected information is stored in `responseUnionSizes` and used to:
+     * 1. Generate generic OneOf classes in the `union` package
+     * 2. Generate polymorphic serializers in the `union` package
+     * 3. Update API method return types to use OneOf generics
+     */
+    private fun collectResponseUnionTypes(swagger: JsonNode) {
+        val paths = swagger.get("paths") ?: return
+
+        paths.properties().forEach { (_, methods) ->
+            methods.properties().forEach { (_, operation) ->
+                val operationId = operation.get("operationId")?.asText() ?: return@forEach
+
+                // Get the 200 response
+                val response200 = operation.get("responses")?.get("200") ?: return@forEach
+                val content = response200.get("content")?.get(CONTENT_TYPE_JSON) ?: return@forEach
+                val schema = content.get("schema") ?: return@forEach
+
+                // Check if the result property has oneOf
+                val resultProp = schema.get("properties")?.get("result") ?: return@forEach
+                val oneOf = resultProp.get("oneOf") ?: return@forEach
+
+                if (!oneOf.isArray || oneOf.isEmpty) return@forEach
+
+                // Extract members from oneOf
+                val members = mutableListOf<ResponseUnionMember>()
+                oneOf.forEach { option ->
+                    val ref = option.get("\$ref")?.asText()
+                    val primitiveType = option.get("type")?.asText()
+
+                    if (ref != null) {
+                        val typeName = ref.substringAfterLast("/")
+                        members.add(ResponseUnionMember(refTypeName = typeName, primitiveType = null))
+                    } else if (primitiveType != null && primitiveType in listOf(
+                            "boolean",
+                            "string",
+                            "number",
+                            "integer"
+                        )
+                    ) {
+                        members.add(ResponseUnionMember(refTypeName = null, primitiveType = primitiveType))
+                    }
+                }
+
+                // Only create union types for mixed ref + primitive combinations
+                val hasRefs = members.any { it.refTypeName != null }
+                val hasPrimitives = members.any { it.isPrimitive() }
+
+                if (members.size >= 2 && hasRefs && hasPrimitives) {
+                    // Store the size for generating OneOf classes
+                    responseUnionSizes.add(members.size)
+
+                    // Store the union info for this operation
+                    val info = responseUnionOperations.getOrPut(operationId) {
+                        ResponseUnionInfo(members = members)
+                    }
+                    info.operationIds.add(operationId)
+                }
+            }
+        }
+    }
+
+    // Map of operationId -> ResponseUnionInfo for response unions
+    private val responseUnionOperations = mutableMapOf<String, ResponseUnionInfo>()
 
     private fun collectReplyMarkupFromRequestBody(requestBody: JsonNode) {
         val content = requestBody.get("content") ?: return
@@ -615,6 +750,12 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             return ClassName(MODEL_PACKAGE, REPLY_MARKUP_INTERFACE)
         }
 
+        // Check if this matches a response union type (mixed ref + primitive)
+        val responseUnionType = findResponseUnionType(oneOf)
+        if (responseUnionType != null) {
+            return responseUnionType
+        }
+
         // Try to find a common parent type in allSchemas
         // Look for a schema that has a oneOf containing exactly these refs
         if (refs.isNotEmpty()) {
@@ -626,6 +767,55 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
         // Handle oneOf for basic types - choose the "largest" type
         return determineLargestPrimitiveType(oneOf, context)
+    }
+
+    /**
+     * Finds a matching response union type for a oneOf schema.
+     * Returns the parameterized OneOf type (e.g., OneOf<Message, Boolean>) if the oneOf matches a collected response union, null otherwise.
+     */
+    private fun findResponseUnionType(oneOf: JsonNode): TypeName? {
+        // Extract members from this oneOf
+        val members = mutableListOf<ResponseUnionMember>()
+        oneOf.forEach { option ->
+            val ref = option.get($$"$ref")?.asText()
+            val primitiveType = option.get("type")?.asText()
+
+            if (ref != null) {
+                val typeName = ref.substringAfterLast("/")
+                members.add(ResponseUnionMember(refTypeName = typeName, primitiveType = null))
+            } else if (primitiveType != null && primitiveType in listOf("boolean", "string", "number", "integer")) {
+                members.add(ResponseUnionMember(refTypeName = null, primitiveType = primitiveType))
+            }
+        }
+
+        // Only match if this is a mixed ref + primitive combination
+        val hasRefs = members.any { it.refTypeName != null }
+        val hasPrimitives = members.any { it.isPrimitive() }
+
+        if (members.size >= 2 && hasRefs && hasPrimitives) {
+            // Build the parameterized OneOf type
+            val oneOfClassName = if (members.size == 2) "OneOf" else "OneOf${members.size}"
+
+            // Map members to Kotlin types
+            val typeArgs = members.map { member ->
+                when {
+                    member.refTypeName != null -> ClassName(MODEL_PACKAGE, member.refTypeName)
+                    member.primitiveType != null -> when (member.primitiveType) {
+                        "boolean" -> BOOLEAN
+                        "string" -> STRING
+                        "number" -> DOUBLE
+                        "integer" -> LONG
+                        else -> STAR
+                    }
+
+                    else -> STAR
+                }
+            }
+
+            return ClassName(UNION_PACKAGE, oneOfClassName).parameterizedBy(typeArgs)
+        }
+
+        return null
     }
 
     /**
@@ -745,6 +935,416 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
         constructorBuilder.addParameter(paramBuilder.build())
         classBuilder.addProperty(propertyBuilder.build())
+    }
+
+    /**
+     * Generates generic OneOf sealed classes and their serializers for response union types.
+     *
+     * For each unique size in the set (e.g., 2, 3), generates:
+     * - `OneOf<A, B>` or `OneOf3<A, B, C>` sealed class with First/Second/Third subclasses
+     * - `OneOfSerializer<A, B>` or `OneOf3Serializer<A, B, C>` custom serializer
+     * - `OneOfSerializersModule` extension property for easy Json configuration
+     *
+     * The serializer tries to deserialize in order: first type, then second type, etc.
+     * If none match, it throws a SerializationException.
+     */
+    private fun generateOneOfClasses(outputDir: File, sizes: Set<Int>) {
+        // Create the union directory to ensure it exists
+        val unionDir = File(outputDir, "com/hiczp/telegram/bot/protocol/union")
+        unionDir.mkdirs()
+
+        for (size in sizes.sorted()) {
+            // Pass outputDir (root src directory), not unionDir, because writeTo creates package subdirs
+            generateOneOfClass(outputDir, size)
+            generateOneOfClassSerializer(outputDir, size)
+        }
+
+        // Generate the SerializersModule extension for all OneOf types
+        generateOneOfSerializersModule(outputDir)
+    }
+
+    /**
+     * Generates a generic OneOf sealed class for the given size.
+     *
+     * For size 2, generates:
+     * ```kotlin
+     * @Serializable(with = OneOfSerializer::class)
+     * sealed class OneOf<out A, out B> {
+     *     data class First<out A>(val value: A) : OneOf<A, Nothing>()
+     *     data class Second<out B>(val value: B) : OneOf<Nothing, B>()
+     * }
+     * ```
+     */
+    private fun generateOneOfClass(unionDir: File, size: Int) {
+        val className = if (size == 2) "OneOf" else "OneOf$size"
+        val serializerClassName = if (size == 2) "OneOfSerializer" else "OneOf${size}Serializer"
+
+        // Generate type parameter names: A, B, C, ...
+        val typeParamNames = (0 until size).map { idx ->
+            ('A' + idx).toString()
+        }
+
+        val fileSpec = FileSpec.builder(UNION_PACKAGE, className)
+            .addFileComment("Auto-generated from Swagger specification, do not modify this file manually")
+            .addImport("kotlinx.serialization", "Serializable")
+
+        // Build the sealed class with type parameters
+        val classBuilder = TypeSpec.classBuilder(className)
+            .addModifiers(KModifier.SEALED)
+            .addAnnotation(
+                AnnotationSpec.builder(ClassName("kotlinx.serialization", "Serializable"))
+                    .addMember("with = %T::class", ClassName(UNION_PACKAGE, serializerClassName))
+                    .build()
+            )
+
+        // Add type parameters with out variance
+        for (paramName in typeParamNames) {
+            classBuilder.addTypeVariable(TypeVariableName.invoke("${paramName}", variance = KModifier.OUT))
+        }
+
+        // Add KDoc
+        val typeParamsStr = typeParamNames.joinToString(", ")
+        classBuilder.addKdoc(
+            "Sealed class representing a union of %L possible types.\n\n" +
+                    "Used for API responses that can return different types (e.g., a Message object or a Boolean).",
+            typeParamsStr
+        )
+
+        // Generate subclasses: First, Second, Third, ...
+        val subclassNames =
+            listOf("First", "Second", "Third", "Fourth", "Fifth", "Sixth", "Seventh", "Eighth", "Ninth", "Tenth")
+        for (idx in 0 until size) {
+            val subclassName = subclassNames[idx]
+            val typeParam = typeParamNames[idx]
+
+            // Build Nothing type args for other positions
+            val nothingTypeArgs = typeParamNames.mapIndexed { i, _ ->
+                if (i == idx) typeParamNames[i] else "Nothing"
+            }.joinToString(", ")
+
+            val subclassBuilder = TypeSpec.classBuilder(subclassName)
+                .addModifiers(KModifier.DATA)
+                .superclass(
+                    ClassName(UNION_PACKAGE, className).parameterizedBy(
+                        typeParamNames.mapIndexed { i, _ ->
+                            if (i == idx) TypeVariableName.invoke(typeParamNames[i])
+                            else ClassName("kotlin", "Nothing")
+                        }
+                    ))
+                .addTypeVariable(TypeVariableName.invoke(typeParam, variance = KModifier.OUT))
+                .primaryConstructor(
+                    FunSpec.constructorBuilder()
+                        .addParameter("value", TypeVariableName.invoke(typeParam))
+                        .build()
+                )
+                .addProperty(
+                    PropertySpec.builder("value", TypeVariableName.invoke(typeParam))
+                        .initializer("value")
+                        .build()
+                )
+                .addKdoc("Holds a value of type %L.", typeParam)
+
+            classBuilder.addType(subclassBuilder.build())
+        }
+
+        fileSpec.addType(classBuilder.build())
+        fileSpec.build().writeTo(unionDir)
+    }
+
+    /**
+     * Generates a generic OneOfSerializer class for the given size.
+     *
+     * For size 2, generates:
+     * ```kotlin
+     * class OneOfSerializer<A, B>(
+     *     private val serializerA: KSerializer<A>,
+     *     private val serializerB: KSerializer<B>
+     * ) : KSerializer<OneOf<A, B>> {
+     *     override val descriptor: SerialDescriptor = buildSerialDescriptor("OneOf", SerialKind.CONTEXTUAL)
+     *
+     *     override fun deserialize(decoder: Decoder): OneOf<A, B> {
+     *         require(decoder is JsonDecoder) { "Only JSON is supported" }
+     *         val jsonElement = decoder.decodeJsonElement()
+     *
+     *         return try {
+     *             OneOf.First(decoder.json.decodeFromJsonElement(serializerA, jsonElement))
+     *         } catch (e: Exception) {
+     *             try {
+     *                 OneOf.Second(decoder.json.decodeFromJsonElement(serializerB, jsonElement))
+     *             } catch (e2: Exception) {
+     *                 throw SerializationException("Could not deserialize OneOf: neither A nor B matched", e2)
+     *             }
+     *         }
+     *     }
+     *
+     *     override fun serialize(encoder: Encoder, value: OneOf<A, B>) {
+     *         when (value) {
+     *             is OneOf.First -> encoder.encodeSerializableValue(serializerA, value.value)
+     *             is OneOf.Second -> encoder.encodeSerializableValue(serializerB, value.value)
+     *         }
+     *     }
+     * }
+     * ```
+     */
+    private fun generateOneOfClassSerializer(unionDir: File, size: Int) {
+        val className = if (size == 2) "OneOfSerializer" else "OneOf${size}Serializer"
+        val oneOfClassName = if (size == 2) "OneOf" else "OneOf$size"
+
+        // Generate type parameter names: A, B, C, ...
+        val typeParamNames = (0 until size).map { idx ->
+            ('A' + idx).toString()
+        }
+
+        val fileSpec = FileSpec.builder(UNION_PACKAGE, className)
+            .addFileComment("Auto-generated from Swagger specification, do not modify this file manually")
+            .addImport("kotlinx.serialization", "KSerializer", "SerializationException")
+            .addImport("kotlinx.serialization.descriptors", "SerialDescriptor", "SerialKind", "buildSerialDescriptor")
+            .addImport("kotlinx.serialization.encoding", "Decoder", "Encoder")
+            .addImport("kotlinx.serialization.json", "JsonDecoder", "JsonEncoder", "JsonElement")
+            .addAnnotation(
+                AnnotationSpec.builder(ClassName("kotlin", "OptIn"))
+                    .addMember("%T::class", ClassName("kotlinx.serialization", "InternalSerializationApi"))
+                    .build()
+            )
+
+        // Build the serializer class
+        val classBuilder = TypeSpec.classBuilder(className)
+
+        // Add type parameters
+        for (paramName in typeParamNames) {
+            classBuilder.addTypeVariable(TypeVariableName.invoke(paramName))
+        }
+
+        // Build the OneOf<A, B, C> type
+        val oneOfType = ClassName(UNION_PACKAGE, oneOfClassName).parameterizedBy(
+            typeParamNames.map { TypeVariableName.invoke(it) }
+        )
+
+        // Add KSerializer interface implementation
+        val kSerializerType = ClassName("kotlinx.serialization", "KSerializer")
+            .parameterizedBy(oneOfType)
+        classBuilder.addSuperinterface(kSerializerType)
+
+        // Add primary constructor with serializer parameters
+        val constructorBuilder = FunSpec.constructorBuilder()
+        for (idx in 0 until size) {
+            val paramName = "serializer${typeParamNames[idx]}"
+            val serializerType = ClassName("kotlinx.serialization", "KSerializer")
+                .parameterizedBy(TypeVariableName.invoke(typeParamNames[idx]))
+            constructorBuilder.addParameter(paramName, serializerType)
+            classBuilder.addProperty(
+                PropertySpec.builder(paramName, serializerType)
+                    .initializer(paramName)
+                    .addModifiers(KModifier.PRIVATE)
+                    .build()
+            )
+        }
+
+        classBuilder.primaryConstructor(constructorBuilder.build())
+
+        // Add KDoc
+        val typeParamsStr = typeParamNames.joinToString(", ")
+        classBuilder.addKdoc(
+            "Serializer for [OneOf] that tries to deserialize as each type in order.\n\n" +
+                    "If none of the types match, throws a [SerializationException]."
+        )
+
+        // Add descriptor property
+        classBuilder.addProperty(
+            PropertySpec.builder("descriptor", ClassName("kotlinx.serialization.descriptors", "SerialDescriptor"))
+                .addModifiers(KModifier.OVERRIDE)
+                .initializer(
+                    CodeBlock.builder()
+                        .add("buildSerialDescriptor(%S, SerialKind.CONTEXTUAL)", oneOfClassName)
+                        .build()
+                )
+                .build()
+        )
+
+        // Add deserialize method
+        val subclassNames =
+            listOf("First", "Second", "Third", "Fourth", "Fifth", "Sixth", "Seventh", "Eighth", "Ninth", "Tenth")
+
+        // Build nested try-catch blocks
+        val deserializeCode = buildString {
+            appendLine("require(decoder is JsonDecoder) { \"Only JSON is supported\" }")
+            appendLine("val jsonElement = decoder.decodeJsonElement()")
+            appendLine()
+
+            // Generate nested try-catch blocks
+            for (idx in 0 until size) {
+                val indent = "    ".repeat(idx)
+                val typeParam = typeParamNames[idx]
+                val serializerParam = "serializer$typeParam"
+                val subclassName = subclassNames[idx]
+
+                if (idx > 0) {
+                    appendLine("${indent}try {")
+                } else {
+                    appendLine("${indent}return try {")
+                }
+                appendLine("${indent}    $oneOfClassName.$subclassName(decoder.json.decodeFromJsonElement($serializerParam, jsonElement))")
+                append("${indent}} catch (e: Exception) {")
+
+                if (idx < size - 1) {
+                    appendLine()
+                }
+            }
+
+            // Final catch throws exception
+            val finalIndent = "    ".repeat(size)
+            appendLine()
+            appendLine("${finalIndent}throw SerializationException(")
+            appendLine("${finalIndent}    \"Could not deserialize $oneOfClassName: none of the types matched\",")
+            appendLine("${finalIndent}    e")
+            appendLine("${finalIndent})")
+
+            // Close all catch blocks (need to close 'size' number of catch blocks)
+            for (idx in size - 1 downTo 0) {
+                val indent = "    ".repeat(idx)
+                appendLine("$indent}")
+            }
+        }
+
+        classBuilder.addFunction(
+            FunSpec.builder("deserialize")
+                .addModifiers(KModifier.OVERRIDE)
+                .addParameter("decoder", ClassName("kotlinx.serialization.encoding", "Decoder"))
+                .returns(oneOfType)
+                .addCode(deserializeCode)
+                .build()
+        )
+
+        // Add serialize method
+        val serializeCode = buildString {
+            appendLine("require(encoder is JsonEncoder) { \"Only JSON is supported\" }")
+            appendLine("when (value) {")
+            for (idx in 0 until size) {
+                val typeParam = typeParamNames[idx]
+                val serializerParam = "serializer$typeParam"
+                val subclassName = subclassNames[idx]
+                appendLine("    is $oneOfClassName.$subclassName -> encoder.encodeSerializableValue($serializerParam, value.value)")
+            }
+            appendLine("}")
+        }
+
+        classBuilder.addFunction(
+            FunSpec.builder("serialize")
+                .addModifiers(KModifier.OVERRIDE)
+                .addParameter("encoder", ClassName("kotlinx.serialization.encoding", "Encoder"))
+                .addParameter("value", oneOfType)
+                .addCode(serializeCode)
+                .build()
+        )
+
+        fileSpec.addType(classBuilder.build())
+        fileSpec.build().writeTo(unionDir)
+    }
+
+    /**
+     * Generates a SerializersModule extension property that registers all OneOf serializers
+     * for the specific union types used in the Telegram Bot API.
+     *
+     * This allows easy configuration of Json with all required OneOf serializers:
+     * ```kotlin
+     * val json = Json {
+     *     serializersModule += oneOfSerializersModule
+     * }
+     * ```
+     *
+     * The generated module includes contextual serializers for each unique OneOf type combination
+     * (e.g., `OneOf<Message, Boolean>`, `OneOf3<Message, Boolean, Array<Message>>`).
+     */
+    private fun generateOneOfSerializersModule(outputDir: File) {
+        val fileSpec = FileSpec.builder(UNION_PACKAGE, "OneOfSerializersModule")
+            .addFileComment(
+                """
+                Auto-generated from Swagger specification, do not modify this file manually
+
+                A SerializersModule that provides serializers for all OneOf types used in the Telegram Bot API.
+
+                Usage:
+                ```kotlin
+                val json = Json {
+                    serializersModule += oneOfSerializersModule
+                }
+                ```
+                """.trimIndent()
+            )
+            .addImport("kotlinx.serialization.modules", "SerializersModule")
+
+        // Collect all unique union type combinations from responseUnionOperations
+        // Group by the member types (not just size) to avoid duplicate registrations
+        val uniqueUnions = mutableMapOf<String, ResponseUnionInfo>()
+
+        for ((_, info) in responseUnionOperations) {
+            // Create a key from the member types
+            val key = info.members.joinToString(", ") { it.kotlinTypeName() }
+            if (key !in uniqueUnions) {
+                uniqueUnions[key] = info
+            }
+        }
+
+        // Build the SerializersModule code lines
+        val codeLines = mutableListOf<String>()
+
+        for ((_, info) in uniqueUnions) {
+            val members = info.members
+            val size = members.size
+            val oneOfClassName = if (size == 2) "OneOf" else "OneOf$size"
+            val serializerClassName = if (size == 2) "OneOfSerializer" else "OneOf${size}Serializer"
+
+            // Add imports for model types and union classes
+            for (member in members) {
+                if (member.refTypeName != null) {
+                    fileSpec.addImport(MODEL_PACKAGE, member.refTypeName)
+                }
+            }
+            fileSpec.addImport(UNION_PACKAGE, oneOfClassName)
+            fileSpec.addImport(UNION_PACKAGE, serializerClassName)
+
+            // Build the type arguments for OneOf<T1, T2, ...>
+            val typeArgs = members.map { it.kotlinTypeName() }.joinToString(", ")
+
+            // Build the serializer arguments - access serializers from args array
+            val serializerArgs = members.mapIndexed { idx, member ->
+                val argIndex = idx
+                when {
+                    member.refTypeName != null -> "args[$argIndex] as KSerializer<${member.kotlinTypeName()}>"
+                    member.primitiveType != null -> "args[$argIndex] as KSerializer<${member.kotlinTypeName()}>"
+                    else -> "args[$argIndex]"
+                }
+            }.joinToString(", ")
+
+            // Add contextual registration using provider pattern
+            // contextual(OneOf::class) { args -> OneOfSerializer<Message, Boolean>(args[0], args[1]) }
+            codeLines.add("    contextual($oneOfClassName::class) { args -> $serializerClassName<$typeArgs>($serializerArgs) }")
+        }
+
+        // Build the complete getter code
+        val getterCode = buildString {
+            append("return SerializersModule {\n")
+            codeLines.forEach { line ->
+                append(line)
+                append("\n")
+            }
+            append("}")
+        }
+
+        val extensionProperty = PropertySpec.builder(
+            "oneOfSerializersModule",
+            ClassName("kotlinx.serialization.modules", "SerializersModule")
+        )
+            .getter(
+                FunSpec.getterBuilder()
+                    .addStatement(getterCode)
+                    .build()
+            )
+            .build()
+
+        fileSpec.addProperty(extensionProperty)
+        fileSpec.addImport("kotlinx.serialization", "KSerializer")
+        fileSpec.build().writeTo(outputDir)
     }
 
     private fun generateReplyMarkupInterface(outputDir: File) {

@@ -23,6 +23,7 @@ package com.hiczp.telegram.bot.protocol.model
 
 import com.hiczp.telegram.bot.protocol.TelegramBotApi
 import com.hiczp.telegram.bot.protocol.type.TelegramResponse
+import com.hiczp.telegram.bot.protocol.union.OneOf
 import kotlin.Boolean
 import kotlin.Double
 import kotlin.Long
@@ -1900,7 +1901,7 @@ public suspend fun TelegramBotApi.editMessageText(
     entities: List<MessageEntity>? = null,
     linkPreviewOptions: LinkPreviewOptions? = null,
     replyMarkup: InlineKeyboardMarkup? = null,
-): TelegramResponse<Boolean> {
+): TelegramResponse<OneOf<Message, Boolean>> {
     val request = EditMessageTextRequest(
         businessConnectionId = businessConnectionId,
         chatId = chatId,
@@ -1938,7 +1939,7 @@ public suspend fun TelegramBotApi.editMessageCaption(
     captionEntities: List<MessageEntity>? = null,
     showCaptionAboveMedia: Boolean? = null,
     replyMarkup: InlineKeyboardMarkup? = null,
-): TelegramResponse<Boolean> {
+): TelegramResponse<OneOf<Message, Boolean>> {
     val request = EditMessageCaptionRequest(
         businessConnectionId = businessConnectionId,
         chatId = chatId,
@@ -1980,7 +1981,7 @@ public suspend fun TelegramBotApi.editMessageLiveLocation(
     heading: Long? = null,
     proximityAlertRadius: Long? = null,
     replyMarkup: InlineKeyboardMarkup? = null,
-): TelegramResponse<Boolean> {
+): TelegramResponse<OneOf<Message, Boolean>> {
     val request = EditMessageLiveLocationRequest(
         businessConnectionId = businessConnectionId,
         chatId = chatId,
@@ -2012,7 +2013,7 @@ public suspend fun TelegramBotApi.stopMessageLiveLocation(
     messageId: Long? = null,
     inlineMessageId: String? = null,
     replyMarkup: InlineKeyboardMarkup? = null,
-): TelegramResponse<Boolean> {
+): TelegramResponse<OneOf<Message, Boolean>> {
     val request = StopMessageLiveLocationRequest(
         businessConnectionId = businessConnectionId,
         chatId = chatId,
@@ -2064,7 +2065,7 @@ public suspend fun TelegramBotApi.editMessageReplyMarkup(
     messageId: Long? = null,
     inlineMessageId: String? = null,
     replyMarkup: InlineKeyboardMarkup? = null,
-): TelegramResponse<Boolean> {
+): TelegramResponse<OneOf<Message, Boolean>> {
     val request = EditMessageReplyMarkupRequest(
         businessConnectionId = businessConnectionId,
         chatId = chatId,
@@ -2679,7 +2680,7 @@ public suspend fun TelegramBotApi.setGameScore(
     chatId: Long? = null,
     messageId: Long? = null,
     inlineMessageId: String? = null,
-): TelegramResponse<Boolean> {
+): TelegramResponse<OneOf<Message, Boolean>> {
     val request = SetGameScoreRequest(
         userId = userId,
         score = score,
