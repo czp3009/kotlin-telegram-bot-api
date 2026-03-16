@@ -79,8 +79,8 @@ import java.io.File
  * - **Update container annotation**: The generated `Update` model is annotated with
  *   `IncomingUpdateContainer` for incoming update container specific processing
  *
- * - **Field-overlapping unions**: For unions like `MaybeInaccessibleMessage` where subclasses
- *   share >70% of properties, the largest subclass (e.g., `Message`) is used for deserialization
+ * - **MaybeInaccessibleMessage special handling**: For `MaybeInaccessibleMessage` union type,
+ *   the largest subclass (`Message`) is used for deserialization instead of generating a sealed interface
  *
  * - **Complete discriminator mappings**: When OpenAPI discriminator covers all oneOf members,
  *   generates a sealed interface with `@JsonClassDiscriminator` and subclasses with `@SerialName`
@@ -630,11 +630,15 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
     /**
      * Finds a parent type in allSchemas that has a oneOf containing all the given refs.
+     * Skips MaybeInaccessibleMessage since it's specially handled and not generated.
      */
     private fun findParentTypeForOneOf(refs: List<String>): String? {
         val refsSet = refs.toSet()
 
         for ((schemaName, schema) in allSchemas) {
+            // Skip MaybeInaccessibleMessage - it's specially handled and shouldn't be used as a parent type
+            if (schemaName == MAYBE_INACCESSIBLE_MESSAGE_TYPE) continue
+
             val schemaOneOf = schema.get("oneOf")
             if (schemaOneOf != null && schemaOneOf.isArray) {
                 val schemaRefs = extractTypeNamesFromRefArray(schemaOneOf).toSet()
@@ -792,26 +796,24 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         if (oneOf != null && oneOf.isArray) {
             val unionMembers = extractTypeNamesFromRefArray(oneOf)
 
-            // Check if this is a field-overlapping case (use the largest subclass)
-            if (shouldUseLargestSubclass(className, unionMembers)) {
-                val largestMember = findLargestSubclass(unionMembers)
-                if (largestMember != null) {
-                    logger.lifecycle("Using largest subclass $largestMember for $className (field-overlapping union)")
-                    // For MaybeInaccessibleMessage: don't generate the union type itself,
-                    // but ensure all member types (Message, InaccessibleMessage) are still generated
-                    processedSchemas.add(className)
+            // Special handling for MaybeInaccessibleMessage: use Message as the deserialization type
+            // instead of generating a sealed interface. This is because Message and InaccessibleMessage
+            // have overlapping fields and we want to deserialize to the richer Message type.
+            if (className == MAYBE_INACCESSIBLE_MESSAGE_TYPE) {
+                logger.lifecycle("Using $MESSAGE_TYPE for $MAYBE_INACCESSIBLE_MESSAGE_TYPE (special handling)")
+                // Don't generate the union type itself, but ensure all member types are still generated
+                processedSchemas.add(className)
 
-                    // Generate member types if not already processed
-                    unionMembers.forEach { memberName ->
-                        if (memberName !in processedSchemas) {
-                            val memberSchema = allSchemas[memberName]
-                            if (memberSchema != null) {
-                                generateModel(packageName, memberName, memberSchema, outputDir)
-                            }
+                // Generate member types if not already processed
+                unionMembers.forEach { memberName ->
+                    if (memberName !in processedSchemas) {
+                        val memberSchema = allSchemas[memberName]
+                        if (memberSchema != null) {
+                            generateModel(packageName, memberName, memberSchema, outputDir)
                         }
                     }
-                    return
                 }
+                return
             }
 
             // First, check if the schema has an explicit discriminator definition
@@ -966,37 +968,6 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         val fieldName: String,
         val memberValues: Map<String, String> // memberClassName -> discriminatorValue
     )
-
-    private fun shouldUseLargestSubclass(parentName: String, unionMembers: List<String>): Boolean {
-        // Special handling for MaybeInaccessibleMessage: use Message as a deserialization type
-        // but keep InaccessibleMessage as a separate serializable class
-        if (parentName == MAYBE_INACCESSIBLE_MESSAGE_TYPE) return true
-
-        val memberSchemas = unionMembers.mapNotNull { allSchemas[it] }
-        if (memberSchemas.size != unionMembers.size) return false
-
-        // Get all property names from all members
-        val allPropertyNames = memberSchemas.flatMap { schema ->
-            schema.get("properties")?.properties()?.asSequence()?.map { it.key }?.toList() ?: emptyList()
-        }.toSet()
-
-        if (allPropertyNames.isEmpty()) return false
-
-        // Check if properties overlap significantly (>70% overlap)
-        val overlaps = memberSchemas.map { schema ->
-            val props = schema.get("properties")?.properties()?.asSequence()?.map { it.key }?.toSet() ?: emptySet()
-            if (allPropertyNames.isEmpty()) 0.0 else props.intersect(allPropertyNames).size.toDouble() / allPropertyNames.size
-        }
-
-        return overlaps.all { it > 0.7 }
-    }
-
-    private fun findLargestSubclass(unionMembers: List<String>): String? {
-        return unionMembers.maxByOrNull { memberName ->
-            val schema = allSchemas[memberName] ?: return@maxByOrNull 0
-            schema.get("properties")?.properties()?.count() ?: 0
-        }
-    }
 
     /**
      * Result of extracting discriminator info from the schema.
