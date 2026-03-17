@@ -3,6 +3,7 @@
 
 package com.hiczp.telegram.bot.protocol.union
 
+import kotlin.OptIn
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationException
@@ -24,7 +25,7 @@ public class UnionSerializer<A, B>(
     private val serializerB: KSerializer<B>,
 ) : KSerializer<Union<A, B>> {
     override val descriptor: SerialDescriptor =
-        buildSerialDescriptor(Union::class.qualifiedName!!, SerialKind.CONTEXTUAL)
+            buildSerialDescriptor(Union::class.qualifiedName!!, SerialKind.CONTEXTUAL)
 
     override fun deserialize(decoder: Decoder): Union<A, B> {
         require(decoder is JsonDecoder) { "Only JSON is supported" }

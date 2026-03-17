@@ -24,6 +24,12 @@ package com.hiczp.telegram.bot.protocol.model
 import com.hiczp.telegram.bot.protocol.TelegramBotApi
 import com.hiczp.telegram.bot.protocol.type.TelegramResponse
 import com.hiczp.telegram.bot.protocol.union.Union
+import kotlin.Boolean
+import kotlin.Double
+import kotlin.Long
+import kotlin.String
+import kotlin.Suppress
+import kotlin.collections.List
 
 /**
  * Use this method to remove webhook integration if you decide to switch back to getUpdates. Returns True on success.

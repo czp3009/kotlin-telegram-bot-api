@@ -1,6 +1,7 @@
 // Auto-generated from Swagger specification, do not modify this file manually
 package com.hiczp.telegram.bot.protocol.union
 
+import kotlin.Nothing
 import kotlinx.serialization.Serializable
 
 /**
