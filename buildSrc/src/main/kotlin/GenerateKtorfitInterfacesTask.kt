@@ -9,104 +9,25 @@ import org.gradle.api.tasks.*
 import java.io.File
 
 /**
- * Gradle task that generates Kotlin code from a Telegram Bot API OpenAPI/Swagger specification.
+ * Generates Kotlin code from a Telegram Bot API OpenAPI/Swagger specification.
  *
- * This task produces type-safe, auto-generated Kotlin bindings for Telegram's REST API,
- * including data models, form classes, query wrappers, and Ktorfit interfaces for HTTP operations.
- *
- * This task is cacheable - outputs are stored in and retrieved from the Gradle build cache
- * when the input Swagger file hasn't changed.
- *
- * ## Generated Components
- *
- * ### Data Models (`model/` package)
- * Generates serializable data classes for all Telegram API entities (Message, User, Chat, etc.)
- * with proper type handling including
- * - Union types (oneOf) → sealed interfaces with `@JsonClassDiscriminator`
- * - Nested objects and arrays
- * - `@SerialName` annotations for snake_case to camelCase mapping
- * - Automatic interface inheritance for `ReplyMarkup` and `IncomingUpdate` types
- *
- * ### Form Data Classes (`form/` package)
- * Generates wrapper classes for multipart form data requests where file uploads are required.
- * These classes keep upload fields as `InputFile` (or `List<InputFile>` for file arrays),
- * while preserving normal scalar and object fields.
- *
- * For request bodies with dynamic binary attachments (`additionalProperties` with `format: binary`),
- * generated form classes include an `attachments: List<FormPart<ChannelProvider>>?` parameter
- * for `attach://<file_attach_name>` references in media payloads.
- *
- * Also generates `Forms.kt` containing extension functions that:
- * - accept scattered parameters (including `InputFile`),
- * - accept form wrapper objects,
- * - convert `InputFile` values to multipart `FormPart<ChannelProvider>` via `toFormPart`, and
- * - call the corresponding API methods.
- *
- * ### Query Extensions (`query/` package)
- * Generates `Queries.kt` with typed extension functions for GET operations whose query parameters
- * require JSON serialization. These extensions keep call sites strongly typed while delegating to
- * generated `TelegramBotApi` methods that accept serialized `String`/`String?` query values.
- *
- * ### JSON Body Extensions (`model/` package)
- * Generates `Bodies.kt` with scatter extension functions for POST operations that accept JSON
- * request bodies (using `@Body` annotation). These functions accept individual parameters matching
- * the Request class fields, construct the Request object internally, and call the original method.
- * This allows users to call API methods with named parameters instead of constructing Request objects manually.
- *
- * Example:
- * ```kotlin
- * // Instead of: api.sendMessage(SendMessageRequest(chatId = "123", text = "Hello"))
- * // You can use: api.sendMessage(chatId = "123", text = "Hello")
- * ```
- *
- * ### Ktorfit Interface (`TelegramBotApi.kt`)
- * Generates the main `TelegramBotApi` interface with Ktorfit annotations:
- * - `@GET` for methods without request bodies
- * - `@POST` for methods with request bodies
- * - `@Body` for JSON request bodies
- * - `@Query` for URL query parameters
- *
- * ## Type Handling
- *
- * The generator handles several special type patterns from the OpenAPI specification:
- *
- * - **ReplyMarkup union types**: Dynamically collected from the specification; all types
- *   implement a `ReplyMarkup` sealed interface with `@JsonClassDiscriminator("type")`
- *
- * - **IncomingUpdate types**: Types used in `Update`'s optional non-primitive fields
- *   implement `IncomingUpdate` interface for polymorphic update handling
- *
- * - **Update container annotation**: The generated `Update` model is annotated with
- *   `IncomingUpdateContainer` for incoming update container specific processing
- *
- * - **MaybeInaccessibleMessage special handling**: For `MaybeInaccessibleMessage` union type,
- *   the largest subclass (`Message`) is used for deserialization instead of generating a sealed interface
- *
- * - **Complete discriminator mappings**: When OpenAPI discriminator covers all oneOf members,
- *   generates a sealed interface with `@JsonClassDiscriminator` and subclasses with `@SerialName`
- *
- * - **Incomplete discriminator mappings**: When discriminator mapping doesn't cover all oneOf members
- *   (e.g., InlineQueryResult with 20 members but 13 in mapping), generates an empty sealed interface
- *   and standalone classes (no inheritance) with `@SerialName` annotations and discriminator field
- *
- * - **Discriminator value extraction**: Attempts multiple strategies to find discriminator values:
- *   1. Explicit discriminator. Mapping from OpenAPI spec
- *   2. Single-value enum fields in member schemas
- *   3. Description patterns: `always "value"`, `must be "value"`, `must be *value*`
- *   4. Fallback inference from class names (e.g., BackgroundFillSolid → "solid")
+ * This cacheable Gradle task produces type-safe bindings for Telegram's REST API:
+ * - **Data models** (`model/`): Serializable data classes with union type support
+ * - **Form classes** (`form/`): Multipart form wrappers for file uploads
+ * - **Query extensions** (`query/`): Typed helpers for JSON-serialized GET parameters
+ * - **JSON body extensions** (`model/Bodies.kt`): Scatter parameter extensions for POST operations
+ * - **Ktorfit interface** (`TelegramBotApi.kt`): HTTP interface with all API endpoints
+ * - **Union types** (`union/`): Generic sealed classes for response unions (e.g., `Union<Message, Boolean>`)
  *
  * ## Configuration
+ * - `swaggerFile`: Path to the OpenAPI/Swagger JSON specification
+ * - `outputDir`: Output directory (defaults to `src/commonMain/kotlin`)
  *
- * The task requires two inputs:
- * - `swaggerFile`: Path to the OpenAPI/Swagger JSON specification file
- * - `outputDir`: Directory where generated Kotlin code will be written (defaults to `src/commonMain/kotlin`)
- *
- * ## Clean Build
- *
- * Before generation, the task cleans specific output directories:
- * - Deletes `model/` and `form/` directories completely
- * - Deletes `TelegramBotApi.kt` interface file
- * - Preserves `type/` directory which contains handwritten code (`TelegramResponse`, `InputFile`)
+ * ## Special Type Handling
+ * - **ReplyMarkup**: Collected types implement a sealed interface with `@JsonClassDiscriminator("type")`
+ * - **IncomingUpdate**: Types in `Update`'s optional fields implement `IncomingUpdate` interface
+ * - **MaybeInaccessibleMessage**: Uses `Message` type for deserialization (field-overlapping union)
+ * - **Discriminator extraction**: Multiple strategies (explicit mapping, enum fields, description patterns, name inference)
  */
 @CacheableTask
 abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
@@ -120,7 +41,6 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         private const val ANNOTATION_PACKAGE = "$BASE_PACKAGE.annotation"
         private const val PLUGIN_PACKAGE = "$BASE_PACKAGE.plugin"
         private const val UNION_PACKAGE = "$BASE_PACKAGE.union"
-        private const val POLYMORPHIC_PACKAGE = "$BASE_PACKAGE.polymorphic"
         private const val KTORFIT_HTTP_PACKAGE = "de.jensklingenberg.ktorfit.http"
         private const val KTOR_STATEMENT_PACKAGE = "io.ktor.client.statement"
 
@@ -147,30 +67,20 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         private const val CONTENT_TYPE_MULTIPART = "multipart/form-data"
     }
 
-    /**
-     * Input property for the OpenAPI/Swagger specification file.
-     *
-     * This file defines the Telegram Bot API structure, including all endpoints, request/response schemas,
-     * and data models. The task parses this specification to generate corresponding Kotlin code.
-     */
+    /** OpenAPI/Swagger specification file defining the Telegram Bot API structure. */
     @get:InputFile
     @get:PathSensitive(PathSensitivity.ABSOLUTE)
     abstract val swaggerFile: RegularFileProperty
 
     /**
-     * Output directory for generated Kotlin code.
+     * Output directory for generated code.
      *
-     * Generated files are organized under this directory:
-     * - `com/hiczp/telegram/bot/protocol/model/` - Data model classes (100+ files) and JSON body scatter extensions (Bodies.kt)
-     * - `com/hiczp/telegram/bot/protocol/form/` - Form wrapper classes (*Form.kt) and Forms.kt extension functions
-     * - `com/hiczp/telegram/bot/protocol/query/Queries.kt` - Query extension functions for JSON-serialized GET parameters
-     * - `com/hiczp/telegram/bot/protocol/TelegramBotApi.kt` - Ktorfit HTTP interface
-     *
-     * The `type/` subdirectory is preserved as it contains handwritten code:
-     * - `InputFile.kt` - Input file handling
-     * - `TelegramResponse.kt` - Response wrapper with error handling
-     *
-     * Note: `IncomingUpdate` and `IncomingUpdateContainer` are defined in the separate `:protocol-annotation` module.
+     * Structure:
+     * - `model/` - Data classes and `Bodies.kt`
+     * - `form/` - Form wrappers and `Forms.kt`
+     * - `query/Queries.kt` - Query extensions
+     * - `TelegramBotApi.kt` - Ktorfit interface
+     * - `type/` - Preserved (handwritten `InputFile`, `TelegramResponse`)
      */
     @get:OutputDirectory
     abstract val outputDir: DirectoryProperty
@@ -185,20 +95,14 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     private val processedSchemas = mutableSetOf<String>()
     private val generatedRequestBodies = mutableMapOf<String, String>() // operationId -> className
 
+    /** Information for multipart form operations. */
     private data class MultipartOperationInfo(
         val schema: JsonNode,
         val returnType: TypeName,
         val description: String?
     )
 
-    /**
-     * Information about a JSON body operation for scatter extension generation.
-     *
-     * @property requestClassName The name of the Request class (e.g., "SendMessageRequest")
-     * @property requestSchema The schema of the request body (for generating the parameter list)
-     * @property returnType The return type of the operation
-     * @property description The operation description for KDoc
-     */
+    /** Information for JSON body operations (scatter extension generation). */
     private data class JsonBodyOperationInfo(
         val requestClassName: String,
         val requestSchema: JsonNode,
@@ -246,7 +150,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
     /**
      * Information about a response union type collected from API response oneOf.
-     * Uses generic OneOf<T1, T2>, OneOf3<T1, T2, T3>, etc. structures.
+     * Uses generic Union<T1, T2>, Union3<T1, T2, T3>, etc. structures.
      *
      * @property members The list of possible types in this union
      * @property operationIds The list of operation IDs that use this union type
@@ -256,65 +160,20 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         val operationIds: MutableList<String> = mutableListOf()
     )
 
-    // Set of unique member type combinations (by size) for generating OneOf classes
+    // Set of unique member type combinations (by size) for generating Union classes
     private val responseUnionSizes = mutableSetOf<Int>()
 
     /**
-     * The main entry point for code generation from the OpenAPI specification.
+     * Main entry point for code generation.
      *
-     * This method orchestrates the entire code generation process:
+     * Orchestrates the entire process:
+     * 1. Parse OpenAPI specification
+     * 2. Clean output directories (preserve `type/`)
+     * 3. Collect special types (ReplyMarkup, IncomingUpdate, response unions)
+     * 4. Generate Union classes, ReplyMarkup interface, data models, API interface
+     * 5. Generate query and form extensions
      *
-     * 1. **Parses the specification**: Reads the OpenAPI/Swagger JSON file using Jackson ObjectMapper
-     * 2. **Cleans output directories**: Deletes `model/`, `form/`, `query/` directories and `TelegramBotApi.kt` file
-     * 3. **Stores all schemas**: Caches all schema definitions for reference during generation
-     * 4. **Collects ReplyMarkup types**: Scans all `reply_markup` fields to identify types for sealed interface
-     * 5. **Collects IncomingUpdate types**: Identifies types used in `Update`'s optional non-primitive fields
-     * 6. **Generates ReplyMarkup interface**: Creates sealed interface if any ReplyMarkup types were found
-     * 7. **Generates data models**: Creates all data classes for API entities (excluding InputFile)
-     * 8. **Generates API interface**: Creates the Ktorfit HTTP interface with all endpoints
-     * 9. **Generates query extensions**: Creates typed query helper extensions in `query/Queries.kt`
-     * 10. **Generates JSON body extensions**: Creates scatter extension functions in `model/Bodies.kt`
-     *
-     * ## Output Structure
-     *
-     * Generated files are written to the configured output directory:
-     * ```
-     * com/hiczp/telegram/bot/protocol/
-     * ├── TelegramBotApi.kt           # Ktorfit HTTP interface with all API methods
-     * ├── form/                       # Form data wrapper classes for multipart uploads
-     * │   ├── *Form.kt                # Wrapper classes with InputFile upload fields
-     * │   └── Forms.kt                # Multipart extension functions (scatter + form overloads)
-     * ├── model/                      # Data model classes (100+ files)
-     * │   ├── Bodies.kt              # Scatter extensions for JSON body operations
-     * │   ├── ReplyMarkup.kt          # Sealed interface with @JsonClassDiscriminator
-     * │   └── *.kt                    # All other data classes and sealed interfaces
-     * ├── query/                      # Query extension functions for JSON-serialized GET params
-     * │   └── Queries.kt
-     * └── type/                       # Handwritten code (preserved, not regenerated)
-     *     ├── InputFile.kt            # Input file handling
-     *     └── TelegramResponse.kt     # Response wrapper with error handling
-     * ```
-     *
-     * Note: `IncomingUpdate` and `IncomingUpdateContainer` are defined in the separate `:protocol-annotation` module.
-     *
-     * ## Type Collection Strategy
-     *
-     * - **ReplyMarkup types**: Collects from all `reply_markup` fields in request bodies and schemas,
-     *   extracting type names from oneOf/allOf $ref arrays
-     *
-     * - **IncomingUpdate types**: Collects from all optional (non-required) non-primitive fields in
-     *   the `Update` schema, excluding `MaybeInaccessibleMessage`
-     *
-     * ## Clean Build Strategy
-     *
-     * Before generating new code, the task cleans specific output locations:
-     * - Deletes `model/` directory completely (all generated data classes)
-     * - Deletes `form/` directory completely (all generated form classes)
-     * - Deletes `query/` directory completely (all generated query extension functions)
-     * - Deletes `TelegramBotApi.kt` interface file
-     * - **Preserves** `type/` directory which contains handwritten code
-     *
-     * @throws Exception if specification parsing or code generation fails
+     * @throws Exception if parsing or generation fails
      */
     @TaskAction
     fun generate() {
@@ -362,9 +221,9 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         collectResponseUnionTypes(swagger)
         logger.lifecycle("Detected response union sizes: $responseUnionSizes, operations: ${responseUnionOperations.keys}")
 
-        // Generate OneOf generic classes as needed
+        // Generate Union generic classes as needed
         if (responseUnionSizes.isNotEmpty()) {
-            generateOneOfClasses(outputDirectory, responseUnionSizes)
+            generateUnionClasses(outputDirectory, responseUnionSizes)
         }
 
         // Generate ReplyMarkup sealed interface if we found any types
@@ -384,19 +243,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     }
 
 
-    /**
-     * Collects all types that appear in `reply_markup` fields across the entire OpenAPI specification.
-     *
-     * This method scans:
-     * 1. All request bodies in API paths (both JSON and multipart content types)
-     * 2. All schemas with `reply_markup` properties
-     *
-     * For each `reply_markup` field found, extracts type names from:
-     * - oneOf arrays (multiple possible types)
-     * - allOf arrays (single type references)
-     *
-     * The collected types are stored in `replyMarkupTypes` and used to generate the `ReplyMarkup` sealed interface.
-     */
+    /** Collects types appearing in `reply_markup` fields from request bodies and schemas. */
     private fun collectReplyMarkupTypes(swagger: JsonNode) {
         val paths = swagger.get("paths") ?: return
 
@@ -471,12 +318,12 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
      * with a `oneOf` containing mixed types (schema references and primitives).
      *
      * For each unique combination, we store the member count to generate the appropriate
-     * OneOf<T1, T2>, OneOf3<T1, T2, T3>, etc. classes as needed.
+     * Union<T1, T2>, Union3<T1, T2, T3>, etc. classes as needed.
      *
      * The collected information is stored in `responseUnionSizes` and used to:
-     * 1. Generate generic OneOf classes in the `union` package
+     * 1. Generate generic Union classes in the `union` package
      * 2. Generate polymorphic serializers in the `union` package
-     * 3. Update API method return types to use OneOf generics
+     * 3. Update API method return types to use Union generics
      */
     private fun collectResponseUnionTypes(swagger: JsonNode) {
         val paths = swagger.get("paths") ?: return
@@ -499,7 +346,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                 // Extract members from oneOf
                 val members = mutableListOf<ResponseUnionMember>()
                 oneOf.forEach { option ->
-                    val ref = option.get("\$ref")?.asText()
+                    val ref = option.get($$"$ref")?.asText()
                     val primitiveType = option.get("type")?.asText()
 
                     if (ref != null) {
@@ -771,7 +618,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
     /**
      * Finds a matching response union type for a oneOf schema.
-     * Returns the parameterized OneOf type (e.g., OneOf<Message, Boolean>) if the oneOf matches a collected response union, null otherwise.
+     * Returns the parameterized Union type (e.g., Union<Message, Boolean>) if the oneOf matches a collected response union, null otherwise.
      */
     private fun findResponseUnionType(oneOf: JsonNode): TypeName? {
         // Extract members from this oneOf
@@ -793,8 +640,8 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         val hasPrimitives = members.any { it.isPrimitive() }
 
         if (members.size >= 2 && hasRefs && hasPrimitives) {
-            // Build the parameterized OneOf type
-            val oneOfClassName = if (members.size == 2) "OneOf" else "OneOf${members.size}"
+            // Build the parameterized Union type
+            val unionClassName = if (members.size == 2) "Union" else "Union${members.size}"
 
             // Map members to Kotlin types
             val typeArgs = members.map { member ->
@@ -812,7 +659,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                 }
             }
 
-            return ClassName(UNION_PACKAGE, oneOfClassName).parameterizedBy(typeArgs)
+            return ClassName(UNION_PACKAGE, unionClassName).parameterizedBy(typeArgs)
         }
 
         return null
@@ -938,46 +785,46 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     }
 
     /**
-     * Generates generic OneOf sealed classes and their serializers for response union types.
+     * Generates generic Union sealed classes and their serializers for response union types.
      *
      * For each unique size in the set (e.g., 2, 3), generates:
-     * - `OneOf<A, B>` or `OneOf3<A, B, C>` sealed class with First/Second/Third subclasses
-     * - `OneOfSerializer<A, B>` or `OneOf3Serializer<A, B, C>` custom serializer
-     * - `OneOfSerializersModule` extension property for easy Json configuration
+     * - `Union<A, B>` or `Union3<A, B, C>` sealed class with First/Second/Third subclasses
+     * - `UnionSerializer<A, B>` or `Union3Serializer<A, B, C>` custom serializer
+     * - `UnionSerializersModule` extension property for easy Json configuration
      *
      * The serializer tries to deserialize in order: first type, then second type, etc.
      * If none match, it throws a SerializationException.
      */
-    private fun generateOneOfClasses(outputDir: File, sizes: Set<Int>) {
+    private fun generateUnionClasses(outputDir: File, sizes: Set<Int>) {
         // Create the union directory to ensure it exists
         val unionDir = File(outputDir, "com/hiczp/telegram/bot/protocol/union")
         unionDir.mkdirs()
 
         for (size in sizes.sorted()) {
             // Pass outputDir (root src directory), not unionDir, because writeTo creates package subdirs
-            generateOneOfClass(outputDir, size)
-            generateOneOfClassSerializer(outputDir, size)
+            generateUnionClass(outputDir, size)
+            generateUnionSerializer(outputDir, size)
         }
 
-        // Generate the SerializersModule extension for all OneOf types
-        generateOneOfSerializersModule(outputDir)
+        // Generate the SerializersModule extension for all Union types
+        generateUnionSerializersModule(outputDir)
     }
 
     /**
-     * Generates a generic OneOf sealed class for the given size.
+     * Generates a generic Union sealed class for the given size.
      *
      * For size 2, generates:
      * ```kotlin
-     * @Serializable(with = OneOfSerializer::class)
-     * sealed class OneOf<out A, out B> {
-     *     data class First<out A>(val value: A) : OneOf<A, Nothing>()
-     *     data class Second<out B>(val value: B) : OneOf<Nothing, B>()
+     * @Serializable(with = UnionSerializer::class)
+     * sealed class Union<out A, out B> {
+     *     data class First<out A>(val value: A) : Union<A, Nothing>()
+     *     data class Second<out B>(val value: B) : Union<Nothing, B>()
      * }
      * ```
      */
-    private fun generateOneOfClass(unionDir: File, size: Int) {
-        val className = if (size == 2) "OneOf" else "OneOf$size"
-        val serializerClassName = if (size == 2) "OneOfSerializer" else "OneOf${size}Serializer"
+    private fun generateUnionClass(unionDir: File, size: Int) {
+        val className = if (size == 2) "Union" else "Union$size"
+        val serializerClassName = if (size == 2) "UnionSerializer" else "Union${size}Serializer"
 
         // Generate type parameter names: A, B, C, ...
         val typeParamNames = (0 until size).map { idx ->
@@ -999,7 +846,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
         // Add type parameters with out variance
         for (paramName in typeParamNames) {
-            classBuilder.addTypeVariable(TypeVariableName.invoke("${paramName}", variance = KModifier.OUT))
+            classBuilder.addTypeVariable(TypeVariableName.invoke(paramName, variance = KModifier.OUT))
         }
 
         // Add KDoc
@@ -1017,16 +864,11 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             val subclassName = subclassNames[idx]
             val typeParam = typeParamNames[idx]
 
-            // Build Nothing type args for other positions
-            val nothingTypeArgs = typeParamNames.mapIndexed { i, _ ->
-                if (i == idx) typeParamNames[i] else "Nothing"
-            }.joinToString(", ")
-
             val subclassBuilder = TypeSpec.classBuilder(subclassName)
                 .addModifiers(KModifier.DATA)
                 .superclass(
                     ClassName(UNION_PACKAGE, className).parameterizedBy(
-                        typeParamNames.mapIndexed { i, _ ->
+                        List(size) { i ->
                             if (i == idx) TypeVariableName.invoke(typeParamNames[i])
                             else ClassName("kotlin", "Nothing")
                         }
@@ -1047,48 +889,66 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             classBuilder.addType(subclassBuilder.build())
         }
 
+        // Generate convenience accessor methods: firstOrNull(), secondOrNull(), etc.
+        for (idx in 0 until size) {
+            val subclassName = subclassNames[idx]
+            val typeParam = typeParamNames[idx]
+            val methodName = "${subclassName.lowercase()}OrNull"
+
+            val accessorMethod = FunSpec.builder(methodName)
+                .returns(TypeVariableName.invoke(typeParam).copy(nullable = true))
+                .addStatement("return (this as? %L)?.value", subclassName)
+                .addKdoc("Returns the value if this is [%L], null otherwise.", subclassName)
+                .build()
+
+            classBuilder.addFunction(accessorMethod)
+        }
+
         fileSpec.addType(classBuilder.build())
         fileSpec.build().writeTo(unionDir)
     }
 
     /**
-     * Generates a generic OneOfSerializer class for the given size.
+     * Generates a generic UnionSerializer class for the given size.
      *
      * For size 2, generates:
      * ```kotlin
-     * class OneOfSerializer<A, B>(
+     * class UnionSerializer<A, B>(
      *     private val serializerA: KSerializer<A>,
      *     private val serializerB: KSerializer<B>
-     * ) : KSerializer<OneOf<A, B>> {
-     *     override val descriptor: SerialDescriptor = buildSerialDescriptor("OneOf", SerialKind.CONTEXTUAL)
+     * ) : KSerializer<Union<A, B>> {
+     *     override val descriptor: SerialDescriptor = buildSerialDescriptor("Union", SerialKind.CONTEXTUAL)
      *
-     *     override fun deserialize(decoder: Decoder): OneOf<A, B> {
+     *     override fun deserialize(decoder: Decoder): Union<A, B> {
      *         require(decoder is JsonDecoder) { "Only JSON is supported" }
      *         val jsonElement = decoder.decodeJsonElement()
      *
-     *         return try {
-     *             OneOf.First(decoder.json.decodeFromJsonElement(serializerA, jsonElement))
-     *         } catch (e: Exception) {
-     *             try {
-     *                 OneOf.Second(decoder.json.decodeFromJsonElement(serializerB, jsonElement))
-     *             } catch (e2: Exception) {
-     *                 throw SerializationException("Could not deserialize OneOf: neither A nor B matched", e2)
-     *             }
-     *         }
+     *         val deserializers = listOf(
+     *             { Union.First(decoder.json.decodeFromJsonElement(serializerA, jsonElement)) },
+     *             { Union.Second(decoder.json.decodeFromJsonElement(serializerB, jsonElement)) }
+     *         )
+     *
+     *         val results = deserializers.map { runCatching(it) }
+     *         return results.firstNotNullOfOrNull { it.getOrNull() }
+     *             ?: throw SerializationException(
+     *                 "Could not deserialize Union: none of the types matched",
+     *                 results.last().exceptionOrNull()
+     *             )
      *     }
      *
-     *     override fun serialize(encoder: Encoder, value: OneOf<A, B>) {
+     *     override fun serialize(encoder: Encoder, value: Union<A, B>) {
+     *         require(encoder is JsonEncoder) { "Only JSON is supported" }
      *         when (value) {
-     *             is OneOf.First -> encoder.encodeSerializableValue(serializerA, value.value)
-     *             is OneOf.Second -> encoder.encodeSerializableValue(serializerB, value.value)
+     *             is Union.First -> encoder.encodeSerializableValue(serializerA, value.value)
+     *             is Union.Second -> encoder.encodeSerializableValue(serializerB, value.value)
      *         }
      *     }
      * }
      * ```
      */
-    private fun generateOneOfClassSerializer(unionDir: File, size: Int) {
-        val className = if (size == 2) "OneOfSerializer" else "OneOf${size}Serializer"
-        val oneOfClassName = if (size == 2) "OneOf" else "OneOf$size"
+    private fun generateUnionSerializer(unionDir: File, size: Int) {
+        val className = if (size == 2) "UnionSerializer" else "Union${size}Serializer"
+        val unionClassName = if (size == 2) "Union" else "Union$size"
 
         // Generate type parameter names: A, B, C, ...
         val typeParamNames = (0 until size).map { idx ->
@@ -1100,7 +960,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             .addImport("kotlinx.serialization", "KSerializer", "SerializationException")
             .addImport("kotlinx.serialization.descriptors", "SerialDescriptor", "SerialKind", "buildSerialDescriptor")
             .addImport("kotlinx.serialization.encoding", "Decoder", "Encoder")
-            .addImport("kotlinx.serialization.json", "JsonDecoder", "JsonEncoder", "JsonElement")
+            .addImport("kotlinx.serialization.json", "JsonDecoder", "JsonEncoder")
             .addAnnotation(
                 AnnotationSpec.builder(ClassName("kotlin", "OptIn"))
                     .addMember("%T::class", ClassName("kotlinx.serialization", "InternalSerializationApi"))
@@ -1115,14 +975,14 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             classBuilder.addTypeVariable(TypeVariableName.invoke(paramName))
         }
 
-        // Build the OneOf<A, B, C> type
-        val oneOfType = ClassName(UNION_PACKAGE, oneOfClassName).parameterizedBy(
+        // Build the Union<A, B, C> type
+        val unionType = ClassName(UNION_PACKAGE, unionClassName).parameterizedBy(
             typeParamNames.map { TypeVariableName.invoke(it) }
         )
 
         // Add KSerializer interface implementation
         val kSerializerType = ClassName("kotlinx.serialization", "KSerializer")
-            .parameterizedBy(oneOfType)
+            .parameterizedBy(unionType)
         classBuilder.addSuperinterface(kSerializerType)
 
         // Add primary constructor with serializer parameters
@@ -1143,9 +1003,8 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         classBuilder.primaryConstructor(constructorBuilder.build())
 
         // Add KDoc
-        val typeParamsStr = typeParamNames.joinToString(", ")
         classBuilder.addKdoc(
-            "Serializer for [OneOf] that tries to deserialize as each type in order.\n\n" +
+            "Serializer for [Union] that tries to deserialize as each type in order.\n\n" +
                     "If none of the types match, throws a [SerializationException]."
         )
 
@@ -1155,7 +1014,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                 .addModifiers(KModifier.OVERRIDE)
                 .initializer(
                     CodeBlock.builder()
-                        .add("buildSerialDescriptor(%S, SerialKind.CONTEXTUAL)", oneOfClassName)
+                        .add("buildSerialDescriptor(%S, SerialKind.CONTEXTUAL)", unionClassName)
                         .build()
                 )
                 .build()
@@ -1171,46 +1030,32 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             appendLine("val jsonElement = decoder.decodeJsonElement()")
             appendLine()
 
-            // Generate nested try-catch blocks
+            // Generate list of deserialization attempts
+            appendLine("val deserializers = listOf(")
             for (idx in 0 until size) {
-                val indent = "    ".repeat(idx)
                 val typeParam = typeParamNames[idx]
                 val serializerParam = "serializer$typeParam"
                 val subclassName = subclassNames[idx]
-
-                if (idx > 0) {
-                    appendLine("${indent}try {")
-                } else {
-                    appendLine("${indent}return try {")
-                }
-                appendLine("${indent}    $oneOfClassName.$subclassName(decoder.json.decodeFromJsonElement($serializerParam, jsonElement))")
-                append("${indent}} catch (e: Exception) {")
-
-                if (idx < size - 1) {
-                    appendLine()
-                }
+                val comma = if (idx < size - 1) "," else ""
+                appendLine("    { $unionClassName.$subclassName(decoder.json.decodeFromJsonElement($serializerParam, jsonElement)) }$comma")
             }
-
-            // Final catch throws exception
-            val finalIndent = "    ".repeat(size)
+            appendLine(")")
             appendLine()
-            appendLine("${finalIndent}throw SerializationException(")
-            appendLine("${finalIndent}    \"Could not deserialize $oneOfClassName: none of the types matched\",")
-            appendLine("${finalIndent}    e")
-            appendLine("${finalIndent})")
 
-            // Close all catch blocks (need to close 'size' number of catch blocks)
-            for (idx in size - 1 downTo 0) {
-                val indent = "    ".repeat(idx)
-                appendLine("$indent}")
-            }
+            // Find first successful deserialization
+            appendLine("val results = deserializers.map { runCatching(it) }")
+            appendLine("return results.firstNotNullOfOrNull { it.getOrNull() }")
+            appendLine("    ?: throw SerializationException(")
+            appendLine("        \"Could not deserialize $unionClassName: none of the types matched\",")
+            appendLine("        results.last().exceptionOrNull()")
+            appendLine("    )")
         }
 
         classBuilder.addFunction(
             FunSpec.builder("deserialize")
                 .addModifiers(KModifier.OVERRIDE)
                 .addParameter("decoder", ClassName("kotlinx.serialization.encoding", "Decoder"))
-                .returns(oneOfType)
+                .returns(unionType)
                 .addCode(deserializeCode)
                 .build()
         )
@@ -1223,7 +1068,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                 val typeParam = typeParamNames[idx]
                 val serializerParam = "serializer$typeParam"
                 val subclassName = subclassNames[idx]
-                appendLine("    is $oneOfClassName.$subclassName -> encoder.encodeSerializableValue($serializerParam, value.value)")
+                appendLine("    is $unionClassName.$subclassName -> encoder.encodeSerializableValue($serializerParam, value.value)")
             }
             appendLine("}")
         }
@@ -1232,7 +1077,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             FunSpec.builder("serialize")
                 .addModifiers(KModifier.OVERRIDE)
                 .addParameter("encoder", ClassName("kotlinx.serialization.encoding", "Encoder"))
-                .addParameter("value", oneOfType)
+                .addParameter("value", unionType)
                 .addCode(serializeCode)
                 .build()
         )
@@ -1242,31 +1087,31 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     }
 
     /**
-     * Generates a SerializersModule extension property that registers all OneOf serializers
+     * Generates a SerializersModule extension property that registers all Union serializers
      * for the specific union types used in the Telegram Bot API.
      *
-     * This allows easy configuration of Json with all required OneOf serializers:
+     * This allows easy configuration of Json with all required Union serializers:
      * ```kotlin
      * val json = Json {
-     *     serializersModule += oneOfSerializersModule
+     *     serializersModule += unionSerializersModule
      * }
      * ```
      *
-     * The generated module includes contextual serializers for each unique OneOf type combination
-     * (e.g., `OneOf<Message, Boolean>`, `OneOf3<Message, Boolean, Array<Message>>`).
+     * The generated module includes contextual serializers for each unique Union type combination
+     * (e.g., `Union<Message, Boolean>`, `Union3<Message, Boolean, Array<Message>>`).
      */
-    private fun generateOneOfSerializersModule(outputDir: File) {
-        val fileSpec = FileSpec.builder(UNION_PACKAGE, "OneOfSerializersModule")
+    private fun generateUnionSerializersModule(outputDir: File) {
+        val fileSpec = FileSpec.builder(UNION_PACKAGE, "UnionSerializersModule")
             .addFileComment(
                 """
                 Auto-generated from Swagger specification, do not modify this file manually
 
-                A SerializersModule that provides serializers for all OneOf types used in the Telegram Bot API.
+                A SerializersModule that provides serializers for all Union types used in the Telegram Bot API.
 
                 Usage:
                 ```kotlin
                 val json = Json {
-                    serializersModule += oneOfSerializersModule
+                    serializersModule += unionSerializersModule
                 }
                 ```
                 """.trimIndent()
@@ -1291,34 +1136,20 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         for ((_, info) in uniqueUnions) {
             val members = info.members
             val size = members.size
-            val oneOfClassName = if (size == 2) "OneOf" else "OneOf$size"
-            val serializerClassName = if (size == 2) "OneOfSerializer" else "OneOf${size}Serializer"
+            val unionClassName = if (size == 2) "Union" else "Union$size"
+            val serializerClassName = if (size == 2) "UnionSerializer" else "Union${size}Serializer"
 
-            // Add imports for model types and union classes
-            for (member in members) {
-                if (member.refTypeName != null) {
-                    fileSpec.addImport(MODEL_PACKAGE, member.refTypeName)
-                }
-            }
-            fileSpec.addImport(UNION_PACKAGE, oneOfClassName)
-            fileSpec.addImport(UNION_PACKAGE, serializerClassName)
-
-            // Build the type arguments for OneOf<T1, T2, ...>
-            val typeArgs = members.map { it.kotlinTypeName() }.joinToString(", ")
+            // Note: We don't need to add imports for model types (like Message) because they're not used in the generated code
+            // The Union and UnionSerializer classes are in the same package, so no import needed either
 
             // Build the serializer arguments - access serializers from args array
-            val serializerArgs = members.mapIndexed { idx, member ->
-                val argIndex = idx
-                when {
-                    member.refTypeName != null -> "args[$argIndex] as KSerializer<${member.kotlinTypeName()}>"
-                    member.primitiveType != null -> "args[$argIndex] as KSerializer<${member.kotlinTypeName()}>"
-                    else -> "args[$argIndex]"
-                }
-            }.joinToString(", ")
+            val serializerArgs = members.indices.joinToString(", ") { idx ->
+                "args[$idx]"
+            }
 
             // Add contextual registration using provider pattern
-            // contextual(OneOf::class) { args -> OneOfSerializer<Message, Boolean>(args[0], args[1]) }
-            codeLines.add("    contextual($oneOfClassName::class) { args -> $serializerClassName<$typeArgs>($serializerArgs) }")
+            // contextual(Union::class) { args -> UnionSerializer(args[0], args[1]) }
+            codeLines.add("    contextual($unionClassName::class) { args -> $serializerClassName($serializerArgs) }")
         }
 
         // Build the complete getter code
@@ -1332,7 +1163,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         }
 
         val extensionProperty = PropertySpec.builder(
-            "oneOfSerializersModule",
+            "unionSerializersModule",
             ClassName("kotlinx.serialization.modules", "SerializersModule")
         )
             .getter(
@@ -1343,7 +1174,6 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             .build()
 
         fileSpec.addProperty(extensionProperty)
-        fileSpec.addImport("kotlinx.serialization", "KSerializer")
         fileSpec.build().writeTo(outputDir)
     }
 

@@ -13,7 +13,7 @@ import com.hiczp.telegram.bot.protocol.plugin.TelegramServerErrorPlugin
 import com.hiczp.telegram.bot.protocol.test.extension.toFormPart
 import com.hiczp.telegram.bot.protocol.test.extension.toInputFile
 import com.hiczp.telegram.bot.protocol.type.InputFile
-import com.hiczp.telegram.bot.protocol.union.OneOf
+import com.hiczp.telegram.bot.protocol.union.Union
 import de.jensklingenberg.ktorfit.Ktorfit
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.KotlinLoggingConfiguration
@@ -35,7 +35,6 @@ import kotlinx.io.buffered
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.modules.SerializersModule
 import kotlin.test.*
 
 private val logger = KotlinLogging.logger {}
@@ -159,8 +158,13 @@ class TelegramBotApiTest {
             messageId = message.messageId,
             text = "Edited message"
         ).getOrThrow()
-        // editMessageText returns OneOf<Message, Boolean>, where Message is returned on success
-        assertTrue(edited is OneOf.First)
+        // editMessageText returns Union<Message, Boolean>, where Message is returned on edit normal message
+        assertNotNull(edited.firstOrNull())
+        assertEquals(edited.firstOrNull()?.messageId, message.messageId)
+        assertNull(edited.secondOrNull())
+        assertTrue(edited is Union.First)
+        assertTrue(edited.value is Message)
+        assertEquals(edited.value.messageId, message.messageId)
 
         // Clean up
         assertTrue(telegramBotApi.deleteMessage(message).getOrThrow())

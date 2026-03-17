@@ -43,6 +43,13 @@ Code is generated from the
     - Accept individual parameters matching request class fields instead of requiring pre-constructed request objects
     - Provide an ergonomic API with named parameters and default values
 
+- **Union type handling** (`union/`)
+  - `Union<A, B>` sealed class for API responses that can return different types
+  - `UnionSerializer` tries deserialization for each type in order (A first, then B)
+  - `unionSerializersModule` provides contextual serializers for all Union types
+  - Used when Telegram API returns either a `Message` object or a `Boolean` (e.g., `sendMessage` with
+    `business_connection_id`)
+
 ### Handwritten Types and Utilities
 
 - **`TelegramResponse<T>`** (`type/TelegramResponse.kt`)
@@ -234,6 +241,37 @@ api.sendMessage(
 ```
 
 These extensions construct the Request object internally and call the underlying `TelegramBotApi` method.
+
+### Union Type Usage
+
+Some Telegram API methods can return different response types. The `Union<A, B>` sealed class handles these cases:
+
+```kotlin
+// sendMessage can return either Message or Boolean (when using business_connection_id)
+val response = api.sendMessage(chatId = "123456789", text = "Hello")
+
+response.onSuccess { union ->
+  // Check which type was returned
+  val message = union.firstOrNull()  // Returns Message if present
+  val boolean = union.secondOrNull() // Returns Boolean if present
+
+  when {
+    message != null -> println("Sent message: ${message.messageId}")
+    boolean != null -> println("Send result: $boolean")
+  }
+}
+```
+
+**Important:** The `unionSerializersModule` must be included in your Json configuration:
+
+```kotlin
+val json = Json(DefaultJson) {
+  ignoreUnknownKeys = true
+  encodeDefaults = true
+  explicitNulls = false
+  serializersModule += unionSerializersModule  // Required for Union types
+}
+```
 
 ## Ktor Client Setup
 
