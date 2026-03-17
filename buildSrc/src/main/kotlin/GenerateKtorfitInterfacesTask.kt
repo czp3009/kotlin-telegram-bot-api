@@ -834,6 +834,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         val fileSpec = FileSpec.builder(UNION_PACKAGE, className)
             .addFileComment("Auto-generated from Swagger specification, do not modify this file manually")
             .addImport("kotlinx.serialization", "Serializable")
+            .indent("    ") // Use 4-space indentation
 
         // Build the sealed class with type parameters
         val classBuilder = TypeSpec.classBuilder(className)
@@ -966,6 +967,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                     .addMember("%T::class", ClassName("kotlinx.serialization", "InternalSerializationApi"))
                     .build()
             )
+            .indent("    ") // Use 4-space indentation
 
         // Build the serializer class
         val classBuilder = TypeSpec.classBuilder(className)
@@ -1008,15 +1010,11 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                     "If none of the types match, throws a [SerializationException]."
         )
 
-        // Add descriptor property
+        // Add descriptor property - use import to get Union class reference
         classBuilder.addProperty(
             PropertySpec.builder("descriptor", ClassName("kotlinx.serialization.descriptors", "SerialDescriptor"))
                 .addModifiers(KModifier.OVERRIDE)
-                .initializer(
-                    CodeBlock.builder()
-                        .add("buildSerialDescriptor(%S, SerialKind.CONTEXTUAL)", unionClassName)
-                        .build()
-                )
+                .initializer("buildSerialDescriptor($unionClassName::class.qualifiedName!!, SerialKind.CONTEXTUAL)")
                 .build()
         )
 
@@ -1024,61 +1022,67 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         val subclassNames =
             listOf("First", "Second", "Third", "Fourth", "Fifth", "Sixth", "Seventh", "Eighth", "Ninth", "Tenth")
 
-        // Build nested try-catch blocks
-        val deserializeCode = buildString {
-            appendLine("require(decoder is JsonDecoder) { \"Only JSON is supported\" }")
-            appendLine("val jsonElement = decoder.decodeJsonElement()")
-            appendLine()
+        // Build lazy evaluation - try each deserializer in order until one succeeds
+        val deserializeCodeBuilder = CodeBlock.builder()
+            .addStatement("require(decoder is JsonDecoder) { \"Only JSON is supported\" }")
+            .addStatement("val jsonElement = decoder.decodeJsonElement()")
+            .addStatement("")
 
-            // Generate list of deserialization attempts
-            appendLine("val deserializers = listOf(")
-            for (idx in 0 until size) {
-                val typeParam = typeParamNames[idx]
-                val serializerParam = "serializer$typeParam"
-                val subclassName = subclassNames[idx]
-                val comma = if (idx < size - 1) "," else ""
-                appendLine("    { $unionClassName.$subclassName(decoder.json.decodeFromJsonElement($serializerParam, jsonElement)) }$comma")
-            }
-            appendLine(")")
-            appendLine()
+        // Try each deserializer in order, return on first success
+        for (idx in 0 until size) {
+            val typeParam = typeParamNames[idx]
+            val serializerParam = "serializer$typeParam"
+            val subclassName = subclassNames[idx]
 
-            // Find first successful deserialization
-            appendLine("val results = deserializers.map { runCatching(it) }")
-            appendLine("return results.firstNotNullOfOrNull { it.getOrNull() }")
-            appendLine("    ?: throw SerializationException(")
-            appendLine("        \"Could not deserialize $unionClassName: none of the types matched\",")
-            appendLine("        results.last().exceptionOrNull()")
-            appendLine("    )")
+            deserializeCodeBuilder
+                .add("runCatching {\n")
+                .indent()
+                .addStatement(
+                    "$unionClassName.$subclassName(decoder.json.decodeFromJsonElement($serializerParam, jsonElement))"
+                )
+                .unindent()
+                .addStatement("}.getOrNull()?.let { return it }")
         }
+
+        // If we get here, none of the deserializers succeeded - build type names list from serializers
+        val typeNamesList = typeParamNames.joinToString(", ") { "serializer$it.descriptor.serialName" }
+        deserializeCodeBuilder.addStatement(
+            "val typeNames = listOf($typeNamesList).joinToString(\", \")"
+        )
+        deserializeCodeBuilder.addStatement(
+            "throw SerializationException(\"Could not deserialize $unionClassName<\$typeNames>\")"
+        )
 
         classBuilder.addFunction(
             FunSpec.builder("deserialize")
                 .addModifiers(KModifier.OVERRIDE)
                 .addParameter("decoder", ClassName("kotlinx.serialization.encoding", "Decoder"))
                 .returns(unionType)
-                .addCode(deserializeCode)
+                .addCode(deserializeCodeBuilder.build())
                 .build()
         )
 
         // Add serialize method
-        val serializeCode = buildString {
-            appendLine("require(encoder is JsonEncoder) { \"Only JSON is supported\" }")
-            appendLine("when (value) {")
-            for (idx in 0 until size) {
-                val typeParam = typeParamNames[idx]
-                val serializerParam = "serializer$typeParam"
-                val subclassName = subclassNames[idx]
-                appendLine("    is $unionClassName.$subclassName -> encoder.encodeSerializableValue($serializerParam, value.value)")
-            }
-            appendLine("}")
+        val serializeCodeBuilder = CodeBlock.builder()
+            .addStatement("require(encoder is JsonEncoder) { \"Only JSON is supported\" }")
+            .beginControlFlow("when (value)")
+
+        for (idx in 0 until size) {
+            val serializerParam = "serializer${typeParamNames[idx]}"
+            val subclassName = subclassNames[idx]
+            serializeCodeBuilder.addStatement(
+                "is $unionClassName.$subclassName -> encoder.encodeSerializableValue($serializerParam, value.value)"
+            )
         }
+
+        serializeCodeBuilder.endControlFlow()
 
         classBuilder.addFunction(
             FunSpec.builder("serialize")
                 .addModifiers(KModifier.OVERRIDE)
                 .addParameter("encoder", ClassName("kotlinx.serialization.encoding", "Encoder"))
                 .addParameter("value", unionType)
-                .addCode(serializeCode)
+                .addCode(serializeCodeBuilder.build())
                 .build()
         )
 
@@ -1117,6 +1121,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                 """.trimIndent()
             )
             .addImport("kotlinx.serialization.modules", "SerializersModule")
+            .indent("    ") // Use 4-space indentation
 
         // Collect all unique union type combinations from responseUnionOperations
         // Group by the member types (not just size) to avoid duplicate registrations
@@ -1130,17 +1135,16 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             }
         }
 
-        // Build the SerializersModule code lines
-        val codeLines = mutableListOf<String>()
+        // Build the getter code using CodeBlock
+        val getterCodeBuilder = CodeBlock.builder()
+            .add("return SerializersModule·{\n")
+            .indent()
 
         for ((_, info) in uniqueUnions) {
             val members = info.members
             val size = members.size
             val unionClassName = if (size == 2) "Union" else "Union$size"
             val serializerClassName = if (size == 2) "UnionSerializer" else "Union${size}Serializer"
-
-            // Note: We don't need to add imports for model types (like Message) because they're not used in the generated code
-            // The Union and UnionSerializer classes are in the same package, so no import needed either
 
             // Build the serializer arguments - access serializers from args array
             val serializerArgs = members.indices.joinToString(", ") { idx ->
@@ -1149,18 +1153,12 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
             // Add contextual registration using provider pattern
             // contextual(Union::class) { args -> UnionSerializer(args[0], args[1]) }
-            codeLines.add("    contextual($unionClassName::class) { args -> $serializerClassName($serializerArgs) }")
+            getterCodeBuilder.addStatement(
+                "contextual($unionClassName::class) { args -> $serializerClassName($serializerArgs) }"
+            )
         }
 
-        // Build the complete getter code
-        val getterCode = buildString {
-            append("return SerializersModule {\n")
-            codeLines.forEach { line ->
-                append(line)
-                append("\n")
-            }
-            append("}")
-        }
+        getterCodeBuilder.unindent().add("}\n")
 
         val extensionProperty = PropertySpec.builder(
             "unionSerializersModule",
@@ -1168,7 +1166,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         )
             .getter(
                 FunSpec.getterBuilder()
-                    .addStatement(getterCode)
+                    .addCode(getterCodeBuilder.build())
                     .build()
             )
             .build()

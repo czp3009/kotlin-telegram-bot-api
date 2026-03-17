@@ -247,31 +247,31 @@ These extensions construct the Request object internally and call the underlying
 Some Telegram API methods can return different response types. The `Union<A, B>` sealed class handles these cases:
 
 ```kotlin
-// sendMessage can return either Message or Boolean (when using business_connection_id)
-val response = api.sendMessage(chatId = "123456789", text = "Hello")
+// editMessageText returns Message when editing a regular message, or Boolean when editing an inline message
+val response: TelegramResponse<Union<Message, Boolean>> = api.editMessageText(
+  chatId = "123456789",
+  messageId = 42,
+  text = "Updated text"
+)
 
 response.onSuccess { union ->
   // Check which type was returned
-  val message = union.firstOrNull()  // Returns Message if present
-  val boolean = union.secondOrNull() // Returns Boolean if present
+  val message = union.firstOrNull()  // Returns Message if present (regular message was edited)
+  val boolean = union.secondOrNull() // Returns Boolean if present (inline message was edited)
 
   when {
-    message != null -> println("Sent message: ${message.messageId}")
-    boolean != null -> println("Send result: $boolean")
+    message != null -> println("Edited message: ${message.messageId}")
+    boolean != null -> println("Edit result: $boolean")
   }
 }
 ```
 
-**Important:** The `unionSerializersModule` must be included in your Json configuration:
+**Note:** The `Union` class is annotated with `@Serializable(with = UnionSerializer::class)`, which means the serializer
+is automatically resolved at compile time when type parameters are known (e.g., `Union<Message, Boolean>`). In most
+cases, you do **not** need to configure `unionSerializersModule` in your `Json` instance.
 
-```kotlin
-val json = Json(DefaultJson) {
-  ignoreUnknownKeys = true
-  encodeDefaults = true
-  explicitNulls = false
-  serializersModule += unionSerializersModule  // Required for Union types
-}
-```
+The `unionSerializersModule` is only needed in rare cases where contextual serialization is required (e.g., when using
+`@Contextual` annotations or runtime reflection-based serialization lookup).
 
 ## Ktor Client Setup
 

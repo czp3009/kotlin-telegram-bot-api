@@ -20,33 +20,31 @@ import kotlinx.serialization.json.JsonEncoder
  * If none of the types match, throws a [SerializationException].
  */
 public class UnionSerializer<A, B>(
-  private val serializerA: KSerializer<A>,
-  private val serializerB: KSerializer<B>,
+    private val serializerA: KSerializer<A>,
+    private val serializerB: KSerializer<B>,
 ) : KSerializer<Union<A, B>> {
-    override val descriptor: SerialDescriptor = buildSerialDescriptor("Union", SerialKind.CONTEXTUAL)
+    override val descriptor: SerialDescriptor =
+        buildSerialDescriptor(Union::class.qualifiedName!!, SerialKind.CONTEXTUAL)
 
     override fun deserialize(decoder: Decoder): Union<A, B> {
-    require(decoder is JsonDecoder) { "Only JSON is supported" }
-    val jsonElement = decoder.decodeJsonElement()
+        require(decoder is JsonDecoder) { "Only JSON is supported" }
+        val jsonElement = decoder.decodeJsonElement()
 
-        val deserializers = listOf(
-            { Union.First(decoder.json.decodeFromJsonElement(serializerA, jsonElement)) },
-            { Union.Second(decoder.json.decodeFromJsonElement(serializerB, jsonElement)) }
-        )
-
-        val results = deserializers.map { runCatching(it) }
-        return results.firstNotNullOfOrNull { it.getOrNull() }
-            ?: throw SerializationException(
-                "Could not deserialize Union: none of the types matched",
-                results.last().exceptionOrNull()
-            )
-  }
+        runCatching {
+            Union.First(decoder.json.decodeFromJsonElement(serializerA, jsonElement))
+        }.getOrNull()?.let { return it }
+        runCatching {
+            Union.Second(decoder.json.decodeFromJsonElement(serializerB, jsonElement))
+        }.getOrNull()?.let { return it }
+        val typeNames = listOf(serializerA.descriptor.serialName, serializerB.descriptor.serialName).joinToString(", ")
+        throw SerializationException("Could not deserialize Union<$typeNames>")
+    }
 
     override fun serialize(encoder: Encoder, `value`: Union<A, B>) {
-    require(encoder is JsonEncoder) { "Only JSON is supported" }
-    when (value) {
-        is Union.First -> encoder.encodeSerializableValue(serializerA, value.value)
-        is Union.Second -> encoder.encodeSerializableValue(serializerB, value.value)
+        require(encoder is JsonEncoder) { "Only JSON is supported" }
+        when (value) {
+            is Union.First -> encoder.encodeSerializableValue(serializerA, value.value)
+            is Union.Second -> encoder.encodeSerializableValue(serializerB, value.value)
+        }
     }
-  }
 }
