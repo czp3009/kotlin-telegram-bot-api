@@ -1010,11 +1010,12 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                     "If none of the types match, throws a [SerializationException]."
         )
 
-        // Add descriptor property - use import to get Union class reference
+        // Add descriptor property - use fully qualified name string directly
+        val unionQualifiedClassName = "$UNION_PACKAGE.$unionClassName"
         classBuilder.addProperty(
             PropertySpec.builder("descriptor", ClassName("kotlinx.serialization.descriptors", "SerialDescriptor"))
                 .addModifiers(KModifier.OVERRIDE)
-                .initializer("buildSerialDescriptor($unionClassName::class.qualifiedName!!, SerialKind.CONTEXTUAL)")
+                .initializer("buildSerialDescriptor(%S, SerialKind.CONTEXTUAL)", unionQualifiedClassName)
                 .build()
         )
 

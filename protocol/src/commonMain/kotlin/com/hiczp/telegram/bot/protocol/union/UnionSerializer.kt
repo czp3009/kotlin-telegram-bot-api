@@ -25,7 +25,7 @@ public class UnionSerializer<A, B>(
     private val serializerB: KSerializer<B>,
 ) : KSerializer<Union<A, B>> {
     override val descriptor: SerialDescriptor =
-            buildSerialDescriptor(Union::class.qualifiedName!!, SerialKind.CONTEXTUAL)
+            buildSerialDescriptor("com.hiczp.telegram.bot.protocol.union.Union", SerialKind.CONTEXTUAL)
 
     override fun deserialize(decoder: Decoder): Union<A, B> {
         require(decoder is JsonDecoder) { "Only JSON is supported" }
