@@ -58,6 +58,14 @@ The `type/` directory contains handwritten code and is preserved during regenera
 
 ## Architecture
 
+### Request Flow
+
+1. **Update Fetching**: `UpdateSource` (e.g., long polling) fetches updates from Telegram via `TelegramBotClient`
+2. **Event Conversion**: Raw `Update` objects are converted to typed `TelegramBotEvent` subclasses
+3. **Interceptor Pipeline**: Events pass through the interceptor chain (onion model)
+4. **Event Dispatching**: `EventDispatcher` routes events to matching handlers
+5. **Response**: Handlers use `TelegramBotClient` to send responses back to Telegram
+
 ### Module Structure
 
 ```
@@ -618,14 +626,15 @@ commandEndpoint("survey") {
 }
 ```
 
-**Messaging Functions:**
+**Messaging Methods:**
 
-- `send(text)` - Sends a message to the conversation's chat without replying to any specific message
+- `send(text)` - Sends a message to the conversation's chat without replying to any specific message. Returns
+  `TelegramResponse<Message>` and updates `lastSentMessageId` on success.
 - `reply(text, replyToMessageId?)` - Sends a message as a reply. If `replyToMessageId` is null, uses
   `lastAwaitedMessageId` to automatically reply to the most recent user input. If no message ID is available,
-  behaves like `send()`.
+  behaves like `send()`. Returns `TelegramResponse<Message>` and updates `lastSentMessageId` on success.
 
-**Await Functions:**
+**Await Methods:**
 
 - `awaitEvent<T>()` - Awaits any event of type T
 - `awaitMessage()` - Awaits the next message event and updates `lastAwaitedMessageId`
@@ -633,11 +642,19 @@ commandEndpoint("survey") {
 - `awaitCommand()` - Awaits the next command and updates `lastAwaitedMessageId`
 - `awaitCallbackQuery()` - Awaits the next callback query event and updates `lastAwaitedMessageId` (if the callback
   has an associated message)
+- `awaitReply(messageId?)` - Awaits a reply to a specific message. If `messageId` is null, uses `lastSentMessageId`.
+  This is useful for waiting for replies to bot messages sent via `send()` or `reply()`.
 
 **ConversationScope Properties:**
 
 - `lastAwaitedMessageId` - Automatically updated after `awaitMessage()`, `awaitText()`, `awaitCommand()`, and
   `awaitCallbackQuery()` to track the most recent user input. Used by `reply()` for automatic reply targeting.
+  **Warning:** This property is mutable, but modifying it directly is generally not recommended. Only modify it if
+  you have a specific use case that requires overriding the default tracking behavior.
+- `lastSentMessageId` - Automatically updated after `send()` and `reply()` to track the most recent bot message.
+  Used by `awaitReply()` for automatic reply waiting. **Warning:** This property is mutable, but modifying it
+  directly is generally not recommended. Only modify it if you have a specific use case that requires overriding
+  the default tracking behavior.
 - `id` - The `ConversationId` identifying this conversation
 - `channel` - The channel receiving events for this conversation
 

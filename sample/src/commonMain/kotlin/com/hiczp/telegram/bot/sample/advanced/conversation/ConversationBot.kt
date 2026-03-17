@@ -15,8 +15,9 @@
  *
  * - Installing [conversationInterceptor] for conversation support
  * - Starting conversations with [startConversation]
- * - Using [reply] for convenient messaging within conversations
+ * - Using [ConversationScope.send] and [ConversationScope.reply] for convenient messaging within conversations
  * - Awaiting user input with `awaitText()`, `awaitMessage()`, and `awaitCommand()`
+ * - Using `awaitReply()` to wait for replies to bot messages
  * - Handling conversation timeout with `onTimeout`
  * - Handling user cancellation with `onCancel`
  * - Custom [ConversationId] scoping (per-user, per-chat)
@@ -27,11 +28,14 @@
  * - `/survey` - Start a multi-question survey
  * - `/quiz` - Start a simple quiz game
  * - `/register` - Start a registration wizard
+ * - `/replygame` - Play a reply-based game (demonstrates `awaitReply()`)
  *
  * @see conversationInterceptor
  * @see startConversation
  * @see ConversationScope
- * @see reply
+ * @see ConversationScope.send
+ * @see ConversationScope.reply
+ * @see ConversationScope.awaitReply
  */
 package com.hiczp.telegram.bot.sample.advanced.conversation
 
@@ -41,10 +45,14 @@ import com.hiczp.telegram.bot.application.dispatcher.handler.HandlerTelegramEven
 import com.hiczp.telegram.bot.application.dispatcher.handler.command.commandEndpoint
 import com.hiczp.telegram.bot.application.dispatcher.handler.handling
 import com.hiczp.telegram.bot.application.dispatcher.handler.matcher.onMessageEventPrivateChat
-import com.hiczp.telegram.bot.application.interceptor.builtin.conversation.*
+import com.hiczp.telegram.bot.application.interceptor.builtin.conversation.ConversationId
+import com.hiczp.telegram.bot.application.interceptor.builtin.conversation.ConversationScope
+import com.hiczp.telegram.bot.application.interceptor.builtin.conversation.conversationInterceptor
+import com.hiczp.telegram.bot.application.interceptor.builtin.conversation.startConversation
 import com.hiczp.telegram.bot.application.interceptor.builtin.logging.loggingInterceptor
 import com.hiczp.telegram.bot.protocol.constant.ParseMode
 import com.hiczp.telegram.bot.protocol.extension.inlineKeyboard
+import com.hiczp.telegram.bot.protocol.model.ForceReply
 import com.hiczp.telegram.bot.protocol.model.answerCallbackQuery
 import com.hiczp.telegram.bot.protocol.model.sendMessage
 import kotlinx.coroutines.launch
@@ -72,6 +80,7 @@ private suspend fun runConversationBot(botToken: String) {
                     /survey - Start a survey (name, age, favorite color)
                     /quiz - Start a quiz game (3 questions)
                     /register - Start a registration wizard
+                    /replygame - Play a reply-based game
 
                     **During conversations:**
                     - Type `/cancel` to cancel any conversation
@@ -287,6 +296,50 @@ private suspend fun runConversationBot(botToken: String) {
                         )
                     } else {
                         reply("Registration cancelled. No worries, you can register anytime with /register")
+                    }
+                }
+            }
+
+            // Reply game - demonstrates awaitReply() for waiting for replies to bot messages
+            commandEndpoint("replygame") {
+                startConversation(
+                    timeout = 2.minutes,
+                    onTimeout = {
+                        replyMessage("Game timed out! Try again with /replygame")
+                    },
+                    onCancel = {
+                        replyMessage("Game cancelled. Try again anytime with /replygame")
+                    }
+                ) {
+                    reply("Welcome to the Reply Game!")
+                    send("I will send you messages, and you need to REPLY to them (use the reply feature in Telegram).")
+                    send(
+                        "Let's start! Reply to this message with anything:",
+                        replyMarkup = ForceReply(forceReply = true)
+                    )
+
+                    // awaitReply() waits for a message that is a reply to the last sent message
+                    val reply1 = awaitReply()
+                    reply("Great! You replied with: ${reply1.text}")
+
+                    send("Now reply to THIS message with a number:", replyMarkup = ForceReply(forceReply = true))
+                    val reply2 = awaitReply()
+                    val number = reply2.text?.toIntOrNull()
+                    if (number != null) {
+                        reply("You sent the number: $number. Double it is: ${number * 2}")
+                    } else {
+                        reply("That wasn't a number, but thanks for replying!")
+                    }
+
+                    send(
+                        "Final challenge: Reply to this message with 'done'",
+                        replyMarkup = ForceReply(forceReply = true)
+                    )
+                    val reply3 = awaitReply()
+                    if (reply3.text?.trim()?.equals("done", ignoreCase = true) == true) {
+                        reply("🎉 Perfect! You've completed the Reply Game!")
+                    } else {
+                        reply("You said '${reply3.text}' instead of 'done', but thanks for playing!")
                     }
                 }
             }

@@ -119,7 +119,8 @@ A bot demonstrating multi-turn conversation support for interactive flows like s
 - Installing `conversationInterceptor` for conversation support
 - Starting conversations with `startConversation`
 - Using `send` and `reply` for messaging within conversations
-- Awaiting user input with `awaitText()` and `awaitCallbackQuery()`
+- Awaiting user input with `awaitText()`, `awaitMessage()`, `awaitCommand()`, and `awaitCallbackQuery()`
+- Using `awaitReply()` to wait for replies to specific bot messages
 - Handling conversation timeout with `onTimeout`
 - Handling user cancellation with `onCancel`
 - Using inline keyboard buttons in conversations
@@ -130,6 +131,7 @@ A bot demonstrating multi-turn conversation support for interactive flows like s
 - `/survey` - Multi-question survey (name, age, favorite color)
 - `/quiz` - Interactive quiz game with inline buttons (3 questions with scoring)
 - `/register` - Registration wizard with validation
+- `/replygame` - Reply-based game demonstrating `awaitReply()`
 
 **During conversations:**
 

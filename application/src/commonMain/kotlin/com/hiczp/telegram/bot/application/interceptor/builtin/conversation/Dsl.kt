@@ -10,8 +10,10 @@ import com.hiczp.telegram.bot.protocol.event.CallbackQueryEvent
 import com.hiczp.telegram.bot.protocol.event.MessageEvent
 import com.hiczp.telegram.bot.protocol.event.TelegramBotEvent
 import com.hiczp.telegram.bot.protocol.model.Message
+import com.hiczp.telegram.bot.protocol.model.ReplyMarkup
 import com.hiczp.telegram.bot.protocol.model.ReplyParameters
 import com.hiczp.telegram.bot.protocol.model.sendMessage
+import com.hiczp.telegram.bot.protocol.type.TelegramResponse
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
@@ -61,9 +63,26 @@ class ConversationScope(
      * (via [startConversation]), and is updated each time [awaitMessage] or [awaitText] successfully returns.
      *
      * This allows [reply] to automatically respond to the most recent user message in the conversation.
+     *
+     * **Warning:** Modifying this property directly is generally not recommended. It is automatically
+     * managed by the conversation framework. Only modify it if you have a specific use case that
+     * requires overriding the default tracking behavior (e.g., implementing custom reply chains).
      */
     var lastAwaitedMessageId: Long? = initialLastAwaitedMessageId
-        private set
+
+    /**
+     * The message ID of the last message sent by [send] or [reply].
+     *
+     * This value is updated each time [send] or [reply] successfully sends a message.
+     *
+     * This allows [awaitReply] to wait for replies to the most recent bot message.
+     *
+     * **Warning:** Modifying this property directly is generally not recommended. It is automatically
+     * managed by the conversation framework. Only modify it if you have a specific use case that
+     * requires overriding the default tracking behavior (e.g., when sending messages outside of
+     * [send] or [reply] methods but still wanting to use [awaitReply]).
+     */
+    var lastSentMessageId: Long? = null
 
     /**
      * Awaits the next event from the user.
@@ -134,6 +153,53 @@ class ConversationScope(
     }
 
     /**
+     * Awaits a reply to a specific message.
+     *
+     * This method waits for a message that is a reply to either:
+     * 1. The specified [messageId] parameter, if provided.
+     * 2. The last message sent by [send] or [reply] (via [lastSentMessageId]), if [messageId] is null.
+     *
+     * If neither [messageId] nor [lastSentMessageId] is available, this method throws an [IllegalStateException].
+     *
+     * Messages that are not replies, or replies to other messages, are ignored.
+     *
+     * After this method returns, [lastAwaitedMessageId] is updated to the received message.
+     *
+     * Example usage:
+     * ```kotlin
+     * startConversation {
+     *     send("Please reply to this message with your answer")
+     *     // Wait for a reply to the message we just sent
+     *     val replyMessage = awaitReply()
+     *     val answer = replyMessage.text ?: "No text"
+     *     reply("You answered: $answer")
+     *
+     *     // Or specify a specific message ID to wait for a reply to
+     *     val replyToSpecific = awaitReply(messageId = 12345)
+     * }
+     * ```
+     *
+     * @param messageId The message ID to wait for a reply to. If null, uses [lastSentMessageId].
+     * @return The [Message] that is a reply to the target message.
+     * @throws IllegalStateException if neither [messageId] nor [lastSentMessageId] is available.
+     * @throws ConversationCancelledException if the received event matches the cancel predicate.
+     * @see lastSentMessageId
+     * @see send
+     * @see reply
+     */
+    suspend fun awaitReply(messageId: Long? = null): Message {
+        val targetMessageId = messageId ?: lastSentMessageId
+        ?: error("No message ID specified and lastSentMessageId is null. Call send() or reply() first, or provide a messageId parameter.")
+
+        while (true) {
+            val message = awaitMessage()
+            if (message.replyToMessage?.messageId == targetMessageId) {
+                return message
+            }
+        }
+    }
+
+    /**
      * Awaits the next command message from the user and returns the parsed command.
      *
      * A command is a text message starting with "/".
@@ -172,111 +238,117 @@ class ConversationScope(
     suspend fun awaitCallbackQuery(): CallbackQueryEvent = awaitEvent<CallbackQueryEvent>().also {
         this.lastAwaitedMessageId = it.callbackQuery.message?.messageId
     }
-}
 
-/**
- * Sends a text message to the conversation's chat within a conversation context.
- *
- * This is a convenience function that can be used inside a [ConversationScope] to send messages
- * without manually specifying the chat ID and thread ID. It automatically uses the conversation's
- * [ConversationId.chatId] and [ConversationId.threadId].
- *
- * This function requires two context receivers:
- * - [TelegramBotEventContext]: Provides access to the Telegram client for sending messages.
- * - [ConversationScope]: Provides the conversation's ID (chatId, threadId) for addressing.
- *
- * Example usage inside a conversation:
- * ```kotlin
- * startConversation {
- *     // Send a message to the conversation's chat
- *     send("What is your name?")
- *
- *     val name = awaitText()
- *     send("Hello, $name! How old are you?")
- *
- *     val age = awaitText()
- *     send("Thanks! You are $age years old.")
- * }
- * ```
- *
- * @param text The text of the message to send.
- * @see ConversationScope
- * @see startConversation
- */
-context(telegramBotEventContext: TelegramBotEventContext<*>, conversationScope: ConversationScope)
-suspend fun send(text: String) =
-    telegramBotEventContext.client.sendMessage(
-        chatId = conversationScope.id.chatId.toString(),
-        messageThreadId = conversationScope.id.threadId,
-        text = text,
-    )
-
-/**
- * Sends a text message as a reply within a conversation context.
- *
- * This is a convenience function that can be used inside a [ConversationScope] to send reply messages.
- * It automatically uses the conversation's [ConversationId.chatId] and [ConversationId.threadId].
- *
- * The reply behavior is determined by the `replyToMessageId` parameter and follows this priority:
- * 1. If `replyToMessageId` is provided (non-null), replies to that specific message.
- * 2. If [ConversationScope.lastAwaitedMessageId] is available, replies to that message.
- *    This allows `reply()` to automatically respond to the most recent user input.
- * 3. If no message ID can be determined, sends a regular message (same as [send]).
- *
- * This function requires two context receivers:
- * - [TelegramBotEventContext]: Provides access to the Telegram client for sending messages.
- * - [ConversationScope]: Provides the conversation's ID (chatId, threadId) for addressing.
- *
- * Example usage inside a conversation:
- * ```kotlin
- * startConversation {
- *     // Reply to the message that triggered this conversation
- *     reply("What is your name?")
- *
- *     val name = awaitText()
- *     // reply() will automatically reply to the message containing the name
- *     reply("Hello, $name! How old are you?")
- *
- *     val ageString = awaitText()
- *     val age = ageString.toIntOrNull()
- *     if (age == null) {
- *         // reply() will automatically reply to the invalid age message
- *         reply("That doesn't seem like a valid age. Please try again.")
- *     }
- *
- *     // Reply to a specific message by ID
- *     reply("This is a reply to message 123", replyToMessageId = 123)
- * }
- * ```
- *
- * @param text The text of the message to send.
- * @param replyToMessageId Optional message ID to reply to. If null, attempts to use
- *        [ConversationScope.lastAwaitedMessageId]. If that is also null, sends a regular message.
- * @see ConversationScope
- * @see ConversationScope.lastAwaitedMessageId
- * @see startConversation
- * @see send
- */
-context(telegramBotEventContext: TelegramBotEventContext<*>, conversationScope: ConversationScope)
-suspend fun reply(text: String, replyToMessageId: Long? = null) {
-    val effectiveReplyToMessageId = replyToMessageId
-        ?: conversationScope.lastAwaitedMessageId
-
-    if (effectiveReplyToMessageId == null) {
-        // Fallback to send behavior when no message ID is available
-        send(text)
-        return
+    /**
+     * Sends a text message to the conversation's chat within a conversation context.
+     *
+     * This is a convenience method that can be used inside a [ConversationScope] to send messages
+     * without manually specifying the chat ID and thread ID. It automatically uses the conversation's
+     * [ConversationId.chatId] and [ConversationId.threadId].
+     *
+     * This method requires a [TelegramBotEventContext] context receiver to provide access
+     * to the Telegram client for sending messages.
+     *
+     * Example usage inside a conversation:
+     * ```kotlin
+     * startConversation {
+     *     // Send a message to the conversation's chat
+     *     send("What is your name?")
+     *
+     *     val name = awaitText()
+     *     send("Hello, $name! How old are you?")
+     *
+     *     val age = awaitText()
+     *     send("Thanks! You are $age years old.")
+     *
+     *     // Send with ForceReply to prompt user to reply
+     *     send("Please reply to this message:", replyMarkup = ForceReply())
+     * }
+     * ```
+     *
+     * @param text The text of the message to send.
+     * @param replyMarkup Additional interface options (e.g., [ForceReply], inline keyboard).
+     * @see reply
+     * @see startConversation
+     */
+    context(telegramBotEventContext: TelegramBotEventContext<*>)
+    suspend fun send(text: String, replyMarkup: ReplyMarkup? = null): TelegramResponse<Message> {
+        val response = telegramBotEventContext.client.sendMessage(
+            chatId = id.chatId.toString(),
+            messageThreadId = id.threadId,
+            text = text,
+            replyMarkup = replyMarkup,
+        )
+        lastSentMessageId = response.result?.messageId
+        return response
     }
 
-    telegramBotEventContext.client.sendMessage(
-        chatId = conversationScope.id.chatId.toString(),
-        messageThreadId = conversationScope.id.threadId,
-        text = text,
-        replyParameters = ReplyParameters(
-            messageId = effectiveReplyToMessageId,
-            chatId = conversationScope.id.chatId.toString()
+    /**
+     * Sends a text message as a reply within a conversation context.
+     *
+     * This is a convenience method that can be used inside a [ConversationScope] to send reply messages.
+     * It automatically uses the conversation's [ConversationId.chatId] and [ConversationId.threadId].
+     *
+     * The reply behavior is determined by the `replyToMessageId` parameter and follows this priority:
+     * 1. If `replyToMessageId` is provided (non-null), replies to that specific message.
+     * 2. If [lastAwaitedMessageId] is available, replies to that message.
+     *    This allows `reply()` to automatically respond to the most recent user input.
+     * 3. If no message ID can be determined, sends a regular message (same as [send]).
+     *
+     * This method requires a [TelegramBotEventContext] context receiver to provide access
+     * to the Telegram client for sending messages.
+     *
+     * Example usage inside a conversation:
+     * ```kotlin
+     * startConversation {
+     *     // Reply to the message that triggered this conversation
+     *     reply("What is your name?")
+     *
+     *     val name = awaitText()
+     *     // reply() will automatically reply to the message containing the name
+     *     reply("Hello, $name! How old are you?")
+     *
+     *     val ageString = awaitText()
+     *     val age = ageString.toIntOrNull()
+     *     if (age == null) {
+     *         // reply() will automatically reply to the invalid age message
+     *         reply("That doesn't seem like a valid age. Please try again.")
+     *     }
+     *
+     *     // Reply to a specific message by ID
+     *     reply("This is a reply to message 123", replyToMessageId = 123)
+     * }
+     * ```
+     *
+     * @param text The text of the message to send.
+     * @param replyToMessageId Optional message ID to reply to. If null, attempts to use
+     *        [lastAwaitedMessageId]. If that is also null, sends a regular message.
+     * @see lastAwaitedMessageId
+     * @see startConversation
+     * @see send
+     */
+    context(telegramBotEventContext: TelegramBotEventContext<*>)
+    suspend fun reply(text: String, replyToMessageId: Long? = null): TelegramResponse<Message> {
+        val effectiveReplyToMessageId = replyToMessageId
+            ?: lastAwaitedMessageId
+
+        if (effectiveReplyToMessageId == null) {
+            // Fallback to send behavior when no message ID is available
+            return send(text)
+        }
+
+        val response = telegramBotEventContext.client.sendMessage(
+            chatId = id.chatId.toString(),
+            messageThreadId = id.threadId,
+            text = text,
+            replyParameters = ReplyParameters(
+                messageId = effectiveReplyToMessageId,
+                chatId = id.chatId.toString()
+            )
         )
-    )
+        lastSentMessageId = response.result?.messageId
+        return response
+    }
 }
 
 /**
@@ -286,8 +358,9 @@ suspend fun reply(text: String, replyToMessageId: Long? = null) {
  * Subsequent events from the same user will be routed to the conversation's [ConversationScope]
  * instead of the normal event processing pipeline.
  *
- * Inside the conversation block, you can use the [reply] function to conveniently send messages
- * to the conversation's chat without manually specifying chat ID and thread ID.
+ * Inside the conversation block, you can use [ConversationScope.send] and [ConversationScope.reply]
+ * methods to conveniently send messages to the conversation's chat without manually specifying
+ * chat ID and thread ID.
  *
  * Example usage:
  * ```kotlin
@@ -341,7 +414,8 @@ suspend fun reply(text: String, replyToMessageId: Long? = null) {
  * @return The [Job] representing the conversation coroutine. Can be used to cancel the conversation externally.
  * @throws IllegalStateException if [conversationInterceptor] is not installed.
  * @throws IllegalStateException if the current event cannot provide chatId/userId for the default ConversationId.
- * @see reply
+ * @see ConversationScope.send
+ * @see ConversationScope.reply
  * @see ConversationScope
  */
 fun <T : TelegramBotEvent> TelegramBotEventContext<T>.startConversation(

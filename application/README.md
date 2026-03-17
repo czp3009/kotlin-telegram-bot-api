@@ -1094,6 +1094,9 @@ handling {
             timeout = 5.minutes,
             onTimeout = {
                 sendMessage("Survey timed out")
+            },
+          onCancel = {
+            sendMessage("Survey cancelled")
             }
         ) {
           // Use send() for simple messages
@@ -1111,32 +1114,86 @@ handling {
 }
 ```
 
-**Messaging Functions:**
+**Messaging Methods:**
 
-- `send(text)` - Sends a message without replying to any specific message
-- `reply(text, replyToMessageId?)` - Sends a message as a reply. Uses `lastAwaitedMessageId` if `replyToMessageId` is
-  null
+- `send(text, replyMarkup?)` - Sends a message to the conversation's chat without replying to any specific message.
+  Returns `TelegramResponse<Message>` and updates `lastSentMessageId` on success.
+- `reply(text, replyToMessageId?)` - Sends a message as a reply. If `replyToMessageId` is null, uses
+  `lastAwaitedMessageId`
+  to automatically reply to the most recent user input. If no message ID is available, behaves like `send()`.
+  Returns `TelegramResponse<Message>` and updates `lastSentMessageId` on success.
 
-**Await Functions:**
+**Await Methods:**
 
 - `awaitEvent<T>()` - Awaits any event of type T
-- `awaitMessage()` - Awaits the next message event
-- `awaitText()` - Awaits the next text message
-- `awaitCommand()` - Awaits the next command
-- `awaitCallbackQuery()` - Awaits the next callback query event
+- `awaitMessage()` - Awaits the next message event and updates `lastAwaitedMessageId`
+- `awaitText()` - Awaits the next text message and updates `lastAwaitedMessageId`
+- `awaitCommand()` - Awaits the next command and updates `lastAwaitedMessageId`
+- `awaitCallbackQuery()` - Awaits the next callback query event and updates `lastAwaitedMessageId` (if the callback
+  has an associated message)
+- `awaitReply(messageId?)` - Awaits a reply to a specific message. If `messageId` is null, uses `lastSentMessageId`.
+  This is useful for waiting for replies to bot messages sent via `send()` or `reply()`.
 
-**ConversationScope:**
+**ConversationScope Properties:**
 
-- `lastAwaitedMessageId` - Tracks the most recent user input for automatic reply targeting
-- `id` - The `ConversationId` (chatId, userId, threadId)
-- Implements `CoroutineScope` for structured concurrency
+- `lastAwaitedMessageId` - Automatically updated after `awaitMessage()`, `awaitText()`, `awaitCommand()`, and
+  `awaitCallbackQuery()` to track the most recent user input. Used by `reply()` for automatic reply targeting.
+  **Warning:** This property is mutable, but modifying it directly is generally not recommended. Only modify it if
+  you have a specific use case that requires overriding the default tracking behavior.
+- `lastSentMessageId` - Automatically updated after `send()` and `reply()` to track the most recent bot message.
+  Used by `awaitReply()` for automatic reply waiting. **Warning:** This property is mutable, but modifying it
+  directly is generally not recommended. Only modify it if you have a specific use case that requires overriding
+  the default tracking behavior.
+- `id` - The `ConversationId` identifying this conversation
+- `channel` - The channel receiving events for this conversation
 
-**Intercepted Events:**
+**Coroutine Support:**
 
-By default, intercepts `MessageEvent`, `BusinessMessageEvent`, and `CallbackQueryEvent`. Customize with
-`interceptPredicate`.
+The `ConversationScope` implements `CoroutineScope`, allowing you to launch child coroutines that are tied to the
+conversation's lifecycle. When the conversation ends (completes, times out, or is cancelled), all child coroutines
+are automatically cancelled.
 
+**startConversation Parameters:**
+
+| Parameter            | Description                                                                                                               |
+|----------------------|---------------------------------------------------------------------------------------------------------------------------|
+| `id`                 | The `ConversationId` for this conversation. Defaults to per-user-in-thread-chat conversation.                             |
+| `timeout`            | Optional duration after which the conversation times out. Defaults to no timeout.                                         |
+| `capacity`           | Channel capacity for buffering events. Defaults to `Channel.UNLIMITED`. See below for options.                            |
+| `interceptPredicate` | Function determining which events to intercept. Defaults to `MessageEvent`, `BusinessMessageEvent`, `CallbackQueryEvent`. |
+| `cancelPredicate`    | Function determining if an event should cancel the conversation. Defaults to `/cancel` command.                           |
+| `onTimeout`          | Callback invoked when the conversation times out.                                                                         |
+| `onCancel`           | Callback invoked when the conversation is canceled.                                                                       |
+| `block`              | The conversation logic to execute within a `ConversationScope`.                                                           |
+
+**Capacity Options:**
+
+- **`Channel.UNLIMITED`** (default): All matching events are buffered. Use with caution in high-traffic scenarios.
+- **Bounded (e.g., `Channel.BUFFERED` or a specific number)**: When the buffer is full, new events are dropped and
+  a warning is logged. This protects against memory issues but may lose events.
+- **`Channel.RENDEZVOUS`** (capacity = 0): Events are only received when actively awaiting. Events sent while not
+  waiting are dropped.
+
+**Intercepted Event Types:**
+
+By default, conversations intercept `MessageEvent`, `BusinessMessageEvent`, and `CallbackQueryEvent`. Customize with
+the `interceptPredicate` parameter:
+
+```kotlin
+startConversation(
+  interceptPredicate = { context ->
+    context.event is MessageEvent || context.event is CallbackQueryEvent
+  }
+) {
+  // ...
+}
 ```
+
+The `ConversationId` is a data class with `chatId`, `userId` (optional), and `threadId` (optional):
+
+- `ConversationId(chatId)` - whole chat shares one conversation
+- `ConversationId(chatId, userId = userId)` - per-user conversation in a group
+- `ConversationId(chatId, threadId = threadId)` - per-thread conversation
 
 ### Middleware
 
