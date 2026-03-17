@@ -656,6 +656,38 @@ response.onError { error ->
 val message = client.sendMessage(chatId, text = "Hello").getOrThrow()
 ```
 
+### Union Types
+
+Some Telegram API methods can return different response types depending on the context. The library handles these with
+the `Union<A, B>` sealed class:
+
+```kotlin
+// editMessageText returns Message when editing a regular message, or Boolean when editing an inline message
+val response = client.editMessageText(
+   chatId = "123456789",
+   messageId = 42,
+   text = "Updated text"
+)
+
+response.onSuccess { union ->
+   // Check which type was returned using firstOrNull() and secondOrNull()
+   val message = union.firstOrNull()  // Message if a regular message was edited
+   val boolean = union.secondOrNull() // Boolean if an inline message was edited
+
+   when {
+      message != null -> println("Edited message: ${message.messageId}")
+      boolean != null -> println("Edit result: $boolean")
+   }
+}
+```
+
+**API methods that return Union types:**
+
+- `editMessageText`, `editMessageCaption`, `editMessageMedia` - Return `Union<Message, Boolean>`
+- `editMessageLiveLocation`, `stopMessageLiveLocation` - Return `Union<Message, Boolean>`
+- `editMessageReplyMarkup` - Returns `Union<Message, Boolean>`
+- `setGameScore` - Returns `Union<Message, Boolean>`
+
 ## Building
 
 ```bash

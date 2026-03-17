@@ -68,6 +68,7 @@ kotlin-telegram-bot-api/
 │   ├── form/             # Auto-generated multipart form wrappers and extension functions
 │   ├── query/            # Auto-generated query extension functions for JSON-serialized GET params
 │   ├── type/             # Handwritten types (TelegramResponse, InputFile, etc.)
+│   ├── union/            # Union type handling (Union sealed class, UnionSerializer)
 │   ├── plugin/           # Handwritten Ktor client plugins (long polling, error handling, file download)
 │   ├── exception/        # Handwritten exception types
 │   ├── extension/        # Handwritten extension functions
@@ -86,6 +87,7 @@ kotlin-telegram-bot-api/
 │   └── command/                       # Command parsing utilities
 ├── application-updatesource-webhook/  # Webhook update source module
 │   └── WebhookTelegramUpdateSource.kt # Webhook-based update source using embedded Ktor server
+├── buildSrc/              # Custom Gradle build scripts (configureAllTargets, etc.)
 └── sample/               # Example bot implementations
     ├── basic/            # EchoBot and CommandBot samples
     └── advanced/         # FileBot and ConversationBot samples
@@ -97,6 +99,7 @@ kotlin-telegram-bot-api/
 - **kotlinx.serialization**: JSON serialization
 - **Ktor**: HTTP client engine
 - **KSP**: Kotlin Symbol Processing for code generation
+- **KotlinPoet**: Code generation in KSP processors
 
 ### Compiler Options
 
@@ -191,6 +194,47 @@ response.onError { error -> println(error) }
 // Or throw on error
 val user = api.getMe().getOrThrow()
 ```
+
+### Union Types
+
+Some Telegram API methods can return different response types depending on the context. The `Union<A, B>` sealed class
+handles these cases:
+
+```kotlin
+// editMessageText returns Message when editing a regular message, or Boolean when editing an inline message
+val response: TelegramResponse<Union<Message, Boolean>> = api.editMessageText(
+  chatId = "123456789",
+  messageId = 42,
+  text = "Updated text"
+)
+
+response.onSuccess { union ->
+  // Check which type was returned
+  val message = union.firstOrNull()  // Returns Message if present (regular message was edited)
+  val boolean = union.secondOrNull() // Returns Boolean if present (inline message was edited)
+
+  when {
+    message != null -> println("Edited message: ${message.messageId}")
+    boolean != null -> println("Edit result: $boolean")
+  }
+}
+```
+
+**API methods that return Union types:**
+
+- `editMessageText` - Returns `Union<Message, Boolean>`
+- `editMessageCaption` - Returns `Union<Message, Boolean>`
+- `editMessageMedia` - Returns `Union<Message, Boolean>`
+- `editMessageLiveLocation` - Returns `Union<Message, Boolean>`
+- `stopMessageLiveLocation` - Returns `Union<Message, Boolean>`
+- `editMessageReplyMarkup` - Returns `Union<Message, Boolean>`
+- `setGameScore` - Returns `Union<Message, Boolean>`
+
+**Note:** The `Union` class uses `@Serializable(with = UnionSerializer::class)`, which means the serializer is
+automatically resolved at compile time when type parameters are known. In most cases, you do **not** need to configure
+`unionSerializersModule` in your `Json` instance. The `unionSerializersModule` is only needed in rare cases where
+contextual serialization is required (e.g., when using `@Contextual` annotations or runtime reflection-based
+serialization lookup).
 
 ### File Uploads
 
@@ -798,6 +842,12 @@ Example bot implementations:
 ### Supported Platforms
 
 All modules target: JVM, Android, JS, WASM, Linux, macOS, Windows, iOS, watchOS, tvOS, Android Native.
+
+**Test Source Sets:**
+
+- `jvmTest` - JVM tests
+- `desktopNativeTest` - Linux, macOS, Windows native tests
+- `otherTest` / `commonTest` - Other platform tests (not all platforms support running tests)
 
 Tests only run on JVM and desktop native targets (Linux, macOS, Windows).
 
