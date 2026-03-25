@@ -839,22 +839,33 @@ val eventDispatcher = SimpleTelegramEventDispatcher { context ->
 
 ### Sample Module
 
-Example bot implementations:
+Example bot implementations in `:sample`:
 
-**Basic Samples (`:sample:basic`):**
+```
+sample/src/commonMain/kotlin/com/hiczp/telegram/bot/sample/
+├── basic/
+│   ├── command/CommandBot.kt      # Typed arguments, subcommands
+│   ├── echo/EchoBot.kt            # Minimal long-polling echo bot
+│   └── interceptor/               # Custom interceptors (Blacklist, Timeout, etc.)
+├── advanced/
+│   ├── conversation/ConversationBot.kt  # Multi-turn conversations, surveys
+│   └── file/FileBot.kt                  # File upload/download, stickers
+├── dsl/
+│   └── AuthDsl.kt                 # Reusable `requireAuth` middleware DSL
+└── expert/                        # (placeholder for complex examples)
+```
 
-- **EchoBot.kt** - Minimal echo bot demonstrating basic long-polling setup
-- **CommandBot.kt** - Comprehensive command handling demo with typed arguments (`BotArguments`), subcommands, and
-  the `requireAuth` DSL pattern for async authorization
-- **AuthDsl.kt** - Reusable authentication DSL using `middleware` with suspend predicates for async database/API lookups
-- **InterceptorBot.kt** - Custom interceptor demo showing localization, timeout, exception catching, and blacklist
-  interceptors. Demonstrates how to use `attributes` for sharing data between interceptors and handlers.
+**Basic Samples:**
 
-**Advanced Samples (`:sample:advanced`):**
+- **EchoBot.kt** - Minimal echo bot with `SimpleTelegramEventDispatcher`
+- **CommandBot.kt** - Typed arguments (`BotArguments`), subcommands, `requireAuth` DSL
+- **InterceptorBot.kt** - Custom interceptors: localization, timeout, exception catching, blacklist
 
-- **FileBot.kt** - File upload, download, and sticker echo handling with progress indicators
-- **ConversationBot.kt** - Multi-turn conversation demo with surveys, quizzes, and registration wizards using
-  `conversationInterceptor`, `startConversation`, `send`, `reply`, `awaitText`, and `awaitCallbackQuery`
+**Advanced Samples:**
+
+- **FileBot.kt** - File upload/download with progress, sticker echo
+- **ConversationBot.kt** - Multi-turn conversations using `startConversation`, `send`, `reply`, `awaitText`,
+  `awaitCallbackQuery`
 
 ### Supported Platforms
 
