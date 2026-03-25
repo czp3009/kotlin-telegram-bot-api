@@ -65,6 +65,14 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         // Content types
         private const val CONTENT_TYPE_JSON = "application/json"
         private const val CONTENT_TYPE_MULTIPART = "multipart/form-data"
+
+        // Cached TypeName constants to avoid repeated ClassName creation
+        private val JSON_ELEMENT_TYPE = ClassName("kotlinx.serialization.json", "JsonElement")
+        private val CHANNEL_PROVIDER_TYPE = ClassName("io.ktor.client.request.forms", "ChannelProvider")
+        private val FORM_PART_TYPE = ClassName("io.ktor.client.request.forms", "FormPart")
+        private val MULTIPART_FORM_DATA_CONTENT_TYPE =
+            ClassName("io.ktor.client.request.forms", "MultiPartFormDataContent")
+        private val FORM_DATA_BUILDER_TYPE = ClassName("io.ktor.client.request.forms", "formData")
     }
 
     /** OpenAPI/Swagger specification file defining the Telegram Bot API structure. */
@@ -94,6 +102,9 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     private lateinit var allSchemas: Map<String, JsonNode>
     private val processedSchemas = mutableSetOf<String>()
     private val generatedRequestBodies = mutableMapOf<String, String>() // operationId -> className
+
+    /** Cache for snake_case to camelCase conversions to avoid repeated string operations */
+    private val snakeToCamelCaseCache = mutableMapOf<String, String>()
 
     /** Information for multipart form operations. */
     private data class MultipartOperationInfo(
@@ -1350,8 +1361,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
                         if (hasBinaryAdditionalProperties) {
                             val attachmentsType = LIST.parameterizedBy(
-                                ClassName("io.ktor.client.request.forms", "FormPart")
-                                    .parameterizedBy(ClassName("io.ktor.client.request.forms", "ChannelProvider"))
+                                FORM_PART_TYPE.parameterizedBy(CHANNEL_PROVIDER_TYPE)
                             ).copy(nullable = true)
 
                             val attachmentsDescription = additionalProperties.get("description")?.asText()
@@ -1881,7 +1891,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     /**
      * Determine the property type from a JSON schema.
      * This is the unified type determination function used for both model classes and form classes.
-     * 
+     *
      * @param schema The JSON schema node
      * @param forMultipart If true, multipart fields use InputFile-aware type resolution
      * @param context Optional context string for logging (e.g., "ClassName.propertyName")
@@ -1897,7 +1907,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
         // For multipart forms, check if this is an InputFile type first
         if (forMultipart && isInputFileType(typeInfo.ref, typeInfo.oneOf, typeInfo.allOf)) {
-            return ClassName("io.ktor.client.request.forms", "ChannelProvider")
+            return CHANNEL_PROVIDER_TYPE
         }
 
         return when {
@@ -1913,10 +1923,8 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                 if (refs.isNotEmpty()) {
                     resolveTypeName(refs.first())
                 } else {
-                    if (context != null) {
-                        logger.warn("Using JsonElement for $context: allOf has no refs")
-                    }
-                    ClassName("kotlinx.serialization.json", "JsonElement").copy(nullable = true)
+                    context?.let { logger.warn("Using JsonElement for $it: allOf has no refs") }
+                    JSON_ELEMENT_TYPE.copy(nullable = true)
                 }
             }
 
@@ -1927,24 +1935,20 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             typeInfo.type == "array" -> {
                 val items = schema.get("items")
                 val itemType = if (items == null || items.isNull) {
-                    if (context != null) {
-                        logger.warn("Using JsonElement for $context: array has no items definition")
-                    }
-                    ClassName("kotlinx.serialization.json", "JsonElement")
+                    context?.let { logger.warn("Using JsonElement for $it: array has no items definition") }
+                    JSON_ELEMENT_TYPE
                 } else {
                     // For multipart arrays, check if items are InputFile
                     if (forMultipart) {
                         val itemTypeInfo = extractSchemaTypeInfo(items)
                         if (isInputFileType(itemTypeInfo.ref, itemTypeInfo.oneOf, itemTypeInfo.allOf)) {
-                            return LIST.parameterizedBy(ClassName("io.ktor.client.request.forms", "ChannelProvider"))
+                            return LIST.parameterizedBy(CHANNEL_PROVIDER_TYPE)
                         }
                     }
                     val determinedType = determinePropertyType(items, forMultipart, context?.let { "$it[]" })
                     if (determinedType == ANY.copy(nullable = true)) {
-                        if (context != null) {
-                            logger.warn("Using JsonElement for $context: array item type resolved to Any")
-                        }
-                        ClassName("kotlinx.serialization.json", "JsonElement")
+                        context?.let { logger.warn("Using JsonElement for $it: array item type resolved to Any") }
+                        JSON_ELEMENT_TYPE
                     } else {
                         determinedType
                     }
@@ -1954,36 +1958,20 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
             // Handle inline objects (no concrete type available)
             typeInfo.type == "object" -> {
-                if (context != null) {
-                    logger.warn("Using JsonElement for $context: inline object without concrete type")
-                }
-                ClassName("kotlinx.serialization.json", "JsonElement").copy(nullable = true)
+                context?.let { logger.warn("Using JsonElement for $it: inline object without concrete type") }
+                JSON_ELEMENT_TYPE.copy(nullable = true)
             }
 
             // Handle primitive types
             typeInfo.type == "string" -> STRING
-            typeInfo.type == "integer" -> {
-                when (typeInfo.format) {
-                    "int64" -> LONG
-                    else -> INT
-                }
-            }
-
-            typeInfo.type == "number" -> {
-                when (typeInfo.format) {
-                    "float" -> FLOAT
-                    else -> DOUBLE
-                }
-            }
-
+            typeInfo.type == "integer" -> if (typeInfo.format == "int64") LONG else INT
+            typeInfo.type == "number" -> if (typeInfo.format == "float") FLOAT else DOUBLE
             typeInfo.type == "boolean" -> BOOLEAN
 
             // Fallback
             else -> {
-                if (context != null) {
-                    logger.warn("Using JsonElement for $context: unknown schema type '${typeInfo.type}'")
-                }
-                ClassName("kotlinx.serialization.json", "JsonElement").copy(nullable = true)
+                context?.let { logger.warn("Using JsonElement for $it: unknown schema type '${typeInfo.type}'") }
+                JSON_ELEMENT_TYPE.copy(nullable = true)
             }
         }
     }
@@ -2225,7 +2213,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                     .addParameter(
                         ParameterSpec.builder(
                             "formData",
-                            ClassName("io.ktor.client.request.forms", "MultiPartFormDataContent")
+                            MULTIPART_FORM_DATA_CONTENT_TYPE
                         ).addAnnotation(
                             AnnotationSpec.builder(ClassName("de.jensklingenberg.ktorfit.http", "Body"))
                                 .build()
@@ -2504,8 +2492,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             // Add attachments field if additionalProperties has the binary format
             if (hasBinaryAdditionalProperties) {
                 val attachmentsType = LIST.parameterizedBy(
-                    ClassName("io.ktor.client.request.forms", "FormPart")
-                        .parameterizedBy(ClassName("io.ktor.client.request.forms", "ChannelProvider"))
+                    FORM_PART_TYPE.parameterizedBy(CHANNEL_PROVIDER_TYPE)
                 ).copy(nullable = true)
 
                 val attachmentsDescription = additionalProperties.get("description")?.asText()
@@ -2610,13 +2597,15 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     }
 
     private fun snakeToCamelCase(snakeCase: String): String {
-        if (!snakeCase.contains('_')) return snakeCase
+        return snakeToCamelCaseCache.getOrPut(snakeCase) {
+            if (!snakeCase.contains('_')) return@getOrPut snakeCase
 
-        return snakeCase.split('_')
-            .mapIndexed { index, part ->
-                if (index == 0) part else part.capitalize()
-            }
-            .joinToString("")
+            snakeCase.split('_')
+                .mapIndexed { index, part ->
+                    if (index == 0) part else part.capitalize()
+                }
+                .joinToString("")
+        }
     }
 
     /**
@@ -2854,8 +2843,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
         if (hasBinaryAdditionalProperties) {
             val attachmentsType = LIST.parameterizedBy(
-                ClassName("io.ktor.client.request.forms", "FormPart")
-                    .parameterizedBy(ClassName("io.ktor.client.request.forms", "ChannelProvider"))
+                FORM_PART_TYPE.parameterizedBy(CHANNEL_PROVIDER_TYPE)
             ).copy(nullable = true)
 
             val attachmentsParam = ParameterSpec.builder("attachments", attachmentsType)
@@ -2874,8 +2862,8 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         val codeBuilder = CodeBlock.builder()
         codeBuilder.addStatement(
             "val formData = %T(%T {",
-            ClassName("io.ktor.client.request.forms", "MultiPartFormDataContent"),
-            ClassName("io.ktor.client.request.forms", "formData")
+            MULTIPART_FORM_DATA_CONTENT_TYPE,
+            FORM_DATA_BUILDER_TYPE
         )
         codeBuilder.indent()
 
