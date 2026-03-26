@@ -19,3 +19,8 @@ After modifying code, check whether the associated KDoc and related KDoc would b
 behavior due to this modification. If incorrect, make corrections.
 
 Do not include import statements in example code within KDoc.
+
+## Kotlin Multiplatform
+
+This is a Kotlin Multiplatform project. When writing code in the common source sets (e.g., `commonMain`), do not use
+platform-specific code. Only use Kotlin common APIs and multiplatform-compatible libraries.
