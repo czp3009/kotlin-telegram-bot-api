@@ -13,7 +13,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
  * Configure all supported Kotlin multiplatform targets for the Telegram Bot API project.
  *
  * This includes:
- * - JVM (toolchain 21)
+ * - JVM (toolchain 17)
  * - Android Library (minSdk 34, compileSdk 36, JVM 17)
  * - JS (browser, nodejs)
  * - WASM (browser, nodejs, d8)
