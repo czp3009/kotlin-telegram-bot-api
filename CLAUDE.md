@@ -30,10 +30,6 @@ Telegram Bot API OpenAPI specification using Ktorfit.
 ./gradlew :sample:jvmRun --args="YOUR_BOT_TOKEN" -DmainClass="com.hiczp.telegram.bot.sample.basic.echo.EchoBotKt" --quiet
 ```
 
-## Code Style
-
-This project uses `kotlin.code.style=official`. Follow the official Kotlin coding conventions.
-
 ## Code Generation
 
 The protocol module's API interfaces and models are auto-generated from the Telegram Bot API OpenAPI specification. Do
