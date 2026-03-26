@@ -1,6 +1,6 @@
 ---
 apply: by file patterns
-patterns: *.kt,*.kts
+patterns: **/*.kt,**/*.kts
 ---
 
 # Kotlin Coding Style
