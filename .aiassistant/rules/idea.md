@@ -12,6 +12,8 @@ Fix issues based on problems reported by IDEA (including warnings and issues rel
 
 Prefer using IDEA MCP to determine which file the user is currently viewing
 
-## Running Programs
+## Build/Run Project
 
-Prefer using run configurations provided by IDEA to run programs
+When verifying code correctness through compilation, only compile the JVM target — compiling all targets is too slow
+
+When running unit tests, only run JVM platform tests
