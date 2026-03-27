@@ -1,3 +1,4 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.jetbrains.kotlin.gradle.targets.js.testing.KotlinJsTest
 
 plugins {
@@ -17,7 +18,7 @@ subprojects {
         testLogging {
             events("passed", "skipped", "failed")
             showStandardStreams = true
-            exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+            exceptionFormat = TestExceptionFormat.FULL
             showExceptions = true
             showCauses = true
             showStackTraces = true
