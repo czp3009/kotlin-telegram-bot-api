@@ -17,7 +17,7 @@ using [Ktorfit](https://github.com/Foso/Ktorfit).
 
 ```kotlin
 // build.gradle.kts
-implementation("com.hiczp.telegram.bot:application:$version")
+implementation("com.hiczp:telegram-bot-api-application:$version")
 ```
 
 ## Quick Example

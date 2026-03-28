@@ -7,7 +7,7 @@ The Handler DSL provides a type-safe, declarative way to route Telegram events t
 ```kotlin
 val routes = handling {
     onMessageEvent {
-        whenMessageEventText("hello") { sendMessage("Hi!") }
+        whenMessageEventText("hello") { replyMessage("Hi!") }
     }
 }
 
@@ -145,7 +145,7 @@ Conditional execution
 onMessageEvent {
     middleware(
         predicate = { it.event.message.text?.length ?: 0 > 10 },
-        onRejected = { sendMessage("Message too short") }
+        onRejected = { replyMessage("Message too short") }
     ) {
         handle { /* protected handler */ }
     }
@@ -162,7 +162,7 @@ onMessageEvent {
 ```kotlin
 handling {
     commandEndpoint("demo") {
-        sendMessage("Hello!")              // Send message to current chat
+        sendMessage("Hello!")              // Send message to current chat (uses client.sendMessage internally)
         replyMessage("This is a reply")     // Reply to current message
         val chatId = event.extractChatId() // Extract chat ID from event
     }

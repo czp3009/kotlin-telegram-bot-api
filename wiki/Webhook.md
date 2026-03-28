@@ -5,7 +5,7 @@ The webhook module (`:application-updatesource-webhook`) provides webhook-based 
 ## Installation
 
 ```kotlin
-implementation("com.hiczp.telegram.bot:application-updatesource-webhook:$version")
+implementation("com.hiczp:telegram-bot-api-application-updatesource-webhook:$version")
 ```
 
 ## Quick Start

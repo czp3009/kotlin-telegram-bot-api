@@ -51,8 +51,8 @@ This page explains the architecture and design of the library.
 │  ┌────────────────┐  ┌────────────────┐  ┌────────────────────┐     │
 │  │ TelegramBotApi │  │    Models      │  │      Events        │     │
 │  │ (Ktorfit)      │  │  - Message     │  │  - MessageEvent    │     │
-│  │                │  │  - User        │  │  - CallbackEvent   │     │
-│  │                │  │  - Chat        │  │  - InlineEvent     │     │
+│  │                │  │  - User        │  │  - CallbackQueryEvent │     │
+│  │                │  │  - Chat        │  │  - InlineQueryEvent   │     │
 │  └────────────────┘  └────────────────┘  └────────────────────┘     │
 └─────────────────────────────────────────────────────────────────┘
                                   │
@@ -69,7 +69,7 @@ This page explains the architecture and design of the library.
           ▼ Raw Update objects
           
 2. Event Conversion
-   Update.toTelegramBotEvent() ──> TelegramBotEvent (MessageEvent, CallbackEvent, etc.)
+   Update.toTelegramBotEvent() ──> TelegramBotEvent (MessageEvent, CallbackQueryEvent, etc.)
                                │
                                ▼
                                
@@ -122,16 +122,16 @@ High-level HTTP client wrapper:
 
 Bot application framework:
 
-| Component                  | Description                                     |
-|----------------------------|-------------------------------------------------|
-| `TelegramBotApplication`   | Main orchestrator for lifecycle                 |
-| `TelegramUpdateSource`     | Interface for fetching updates                  |
-| `LongPollingUpdateSource`  | Long polling implementation                     |
-| `SimpleUpdateSource`       | External update injection (distributed systems) |
-| `MockUpdateSource`         | Testing utility (Channel-based)                 |
-| `TelegramEventInterceptor` | Middleware function type                        |
-| `HandlerEventDispatcher`   | Type-safe routing DSL                           |
-| `SimpleEventDispatcher`    | Single lambda handler                           |
+| Component                         | Description                                     |
+|-----------------------------------|-------------------------------------------------|
+| `TelegramBotApplication`          | Main orchestrator for lifecycle                 |
+| `TelegramUpdateSource`            | Interface for fetching updates                  |
+| `LongPollingTelegramUpdateSource` | Long polling implementation                     |
+| `SimpleTelegramUpdateSource`      | External update injection (distributed systems) |
+| `MockTelegramUpdateSource`        | Testing utility (Channel-based)                 |
+| `TelegramEventInterceptor`        | Middleware function type                        |
+| `HandlerTelegramEventDispatcher`  | Type-safe routing DSL                           |
+| `SimpleTelegramEventDispatcher`   | Single lambda handler                           |
 
 ### Webhook Module (`:application-updatesource-webhook`)
 
@@ -160,7 +160,7 @@ Type-safe routing using Kotlin DSL
 ```kotlin
 handling {
     onMessageEvent {
-        whenMessageEventText("hello") { sendMessage("Hi!") }
+        whenMessageEventText("hello") { replyMessage("Hi!") }
     }
 }
 ```

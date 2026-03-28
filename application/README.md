@@ -347,7 +347,7 @@ A webhook-based update source available in the `application-updatesource-webhook
 embedded Ktor server.
 
 ```kotlin
-// Add dependency: com.hiczp.telegram.bot:application-updatesource-webhook
+// Add dependency: com.hiczp:telegram-bot-api-application-updatesource-webhook
 
 val webhookSource = WebhookTelegramUpdateSource(
   applicationEngineFactory = CIO,  // or Netty, Jetty, etc.

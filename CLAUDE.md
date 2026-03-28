@@ -184,7 +184,7 @@ Key components:
 - `TelegramUpdateSource` - Interface for update sources (long polling, webhook, mock)
 - `TelegramEventInterceptor` - Middleware function type for request interception
 - `TelegramEventDispatcher` - Routes events to handlers
-- `TelegramBotContext` - Request-scoped context with client and attributes
+- `TelegramBotEventContext` - Request-scoped context with client and attributes
 
 ### Response Handling
 
@@ -270,7 +270,7 @@ val loggingInterceptor: TelegramEventInterceptor = { context ->
 
 The `TelegramBotEventContext` provides access to:
 
-- `client` - TelegramBotClient for API calls
+- `client` - TelegramBotApi for API calls
 - `event` - The TelegramBotEvent being processed
 - `applicationScope` - Coroutine scope for launching concurrent tasks
 - `attributes` - Type-safe storage for sharing data between interceptors
@@ -309,7 +309,8 @@ matchers are in `handler/matcher/`:
   `whenMessageEventTextEndsWith`, `whenMessageEventPhoto`, `whenMessageEventVideo`, `whenMessageEventAudio`,
   `whenMessageEventDocument`, `whenMessageEventSticker`, `whenMessageEventVoice`,
   `whenMessageEventVideoNote`, `whenMessageEventAnimation`, `whenMessageEventContact`, `whenMessageEventLocation`,
-  `whenMessageEventVenue`, `whenMessageEventPoll`, `whenMessageEventDice`, `whenMessageEventReply`,
+  `whenMessageEventVenue`, `whenMessageEventPoll`, `whenMessageEventDice`, `whenMessageEventDiceWithEmoji`,
+  `whenMessageEventReply`,
   `whenMessageEventReplyTo`, `whenMessageEventFromUser`, `whenMessageEventFromUsers`, `whenMessageEventInChat`,
   `whenMessageEventInChats`, `whenMessageEventForwarded`, `whenMessageEventForwardedFromUser`,
   `whenMessageEventForwardedFromChat`, `whenMessageEventForwardedHiddenUser`)
@@ -318,7 +319,7 @@ matchers are in `handler/matcher/`:
   `whenCallbackQueryEventInChat`)
 - **InlineQuery.kt** - Inline query handlers (`whenInlineQueryEventQuery`, `whenInlineQueryEventQueryRegex`,
   `whenInlineQueryEventQueryContains`,
-  `whenInlineQueryEventQueryStartsWith`, `whenInlineQueryEventFromUser`, `whenChosenInlineResultEvent`,
+  `whenInlineQueryEventQueryStartsWith`, `whenInlineQueryEventFromUser`, `whenChosenInlineResultEventMatchAny`,
   `whenChosenInlineResultEventFromUser`)
 - **ChatType.kt** - Chat type filters (`whenMessageEventPrivateChat`, `whenMessageEventGroupChat`,
   `whenMessageEventSupergroupChat`, `whenMessageEventChannel`)
@@ -540,7 +541,7 @@ command("process") {
         // Launch concurrent operations
         launch {
             val result = slowOperation()
-          client.sendMessage(event.message.chat.id, "Result: $result")
+          sendMessage("Result: $result")
         }
         launch {
             anotherAsyncTask()
@@ -557,7 +558,7 @@ commandEndpoint("background") {
   // In application scope - continues after handler returns
   applicationScope.launch {
     delay(10.seconds)
-    sendMessage("Delayed message")
+    client.sendMessage(SendMessageRequest(chatId = event.message.chat.id.toString(), text = "Delayed message"))
   }
   // Handler returns immediately
 }
@@ -743,7 +744,7 @@ app.stop()
 A separate module providing webhook-based update receiving. Uses an embedded Ktor server:
 
 ```kotlin
-implementation("com.hiczp.telegram.bot:application-updatesource-webhook:$version")
+implementation("com.hiczp:telegram-bot-api-application-updatesource-webhook:$version")
 ```
 
 #### Quick Start with Webhook

@@ -9,26 +9,14 @@ This guide will help you set up and create your first Telegram bot.
 
 ## Installation
 
-### Gradle (Kotlin DSL)
-
 ```kotlin
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    implementation("com.hiczp.telegram.bot:application:$version")
+    implementation("com.hiczp:telegram-bot-api-application:$version")
 }
-```
-
-### Maven
-
-```xml
-<dependency>
-    <groupId>com.hiczp.telegram.bot</groupId>
-    <artifactId>application</artifactId>
-    <version>${version}</version>
-</dependency>
 ```
 
 ## Your First Bot

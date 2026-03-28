@@ -17,8 +17,8 @@ This module extends the [application](../application) module. First add the appl
 module:
 
 ```kotlin
-implementation("com.hiczp.telegram.bot:application:$version")
-implementation("com.hiczp.telegram.bot:application-updatesource-webhook:$version")
+implementation("com.hiczp:telegram-bot-api-application:$version")
+implementation("com.hiczp:telegram-bot-api-application-updatesource-webhook:$version")
 ```
 
 You also need to add a Ktor server engine dependency.
