@@ -13,6 +13,7 @@ logback-classic = "1.5.32"
 kotlinx-atomicfu = "0.31.0"
 kotlinx-datetime = "0.7.1"
 mockative = "3.2.3"
+maven-publish = "0.36.0"
 
 [libraries]
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
@@ -59,3 +60,4 @@ androidKotlinMultiplatformLibrary = { id = "com.android.kotlin.multiplatform.lib
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 ktorfit = { id = "de.jensklingenberg.ktorfit", version.ref = "ktorfit" }
 mockative = { id = "io.mockative", version.ref = "mockative" }
+mavenPublish = { id = "com.vanniktech.maven.publish", version.ref = "maven-publish" }

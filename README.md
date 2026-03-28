@@ -1,5 +1,8 @@
 # Kotlin Telegram Bot API
 
+> **⚠️ Early Development Warning**
+> This project is still in its early stages of development and may contain critical bugs. Use at your own risk.
+
 [![Kotlin](https://img.shields.io/badge/Kotlin-Multiplatform-7F52FF)](https://kotlinlang.org/)
 
 A Kotlin Multiplatform library for the [Telegram Bot API](https://core.telegram.org/bots/api). It provides type-safe,
