@@ -20,6 +20,10 @@ behavior due to this modification. If incorrect, make corrections.
 
 Do not include import statements in example code within KDoc.
 
+## Imports
+
+Always use import statements instead of fully qualified names.
+
 ## Kotlin Multiplatform
 
 This is a Kotlin Multiplatform project. When writing code in the common source sets (e.g., `commonMain`), do not use
