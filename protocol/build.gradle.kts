@@ -82,3 +82,9 @@ tasks.configureEach {
         dependsOn(generateKtorfitInterfaces)
     }
 }
+
+tasks.configureEach {
+    if (name == "sourcesJar") {
+        dependsOn("kspCommonMainKotlinMetadata")
+    }
+}
