@@ -48,7 +48,9 @@ suspend fun main() {
 
 | Module                              | Description                                 |
 |-------------------------------------|---------------------------------------------|
+| `:protocol-annotation`              | Annotations for KSP code generation         |
 | `:protocol`                         | Auto-generated Telegram Bot API definitions |
+| `:protocol-update-codegen`          | KSP processor for event code generation     |
 | `:client`                           | High-level HTTP client wrapper              |
 | `:application`                      | Bot framework with lifecycle management     |
 | `:application-updatesource-webhook` | Webhook update source                       |
@@ -57,23 +59,23 @@ suspend fun main() {
 
 | Platform       | Support |
 |----------------|---------|
-| JVM            | ✅       |
-| Android        | ✅       |
-| JS             | ✅       |
-| WASM           | ✅       |
-| Linux          | ✅       |
-| macOS          | ✅       |
-| Windows        | ✅       |
-| iOS            | ✅       |
-| watchOS        | ✅       |
-| tvOS           | ✅       |
-| Android Native | ✅       |
+| JVM            | Yes     |
+| Android        | Yes     |
+| JS             | Yes     |
+| WASM           | Yes     |
+| Linux          | Yes     |
+| macOS          | Yes     |
+| Windows        | Yes     |
+| iOS            | Yes     |
+| watchOS        | Yes     |
+| tvOS           | Yes     |
+| Android Native | Yes     |
 
 **Note:** Tests only run on JVM and desktop native targets (Linux, macOS, Windows).
 
 ## Documentation
 
-📚 **Full documentation is available in the [Wiki](wiki/).**
+Full documentation is available in the [Wiki](wiki/).
 
 ## Related Links
 

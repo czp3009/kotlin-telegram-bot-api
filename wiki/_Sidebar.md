@@ -2,9 +2,6 @@
 
 - [Home](Home)
 - [Getting Started](Getting-Started)
-
-## Architecture
-
 - [Architecture](Architecture)
 
 ## Building Bots
