@@ -1,7 +1,6 @@
 // Auto-generated from Swagger specification, do not modify this file manually
 package com.hiczp.telegram.bot.protocol.model
 
-import kotlin.String
 import kotlinx.serialization.Serializable
 
 /**
@@ -14,7 +13,7 @@ public data class BotCommand(
      */
     public val command: String,
     /**
-     * Description of the command; 1-256 characters.
+     * Description of the command; 1-256 characters
      */
     public val description: String,
 )

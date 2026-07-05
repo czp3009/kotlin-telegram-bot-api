@@ -36,6 +36,8 @@ fun TelegramBotEvent.extractChatId(): Long? = when (this) {
     is ChatJoinRequestEvent -> chatJoinRequest.chat.id
     is ChatBoostEvent -> chatBoost.chat.id
     is RemovedChatBoostEvent -> removedChatBoost.chat.id
+    is GuestMessageEvent -> null
+    is ManagedBotEvent -> null
 }
 
 /**
@@ -71,6 +73,8 @@ fun TelegramBotEvent.extractThreadId(): Long? = when (this) {
     is ChatJoinRequestEvent -> null
     is ChatBoostEvent -> null
     is RemovedChatBoostEvent -> null
+    is GuestMessageEvent -> null
+    is ManagedBotEvent -> null
 }
 
 /**
@@ -109,6 +113,8 @@ fun TelegramBotEvent.extractMessageId(): Long? = when (this) {
     is ChatJoinRequestEvent -> null
     is ChatBoostEvent -> null
     is RemovedChatBoostEvent -> null
+    is GuestMessageEvent -> null
+    is ManagedBotEvent -> null
 }
 
 /**
@@ -146,6 +152,8 @@ fun TelegramBotEvent.extractUserId(): Long? = when (this) {
     is ChatJoinRequestEvent -> chatJoinRequest.from.id
     is ChatBoostEvent -> null
     is RemovedChatBoostEvent -> null
+    is GuestMessageEvent -> null
+    is ManagedBotEvent -> null
 }
 
 /**
@@ -181,4 +189,6 @@ fun TelegramBotEvent.extractLanguageCode(): String? = when (this) {
     is ChatJoinRequestEvent -> chatJoinRequest.from.languageCode
     is ChatBoostEvent -> null
     is RemovedChatBoostEvent -> null
+    is GuestMessageEvent -> null
+    is ManagedBotEvent -> null
 }

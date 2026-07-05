@@ -6,10 +6,6 @@ plugins {
 }
 
 kotlin {
-    compilerOptions {
-        freeCompilerArgs.add("-Xcontext-parameters")
-    }
-
     configureAllTargets("com.hiczp.telegram.bot.application")
 
     sourceSets {

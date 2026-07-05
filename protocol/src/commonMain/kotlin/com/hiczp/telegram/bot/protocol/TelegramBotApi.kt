@@ -10,6 +10,8 @@ package com.hiczp.telegram.bot.protocol
 
 import com.hiczp.telegram.bot.protocol.`annotation`.TelegramBotApiVersion
 import com.hiczp.telegram.bot.protocol.model.AnswerCallbackQueryRequest
+import com.hiczp.telegram.bot.protocol.model.AnswerChatJoinRequestQueryRequest
+import com.hiczp.telegram.bot.protocol.model.AnswerGuestQueryRequest
 import com.hiczp.telegram.bot.protocol.model.AnswerInlineQueryRequest
 import com.hiczp.telegram.bot.protocol.model.AnswerPreCheckoutQueryRequest
 import com.hiczp.telegram.bot.protocol.model.AnswerShippingQueryRequest
@@ -18,6 +20,7 @@ import com.hiczp.telegram.bot.protocol.model.ApproveChatJoinRequestRequest
 import com.hiczp.telegram.bot.protocol.model.ApproveSuggestedPostRequest
 import com.hiczp.telegram.bot.protocol.model.BanChatMemberRequest
 import com.hiczp.telegram.bot.protocol.model.BanChatSenderChatRequest
+import com.hiczp.telegram.bot.protocol.model.BotAccessSettings
 import com.hiczp.telegram.bot.protocol.model.BotCommand
 import com.hiczp.telegram.bot.protocol.model.BotDescription
 import com.hiczp.telegram.bot.protocol.model.BotName
@@ -38,10 +41,12 @@ import com.hiczp.telegram.bot.protocol.model.CreateForumTopicRequest
 import com.hiczp.telegram.bot.protocol.model.CreateInvoiceLinkRequest
 import com.hiczp.telegram.bot.protocol.model.DeclineChatJoinRequestRequest
 import com.hiczp.telegram.bot.protocol.model.DeclineSuggestedPostRequest
+import com.hiczp.telegram.bot.protocol.model.DeleteAllMessageReactionsRequest
 import com.hiczp.telegram.bot.protocol.model.DeleteBusinessMessagesRequest
 import com.hiczp.telegram.bot.protocol.model.DeleteChatPhotoRequest
 import com.hiczp.telegram.bot.protocol.model.DeleteChatStickerSetRequest
 import com.hiczp.telegram.bot.protocol.model.DeleteForumTopicRequest
+import com.hiczp.telegram.bot.protocol.model.DeleteMessageReactionRequest
 import com.hiczp.telegram.bot.protocol.model.DeleteMessageRequest
 import com.hiczp.telegram.bot.protocol.model.DeleteMessagesRequest
 import com.hiczp.telegram.bot.protocol.model.DeleteMyCommandsRequest
@@ -76,6 +81,7 @@ import com.hiczp.telegram.bot.protocol.model.OwnedGifts
 import com.hiczp.telegram.bot.protocol.model.PinChatMessageRequest
 import com.hiczp.telegram.bot.protocol.model.Poll
 import com.hiczp.telegram.bot.protocol.model.PreparedInlineMessage
+import com.hiczp.telegram.bot.protocol.model.PreparedKeyboardButton
 import com.hiczp.telegram.bot.protocol.model.PromoteChatMemberRequest
 import com.hiczp.telegram.bot.protocol.model.ReadBusinessMessageRequest
 import com.hiczp.telegram.bot.protocol.model.RefundStarPaymentRequest
@@ -84,11 +90,14 @@ import com.hiczp.telegram.bot.protocol.model.RemoveChatVerificationRequest
 import com.hiczp.telegram.bot.protocol.model.RemoveUserVerificationRequest
 import com.hiczp.telegram.bot.protocol.model.ReopenForumTopicRequest
 import com.hiczp.telegram.bot.protocol.model.ReopenGeneralForumTopicRequest
+import com.hiczp.telegram.bot.protocol.model.ReplaceManagedBotTokenRequest
 import com.hiczp.telegram.bot.protocol.model.RepostStoryRequest
 import com.hiczp.telegram.bot.protocol.model.RestrictChatMemberRequest
 import com.hiczp.telegram.bot.protocol.model.RevokeChatInviteLinkRequest
 import com.hiczp.telegram.bot.protocol.model.SavePreparedInlineMessageRequest
+import com.hiczp.telegram.bot.protocol.model.SavePreparedKeyboardButtonRequest
 import com.hiczp.telegram.bot.protocol.model.SendChatActionRequest
+import com.hiczp.telegram.bot.protocol.model.SendChatJoinRequestWebAppRequest
 import com.hiczp.telegram.bot.protocol.model.SendChecklistRequest
 import com.hiczp.telegram.bot.protocol.model.SendContactRequest
 import com.hiczp.telegram.bot.protocol.model.SendDiceRequest
@@ -98,8 +107,10 @@ import com.hiczp.telegram.bot.protocol.model.SendInvoiceRequest
 import com.hiczp.telegram.bot.protocol.model.SendLocationRequest
 import com.hiczp.telegram.bot.protocol.model.SendMessageDraftRequest
 import com.hiczp.telegram.bot.protocol.model.SendMessageRequest
-import com.hiczp.telegram.bot.protocol.model.SendPollRequest
+import com.hiczp.telegram.bot.protocol.model.SendRichMessageDraftRequest
+import com.hiczp.telegram.bot.protocol.model.SendRichMessageRequest
 import com.hiczp.telegram.bot.protocol.model.SendVenueRequest
+import com.hiczp.telegram.bot.protocol.model.SentGuestMessage
 import com.hiczp.telegram.bot.protocol.model.SentWebAppMessage
 import com.hiczp.telegram.bot.protocol.model.SetBusinessAccountBioRequest
 import com.hiczp.telegram.bot.protocol.model.SetBusinessAccountGiftSettingsRequest
@@ -114,6 +125,7 @@ import com.hiczp.telegram.bot.protocol.model.SetChatStickerSetRequest
 import com.hiczp.telegram.bot.protocol.model.SetChatTitleRequest
 import com.hiczp.telegram.bot.protocol.model.SetCustomEmojiStickerSetThumbnailRequest
 import com.hiczp.telegram.bot.protocol.model.SetGameScoreRequest
+import com.hiczp.telegram.bot.protocol.model.SetManagedBotAccessSettingsRequest
 import com.hiczp.telegram.bot.protocol.model.SetMessageReactionRequest
 import com.hiczp.telegram.bot.protocol.model.SetMyCommandsRequest
 import com.hiczp.telegram.bot.protocol.model.SetMyDefaultAdministratorRightsRequest
@@ -169,7 +181,7 @@ import kotlin.String
 import kotlin.Suppress
 import kotlin.collections.List
 
-@TelegramBotApiVersion("9.5")
+@TelegramBotApiVersion("10.1")
 public interface TelegramBotApi {
     /**
      * Use this method to receive incoming updates using long polling (wiki). Returns an Array of Update objects.
@@ -263,6 +275,12 @@ public interface TelegramBotApi {
     public suspend fun sendPhoto(@Body formData: MultiPartFormDataContent): TelegramResponse<Message>
 
     /**
+     * Use this method to send live photos. On success, the sent Message is returned.
+     */
+    @POST("sendLivePhoto")
+    public suspend fun sendLivePhoto(@Body formData: MultiPartFormDataContent): TelegramResponse<Message>
+
+    /**
      * Use this method to send audio files, if you want Telegram clients to display them in the music player. Your audio must be in the .MP3 or .M4A format. On success, the sent Message is returned. Bots can currently send audio files of up to 50 MB in size, this limit may be changed in the future.
      * For sending voice messages, use the sendVoice method instead.
      */
@@ -306,7 +324,7 @@ public interface TelegramBotApi {
     public suspend fun sendPaidMedia(@Body formData: MultiPartFormDataContent): TelegramResponse<Message>
 
     /**
-     * Use this method to send a group of photos, videos, documents or audios as an album. Documents and audio files can be only grouped in an album with messages of the same type. On success, an array of Message objects that were sent is returned.
+     * Use this method to send a group of photos, live photos, videos, documents or audios as an album. Documents and audio files can be only grouped in an album with messages of the same type. On success, an array of Message objects that were sent is returned.
      */
     @POST("sendMediaGroup")
     public suspend fun sendMediaGroup(@Body formData: MultiPartFormDataContent): TelegramResponse<List<Message>>
@@ -333,7 +351,7 @@ public interface TelegramBotApi {
      * Use this method to send a native poll. On success, the sent Message is returned.
      */
     @POST("sendPoll")
-    public suspend fun sendPoll(@Body body: SendPollRequest): TelegramResponse<Message>
+    public suspend fun sendPoll(@Body formData: MultiPartFormDataContent): TelegramResponse<Message>
 
     /**
      * Use this method to send a checklist on behalf of a connected business account. On success, the sent Message is returned.
@@ -348,7 +366,7 @@ public interface TelegramBotApi {
     public suspend fun sendDice(@Body body: SendDiceRequest): TelegramResponse<Message>
 
     /**
-     * Use this method to stream a partial message to a user while the message is being generated. Returns True on success.
+     * Use this method to stream a partial message to a user while the message is being generated. Note that the streamed draft is ephemeral and acts as a temporary 30-second preview - once the output is finalized, you must call sendMessage with the complete message to persist it in the user's chat. Returns True on success.
      */
     @POST("sendMessageDraft")
     public suspend fun sendMessageDraft(@Body body: SendMessageDraftRequest): TelegramResponse<Boolean>
@@ -514,6 +532,18 @@ public interface TelegramBotApi {
     public suspend fun declineChatJoinRequest(@Body body: DeclineChatJoinRequestRequest): TelegramResponse<Boolean>
 
     /**
+     * Use this method to process a received chat join request query. Returns True on success.
+     */
+    @POST("answerChatJoinRequestQuery")
+    public suspend fun answerChatJoinRequestQuery(@Body body: AnswerChatJoinRequestQueryRequest): TelegramResponse<Boolean>
+
+    /**
+     * Use this method to process a received chat join request query by showing a Mini App to the user before deciding the outcome. Call answerChatJoinRequestQuery to resolve the join request query based on the user interaction with the Mini App. Returns True on success.
+     */
+    @POST("sendChatJoinRequestWebApp")
+    public suspend fun sendChatJoinRequestWebApp(@Body body: SendChatJoinRequestWebAppRequest): TelegramResponse<Boolean>
+
+    /**
      * Use this method to set a new profile photo for the chat. Photos can't be changed for private chats. The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights. Returns True on success.
      */
     @POST("setChatPhoto")
@@ -564,23 +594,27 @@ public interface TelegramBotApi {
     /**
      * Use this method to get up-to-date information about the chat. Returns a ChatFullInfo object on success.
      *
-     * @param chatId Unique identifier for the target chat or username of the target supergroup or channel (in the format `@channelusername`)
+     * @param chatId Unique identifier for the target chat or username of the target supergroup or channel in the format `@username`
      */
     @GET("getChat")
     public suspend fun getChat(@Query("chat_id") chatId: String): TelegramResponse<ChatFullInfo>
 
     /**
-     * Use this method to get a list of administrators in a chat, which aren't bots. Returns an Array of ChatMember objects.
+     * Use this method to get a list of administrators in a chat. Returns an Array of ChatMember objects.
      *
-     * @param chatId Unique identifier for the target chat or username of the target supergroup or channel (in the format `@channelusername`)
+     * @param chatId Unique identifier for the target chat or username of the target supergroup or channel in the format `@username`
+     * @param returnBots Pass *True* to additionally receive all bots that are administrators of the chat. By default, bots other than the current bot are omitted.
      */
     @GET("getChatAdministrators")
-    public suspend fun getChatAdministrators(@Query("chat_id") chatId: String): TelegramResponse<List<ChatMember>>
+    public suspend fun getChatAdministrators(
+        @Query("chat_id") chatId: String,
+        @Query("return_bots") returnBots: Boolean? = null
+    ): TelegramResponse<List<ChatMember>>
 
     /**
      * Use this method to get the number of members in a chat. Returns Int on success.
      *
-     * @param chatId Unique identifier for the target chat or username of the target supergroup or channel (in the format `@channelusername`)
+     * @param chatId Unique identifier for the target chat or username of the target supergroup or channel in the format `@username`
      */
     @GET("getChatMemberCount")
     public suspend fun getChatMemberCount(@Query("chat_id") chatId: String): TelegramResponse<Long>
@@ -588,11 +622,23 @@ public interface TelegramBotApi {
     /**
      * Use this method to get information about a member of a chat. The method is only guaranteed to work for other users if the bot is an administrator in the chat. Returns a ChatMember object on success.
      *
-     * @param chatId Unique identifier for the target chat or username of the target supergroup or channel (in the format `@channelusername`)
+     * @param chatId Unique identifier for the target chat or username of the target supergroup or channel in the format `@username`
      * @param userId Unique identifier of the target user
      */
     @GET("getChatMember")
     public suspend fun getChatMember(@Query("chat_id") chatId: String, @Query("user_id") userId: Long): TelegramResponse<ChatMember>
+
+    /**
+     * Use this method to get the last messages from the personal chat (i.e., the chat currently added to their profile) of a given user. On success, an array of Message objects is returned.
+     *
+     * @param userId Unique identifier for the target user
+     * @param limit The maximum number of messages to return; 1-20
+     */
+    @GET("getUserPersonalChatMessages")
+    public suspend fun getUserPersonalChatMessages(
+        @Query("user_id") userId: Long,
+        @Query limit: Long
+    ): TelegramResponse<List<Message>>
 
     /**
      * Use this method to set a new group sticker set for a supergroup. The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights. Use the field can_set_sticker_set optionally returned in getChat requests to check if the bot can use this method. Returns True on success.
@@ -692,9 +738,15 @@ public interface TelegramBotApi {
     public suspend fun answerCallbackQuery(@Body body: AnswerCallbackQueryRequest): TelegramResponse<Boolean>
 
     /**
+     * Use this method to reply to a received guest message. On success, a SentGuestMessage object is returned.
+     */
+    @POST("answerGuestQuery")
+    public suspend fun answerGuestQuery(@Body body: AnswerGuestQueryRequest): TelegramResponse<SentGuestMessage>
+
+    /**
      * Use this method to get the list of boosts added to a chat by a user. Requires administrator rights in the chat. Returns a UserChatBoosts object.
      *
-     * @param chatId Unique identifier for the chat or username of the channel (in the format `@channelusername`)
+     * @param chatId Unique identifier for the chat or username of the channel in the format `@username`
      * @param userId Unique identifier of the target user
      */
     @GET("getUserChatBoosts")
@@ -707,6 +759,34 @@ public interface TelegramBotApi {
      */
     @GET("getBusinessConnection")
     public suspend fun getBusinessConnection(@Query("business_connection_id") businessConnectionId: String): TelegramResponse<BusinessConnection>
+
+    /**
+     * Use this method to get the token of a managed bot. Returns the token as String on success.
+     *
+     * @param userId User identifier of the managed bot whose token will be returned
+     */
+    @GET("getManagedBotToken")
+    public suspend fun getManagedBotToken(@Query("user_id") userId: Long): TelegramResponse<String>
+
+    /**
+     * Use this method to revoke the current token of a managed bot and generate a new one. Returns the new token as String on success.
+     */
+    @POST("replaceManagedBotToken")
+    public suspend fun replaceManagedBotToken(@Body body: ReplaceManagedBotTokenRequest): TelegramResponse<String>
+
+    /**
+     * Use this method to get the access settings of a managed bot. Returns a BotAccessSettings object on success.
+     *
+     * @param userId User identifier of the managed bot whose access settings will be returned
+     */
+    @GET("getManagedBotAccessSettings")
+    public suspend fun getManagedBotAccessSettings(@Query("user_id") userId: Long): TelegramResponse<BotAccessSettings>
+
+    /**
+     * Use this method to change the access settings of a managed bot. Returns True on success.
+     */
+    @POST("setManagedBotAccessSettings")
+    public suspend fun setManagedBotAccessSettings(@Body body: SetManagedBotAccessSettingsRequest): TelegramResponse<Boolean>
 
     /**
      * Use this method to change the list of the bot's commands. See this manual for more details about bot commands. Returns True on success.
@@ -792,7 +872,7 @@ public interface TelegramBotApi {
     /**
      * Use this method to get the current value of the bot's menu button in a private chat, or the default menu button. Returns MenuButton on success.
      *
-     * @param chatId Unique identifier for the target private chat. If not specified, default bot's menu button will be returned
+     * @param chatId Unique identifier for the target private chat. If not specified, the bot's default menu button will be returned.
      */
     @GET("getChatMenuButton")
     public suspend fun getChatMenuButton(@Query("chat_id") chatId: Long? = null): TelegramResponse<MenuButton>
@@ -928,7 +1008,7 @@ public interface TelegramBotApi {
      * @param excludeFromBlockchain Pass *True* to exclude gifts that were assigned from the TON blockchain and can't be resold or transferred in Telegram
      * @param sortByPrice Pass *True* to sort results by gift price instead of send date. Sorting is applied before pagination.
      * @param offset Offset of the first entry to return as received from the previous request; use empty string to get the first chunk of results
-     * @param limit The maximum number of gifts to be returned; 1-100. Defaults to 100
+     * @param limit The maximum number of gifts to be returned; 1-100. Defaults to 100.
      */
     @GET("getBusinessAccountGifts")
     public suspend fun getBusinessAccountGifts(
@@ -956,7 +1036,7 @@ public interface TelegramBotApi {
      * @param excludeUnique Pass *True* to exclude unique gifts
      * @param sortByPrice Pass *True* to sort results by gift price instead of send date. Sorting is applied before pagination.
      * @param offset Offset of the first entry to return as received from the previous request; use an empty string to get the first chunk of results
-     * @param limit The maximum number of gifts to be returned; 1-100. Defaults to 100
+     * @param limit The maximum number of gifts to be returned; 1-100. Defaults to 100.
      */
     @GET("getUserGifts")
     public suspend fun getUserGifts(
@@ -974,7 +1054,7 @@ public interface TelegramBotApi {
     /**
      * Returns the gifts owned by a chat. Returns OwnedGifts on success.
      *
-     * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+     * @param chatId Unique identifier for the target chat or username of the target channel in the format `@username`
      * @param excludeUnsaved Pass *True* to exclude gifts that aren't saved to the chat's profile page. Always *True*, unless the bot has the *can_post_messages* administrator right in the channel.
      * @param excludeSaved Pass *True* to exclude gifts that are saved to the chat's profile page. Always *False*, unless the bot has the *can_post_messages* administrator right in the channel.
      * @param excludeUnlimited Pass *True* to exclude gifts that can be purchased an unlimited number of times
@@ -984,7 +1064,7 @@ public interface TelegramBotApi {
      * @param excludeUnique Pass *True* to exclude unique gifts
      * @param sortByPrice Pass *True* to sort results by gift price instead of send date. Sorting is applied before pagination.
      * @param offset Offset of the first entry to return as received from the previous request; use an empty string to get the first chunk of results
-     * @param limit The maximum number of gifts to be returned; 1-100. Defaults to 100
+     * @param limit The maximum number of gifts to be returned; 1-100. Defaults to 100.
      */
     @GET("getChatGifts")
     public suspend fun getChatGifts(
@@ -1044,7 +1124,25 @@ public interface TelegramBotApi {
     public suspend fun deleteStory(@Body body: DeleteStoryRequest): TelegramResponse<Boolean>
 
     /**
-     * Use this method to edit text and game messages. On success, if the edited message is not an inline message, the edited Message is returned, otherwise True is returned. Note that business messages that were not sent by the bot and do not contain an inline keyboard can only be edited within 48 hours from the time they were sent.
+     * Use this method to set the result of an interaction with a Web App and send a corresponding message on behalf of the user to the chat from which the query originated. On success, a SentWebAppMessage object is returned.
+     */
+    @POST("answerWebAppQuery")
+    public suspend fun answerWebAppQuery(@Body body: AnswerWebAppQueryRequest): TelegramResponse<SentWebAppMessage>
+
+    /**
+     * Stores a message that can be sent by a user of a Mini App. Returns a PreparedInlineMessage object.
+     */
+    @POST("savePreparedInlineMessage")
+    public suspend fun savePreparedInlineMessage(@Body body: SavePreparedInlineMessageRequest): TelegramResponse<PreparedInlineMessage>
+
+    /**
+     * Stores a keyboard button that can be used by a user within a Mini App. Returns a PreparedKeyboardButton object.
+     */
+    @POST("savePreparedKeyboardButton")
+    public suspend fun savePreparedKeyboardButton(@Body body: SavePreparedKeyboardButtonRequest): TelegramResponse<PreparedKeyboardButton>
+
+    /**
+     * Use this method to edit text, rich and game messages. On success, if the edited message is not an inline message, the edited Message is returned, otherwise True is returned. Note that business messages that were not sent by the bot and do not contain an inline keyboard can only be edited within 48 hours from the time they were sent.
      */
     @POST("editMessageText")
     public suspend fun editMessageText(@Body body: EditMessageTextRequest): TelegramResponse<Union<Message, Boolean>>
@@ -1056,7 +1154,7 @@ public interface TelegramBotApi {
     public suspend fun editMessageCaption(@Body body: EditMessageCaptionRequest): TelegramResponse<Union<Message, Boolean>>
 
     /**
-     * Use this method to edit animation, audio, document, photo, or video messages, or to add media to text messages. If a message is part of a message album, then it can be edited only to an audio for audio albums, only to a document for document albums and to a photo or a video otherwise. When an inline message is edited, a new file can't be uploaded; use a previously uploaded file via its file_id or specify a URL. On success, if the edited message is not an inline message, the edited Message is returned, otherwise True is returned. Note that business messages that were not sent by the bot and do not contain an inline keyboard can only be edited within 48 hours from the time they were sent.
+     * Use this method to edit animation, audio, document, live photo, photo, or video messages, or to replace a text or a rich message with a media. If a message is part of a message album, then it can be edited only to an audio for audio albums, only to a document for document albums and to a photo, a live photo, or a video otherwise. When an inline message is edited, a new file can't be uploaded; use a previously uploaded file via its file_id or specify a URL. On success, if the edited message is not an inline message, the edited Message is returned, otherwise True is returned. Note that business messages that were not sent by the bot and do not contain an inline keyboard can only be edited within 48 hours from the time they were sent.
      */
     @POST("editMessageMedia")
     public suspend fun editMessageMedia(@Body formData: MultiPartFormDataContent): TelegramResponse<Union<Message, Boolean>>
@@ -1114,6 +1212,18 @@ public interface TelegramBotApi {
      */
     @POST("deleteMessages")
     public suspend fun deleteMessages(@Body body: DeleteMessagesRequest): TelegramResponse<Boolean>
+
+    /**
+     * Use this method to remove a reaction from a message in a group or a supergroup chat. The bot must have the 'can_delete_messages' administrator right in the chat. Returns True on success.
+     */
+    @POST("deleteMessageReaction")
+    public suspend fun deleteMessageReaction(@Body body: DeleteMessageReactionRequest): TelegramResponse<Boolean>
+
+    /**
+     * Use this method to remove up to 10000 recent reactions in a group or a supergroup chat added by a given user or chat. The bot must have the 'can_delete_messages' administrator right in the chat. Returns True on success.
+     */
+    @POST("deleteAllMessageReactions")
+    public suspend fun deleteAllMessageReactions(@Body body: DeleteAllMessageReactionsRequest): TelegramResponse<Boolean>
 
     /**
      * Use this method to send static .WEBP, animated .TGS, or video .WEBM stickers. On success, the sent Message is returned.
@@ -1216,22 +1326,22 @@ public interface TelegramBotApi {
     public suspend fun deleteStickerSet(@Body body: DeleteStickerSetRequest): TelegramResponse<Boolean>
 
     /**
+     * Use this method to send rich messages. If the message contains a block with a media element, then the bot must have the right to send the media to the chat. On success, the sent Message is returned.
+     */
+    @POST("sendRichMessage")
+    public suspend fun sendRichMessage(@Body body: SendRichMessageRequest): TelegramResponse<Message>
+
+    /**
+     * Use this method to stream a partial rich message to a user while the message is being generated. Note that the streamed draft is ephemeral and acts as a temporary 30-second preview - once the output is finalized, you must call sendRichMessage with the complete message to persist it in the user's chat. Returns True on success.
+     */
+    @POST("sendRichMessageDraft")
+    public suspend fun sendRichMessageDraft(@Body body: SendRichMessageDraftRequest): TelegramResponse<Boolean>
+
+    /**
      * Use this method to send answers to an inline query. On success, True is returned. No more than 50 results per query are allowed.
      */
     @POST("answerInlineQuery")
     public suspend fun answerInlineQuery(@Body body: AnswerInlineQueryRequest): TelegramResponse<Boolean>
-
-    /**
-     * Use this method to set the result of an interaction with a Web App and send a corresponding message on behalf of the user to the chat from which the query originated. On success, a SentWebAppMessage object is returned.
-     */
-    @POST("answerWebAppQuery")
-    public suspend fun answerWebAppQuery(@Body body: AnswerWebAppQueryRequest): TelegramResponse<SentWebAppMessage>
-
-    /**
-     * Stores a message that can be sent by a user of a Mini App. Returns a PreparedInlineMessage object.
-     */
-    @POST("savePreparedInlineMessage")
-    public suspend fun savePreparedInlineMessage(@Body body: SavePreparedInlineMessageRequest): TelegramResponse<PreparedInlineMessage>
 
     /**
      * Use this method to send invoices. On success, the sent Message is returned.
@@ -1308,9 +1418,9 @@ public interface TelegramBotApi {
      * This method will currently return scores for the target user, plus two of their closest neighbors on each side. Will also return the top three users if the user and their neighbors are not among them. Please note that this behavior is subject to change.
      *
      * @param userId Target user id
-     * @param chatId Required if *inline_message_id* is not specified. Unique identifier for the target chat
-     * @param messageId Required if *inline_message_id* is not specified. Identifier of the sent message
-     * @param inlineMessageId Required if *chat_id* and *message_id* are not specified. Identifier of the inline message
+     * @param chatId Required if *inline_message_id* is not specified. Unique identifier for the target chat.
+     * @param messageId Required if *inline_message_id* is not specified. Identifier of the sent message.
+     * @param inlineMessageId Required if *chat_id* and *message_id* are not specified. Identifier of the inline message.
      */
     @GET("getGameHighScores")
     public suspend fun getGameHighScores(

@@ -705,7 +705,9 @@ class StackableMatchersTest {
                     isClosed = false,
                     isAnonymous = false,
                     type = "regular",
-                    allowsMultipleAnswers = false
+                    allowsMultipleAnswers = false,
+                    allowsRevoting = false,
+                    membersOnly = false
                 )
             )
         )
@@ -727,6 +729,7 @@ class StackableMatchersTest {
                 pollAnswer = PollAnswer(
                     pollId = "poll1",
                     optionIds = listOf(0),
+                    optionPersistentIds = listOf("option-0"),
                     user = User(id = 1L, isBot = false, firstName = "User")
                 )
             )

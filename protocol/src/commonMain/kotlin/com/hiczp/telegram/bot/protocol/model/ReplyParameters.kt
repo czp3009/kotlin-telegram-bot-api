@@ -19,7 +19,7 @@ public data class ReplyParameters(
     @SerialName("message_id")
     public val messageId: Long,
     /**
-     * *Optional*. If the message to be replied to is from a different chat, unique identifier for the chat or username of the channel (in the format `@channelusername`). Not supported for messages sent on behalf of a business account and messages from channel direct messages chats.
+     * *Optional*. If the message to be replied to is from a different chat, unique identifier for the chat or username of the bot, supergroup or channel in the format `@username`. Not supported for messages sent on behalf of a business account and messages from channel direct messages chats.
      */
     @SerialName("chat_id")
     public val chatId: String? = null,
@@ -29,7 +29,7 @@ public data class ReplyParameters(
     @SerialName("allow_sending_without_reply")
     public val allowSendingWithoutReply: Boolean? = null,
     /**
-     * *Optional*. Quoted part of the message to be replied to; 0-1024 characters after entities parsing. The quote must be an exact substring of the message to be replied to, including *bold*, *italic*, *underline*, *strikethrough*, *spoiler*, and *custom_emoji* entities. The message will fail to send if the quote isn't found in the original message.
+     * *Optional*. Quoted part of the message to be replied to; 0-1024 characters after entities parsing. The quote must be an exact substring of the message to be replied to, including *bold*, *italic*, *underline*, *strikethrough*, *spoiler*, *custom_emoji*, and *date_time* entities. The message will fail to send if the quote isn't found in the original message.
      */
     public val quote: String? = null,
     /**
@@ -52,4 +52,9 @@ public data class ReplyParameters(
      */
     @SerialName("checklist_task_id")
     public val checklistTaskId: Long? = null,
+    /**
+     * *Optional*. Persistent identifier of the specific poll option to be replied to
+     */
+    @SerialName("poll_option_id")
+    public val pollOptionId: String? = null,
 )

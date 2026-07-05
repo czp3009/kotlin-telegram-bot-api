@@ -7,7 +7,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * This object represents an incoming update. At most one of the optional parameters can be present in any given update.
+ * This object represents an incoming update. At most one of the optional fields can be present in any given update.
  */
 @Serializable
 @IncomingUpdateContainer
@@ -57,6 +57,11 @@ public data class Update(
     @SerialName("deleted_business_messages")
     public val deletedBusinessMessages: BusinessMessagesDeleted? = null,
     /**
+     * *Optional*. New guest message. The bot can use the field *Message.guest_query_id* and the method [answerGuestQuery](https://core.telegram.org/bots/api#answerguestquery) to send a message in response.
+     */
+    @SerialName("guest_message")
+    public val guestMessage: Message? = null,
+    /**
      * *Optional*. A reaction to a message was changed by a user. The bot must be an administrator in the chat and must explicitly specify `"message_reaction"` in the list of *allowed_updates* to receive these updates. The update isn't received for reactions set by bots.
      */
     @SerialName("message_reaction")
@@ -82,12 +87,12 @@ public data class Update(
     @SerialName("callback_query")
     public val callbackQuery: CallbackQuery? = null,
     /**
-     * *Optional*. New incoming shipping query. Only for invoices with flexible price
+     * *Optional*. New incoming shipping query. Only for invoices with flexible price.
      */
     @SerialName("shipping_query")
     public val shippingQuery: ShippingQuery? = null,
     /**
-     * *Optional*. New incoming pre-checkout query. Contains full information about checkout
+     * *Optional*. New incoming pre-checkout query. Contains full information about checkout.
      */
     @SerialName("pre_checkout_query")
     public val preCheckoutQuery: PreCheckoutQuery? = null,
@@ -97,7 +102,7 @@ public data class Update(
     @SerialName("purchased_paid_media")
     public val purchasedPaidMedia: PaidMediaPurchased? = null,
     /**
-     * *Optional*. New poll state. Bots receive only updates about manually stopped polls and polls, which are sent by the bot
+     * *Optional*. New poll state. Bots receive only updates about manually stopped polls and polls, which are sent by the bot.
      */
     public val poll: Poll? = null,
     /**
@@ -130,4 +135,9 @@ public data class Update(
      */
     @SerialName("removed_chat_boost")
     public val removedChatBoost: ChatBoostRemoved? = null,
+    /**
+     * *Optional*. A new bot was created to be managed by the bot, or token or owner of a managed bot was changed
+     */
+    @SerialName("managed_bot")
+    public val managedBot: ManagedBotUpdated? = null,
 )

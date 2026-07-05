@@ -185,7 +185,7 @@ class MiddlewareTest {
         // Simulate an auth service with allowed user IDs
         val allowedUserIds = setOf(1L, 2L, 3L)
 
-        suspend fun checkAuth(userId: Long?): Boolean {
+        fun checkAuth(userId: Long?): Boolean {
             // Pure function check, no delay
             return userId != null && userId in allowedUserIds
         }
@@ -462,10 +462,7 @@ class MiddlewareTest {
             onMessageEvent {
                 middleware(
                     predicate = { ctx ->
-                        val userId = when (val event = ctx.event) {
-                            is MessageEvent -> event.message.from?.id
-                            else -> null
-                        }
+                        val userId = ctx.event.message.from?.id
                         checkAuthAsync2(userId)
                     },
                     onRejected = {

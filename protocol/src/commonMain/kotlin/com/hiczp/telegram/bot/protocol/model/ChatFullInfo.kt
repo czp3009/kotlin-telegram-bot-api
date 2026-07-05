@@ -1,10 +1,6 @@
 // Auto-generated from Swagger specification, do not modify this file manually
 package com.hiczp.telegram.bot.protocol.model
 
-import kotlin.Boolean
-import kotlin.Long
-import kotlin.String
-import kotlin.collections.List
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -253,8 +249,13 @@ public data class ChatFullInfo(
     @SerialName("unique_gift_colors")
     public val uniqueGiftColors: UniqueGiftColors? = null,
     /**
-     * *Optional*. The number of Telegram Stars a general user have to pay to send a message to the chat
+     * *Optional*. The number of Telegram Stars a general user has to pay to send a message to the chat
      */
     @SerialName("paid_message_star_count")
     public val paidMessageStarCount: Long? = null,
+    /**
+     * *Optional*. The bot that processes join request queries in the chat. The field is only available to chat administrators.
+     */
+    @SerialName("guard_bot")
+    public val guardBot: User? = null,
 )

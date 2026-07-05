@@ -2,8 +2,6 @@
 package com.hiczp.telegram.bot.protocol.form
 
 import com.hiczp.telegram.bot.protocol.type.InputFile
-import kotlin.Long
-import kotlin.String
 import kotlinx.serialization.SerialName
 
 public data class UploadStickerFileForm(
@@ -13,7 +11,7 @@ public data class UploadStickerFileForm(
     @SerialName("user_id")
     public val userId: Long,
     /**
-     * A file with the sticker in .WEBP, .PNG, .TGS, or .WEBM format. See [](https://core.telegram.org/stickers)[https://core.telegram.org/stickers](https://core.telegram.org/stickers) for technical requirements. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files)
+     * A file with the sticker in .WEBP, .PNG, .TGS, or .WEBM format. See https://core.telegram.org/stickers for technical requirements. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files)
      */
     public val sticker: InputFile,
     /**

@@ -1,9 +1,6 @@
 // Auto-generated from Swagger specification, do not modify this file manually
 package com.hiczp.telegram.bot.protocol.model
 
-import kotlin.Boolean
-import kotlin.Long
-import kotlin.collections.List
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -42,6 +39,11 @@ public data class ExternalReplyInfo(
      * *Optional*. Message is a general file, information about the file
      */
     public val document: Document? = null,
+    /**
+     * *Optional*. Message is a live photo, information about the live photo
+     */
+    @SerialName("live_photo")
+    public val livePhoto: LivePhoto? = null,
     /**
      * *Optional*. Message contains paid media; information about the paid media
      */

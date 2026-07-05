@@ -1,7 +1,6 @@
 // Auto-generated from Swagger specification, do not modify this file manually
 package com.hiczp.telegram.bot.protocol.model
 
-import kotlin.Long
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -16,7 +15,7 @@ public data class DirectMessagesTopic(
     @SerialName("topic_id")
     public val topicId: Long,
     /**
-     * *Optional*. Information about the user that created the topic. Currently, it is always present
+     * *Optional*. Information about the user that created the topic. Currently, it is always present.
      */
     public val user: User? = null,
 )

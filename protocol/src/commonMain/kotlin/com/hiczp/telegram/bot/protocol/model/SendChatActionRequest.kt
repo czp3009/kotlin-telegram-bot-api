@@ -14,7 +14,7 @@ public data class SendChatActionRequest(
     @SerialName("business_connection_id")
     public val businessConnectionId: String? = null,
     /**
-     * Unique identifier for the target chat or username of the target supergroup (in the format `@supergroupusername`). Channel chats and channel direct messages chats aren't supported.
+     * Unique identifier for the target chat or username of the target bot or supergroup in the format `@username`. Channel chats and channel direct messages chats aren't supported.
      */
     @SerialName("chat_id")
     public val chatId: String,

@@ -24,12 +24,6 @@ package com.hiczp.telegram.bot.protocol.model
 import com.hiczp.telegram.bot.protocol.TelegramBotApi
 import com.hiczp.telegram.bot.protocol.type.TelegramResponse
 import com.hiczp.telegram.bot.protocol.union.Union
-import kotlin.Boolean
-import kotlin.Double
-import kotlin.Long
-import kotlin.String
-import kotlin.Suppress
-import kotlin.collections.List
 
 /**
  * Use this method to remove webhook integration if you decide to switch back to getUpdates. Returns True on success.
@@ -47,7 +41,7 @@ public suspend fun TelegramBotApi.deleteWebhook(dropPendingUpdates: Boolean? = n
  * Use this method to send text messages. On success, the sent Message is returned.
  *
  * @param businessConnectionId Unique identifier of the business connection on behalf of which the message will be sent
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target bot, supergroup or channel in the format `@username`
  * @param messageThreadId Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only
  * @param directMessagesTopicId Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat
  * @param text Text of the message to be sent, 1-4096 characters after entities parsing
@@ -56,11 +50,11 @@ public suspend fun TelegramBotApi.deleteWebhook(dropPendingUpdates: Boolean? = n
  * @param linkPreviewOptions Link preview generation options for the message
  * @param disableNotification Sends the message [silently](https://telegram.org/blog/channels-2-0#silent-messages). Users will receive a notification with no sound.
  * @param protectContent Protects the contents of the sent message from forwarding and saving
- * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance
+ * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance.
  * @param messageEffectId Unique identifier of the message effect to be added to the message; for private chats only
  * @param suggestedPostParameters A JSON-serialized object containing the parameters of the suggested post to send; for direct messages chats only. If the message is sent as a reply to another suggested post, then that suggested post is automatically declined.
  * @param replyParameters Description of the message to reply to
- * @param replyMarkup Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user
+ * @param replyMarkup Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user.
  */
 public suspend fun TelegramBotApi.sendMessage(
     businessConnectionId: String? = null,
@@ -102,10 +96,10 @@ public suspend fun TelegramBotApi.sendMessage(
 /**
  * Use this method to forward messages of any kind. Service messages and messages with protected content can't be forwarded. On success, the sent Message is returned.
  *
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target bot, supergroup or channel in the format `@username`
  * @param messageThreadId Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only
  * @param directMessagesTopicId Identifier of the direct messages topic to which the message will be forwarded; required if the message is forwarded to a direct messages chat
- * @param fromChatId Unique identifier for the chat where the original message was sent (or channel username in the format `@channelusername`)
+ * @param fromChatId Unique identifier for the chat where the original message was sent (or username of the target bot, supergroup or channel in the format `@username`)
  * @param videoStartTimestamp New start timestamp for the forwarded video in the message
  * @param disableNotification Sends the message [silently](https://telegram.org/blog/channels-2-0#silent-messages). Users will receive a notification with no sound.
  * @param protectContent Protects the contents of the forwarded message from forwarding and saving
@@ -143,10 +137,10 @@ public suspend fun TelegramBotApi.forwardMessage(
 /**
  * Use this method to forward multiple messages of any kind. If some of the specified messages can't be found or forwarded, they are skipped. Service messages and messages with protected content can't be forwarded. Album grouping is kept for forwarded messages. On success, an array of MessageId of the sent messages is returned.
  *
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target bot, supergroup or channel in the format `@username`
  * @param messageThreadId Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only
  * @param directMessagesTopicId Identifier of the direct messages topic to which the messages will be forwarded; required if the messages are forwarded to a direct messages chat
- * @param fromChatId Unique identifier for the chat where the original messages were sent (or channel username in the format `@channelusername`)
+ * @param fromChatId Unique identifier for the chat where the original messages were sent (or username of the target bot, supergroup or channel in the format `@username`)
  * @param messageIds A JSON-serialized list of 1-100 identifiers of messages in the chat *from_chat_id* to forward. The identifiers must be specified in a strictly increasing order.
  * @param disableNotification Sends the messages [silently](https://telegram.org/blog/channels-2-0#silent-messages). Users will receive a notification with no sound.
  * @param protectContent Protects the contents of the forwarded messages from forwarding and saving
@@ -175,23 +169,23 @@ public suspend fun TelegramBotApi.forwardMessages(
 /**
  * Use this method to copy messages of any kind. Service messages, paid media messages, giveaway messages, giveaway winners messages, and invoice messages can't be copied. A quiz poll can be copied only if the value of the field correct_option_id is known to the bot. The method is analogous to the method forwardMessage, but the copied message doesn't have a link to the original message. Returns the MessageId of the sent message on success.
  *
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target bot, supergroup or channel in the format `@username`
  * @param messageThreadId Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only
  * @param directMessagesTopicId Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat
- * @param fromChatId Unique identifier for the chat where the original message was sent (or channel username in the format `@channelusername`)
+ * @param fromChatId Unique identifier for the chat where the original message was sent (or username of the target bot, supergroup or channel in the format `@username`)
  * @param messageId Message identifier in the chat specified in *from_chat_id*
  * @param videoStartTimestamp New start timestamp for the copied video in the message
- * @param caption New caption for media, 0-1024 characters after entities parsing. If not specified, the original caption is kept
+ * @param caption New caption for media, 0-1024 characters after entities parsing. If not specified, the original caption is kept.
  * @param parseMode Mode for parsing entities in the new caption. See [formatting options](https://core.telegram.org/bots/api#formatting-options) for more details.
  * @param captionEntities A JSON-serialized list of special entities that appear in the new caption, which can be specified instead of *parse_mode*
  * @param showCaptionAboveMedia Pass *True*, if the caption must be shown above the message media. Ignored if a new caption isn't specified.
  * @param disableNotification Sends the message [silently](https://telegram.org/blog/channels-2-0#silent-messages). Users will receive a notification with no sound.
  * @param protectContent Protects the contents of the sent message from forwarding and saving
- * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance
+ * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance.
  * @param messageEffectId Unique identifier of the message effect to be added to the message; only available when copying to private chats
  * @param suggestedPostParameters A JSON-serialized object containing the parameters of the suggested post to send; for direct messages chats only. If the message is sent as a reply to another suggested post, then that suggested post is automatically declined.
  * @param replyParameters Description of the message to reply to
- * @param replyMarkup Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user
+ * @param replyMarkup Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user.
  */
 public suspend fun TelegramBotApi.copyMessage(
     chatId: String,
@@ -237,10 +231,10 @@ public suspend fun TelegramBotApi.copyMessage(
 /**
  * Use this method to copy messages of any kind. If some of the specified messages can't be found or copied, they are skipped. Service messages, paid media messages, giveaway messages, giveaway winners messages, and invoice messages can't be copied. A quiz poll can be copied only if the value of the field correct_option_id is known to the bot. The method is analogous to the method forwardMessages, but the copied messages don't have a link to the original message. Album grouping is kept for copied messages. On success, an array of MessageId of the sent messages is returned.
  *
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target bot, supergroup or channel in the format `@username`
  * @param messageThreadId Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only
  * @param directMessagesTopicId Identifier of the direct messages topic to which the messages will be sent; required if the messages are sent to a direct messages chat
- * @param fromChatId Unique identifier for the chat where the original messages were sent (or channel username in the format `@channelusername`)
+ * @param fromChatId Unique identifier for the chat where the original messages were sent (or username of the target bot, supergroup or channel in the format `@username`)
  * @param messageIds A JSON-serialized list of 1-100 identifiers of messages in the chat *from_chat_id* to copy. The identifiers must be specified in a strictly increasing order.
  * @param disableNotification Sends the messages [silently](https://telegram.org/blog/channels-2-0#silent-messages). Users will receive a notification with no sound.
  * @param protectContent Protects the contents of the sent messages from forwarding and saving
@@ -273,22 +267,22 @@ public suspend fun TelegramBotApi.copyMessages(
  * Use this method to send point on the map. On success, the sent Message is returned.
  *
  * @param businessConnectionId Unique identifier of the business connection on behalf of which the message will be sent
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target bot, supergroup or channel in the format `@username`
  * @param messageThreadId Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only
  * @param directMessagesTopicId Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat
  * @param latitude Latitude of the location
  * @param longitude Longitude of the location
  * @param horizontalAccuracy The radius of uncertainty for the location, measured in meters; 0-1500
- * @param livePeriod Period in seconds during which the location will be updated (see [Live Locations](https://telegram.org/blog/live-locations), should be between 60 and 86400, or 0x7FFFFFFF for live locations that can be edited indefinitely.
+ * @param livePeriod Period in seconds during which the location will be updated (see [Live Locations](https://telegram.org/blog/live-locations), should be between 60 and 86400, or 0x7FFFFFFF for live locations that can be edited indefinitely
  * @param heading For live locations, a direction in which the user is moving, in degrees. Must be between 1 and 360 if specified.
  * @param proximityAlertRadius For live locations, a maximum distance for proximity alerts about approaching another chat member, in meters. Must be between 1 and 100000 if specified.
  * @param disableNotification Sends the message [silently](https://telegram.org/blog/channels-2-0#silent-messages). Users will receive a notification with no sound.
  * @param protectContent Protects the contents of the sent message from forwarding and saving
- * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance
+ * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance.
  * @param messageEffectId Unique identifier of the message effect to be added to the message; for private chats only
  * @param suggestedPostParameters A JSON-serialized object containing the parameters of the suggested post to send; for direct messages chats only. If the message is sent as a reply to another suggested post, then that suggested post is automatically declined.
  * @param replyParameters Description of the message to reply to
- * @param replyMarkup Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user
+ * @param replyMarkup Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user.
  */
 public suspend fun TelegramBotApi.sendLocation(
     businessConnectionId: String? = null,
@@ -335,7 +329,7 @@ public suspend fun TelegramBotApi.sendLocation(
  * Use this method to send information about a venue. On success, the sent Message is returned.
  *
  * @param businessConnectionId Unique identifier of the business connection on behalf of which the message will be sent
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target bot, supergroup or channel in the format `@username`
  * @param messageThreadId Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only
  * @param directMessagesTopicId Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat
  * @param latitude Latitude of the venue
@@ -348,11 +342,11 @@ public suspend fun TelegramBotApi.sendLocation(
  * @param googlePlaceType Google Places type of the venue. (See [supported types](https://developers.google.com/places/web-service/supported_types).)
  * @param disableNotification Sends the message [silently](https://telegram.org/blog/channels-2-0#silent-messages). Users will receive a notification with no sound.
  * @param protectContent Protects the contents of the sent message from forwarding and saving
- * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance
+ * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance.
  * @param messageEffectId Unique identifier of the message effect to be added to the message; for private chats only
  * @param suggestedPostParameters A JSON-serialized object containing the parameters of the suggested post to send; for direct messages chats only. If the message is sent as a reply to another suggested post, then that suggested post is automatically declined.
  * @param replyParameters Description of the message to reply to
- * @param replyMarkup Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user
+ * @param replyMarkup Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user.
  */
 public suspend fun TelegramBotApi.sendVenue(
     businessConnectionId: String? = null,
@@ -403,7 +397,7 @@ public suspend fun TelegramBotApi.sendVenue(
  * Use this method to send phone contacts. On success, the sent Message is returned.
  *
  * @param businessConnectionId Unique identifier of the business connection on behalf of which the message will be sent
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target bot, supergroup or channel in the format `@username`
  * @param messageThreadId Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only
  * @param directMessagesTopicId Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat
  * @param phoneNumber Contact's phone number
@@ -412,11 +406,11 @@ public suspend fun TelegramBotApi.sendVenue(
  * @param vcard Additional data about the contact in the form of a [vCard](https://en.wikipedia.org/wiki/VCard), 0-2048 bytes
  * @param disableNotification Sends the message [silently](https://telegram.org/blog/channels-2-0#silent-messages). Users will receive a notification with no sound.
  * @param protectContent Protects the contents of the sent message from forwarding and saving
- * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance
+ * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance.
  * @param messageEffectId Unique identifier of the message effect to be added to the message; for private chats only
  * @param suggestedPostParameters A JSON-serialized object containing the parameters of the suggested post to send; for direct messages chats only. If the message is sent as a reply to another suggested post, then that suggested post is automatically declined.
  * @param replyParameters Description of the message to reply to
- * @param replyMarkup Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user
+ * @param replyMarkup Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user.
  */
 public suspend fun TelegramBotApi.sendContact(
     businessConnectionId: String? = null,
@@ -456,90 +450,10 @@ public suspend fun TelegramBotApi.sendContact(
 }
 
 /**
- * Use this method to send a native poll. On success, the sent Message is returned.
- *
- * @param businessConnectionId Unique identifier of the business connection on behalf of which the message will be sent
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`). Polls can't be sent to channel direct messages chats.
- * @param messageThreadId Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only
- * @param question Poll question, 1-300 characters
- * @param questionParseMode Mode for parsing entities in the question. See [formatting options](https://core.telegram.org/bots/api#formatting-options) for more details. Currently, only custom emoji entities are allowed
- * @param questionEntities A JSON-serialized list of special entities that appear in the poll question. It can be specified instead of *question_parse_mode*
- * @param options A JSON-serialized list of 2-12 answer options
- * @param isAnonymous *True*, if the poll needs to be anonymous, defaults to *True*
- * @param type Poll type, “quiz” or “regular”, defaults to “regular”
- * @param allowsMultipleAnswers *True*, if the poll allows multiple answers, ignored for polls in quiz mode, defaults to *False*
- * @param correctOptionId 0-based identifier of the correct answer option, required for polls in quiz mode
- * @param explanation Text that is shown when a user chooses an incorrect answer or taps on the lamp icon in a quiz-style poll, 0-200 characters with at most 2 line feeds after entities parsing
- * @param explanationParseMode Mode for parsing entities in the explanation. See [formatting options](https://core.telegram.org/bots/api#formatting-options) for more details.
- * @param explanationEntities A JSON-serialized list of special entities that appear in the poll explanation. It can be specified instead of *explanation_parse_mode*
- * @param openPeriod Amount of time in seconds the poll will be active after creation, 5-600. Can't be used together with *close_date*.
- * @param closeDate Point in time (Unix timestamp) when the poll will be automatically closed. Must be at least 5 and no more than 600 seconds in the future. Can't be used together with *open_period*.
- * @param isClosed Pass *True* if the poll needs to be immediately closed. This can be useful for poll preview.
- * @param disableNotification Sends the message [silently](https://telegram.org/blog/channels-2-0#silent-messages). Users will receive a notification with no sound.
- * @param protectContent Protects the contents of the sent message from forwarding and saving
- * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance
- * @param messageEffectId Unique identifier of the message effect to be added to the message; for private chats only
- * @param replyParameters Description of the message to reply to
- * @param replyMarkup Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user
- */
-public suspend fun TelegramBotApi.sendPoll(
-    businessConnectionId: String? = null,
-    chatId: String,
-    messageThreadId: Long? = null,
-    question: String,
-    questionParseMode: String? = null,
-    questionEntities: List<MessageEntity>? = null,
-    options: List<InputPollOption>,
-    isAnonymous: Boolean? = null,
-    type: String? = null,
-    allowsMultipleAnswers: Boolean? = null,
-    correctOptionId: Long? = null,
-    explanation: String? = null,
-    explanationParseMode: String? = null,
-    explanationEntities: List<MessageEntity>? = null,
-    openPeriod: Long? = null,
-    closeDate: Long? = null,
-    isClosed: Boolean? = null,
-    disableNotification: Boolean? = null,
-    protectContent: Boolean? = null,
-    allowPaidBroadcast: Boolean? = null,
-    messageEffectId: String? = null,
-    replyParameters: ReplyParameters? = null,
-    replyMarkup: ReplyMarkup? = null,
-): TelegramResponse<Message> {
-    val request = SendPollRequest(
-        businessConnectionId = businessConnectionId,
-        chatId = chatId,
-        messageThreadId = messageThreadId,
-        question = question,
-        questionParseMode = questionParseMode,
-        questionEntities = questionEntities,
-        options = options,
-        isAnonymous = isAnonymous,
-        type = type,
-        allowsMultipleAnswers = allowsMultipleAnswers,
-        correctOptionId = correctOptionId,
-        explanation = explanation,
-        explanationParseMode = explanationParseMode,
-        explanationEntities = explanationEntities,
-        openPeriod = openPeriod,
-        closeDate = closeDate,
-        isClosed = isClosed,
-        disableNotification = disableNotification,
-        protectContent = protectContent,
-        allowPaidBroadcast = allowPaidBroadcast,
-        messageEffectId = messageEffectId,
-        replyParameters = replyParameters,
-        replyMarkup = replyMarkup
-    )
-    return sendPoll(request)
-}
-
-/**
  * Use this method to send a checklist on behalf of a connected business account. On success, the sent Message is returned.
  *
  * @param businessConnectionId Unique identifier of the business connection on behalf of which the message will be sent
- * @param chatId Unique identifier for the target chat
+ * @param chatId Unique identifier for the target chat or username of the target bot in the format `@username`
  * @param checklist A JSON-serialized object for the checklist to send
  * @param disableNotification Sends the message silently. Users will receive a notification with no sound.
  * @param protectContent Protects the contents of the sent message from forwarding and saving
@@ -549,7 +463,7 @@ public suspend fun TelegramBotApi.sendPoll(
  */
 public suspend fun TelegramBotApi.sendChecklist(
     businessConnectionId: String,
-    chatId: Long,
+    chatId: String,
     checklist: InputChecklist,
     disableNotification: Boolean? = null,
     protectContent: Boolean? = null,
@@ -574,17 +488,17 @@ public suspend fun TelegramBotApi.sendChecklist(
  * Use this method to send an animated emoji that will display a random value. On success, the sent Message is returned.
  *
  * @param businessConnectionId Unique identifier of the business connection on behalf of which the message will be sent
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target bot, supergroup or channel in the format `@username`
  * @param messageThreadId Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only
  * @param directMessagesTopicId Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat
- * @param emoji Emoji on which the dice throw animation is based. Currently, must be one of “”, “”, “”, “”, “”, or “”. Dice can have values 1-6 for “”, “” and “”, values 1-5 for “” and “”, and values 1-64 for “”. Defaults to “”
+ * @param emoji Emoji on which the dice throw animation is based. Currently, must be one of “”, “”, “”, “”, “”, or “”. Dice can have values 1-6 for “”, “” and “”, values 1-5 for “” and “”, and values 1-64 for “”. Defaults to “”.
  * @param disableNotification Sends the message [silently](https://telegram.org/blog/channels-2-0#silent-messages). Users will receive a notification with no sound.
  * @param protectContent Protects the contents of the sent message from forwarding
- * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance
+ * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance.
  * @param messageEffectId Unique identifier of the message effect to be added to the message; for private chats only
  * @param suggestedPostParameters A JSON-serialized object containing the parameters of the suggested post to send; for direct messages chats only. If the message is sent as a reply to another suggested post, then that suggested post is automatically declined.
  * @param replyParameters Description of the message to reply to
- * @param replyMarkup Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user
+ * @param replyMarkup Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user.
  */
 public suspend fun TelegramBotApi.sendDice(
     businessConnectionId: String? = null,
@@ -618,12 +532,12 @@ public suspend fun TelegramBotApi.sendDice(
 }
 
 /**
- * Use this method to stream a partial message to a user while the message is being generated. Returns True on success.
+ * Use this method to stream a partial message to a user while the message is being generated. Note that the streamed draft is ephemeral and acts as a temporary 30-second preview - once the output is finalized, you must call sendMessage with the complete message to persist it in the user's chat. Returns True on success.
  *
  * @param chatId Unique identifier for the target private chat
  * @param messageThreadId Unique identifier for the target message thread
- * @param draftId Unique identifier of the message draft; must be non-zero. Changes of drafts with the same identifier are animated
- * @param text Text of the message to be sent, 1-4096 characters after entities parsing
+ * @param draftId Unique identifier of the message draft; must be non-zero. Changes to drafts with the same identifier are animated.
+ * @param text Text of the message to be sent, 0-4096 characters after entities parsing. Pass an empty text to show a “Thinking…” placeholder.
  * @param parseMode Mode for parsing entities in the message text. See [formatting options](https://core.telegram.org/bots/api#formatting-options) for more details.
  * @param entities A JSON-serialized list of special entities that appear in message text, which can be specified instead of *parse_mode*
  */
@@ -631,7 +545,7 @@ public suspend fun TelegramBotApi.sendMessageDraft(
     chatId: Long,
     messageThreadId: Long? = null,
     draftId: Long,
-    text: String,
+    text: String? = null,
     parseMode: String? = null,
     entities: List<MessageEntity>? = null,
 ): TelegramResponse<Boolean> {
@@ -652,7 +566,7 @@ public suspend fun TelegramBotApi.sendMessageDraft(
  * We only recommend using this method when a response from the bot will take a noticeable amount of time to arrive.
  *
  * @param businessConnectionId Unique identifier of the business connection on behalf of which the action will be sent
- * @param chatId Unique identifier for the target chat or username of the target supergroup (in the format `@supergroupusername`). Channel chats and channel direct messages chats aren't supported.
+ * @param chatId Unique identifier for the target chat or username of the target bot or supergroup in the format `@username`. Channel chats and channel direct messages chats aren't supported.
  * @param messageThreadId Unique identifier for the target message thread or topic of a forum; for supergroups and private chats of bots with forum topic mode enabled only
  * @param action Type of action to broadcast. Choose one, depending on what the user is about to receive: *typing* for [text messages](https://core.telegram.org/bots/api#sendmessage), *upload_photo* for [photos](https://core.telegram.org/bots/api#sendphoto), *record_video* or *upload_video* for [videos](https://core.telegram.org/bots/api#sendvideo), *record_voice* or *upload_voice* for [voice notes](https://core.telegram.org/bots/api#sendvoice), *upload_document* for [general files](https://core.telegram.org/bots/api#senddocument), *choose_sticker* for [stickers](https://core.telegram.org/bots/api#sendsticker), *find_location* for [location data](https://core.telegram.org/bots/api#sendlocation), *record_video_note* or *upload_video_note* for [video notes](https://core.telegram.org/bots/api#sendvideonote).
  */
@@ -674,7 +588,7 @@ public suspend fun TelegramBotApi.sendChatAction(
 /**
  * Use this method to change the chosen reactions on a message. Service messages of some types can't be reacted to. Automatically forwarded messages from a channel to its discussion group have the same available reactions as messages in the channel. Bots can't use paid reactions. Returns True on success.
  *
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target bot, supergroup or channel in the format `@username`
  * @param messageId Identifier of the target message. If the message belongs to a media group, the reaction is set to the first non-deleted message in the group instead.
  * @param reaction A JSON-serialized list of reaction types to set on the message. Currently, as non-premium users, bots can set up to one reaction per message. A custom emoji reaction can be used if it is either already present on the message or explicitly allowed by chat administrators. Paid reactions can't be used by bots.
  * @param isBig Pass *True* to set the reaction with a big animation
@@ -717,7 +631,7 @@ public suspend fun TelegramBotApi.setUserEmojiStatus(
 /**
  * Use this method to ban a user in a group, a supergroup or a channel. In the case of supergroups and channels, the user will not be able to return to the chat on their own using invite links, etc., unless unbanned first. The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights. Returns True on success.
  *
- * @param chatId Unique identifier for the target group or username of the target supergroup or channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target group or username of the target supergroup or channel in the format `@username`
  * @param userId Unique identifier of the target user
  * @param untilDate Date when the user will be unbanned; Unix time. If user is banned for more than 366 days or less than 30 seconds from the current time they are considered to be banned forever. Applied for supergroups and channels only.
  * @param revokeMessages Pass *True* to delete all messages from the chat for the user that is being removed. If *False*, the user will be able to see messages in the group that were sent before the user was removed. Always *True* for supergroups and channels.
@@ -740,7 +654,7 @@ public suspend fun TelegramBotApi.banChatMember(
 /**
  * Use this method to unban a previously banned user in a supergroup or channel. The user will not return to the group or channel automatically, but will be able to join via link, etc. The bot must be an administrator for this to work. By default, this method guarantees that after the call the user is not a member of the chat, but will be able to join it. So if the user is a member of the chat they will also be removed from the chat. If you don't want this, use the parameter only_if_banned. Returns True on success.
  *
- * @param chatId Unique identifier for the target group or username of the target supergroup or channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target group or username of the target supergroup or channel in the format `@username`
  * @param userId Unique identifier of the target user
  * @param onlyIfBanned Do nothing if the user is not banned
  */
@@ -760,11 +674,11 @@ public suspend fun TelegramBotApi.unbanChatMember(
 /**
  * Use this method to restrict a user in a supergroup. The bot must be an administrator in the supergroup for this to work and must have the appropriate administrator rights. Pass True for all permissions to lift restrictions from a user. Returns True on success.
  *
- * @param chatId Unique identifier for the target chat or username of the target supergroup (in the format `@supergroupusername`)
+ * @param chatId Unique identifier for the target chat or username of the target supergroup in the format `@username`
  * @param userId Unique identifier of the target user
  * @param permissions A JSON-serialized object for new user permissions
  * @param useIndependentChatPermissions Pass *True* if chat permissions are set independently. Otherwise, the *can_send_other_messages* and *can_add_web_page_previews* permissions will imply the *can_send_messages*, *can_send_audios*, *can_send_documents*, *can_send_photos*, *can_send_videos*, *can_send_video_notes*, and *can_send_voice_notes* permissions; the *can_send_polls* permission will imply the *can_send_messages* permission.
- * @param untilDate Date when restrictions will be lifted for the user; Unix time. If user is restricted for more than 366 days or less than 30 seconds from the current time, they are considered to be restricted forever
+ * @param untilDate Date when restrictions will be lifted for the user; Unix time. If user is restricted for more than 366 days or less than 30 seconds from the current time, they are considered to be restricted forever.
  */
 public suspend fun TelegramBotApi.restrictChatMember(
     chatId: String,
@@ -786,13 +700,13 @@ public suspend fun TelegramBotApi.restrictChatMember(
 /**
  * Use this method to promote or demote a user in a supergroup or a channel. The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights. Pass False for all boolean parameters to demote a user. Returns True on success.
  *
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target channel in the format `@username`
  * @param userId Unique identifier of the target user
  * @param isAnonymous Pass *True* if the administrator's presence in the chat is hidden
  * @param canManageChat Pass *True* if the administrator can access the chat event log, get boost list, see hidden supergroup and channel members, report spam messages, ignore slow mode, and send messages to the chat without paying Telegram Stars. Implied by any other administrator privilege.
  * @param canDeleteMessages Pass *True* if the administrator can delete messages of other users
  * @param canManageVideoChats Pass *True* if the administrator can manage video chats
- * @param canRestrictMembers Pass *True* if the administrator can restrict, ban or unban chat members, or access supergroup statistics. For backward compatibility, defaults to *True* for promotions of channel administrators
+ * @param canRestrictMembers Pass *True* if the administrator can restrict, ban or unban chat members, or access supergroup statistics. For backward compatibility, defaults to *True* for promotions of channel administrators.
  * @param canPromoteMembers Pass *True* if the administrator can add new administrators with a subset of their own privileges or demote administrators that they have promoted, directly or indirectly (promoted by administrators that were appointed by him)
  * @param canChangeInfo Pass *True* if the administrator can change chat title, photo and other settings
  * @param canInviteUsers Pass *True* if the administrator can invite new users to the chat
@@ -854,7 +768,7 @@ public suspend fun TelegramBotApi.promoteChatMember(
 /**
  * Use this method to set a custom title for an administrator in a supergroup promoted by the bot. Returns True on success.
  *
- * @param chatId Unique identifier for the target chat or username of the target supergroup (in the format `@supergroupusername`)
+ * @param chatId Unique identifier for the target chat or username of the target supergroup in the format `@username`
  * @param userId Unique identifier of the target user
  * @param customTitle New custom title for the administrator; 0-16 characters, emoji are not allowed
  */
@@ -874,7 +788,7 @@ public suspend fun TelegramBotApi.setChatAdministratorCustomTitle(
 /**
  * Use this method to set a tag for a regular member in a group or a supergroup. The bot must be an administrator in the chat for this to work and must have the can_manage_tags administrator right. Returns True on success.
  *
- * @param chatId Unique identifier for the target chat or username of the target supergroup (in the format `@supergroupusername`)
+ * @param chatId Unique identifier for the target chat or username of the target supergroup in the format `@username`
  * @param userId Unique identifier of the target user
  * @param tag New tag for the member; 0-16 characters, emoji are not allowed
  */
@@ -894,7 +808,7 @@ public suspend fun TelegramBotApi.setChatMemberTag(
 /**
  * Use this method to ban a channel chat in a supergroup or a channel. Until the chat is unbanned, the owner of the banned chat won't be able to send messages on behalf of any of their channels. The bot must be an administrator in the supergroup or channel for this to work and must have the appropriate administrator rights. Returns True on success.
  *
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target channel in the format `@username`
  * @param senderChatId Unique identifier of the target sender chat
  */
 public suspend fun TelegramBotApi.banChatSenderChat(chatId: String, senderChatId: Long): TelegramResponse<Boolean> {
@@ -908,7 +822,7 @@ public suspend fun TelegramBotApi.banChatSenderChat(chatId: String, senderChatId
 /**
  * Use this method to unban a previously banned channel chat in a supergroup or channel. The bot must be an administrator for this to work and must have the appropriate administrator rights. Returns True on success.
  *
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target channel in the format `@username`
  * @param senderChatId Unique identifier of the target sender chat
  */
 public suspend fun TelegramBotApi.unbanChatSenderChat(chatId: String, senderChatId: Long): TelegramResponse<Boolean> {
@@ -922,7 +836,7 @@ public suspend fun TelegramBotApi.unbanChatSenderChat(chatId: String, senderChat
 /**
  * Use this method to set default chat permissions for all members. The bot must be an administrator in the group or a supergroup for this to work and must have the can_restrict_members administrator rights. Returns True on success.
  *
- * @param chatId Unique identifier for the target chat or username of the target supergroup (in the format `@supergroupusername`)
+ * @param chatId Unique identifier for the target chat or username of the target supergroup in the format `@username`
  * @param permissions A JSON-serialized object for new default chat permissions
  * @param useIndependentChatPermissions Pass *True* if chat permissions are set independently. Otherwise, the *can_send_other_messages* and *can_add_web_page_previews* permissions will imply the *can_send_messages*, *can_send_audios*, *can_send_documents*, *can_send_photos*, *can_send_videos*, *can_send_video_notes*, and *can_send_voice_notes* permissions; the *can_send_polls* permission will imply the *can_send_messages* permission.
  */
@@ -943,7 +857,7 @@ public suspend fun TelegramBotApi.setChatPermissions(
  * Use this method to generate a new primary invite link for a chat; any previously generated primary link is revoked. The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights. Returns the new invite link as String on success.
  * Note: Each administrator in a chat generates their own invite links. Bots can't use invite links generated by other administrators. If you want your bot to work with invite links, it will need to generate its own link using exportChatInviteLink or by calling the getChat method. If your bot needs to generate a new primary invite link replacing its previous one, use exportChatInviteLink again.
  *
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target channel in the format `@username`
  */
 public suspend fun TelegramBotApi.exportChatInviteLink(chatId: String): TelegramResponse<String> {
     val request = ExportChatInviteLinkRequest(
@@ -955,11 +869,11 @@ public suspend fun TelegramBotApi.exportChatInviteLink(chatId: String): Telegram
 /**
  * Use this method to create an additional invite link for a chat. The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights. The link can be revoked using the method revokeChatInviteLink. Returns the new invite link as ChatInviteLink object.
  *
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target channel in the format `@username`
  * @param name Invite link name; 0-32 characters
  * @param expireDate Point in time (Unix timestamp) when the link will expire
  * @param memberLimit The maximum number of users that can be members of the chat simultaneously after joining the chat via this invite link; 1-99999
- * @param createsJoinRequest *True*, if users joining the chat via the link need to be approved by chat administrators. If *True*, *member_limit* can't be specified
+ * @param createsJoinRequest *True*, if users joining the chat via the link need to be approved by chat administrators. If *True*, *member_limit* can't be specified.
  */
 public suspend fun TelegramBotApi.createChatInviteLink(
     chatId: String,
@@ -981,12 +895,12 @@ public suspend fun TelegramBotApi.createChatInviteLink(
 /**
  * Use this method to edit a non-primary invite link created by the bot. The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights. Returns the edited invite link as a ChatInviteLink object.
  *
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target channel in the format `@username`
  * @param inviteLink The invite link to edit
  * @param name Invite link name; 0-32 characters
  * @param expireDate Point in time (Unix timestamp) when the link will expire
  * @param memberLimit The maximum number of users that can be members of the chat simultaneously after joining the chat via this invite link; 1-99999
- * @param createsJoinRequest *True*, if users joining the chat via the link need to be approved by chat administrators. If *True*, *member_limit* can't be specified
+ * @param createsJoinRequest *True*, if users joining the chat via the link need to be approved by chat administrators. If *True*, *member_limit* can't be specified.
  */
 public suspend fun TelegramBotApi.editChatInviteLink(
     chatId: String,
@@ -1010,7 +924,7 @@ public suspend fun TelegramBotApi.editChatInviteLink(
 /**
  * Use this method to create a subscription invite link for a channel chat. The bot must have the can_invite_users administrator rights. The link can be edited using the method editChatSubscriptionInviteLink or revoked using the method revokeChatInviteLink. Returns the new invite link as a ChatInviteLink object.
  *
- * @param chatId Unique identifier for the target channel chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target channel chat or username of the target channel in the format `@username`
  * @param name Invite link name; 0-32 characters
  * @param subscriptionPeriod The number of seconds the subscription will be active for before the next payment. Currently, it must always be 2592000 (30 days).
  * @param subscriptionPrice The amount of Telegram Stars a user must pay initially and after each subsequent subscription period to be a member of the chat; 1-10000
@@ -1033,7 +947,7 @@ public suspend fun TelegramBotApi.createChatSubscriptionInviteLink(
 /**
  * Use this method to edit a subscription invite link created by the bot. The bot must have the can_invite_users administrator rights. Returns the edited invite link as a ChatInviteLink object.
  *
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target channel in the format `@username`
  * @param inviteLink The invite link to edit
  * @param name Invite link name; 0-32 characters
  */
@@ -1053,7 +967,7 @@ public suspend fun TelegramBotApi.editChatSubscriptionInviteLink(
 /**
  * Use this method to revoke an invite link created by the bot. If the primary link is revoked, a new link is automatically generated. The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights. Returns the revoked invite link as ChatInviteLink object.
  *
- * @param chatId Unique identifier of the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier of the target chat or username of the target channel in the format `@username`
  * @param inviteLink The invite link to revoke
  */
 public suspend fun TelegramBotApi.revokeChatInviteLink(chatId: String, inviteLink: String): TelegramResponse<ChatInviteLink> {
@@ -1067,7 +981,7 @@ public suspend fun TelegramBotApi.revokeChatInviteLink(chatId: String, inviteLin
 /**
  * Use this method to approve a chat join request. The bot must be an administrator in the chat for this to work and must have the can_invite_users administrator right. Returns True on success.
  *
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target channel in the format `@username`
  * @param userId Unique identifier of the target user
  */
 public suspend fun TelegramBotApi.approveChatJoinRequest(chatId: String, userId: Long): TelegramResponse<Boolean> {
@@ -1081,7 +995,7 @@ public suspend fun TelegramBotApi.approveChatJoinRequest(chatId: String, userId:
 /**
  * Use this method to decline a chat join request. The bot must be an administrator in the chat for this to work and must have the can_invite_users administrator right. Returns True on success.
  *
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target channel in the format `@username`
  * @param userId Unique identifier of the target user
  */
 public suspend fun TelegramBotApi.declineChatJoinRequest(chatId: String, userId: Long): TelegramResponse<Boolean> {
@@ -1093,9 +1007,43 @@ public suspend fun TelegramBotApi.declineChatJoinRequest(chatId: String, userId:
 }
 
 /**
+ * Use this method to process a received chat join request query. Returns True on success.
+ *
+ * @param chatJoinRequestQueryId Unique identifier of the join request query
+ * @param result Result of the query. Must be either “approve” to allow the user to join the chat, “decline” to disallow the user to join the chat, or “queue” to leave the decision to other administrators.
+ */
+public suspend fun TelegramBotApi.answerChatJoinRequestQuery(
+    chatJoinRequestQueryId: String,
+    result: String
+): TelegramResponse<Boolean> {
+    val request = AnswerChatJoinRequestQueryRequest(
+        chatJoinRequestQueryId = chatJoinRequestQueryId,
+        result = result
+    )
+    return answerChatJoinRequestQuery(request)
+}
+
+/**
+ * Use this method to process a received chat join request query by showing a Mini App to the user before deciding the outcome. Call answerChatJoinRequestQuery to resolve the join request query based on the user interaction with the Mini App. Returns True on success.
+ *
+ * @param chatJoinRequestQueryId Unique identifier of the join request query
+ * @param webAppUrl The URL of the Mini App to be opened
+ */
+public suspend fun TelegramBotApi.sendChatJoinRequestWebApp(
+    chatJoinRequestQueryId: String,
+    webAppUrl: String
+): TelegramResponse<Boolean> {
+    val request = SendChatJoinRequestWebAppRequest(
+        chatJoinRequestQueryId = chatJoinRequestQueryId,
+        webAppUrl = webAppUrl
+    )
+    return sendChatJoinRequestWebApp(request)
+}
+
+/**
  * Use this method to delete a chat photo. Photos can't be changed for private chats. The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights. Returns True on success.
  *
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target channel in the format `@username`
  */
 public suspend fun TelegramBotApi.deleteChatPhoto(chatId: String): TelegramResponse<Boolean> {
     val request = DeleteChatPhotoRequest(
@@ -1107,7 +1055,7 @@ public suspend fun TelegramBotApi.deleteChatPhoto(chatId: String): TelegramRespo
 /**
  * Use this method to change the title of a chat. Titles can't be changed for private chats. The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights. Returns True on success.
  *
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target channel in the format `@username`
  * @param title New chat title, 1-128 characters
  */
 public suspend fun TelegramBotApi.setChatTitle(chatId: String, title: String): TelegramResponse<Boolean> {
@@ -1121,7 +1069,7 @@ public suspend fun TelegramBotApi.setChatTitle(chatId: String, title: String): T
 /**
  * Use this method to change the description of a group, a supergroup or a channel. The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights. Returns True on success.
  *
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target channel in the format `@username`
  * @param description New chat description, 0-255 characters
  */
 public suspend fun TelegramBotApi.setChatDescription(chatId: String, description: String? = null): TelegramResponse<Boolean> {
@@ -1136,7 +1084,7 @@ public suspend fun TelegramBotApi.setChatDescription(chatId: String, description
  * Use this method to add a message to the list of pinned messages in a chat. In private chats and channel direct messages chats, all non-service messages can be pinned. Conversely, the bot must be an administrator with the 'can_pin_messages' right or the 'can_edit_messages' right to pin messages in groups and channels respectively. Returns True on success.
  *
  * @param businessConnectionId Unique identifier of the business connection on behalf of which the message will be pinned
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target channel in the format `@username`
  * @param messageId Identifier of a message to pin
  * @param disableNotification Pass *True* if it is not necessary to send a notification to all chat members about the new pinned message. Notifications are always disabled in channels and private chats.
  */
@@ -1159,7 +1107,7 @@ public suspend fun TelegramBotApi.pinChatMessage(
  * Use this method to remove a message from the list of pinned messages in a chat. In private chats and channel direct messages chats, all messages can be unpinned. Conversely, the bot must be an administrator with the 'can_pin_messages' right or the 'can_edit_messages' right to unpin messages in groups and channels respectively. Returns True on success.
  *
  * @param businessConnectionId Unique identifier of the business connection on behalf of which the message will be unpinned
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target channel in the format `@username`
  * @param messageId Identifier of the message to unpin. Required if *business_connection_id* is specified. If not specified, the most recent pinned message (by sending date) will be unpinned.
  */
 public suspend fun TelegramBotApi.unpinChatMessage(
@@ -1178,7 +1126,7 @@ public suspend fun TelegramBotApi.unpinChatMessage(
 /**
  * Use this method to clear the list of pinned messages in a chat. In private chats and channel direct messages chats, no additional rights are required to unpin all pinned messages. Conversely, the bot must be an administrator with the 'can_pin_messages' right or the 'can_edit_messages' right to unpin all pinned messages in groups and channels respectively. Returns True on success.
  *
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target channel in the format `@username`
  */
 public suspend fun TelegramBotApi.unpinAllChatMessages(chatId: String): TelegramResponse<Boolean> {
     val request = UnpinAllChatMessagesRequest(
@@ -1190,7 +1138,7 @@ public suspend fun TelegramBotApi.unpinAllChatMessages(chatId: String): Telegram
 /**
  * Use this method for your bot to leave a group, supergroup or channel. Returns True on success.
  *
- * @param chatId Unique identifier for the target chat or username of the target supergroup or channel (in the format `@channelusername`). Channel direct messages chats aren't supported; leave the corresponding channel instead.
+ * @param chatId Unique identifier for the target chat or username of the target supergroup or channel in the format `@username`. Channel direct messages chats aren't supported; leave the corresponding channel instead.
  */
 public suspend fun TelegramBotApi.leaveChat(chatId: String): TelegramResponse<Boolean> {
     val request = LeaveChatRequest(
@@ -1202,7 +1150,7 @@ public suspend fun TelegramBotApi.leaveChat(chatId: String): TelegramResponse<Bo
 /**
  * Use this method to set a new group sticker set for a supergroup. The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights. Use the field can_set_sticker_set optionally returned in getChat requests to check if the bot can use this method. Returns True on success.
  *
- * @param chatId Unique identifier for the target chat or username of the target supergroup (in the format `@supergroupusername`)
+ * @param chatId Unique identifier for the target chat or username of the target supergroup in the format `@username`
  * @param stickerSetName Name of the sticker set to be set as the group sticker set
  */
 public suspend fun TelegramBotApi.setChatStickerSet(chatId: String, stickerSetName: String): TelegramResponse<Boolean> {
@@ -1216,7 +1164,7 @@ public suspend fun TelegramBotApi.setChatStickerSet(chatId: String, stickerSetNa
 /**
  * Use this method to delete a group sticker set from a supergroup. The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights. Use the field can_set_sticker_set optionally returned in getChat requests to check if the bot can use this method. Returns True on success.
  *
- * @param chatId Unique identifier for the target chat or username of the target supergroup (in the format `@supergroupusername`)
+ * @param chatId Unique identifier for the target chat or username of the target supergroup in the format `@username`
  */
 public suspend fun TelegramBotApi.deleteChatStickerSet(chatId: String): TelegramResponse<Boolean> {
     val request = DeleteChatStickerSetRequest(
@@ -1228,9 +1176,9 @@ public suspend fun TelegramBotApi.deleteChatStickerSet(chatId: String): Telegram
 /**
  * Use this method to create a topic in a forum supergroup chat or a private chat with a user. In the case of a supergroup chat the bot must be an administrator in the chat for this to work and must have the can_manage_topics administrator right. Returns information about the created topic as a ForumTopic object.
  *
- * @param chatId Unique identifier for the target chat or username of the target supergroup (in the format `@supergroupusername`)
+ * @param chatId Unique identifier for the target chat or username of the target supergroup in the format `@username`
  * @param name Topic name, 1-128 characters
- * @param iconColor Color of the topic icon in RGB format. Currently, must be one of 7322096 (0x6FB9F0), 16766590 (0xFFD67E), 13338331 (0xCB86DB), 9367192 (0x8EEE98), 16749490 (0xFF93B2), or 16478047 (0xFB6F5F)
+ * @param iconColor Color of the topic icon in RGB format. Currently, must be one of 7322096 (0x6FB9F0), 16766590 (0xFFD67E), 13338331 (0xCB86DB), 9367192 (0x8EEE98), 16749490 (0xFF93B2), or 16478047 (0xFB6F5F).
  * @param iconCustomEmojiId Unique identifier of the custom emoji shown as the topic icon. Use [getForumTopicIconStickers](https://core.telegram.org/bots/api#getforumtopiciconstickers) to get all allowed custom emoji identifiers.
  */
 public suspend fun TelegramBotApi.createForumTopic(
@@ -1251,10 +1199,10 @@ public suspend fun TelegramBotApi.createForumTopic(
 /**
  * Use this method to edit name and icon of a topic in a forum supergroup chat or a private chat with a user. In the case of a supergroup chat the bot must be an administrator in the chat for this to work and must have the can_manage_topics administrator rights, unless it is the creator of the topic. Returns True on success.
  *
- * @param chatId Unique identifier for the target chat or username of the target supergroup (in the format `@supergroupusername`)
+ * @param chatId Unique identifier for the target chat or username of the target supergroup in the format `@username`
  * @param messageThreadId Unique identifier for the target message thread of the forum topic
- * @param name New topic name, 0-128 characters. If not specified or empty, the current name of the topic will be kept
- * @param iconCustomEmojiId New unique identifier of the custom emoji shown as the topic icon. Use [getForumTopicIconStickers](https://core.telegram.org/bots/api#getforumtopiciconstickers) to get all allowed custom emoji identifiers. Pass an empty string to remove the icon. If not specified, the current icon will be kept
+ * @param name New topic name, 0-128 characters. If not specified or empty, the current name of the topic will be kept.
+ * @param iconCustomEmojiId New unique identifier of the custom emoji shown as the topic icon. Use [getForumTopicIconStickers](https://core.telegram.org/bots/api#getforumtopiciconstickers) to get all allowed custom emoji identifiers. Pass an empty string to remove the icon. If not specified, the current icon will be kept.
  */
 public suspend fun TelegramBotApi.editForumTopic(
     chatId: String,
@@ -1274,7 +1222,7 @@ public suspend fun TelegramBotApi.editForumTopic(
 /**
  * Use this method to close an open topic in a forum supergroup chat. The bot must be an administrator in the chat for this to work and must have the can_manage_topics administrator rights, unless it is the creator of the topic. Returns True on success.
  *
- * @param chatId Unique identifier for the target chat or username of the target supergroup (in the format `@supergroupusername`)
+ * @param chatId Unique identifier for the target chat or username of the target supergroup in the format `@username`
  * @param messageThreadId Unique identifier for the target message thread of the forum topic
  */
 public suspend fun TelegramBotApi.closeForumTopic(chatId: String, messageThreadId: Long): TelegramResponse<Boolean> {
@@ -1288,7 +1236,7 @@ public suspend fun TelegramBotApi.closeForumTopic(chatId: String, messageThreadI
 /**
  * Use this method to reopen a closed topic in a forum supergroup chat. The bot must be an administrator in the chat for this to work and must have the can_manage_topics administrator rights, unless it is the creator of the topic. Returns True on success.
  *
- * @param chatId Unique identifier for the target chat or username of the target supergroup (in the format `@supergroupusername`)
+ * @param chatId Unique identifier for the target chat or username of the target supergroup in the format `@username`
  * @param messageThreadId Unique identifier for the target message thread of the forum topic
  */
 public suspend fun TelegramBotApi.reopenForumTopic(chatId: String, messageThreadId: Long): TelegramResponse<Boolean> {
@@ -1302,7 +1250,7 @@ public suspend fun TelegramBotApi.reopenForumTopic(chatId: String, messageThread
 /**
  * Use this method to delete a forum topic along with all its messages in a forum supergroup chat or a private chat with a user. In the case of a supergroup chat the bot must be an administrator in the chat for this to work and must have the can_delete_messages administrator rights. Returns True on success.
  *
- * @param chatId Unique identifier for the target chat or username of the target supergroup (in the format `@supergroupusername`)
+ * @param chatId Unique identifier for the target chat or username of the target supergroup in the format `@username`
  * @param messageThreadId Unique identifier for the target message thread of the forum topic
  */
 public suspend fun TelegramBotApi.deleteForumTopic(chatId: String, messageThreadId: Long): TelegramResponse<Boolean> {
@@ -1316,7 +1264,7 @@ public suspend fun TelegramBotApi.deleteForumTopic(chatId: String, messageThread
 /**
  * Use this method to clear the list of pinned messages in a forum topic in a forum supergroup chat or a private chat with a user. In the case of a supergroup chat the bot must be an administrator in the chat for this to work and must have the can_pin_messages administrator right in the supergroup. Returns True on success.
  *
- * @param chatId Unique identifier for the target chat or username of the target supergroup (in the format `@supergroupusername`)
+ * @param chatId Unique identifier for the target chat or username of the target supergroup in the format `@username`
  * @param messageThreadId Unique identifier for the target message thread of the forum topic
  */
 public suspend fun TelegramBotApi.unpinAllForumTopicMessages(chatId: String, messageThreadId: Long): TelegramResponse<Boolean> {
@@ -1330,7 +1278,7 @@ public suspend fun TelegramBotApi.unpinAllForumTopicMessages(chatId: String, mes
 /**
  * Use this method to edit the name of the 'General' topic in a forum supergroup chat. The bot must be an administrator in the chat for this to work and must have the can_manage_topics administrator rights. Returns True on success.
  *
- * @param chatId Unique identifier for the target chat or username of the target supergroup (in the format `@supergroupusername`)
+ * @param chatId Unique identifier for the target chat or username of the target supergroup in the format `@username`
  * @param name New topic name, 1-128 characters
  */
 public suspend fun TelegramBotApi.editGeneralForumTopic(chatId: String, name: String): TelegramResponse<Boolean> {
@@ -1344,7 +1292,7 @@ public suspend fun TelegramBotApi.editGeneralForumTopic(chatId: String, name: St
 /**
  * Use this method to close an open 'General' topic in a forum supergroup chat. The bot must be an administrator in the chat for this to work and must have the can_manage_topics administrator rights. Returns True on success.
  *
- * @param chatId Unique identifier for the target chat or username of the target supergroup (in the format `@supergroupusername`)
+ * @param chatId Unique identifier for the target chat or username of the target supergroup in the format `@username`
  */
 public suspend fun TelegramBotApi.closeGeneralForumTopic(chatId: String): TelegramResponse<Boolean> {
     val request = CloseGeneralForumTopicRequest(
@@ -1356,7 +1304,7 @@ public suspend fun TelegramBotApi.closeGeneralForumTopic(chatId: String): Telegr
 /**
  * Use this method to reopen a closed 'General' topic in a forum supergroup chat. The bot must be an administrator in the chat for this to work and must have the can_manage_topics administrator rights. The topic will be automatically unhidden if it was hidden. Returns True on success.
  *
- * @param chatId Unique identifier for the target chat or username of the target supergroup (in the format `@supergroupusername`)
+ * @param chatId Unique identifier for the target chat or username of the target supergroup in the format `@username`
  */
 public suspend fun TelegramBotApi.reopenGeneralForumTopic(chatId: String): TelegramResponse<Boolean> {
     val request = ReopenGeneralForumTopicRequest(
@@ -1368,7 +1316,7 @@ public suspend fun TelegramBotApi.reopenGeneralForumTopic(chatId: String): Teleg
 /**
  * Use this method to hide the 'General' topic in a forum supergroup chat. The bot must be an administrator in the chat for this to work and must have the can_manage_topics administrator rights. The topic will be automatically closed if it was open. Returns True on success.
  *
- * @param chatId Unique identifier for the target chat or username of the target supergroup (in the format `@supergroupusername`)
+ * @param chatId Unique identifier for the target chat or username of the target supergroup in the format `@username`
  */
 public suspend fun TelegramBotApi.hideGeneralForumTopic(chatId: String): TelegramResponse<Boolean> {
     val request = HideGeneralForumTopicRequest(
@@ -1380,7 +1328,7 @@ public suspend fun TelegramBotApi.hideGeneralForumTopic(chatId: String): Telegra
 /**
  * Use this method to unhide the 'General' topic in a forum supergroup chat. The bot must be an administrator in the chat for this to work and must have the can_manage_topics administrator rights. Returns True on success.
  *
- * @param chatId Unique identifier for the target chat or username of the target supergroup (in the format `@supergroupusername`)
+ * @param chatId Unique identifier for the target chat or username of the target supergroup in the format `@username`
  */
 public suspend fun TelegramBotApi.unhideGeneralForumTopic(chatId: String): TelegramResponse<Boolean> {
     val request = UnhideGeneralForumTopicRequest(
@@ -1392,7 +1340,7 @@ public suspend fun TelegramBotApi.unhideGeneralForumTopic(chatId: String): Teleg
 /**
  * Use this method to clear the list of pinned messages in a General forum topic. The bot must be an administrator in the chat for this to work and must have the can_pin_messages administrator right in the supergroup. Returns True on success.
  *
- * @param chatId Unique identifier for the target chat or username of the target supergroup (in the format `@supergroupusername`)
+ * @param chatId Unique identifier for the target chat or username of the target supergroup in the format `@username`
  */
 public suspend fun TelegramBotApi.unpinAllGeneralForumTopicMessages(chatId: String): TelegramResponse<Boolean> {
     val request = UnpinAllGeneralForumTopicMessagesRequest(
@@ -1406,7 +1354,7 @@ public suspend fun TelegramBotApi.unpinAllGeneralForumTopicMessages(chatId: Stri
  * Alternatively, the user can be redirected to the specified Game URL. For this option to work, you must first create a game for your bot via @BotFather and accept the terms. Otherwise, you may use links like t.me/your_bot?start=XXXX that open your bot with a parameter.
  *
  * @param callbackQueryId Unique identifier for the query to be answered
- * @param text Text of the notification. If not specified, nothing will be shown to the user, 0-200 characters
+ * @param text Text of the notification. If not specified, nothing will be shown to the user, 0-200 characters.
  * @param showAlert If *True*, an alert will be shown by the client instead of a notification at the top of the chat screen. Defaults to *false*.
  * @param url URL that will be opened by the user's client. If you have created a [Game](https://core.telegram.org/bots/api#game) and accepted the conditions via [@BotFather](https://t.me/botfather), specify the URL that opens your game - note that this will only work if the query comes from a [callback_game](https://core.telegram.org/bots/api#inlinekeyboardbutton) button.Otherwise, you may use links like `t.me/your_bot?start=XXXX` that open your bot with a parameter.
  * @param cacheTime The maximum amount of time in seconds that the result of the callback query may be cached client-side. Telegram apps will support caching starting in version 3.14. Defaults to 0.
@@ -1429,11 +1377,60 @@ public suspend fun TelegramBotApi.answerCallbackQuery(
 }
 
 /**
+ * Use this method to reply to a received guest message. On success, a SentGuestMessage object is returned.
+ *
+ * @param guestQueryId Unique identifier for the query to be answered
+ * @param result A JSON-serialized object describing the message to be sent
+ */
+public suspend fun TelegramBotApi.answerGuestQuery(
+    guestQueryId: String,
+    result: InlineQueryResult
+): TelegramResponse<SentGuestMessage> {
+    val request = AnswerGuestQueryRequest(
+        guestQueryId = guestQueryId,
+        result = result
+    )
+    return answerGuestQuery(request)
+}
+
+/**
+ * Use this method to revoke the current token of a managed bot and generate a new one. Returns the new token as String on success.
+ *
+ * @param userId User identifier of the managed bot whose token will be replaced
+ */
+public suspend fun TelegramBotApi.replaceManagedBotToken(userId: Long): TelegramResponse<String> {
+    val request = ReplaceManagedBotTokenRequest(
+        userId = userId
+    )
+    return replaceManagedBotToken(request)
+}
+
+/**
+ * Use this method to change the access settings of a managed bot. Returns True on success.
+ *
+ * @param userId User identifier of the managed bot whose access settings will be changed
+ * @param isAccessRestricted Pass *True*, if only selected users can access the bot. The bot's owner can always access it.
+ * @param addedUserIds A JSON-serialized list of up to 10 identifiers of users who will have access to the bot in addition to its owner. Ignored if *is_access_restricted* is false.
+ */
+public suspend fun TelegramBotApi.setManagedBotAccessSettings(
+    userId: Long,
+    isAccessRestricted: Boolean,
+    addedUserIds: List<Long>? = null,
+): TelegramResponse<Boolean> {
+    val request = SetManagedBotAccessSettingsRequest(
+        userId = userId,
+        isAccessRestricted = isAccessRestricted,
+        addedUserIds = addedUserIds
+    )
+    return setManagedBotAccessSettings(request)
+}
+
+/**
  * Use this method to change the list of the bot's commands. See this manual for more details about bot commands. Returns True on success.
  *
  * @param commands A JSON-serialized list of bot commands to be set as the list of the bot's commands. At most 100 commands can be specified.
  * @param scope A JSON-serialized object, describing scope of users for which the commands are relevant. Defaults to [BotCommandScopeDefault](https://core.telegram.org/bots/api#botcommandscopedefault).
- * @param languageCode A two-letter ISO 639-1 language code. If empty, commands will be applied to all users from the given scope, for whose language there are no dedicated commands
+ * @param languageCode A two-letter ISO 639-1 language code. If empty, commands will be applied to all users from the given scope, for whose language there are no dedicated commands.
  */
 public suspend fun TelegramBotApi.setMyCommands(
     commands: List<BotCommand>,
@@ -1452,7 +1449,7 @@ public suspend fun TelegramBotApi.setMyCommands(
  * Use this method to delete the list of the bot's commands for the given scope and user language. After deletion, higher level commands will be shown to affected users. Returns True on success.
  *
  * @param scope A JSON-serialized object, describing scope of users for which the commands are relevant. Defaults to [BotCommandScopeDefault](https://core.telegram.org/bots/api#botcommandscopedefault).
- * @param languageCode A two-letter ISO 639-1 language code. If empty, commands will be applied to all users from the given scope, for whose language there are no dedicated commands
+ * @param languageCode A two-letter ISO 639-1 language code. If empty, commands will be applied to all users from the given scope, for whose language there are no dedicated commands.
  */
 public suspend fun TelegramBotApi.deleteMyCommands(scope: BotCommandScope? = null, languageCode: String? = null): TelegramResponse<Boolean> {
     val request = DeleteMyCommandsRequest(
@@ -1507,8 +1504,8 @@ public suspend fun TelegramBotApi.setMyShortDescription(shortDescription: String
 /**
  * Use this method to change the bot's menu button in a private chat, or the default menu button. Returns True on success.
  *
- * @param chatId Unique identifier for the target private chat. If not specified, default bot's menu button will be changed
- * @param menuButton A JSON-serialized object for the bot's new menu button. Defaults to [MenuButtonDefault](https://core.telegram.org/bots/api#menubuttondefault)
+ * @param chatId Unique identifier for the target private chat. If not specified, the bot's default menu button will be changed.
+ * @param menuButton A JSON-serialized object for the bot's new menu button. Defaults to [MenuButtonDefault](https://core.telegram.org/bots/api#menubuttondefault).
  */
 public suspend fun TelegramBotApi.setChatMenuButton(chatId: Long? = null, menuButton: MenuButton? = null): TelegramResponse<Boolean> {
     val request = SetChatMenuButtonRequest(
@@ -1536,12 +1533,12 @@ public suspend fun TelegramBotApi.setMyDefaultAdministratorRights(rights: ChatAd
  * Sends a gift to the given user or channel chat. The gift can't be converted to Telegram Stars by the receiver. Returns True on success.
  *
  * @param userId Required if *chat_id* is not specified. Unique identifier of the target user who will receive the gift.
- * @param chatId Required if *user_id* is not specified. Unique identifier for the chat or username of the channel (in the format `@channelusername`) that will receive the gift.
+ * @param chatId Required if *user_id* is not specified. Unique identifier for the chat or username of the channel (in the format `@username`) that will receive the gift.
  * @param giftId Identifier of the gift; limited gifts can't be sent to channel chats
  * @param payForUpgrade Pass *True* to pay for the gift upgrade from the bot's balance, thereby making the upgrade free for the receiver
  * @param text Text that will be shown along with the gift; 0-128 characters
- * @param textParseMode Mode for parsing entities in the text. See [formatting options](https://core.telegram.org/bots/api#formatting-options) for more details. Entities other than “bold”, “italic”, “underline”, “strikethrough”, “spoiler”, and “custom_emoji” are ignored.
- * @param textEntities A JSON-serialized list of special entities that appear in the gift text. It can be specified instead of *text_parse_mode*. Entities other than “bold”, “italic”, “underline”, “strikethrough”, “spoiler”, and “custom_emoji” are ignored.
+ * @param textParseMode Mode for parsing entities in the text. See [formatting options](https://core.telegram.org/bots/api#formatting-options) for more details. Entities other than “bold”, “italic”, “underline”, “strikethrough”, “spoiler”, “custom_emoji”, and “date_time” are ignored.
+ * @param textEntities A JSON-serialized list of special entities that appear in the gift text. It can be specified instead of *text_parse_mode*. Entities other than “bold”, “italic”, “underline”, “strikethrough”, “spoiler”, “custom_emoji”, and “date_time” are ignored.
  */
 public suspend fun TelegramBotApi.sendGift(
     userId: Long? = null,
@@ -1571,8 +1568,8 @@ public suspend fun TelegramBotApi.sendGift(
  * @param monthCount Number of months the Telegram Premium subscription will be active for the user; must be one of 3, 6, or 12
  * @param starCount Number of Telegram Stars to pay for the Telegram Premium subscription; must be 1000 for 3 months, 1500 for 6 months, and 2500 for 12 months
  * @param text Text that will be shown along with the service message about the subscription; 0-128 characters
- * @param textParseMode Mode for parsing entities in the text. See [formatting options](https://core.telegram.org/bots/api#formatting-options) for more details. Entities other than “bold”, “italic”, “underline”, “strikethrough”, “spoiler”, and “custom_emoji” are ignored.
- * @param textEntities A JSON-serialized list of special entities that appear in the gift text. It can be specified instead of *text_parse_mode*. Entities other than “bold”, “italic”, “underline”, “strikethrough”, “spoiler”, and “custom_emoji” are ignored.
+ * @param textParseMode Mode for parsing entities in the text. See [formatting options](https://core.telegram.org/bots/api#formatting-options) for more details. Entities other than “bold”, “italic”, “underline”, “strikethrough”, “spoiler”, “custom_emoji”, and “date_time” are ignored.
+ * @param textEntities A JSON-serialized list of special entities that appear in the gift text. It can be specified instead of *text_parse_mode*. Entities other than “bold”, “italic”, “underline”, “strikethrough”, “spoiler”, “custom_emoji”, and “date_time” are ignored.
  */
 public suspend fun TelegramBotApi.giftPremiumSubscription(
     userId: Long,
@@ -1610,7 +1607,7 @@ public suspend fun TelegramBotApi.verifyUser(userId: Long, customDescription: St
 /**
  * Verifies a chat on behalf of the organization which is represented by the bot. Returns True on success.
  *
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`). Channel direct messages chats can't be verified.
+ * @param chatId Unique identifier for the target chat or username of the target bot, supergroup or channel in the format `@username`. Channel direct messages chats can't be verified.
  * @param customDescription Custom description for the verification; 0-70 characters. Must be empty if the organization isn't allowed to provide a custom verification description.
  */
 public suspend fun TelegramBotApi.verifyChat(chatId: String, customDescription: String? = null): TelegramResponse<Boolean> {
@@ -1636,7 +1633,7 @@ public suspend fun TelegramBotApi.removeUserVerification(userId: Long): Telegram
 /**
  * Removes verification from a chat that is currently verified on behalf of the organization represented by the bot. Returns True on success.
  *
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target bot or channel in the format `@username`
  */
 public suspend fun TelegramBotApi.removeChatVerification(chatId: String): TelegramResponse<Boolean> {
     val request = RemoveChatVerificationRequest(
@@ -1669,7 +1666,7 @@ public suspend fun TelegramBotApi.readBusinessMessage(
  * Delete messages on behalf of a business account. Requires the can_delete_sent_messages business bot right to delete messages sent by the bot itself, or the can_delete_all_messages business bot right to delete any message. Returns True on success.
  *
  * @param businessConnectionId Unique identifier of the business connection on behalf of which to delete the messages
- * @param messageIds A JSON-serialized list of 1-100 identifiers of messages to delete. All messages must be from the same chat. See [deleteMessage](https://core.telegram.org/bots/api#deletemessage) for limitations on which messages can be deleted
+ * @param messageIds A JSON-serialized list of 1-100 identifiers of messages to delete. All messages must be from the same chat. See [deleteMessage](https://core.telegram.org/bots/api#deletemessage) for limitations on which messages can be deleted.
  */
 public suspend fun TelegramBotApi.deleteBusinessMessages(businessConnectionId: String, messageIds: List<Long>): TelegramResponse<Boolean> {
     val request = DeleteBusinessMessagesRequest(
@@ -1879,27 +1876,92 @@ public suspend fun TelegramBotApi.deleteStory(businessConnectionId: String, stor
 }
 
 /**
- * Use this method to edit text and game messages. On success, if the edited message is not an inline message, the edited Message is returned, otherwise True is returned. Note that business messages that were not sent by the bot and do not contain an inline keyboard can only be edited within 48 hours from the time they were sent.
+ * Use this method to set the result of an interaction with a Web App and send a corresponding message on behalf of the user to the chat from which the query originated. On success, a SentWebAppMessage object is returned.
+ *
+ * @param webAppQueryId Unique identifier for the query to be answered
+ * @param result A JSON-serialized object describing the message to be sent
+ */
+public suspend fun TelegramBotApi.answerWebAppQuery(
+    webAppQueryId: String,
+    result: InlineQueryResult
+): TelegramResponse<SentWebAppMessage> {
+    val request = AnswerWebAppQueryRequest(
+        webAppQueryId = webAppQueryId,
+        result = result
+    )
+    return answerWebAppQuery(request)
+}
+
+/**
+ * Stores a message that can be sent by a user of a Mini App. Returns a PreparedInlineMessage object.
+ *
+ * @param userId Unique identifier of the target user that can use the prepared message
+ * @param result A JSON-serialized object describing the message to be sent
+ * @param allowUserChats Pass *True* if the message can be sent to private chats with users
+ * @param allowBotChats Pass *True* if the message can be sent to private chats with bots
+ * @param allowGroupChats Pass *True* if the message can be sent to group and supergroup chats
+ * @param allowChannelChats Pass *True* if the message can be sent to channel chats
+ */
+public suspend fun TelegramBotApi.savePreparedInlineMessage(
+    userId: Long,
+    result: InlineQueryResult,
+    allowUserChats: Boolean? = null,
+    allowBotChats: Boolean? = null,
+    allowGroupChats: Boolean? = null,
+    allowChannelChats: Boolean? = null,
+): TelegramResponse<PreparedInlineMessage> {
+    val request = SavePreparedInlineMessageRequest(
+        userId = userId,
+        result = result,
+        allowUserChats = allowUserChats,
+        allowBotChats = allowBotChats,
+        allowGroupChats = allowGroupChats,
+        allowChannelChats = allowChannelChats
+    )
+    return savePreparedInlineMessage(request)
+}
+
+/**
+ * Stores a keyboard button that can be used by a user within a Mini App. Returns a PreparedKeyboardButton object.
+ *
+ * @param userId Unique identifier of the target user that can use the button
+ * @param button A JSON-serialized object describing the button to be saved. The button must be of the type *request_users*, *request_chat*, or *request_managed_bot*.
+ */
+public suspend fun TelegramBotApi.savePreparedKeyboardButton(
+    userId: Long,
+    button: KeyboardButton
+): TelegramResponse<PreparedKeyboardButton> {
+    val request = SavePreparedKeyboardButtonRequest(
+        userId = userId,
+        button = button
+    )
+    return savePreparedKeyboardButton(request)
+}
+
+/**
+ * Use this method to edit text, rich and game messages. On success, if the edited message is not an inline message, the edited Message is returned, otherwise True is returned. Note that business messages that were not sent by the bot and do not contain an inline keyboard can only be edited within 48 hours from the time they were sent.
  *
  * @param businessConnectionId Unique identifier of the business connection on behalf of which the message to be edited was sent
- * @param chatId Required if *inline_message_id* is not specified. Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
- * @param messageId Required if *inline_message_id* is not specified. Identifier of the message to edit
- * @param inlineMessageId Required if *chat_id* and *message_id* are not specified. Identifier of the inline message
- * @param text New text of the message, 1-4096 characters after entities parsing
+ * @param chatId Required if *inline_message_id* is not specified. Unique identifier for the target chat or username of the target bot, supergroup or channel in the format `@username`.
+ * @param messageId Required if *inline_message_id* is not specified. Identifier of the message to edit.
+ * @param inlineMessageId Required if *chat_id* and *message_id* are not specified. Identifier of the inline message.
+ * @param text New text of the message, 1-4096 characters after entity parsing; required if *rich_message* isn't specified
  * @param parseMode Mode for parsing entities in the message text. See [formatting options](https://core.telegram.org/bots/api#formatting-options) for more details.
  * @param entities A JSON-serialized list of special entities that appear in message text, which can be specified instead of *parse_mode*
  * @param linkPreviewOptions Link preview generation options for the message
- * @param replyMarkup A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards).
+ * @param richMessage New rich content of the message; required if *text* isn't specified
+ * @param replyMarkup A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards)
  */
 public suspend fun TelegramBotApi.editMessageText(
     businessConnectionId: String? = null,
     chatId: String? = null,
     messageId: Long? = null,
     inlineMessageId: String? = null,
-    text: String,
+    text: String? = null,
     parseMode: String? = null,
     entities: List<MessageEntity>? = null,
     linkPreviewOptions: LinkPreviewOptions? = null,
+    richMessage: InputRichMessage? = null,
     replyMarkup: InlineKeyboardMarkup? = null,
 ): TelegramResponse<Union<Message, Boolean>> {
     val request = EditMessageTextRequest(
@@ -1911,6 +1973,7 @@ public suspend fun TelegramBotApi.editMessageText(
         parseMode = parseMode,
         entities = entities,
         linkPreviewOptions = linkPreviewOptions,
+        richMessage = richMessage,
         replyMarkup = replyMarkup
     )
     return editMessageText(request)
@@ -1920,14 +1983,14 @@ public suspend fun TelegramBotApi.editMessageText(
  * Use this method to edit captions of messages. On success, if the edited message is not an inline message, the edited Message is returned, otherwise True is returned. Note that business messages that were not sent by the bot and do not contain an inline keyboard can only be edited within 48 hours from the time they were sent.
  *
  * @param businessConnectionId Unique identifier of the business connection on behalf of which the message to be edited was sent
- * @param chatId Required if *inline_message_id* is not specified. Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
- * @param messageId Required if *inline_message_id* is not specified. Identifier of the message to edit
- * @param inlineMessageId Required if *chat_id* and *message_id* are not specified. Identifier of the inline message
+ * @param chatId Required if *inline_message_id* is not specified. Unique identifier for the target chat or username of the target bot, supergroup or channel in the format `@username`.
+ * @param messageId Required if *inline_message_id* is not specified. Identifier of the message to edit.
+ * @param inlineMessageId Required if *chat_id* and *message_id* are not specified. Identifier of the inline message.
  * @param caption New caption of the message, 0-1024 characters after entities parsing
  * @param parseMode Mode for parsing entities in the message caption. See [formatting options](https://core.telegram.org/bots/api#formatting-options) for more details.
  * @param captionEntities A JSON-serialized list of special entities that appear in the caption, which can be specified instead of *parse_mode*
  * @param showCaptionAboveMedia Pass *True*, if the caption must be shown above the message media. Supported only for animation, photo and video messages.
- * @param replyMarkup A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards).
+ * @param replyMarkup A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards)
  */
 public suspend fun TelegramBotApi.editMessageCaption(
     businessConnectionId: String? = null,
@@ -1958,16 +2021,16 @@ public suspend fun TelegramBotApi.editMessageCaption(
  * Use this method to edit live location messages. A location can be edited until its live_period expires or editing is explicitly disabled by a call to stopMessageLiveLocation. On success, if the edited message is not an inline message, the edited Message is returned, otherwise True is returned.
  *
  * @param businessConnectionId Unique identifier of the business connection on behalf of which the message to be edited was sent
- * @param chatId Required if *inline_message_id* is not specified. Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
- * @param messageId Required if *inline_message_id* is not specified. Identifier of the message to edit
- * @param inlineMessageId Required if *chat_id* and *message_id* are not specified. Identifier of the inline message
+ * @param chatId Required if *inline_message_id* is not specified. Unique identifier for the target chat or username of the target bot, supergroup or channel in the format `@username`.
+ * @param messageId Required if *inline_message_id* is not specified. Identifier of the message to edit.
+ * @param inlineMessageId Required if *chat_id* and *message_id* are not specified. Identifier of the inline message.
  * @param latitude Latitude of new location
  * @param longitude Longitude of new location
- * @param livePeriod New period in seconds during which the location can be updated, starting from the message send date. If 0x7FFFFFFF is specified, then the location can be updated forever. Otherwise, the new value must not exceed the current *live_period* by more than a day, and the live location expiration date must remain within the next 90 days. If not specified, then *live_period* remains unchanged
+ * @param livePeriod New period in seconds during which the location can be updated, starting from the message send date. If 0x7FFFFFFF is specified, then the location can be updated forever. Otherwise, the new value must not exceed the current *live_period* by more than a day, and the live location expiration date must remain within the next 90 days. If not specified, then *live_period* remains unchanged.
  * @param horizontalAccuracy The radius of uncertainty for the location, measured in meters; 0-1500
  * @param heading Direction in which the user is moving, in degrees. Must be between 1 and 360 if specified.
  * @param proximityAlertRadius The maximum distance for proximity alerts about approaching another chat member, in meters. Must be between 1 and 100000 if specified.
- * @param replyMarkup A JSON-serialized object for a new [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards).
+ * @param replyMarkup A JSON-serialized object for a new [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards)
  */
 public suspend fun TelegramBotApi.editMessageLiveLocation(
     businessConnectionId: String? = null,
@@ -2002,10 +2065,10 @@ public suspend fun TelegramBotApi.editMessageLiveLocation(
  * Use this method to stop updating a live location message before live_period expires. On success, if the message is not an inline message, the edited Message is returned, otherwise True is returned.
  *
  * @param businessConnectionId Unique identifier of the business connection on behalf of which the message to be edited was sent
- * @param chatId Required if *inline_message_id* is not specified. Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
- * @param messageId Required if *inline_message_id* is not specified. Identifier of the message with live location to stop
- * @param inlineMessageId Required if *chat_id* and *message_id* are not specified. Identifier of the inline message
- * @param replyMarkup A JSON-serialized object for a new [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards).
+ * @param chatId Required if *inline_message_id* is not specified. Unique identifier for the target chat or username of the target bot, supergroup or channel in the format `@username`.
+ * @param messageId Required if *inline_message_id* is not specified. Identifier of the message with live location to stop.
+ * @param inlineMessageId Required if *chat_id* and *message_id* are not specified. Identifier of the inline message.
+ * @param replyMarkup A JSON-serialized object for a new [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards)
  */
 public suspend fun TelegramBotApi.stopMessageLiveLocation(
     businessConnectionId: String? = null,
@@ -2028,14 +2091,14 @@ public suspend fun TelegramBotApi.stopMessageLiveLocation(
  * Use this method to edit a checklist on behalf of a connected business account. On success, the edited Message is returned.
  *
  * @param businessConnectionId Unique identifier of the business connection on behalf of which the message will be sent
- * @param chatId Unique identifier for the target chat
+ * @param chatId Unique identifier for the target chat or username of the target bot in the format `@username`
  * @param messageId Unique identifier for the target message
  * @param checklist A JSON-serialized object for the new checklist
  * @param replyMarkup A JSON-serialized object for the new [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) for the message
  */
 public suspend fun TelegramBotApi.editMessageChecklist(
     businessConnectionId: String,
-    chatId: Long,
+    chatId: String,
     messageId: Long,
     checklist: InputChecklist,
     replyMarkup: InlineKeyboardMarkup? = null,
@@ -2054,10 +2117,10 @@ public suspend fun TelegramBotApi.editMessageChecklist(
  * Use this method to edit only the reply markup of messages. On success, if the edited message is not an inline message, the edited Message is returned, otherwise True is returned. Note that business messages that were not sent by the bot and do not contain an inline keyboard can only be edited within 48 hours from the time they were sent.
  *
  * @param businessConnectionId Unique identifier of the business connection on behalf of which the message to be edited was sent
- * @param chatId Required if *inline_message_id* is not specified. Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
- * @param messageId Required if *inline_message_id* is not specified. Identifier of the message to edit
- * @param inlineMessageId Required if *chat_id* and *message_id* are not specified. Identifier of the inline message
- * @param replyMarkup A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards).
+ * @param chatId Required if *inline_message_id* is not specified. Unique identifier for the target chat or username of the target bot, supergroup or channel in the format `@username`.
+ * @param messageId Required if *inline_message_id* is not specified. Identifier of the message to edit.
+ * @param inlineMessageId Required if *chat_id* and *message_id* are not specified. Identifier of the inline message.
+ * @param replyMarkup A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards)
  */
 public suspend fun TelegramBotApi.editMessageReplyMarkup(
     businessConnectionId: String? = null,
@@ -2080,9 +2143,9 @@ public suspend fun TelegramBotApi.editMessageReplyMarkup(
  * Use this method to stop a poll which was sent by the bot. On success, the stopped Poll is returned.
  *
  * @param businessConnectionId Unique identifier of the business connection on behalf of which the message to be edited was sent
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target bot, supergroup or channel in the format `@username`
  * @param messageId Identifier of the original message with the poll
- * @param replyMarkup A JSON-serialized object for a new message [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards).
+ * @param replyMarkup A JSON-serialized object for a new message [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards)
  */
 public suspend fun TelegramBotApi.stopPoll(
     businessConnectionId: String? = null,
@@ -2104,7 +2167,7 @@ public suspend fun TelegramBotApi.stopPoll(
  *
  * @param chatId Unique identifier for the target direct messages chat
  * @param messageId Identifier of a suggested post message to approve
- * @param sendDate Point in time (Unix timestamp) when the post is expected to be published; omit if the date has already been specified when the suggested post was created. If specified, then the date must be not more than 2678400 seconds (30 days) in the future
+ * @param sendDate Point in time (Unix timestamp) when the post is expected to be published; omit if the date has already been specified when the suggested post was created. If specified, then the date must be not more than 2678400 seconds (30 days) in the future.
  */
 public suspend fun TelegramBotApi.approveSuggestedPost(
     chatId: Long,
@@ -2142,7 +2205,7 @@ public suspend fun TelegramBotApi.declineSuggestedPost(
 /**
  * Use this method to delete a message, including service messages, with the following limitations: - A message can only be deleted if it was sent less than 48 hours ago. - Service messages about a supergroup, channel, or forum topic creation can't be deleted. - A dice message in a private chat can only be deleted if it was sent more than 24 hours ago. - Bots can delete outgoing messages in private chats, groups, and supergroups. - Bots can delete incoming messages in private chats. - Bots granted can_post_messages permissions can delete outgoing messages in channels. - If the bot is an administrator of a group, it can delete any message there. - If the bot has can_delete_messages administrator right in a supergroup or a channel, it can delete any message there. - If the bot has can_manage_direct_messages administrator right in a channel, it can delete any message in the corresponding direct messages chat. Returns True on success.
  *
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target bot, supergroup or channel in the format `@username`
  * @param messageId Identifier of the message to delete
  */
 public suspend fun TelegramBotApi.deleteMessage(chatId: String, messageId: Long): TelegramResponse<Boolean> {
@@ -2156,8 +2219,8 @@ public suspend fun TelegramBotApi.deleteMessage(chatId: String, messageId: Long)
 /**
  * Use this method to delete multiple messages simultaneously. If some of the specified messages can't be found, they are skipped. Returns True on success.
  *
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
- * @param messageIds A JSON-serialized list of 1-100 identifiers of messages to delete. See [deleteMessage](https://core.telegram.org/bots/api#deletemessage) for limitations on which messages can be deleted
+ * @param chatId Unique identifier for the target chat or username of the target bot, supergroup or channel in the format `@username`
+ * @param messageIds A JSON-serialized list of 1-100 identifiers of messages to delete. See [deleteMessage](https://core.telegram.org/bots/api#deletemessage) for limitations on which messages can be deleted.
  */
 public suspend fun TelegramBotApi.deleteMessages(chatId: String, messageIds: List<Long>): TelegramResponse<Boolean> {
     val request = DeleteMessagesRequest(
@@ -2165,6 +2228,49 @@ public suspend fun TelegramBotApi.deleteMessages(chatId: String, messageIds: Lis
         messageIds = messageIds
     )
     return deleteMessages(request)
+}
+
+/**
+ * Use this method to remove a reaction from a message in a group or a supergroup chat. The bot must have the 'can_delete_messages' administrator right in the chat. Returns True on success.
+ *
+ * @param chatId Unique identifier for the target chat or username of the target supergroup in the format `@username`
+ * @param messageId Identifier of the target message
+ * @param userId Identifier of the user whose reaction will be removed, if the reaction was added by a user
+ * @param actorChatId Identifier of the chat whose reaction will be removed, if the reaction was added by a chat
+ */
+public suspend fun TelegramBotApi.deleteMessageReaction(
+    chatId: String,
+    messageId: Long,
+    userId: Long? = null,
+    actorChatId: Long? = null,
+): TelegramResponse<Boolean> {
+    val request = DeleteMessageReactionRequest(
+        chatId = chatId,
+        messageId = messageId,
+        userId = userId,
+        actorChatId = actorChatId
+    )
+    return deleteMessageReaction(request)
+}
+
+/**
+ * Use this method to remove up to 10000 recent reactions in a group or a supergroup chat added by a given user or chat. The bot must have the 'can_delete_messages' administrator right in the chat. Returns True on success.
+ *
+ * @param chatId Unique identifier for the target chat or username of the target supergroup in the format `@username`
+ * @param userId Identifier of the user whose reactions will be removed, if the reactions were added by a user
+ * @param actorChatId Identifier of the chat whose reactions will be removed, if the reactions were added by a chat
+ */
+public suspend fun TelegramBotApi.deleteAllMessageReactions(
+    chatId: String,
+    userId: Long? = null,
+    actorChatId: Long? = null,
+): TelegramResponse<Boolean> {
+    val request = DeleteAllMessageReactionsRequest(
+        chatId = chatId,
+        userId = userId,
+        actorChatId = actorChatId
+    )
+    return deleteAllMessageReactions(request)
 }
 
 /**
@@ -2253,7 +2359,7 @@ public suspend fun TelegramBotApi.setStickerSetTitle(name: String, title: String
  * Use this method to set the thumbnail of a custom emoji sticker set. Returns True on success.
  *
  * @param name Sticker set name
- * @param customEmojiId Custom emoji identifier of a sticker from the sticker set; pass an empty string to drop the thumbnail and use the first sticker as the thumbnail.
+ * @param customEmojiId Custom emoji identifier of a sticker from the sticker set; pass an empty string to drop the thumbnail and use the first sticker as the thumbnail
  */
 public suspend fun TelegramBotApi.setCustomEmojiStickerSetThumbnail(name: String, customEmojiId: String? = null): TelegramResponse<Boolean> {
     val request = SetCustomEmojiStickerSetThumbnailRequest(
@@ -2273,6 +2379,76 @@ public suspend fun TelegramBotApi.deleteStickerSet(name: String): TelegramRespon
         name = name
     )
     return deleteStickerSet(request)
+}
+
+/**
+ * Use this method to send rich messages. If the message contains a block with a media element, then the bot must have the right to send the media to the chat. On success, the sent Message is returned.
+ *
+ * @param businessConnectionId Unique identifier of the business connection on behalf of which the message will be sent. Bot can send rich messages on behalf of a business account only if the corresponding user can send rich messages.
+ * @param chatId Unique identifier for the target chat or username of the target bot, supergroup or channel in the format `@username`
+ * @param messageThreadId Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only
+ * @param directMessagesTopicId Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat
+ * @param richMessage The message to be sent
+ * @param disableNotification Sends the message [silently](https://telegram.org/blog/channels-2-0#silent-messages). Users will receive a notification with no sound.
+ * @param protectContent Protects the contents of the sent message from forwarding and saving
+ * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance.
+ * @param messageEffectId Unique identifier of the message effect to be added to the message; for private chats only
+ * @param suggestedPostParameters A JSON-serialized object containing the parameters of the suggested post to send; for direct messages chats only. If the message is sent as a reply to another suggested post, then that suggested post is automatically declined.
+ * @param replyParameters Description of the message to reply to
+ * @param replyMarkup Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user.
+ */
+public suspend fun TelegramBotApi.sendRichMessage(
+    businessConnectionId: String? = null,
+    chatId: String,
+    messageThreadId: Long? = null,
+    directMessagesTopicId: Long? = null,
+    richMessage: InputRichMessage,
+    disableNotification: Boolean? = null,
+    protectContent: Boolean? = null,
+    allowPaidBroadcast: Boolean? = null,
+    messageEffectId: String? = null,
+    suggestedPostParameters: SuggestedPostParameters? = null,
+    replyParameters: ReplyParameters? = null,
+    replyMarkup: ReplyMarkup? = null,
+): TelegramResponse<Message> {
+    val request = SendRichMessageRequest(
+        businessConnectionId = businessConnectionId,
+        chatId = chatId,
+        messageThreadId = messageThreadId,
+        directMessagesTopicId = directMessagesTopicId,
+        richMessage = richMessage,
+        disableNotification = disableNotification,
+        protectContent = protectContent,
+        allowPaidBroadcast = allowPaidBroadcast,
+        messageEffectId = messageEffectId,
+        suggestedPostParameters = suggestedPostParameters,
+        replyParameters = replyParameters,
+        replyMarkup = replyMarkup
+    )
+    return sendRichMessage(request)
+}
+
+/**
+ * Use this method to stream a partial rich message to a user while the message is being generated. Note that the streamed draft is ephemeral and acts as a temporary 30-second preview - once the output is finalized, you must call sendRichMessage with the complete message to persist it in the user's chat. Returns True on success.
+ *
+ * @param chatId Unique identifier for the target private chat
+ * @param messageThreadId Unique identifier for the target message thread
+ * @param draftId Unique identifier of the message draft; must be non-zero. Changes to drafts with the same identifier are animated.
+ * @param richMessage The partial message to be streamed
+ */
+public suspend fun TelegramBotApi.sendRichMessageDraft(
+    chatId: Long,
+    messageThreadId: Long? = null,
+    draftId: Long,
+    richMessage: InputRichMessage,
+): TelegramResponse<Boolean> {
+    val request = SendRichMessageDraftRequest(
+        chatId = chatId,
+        messageThreadId = messageThreadId,
+        draftId = draftId,
+        richMessage = richMessage
+    )
+    return sendRichMessageDraft(request)
 }
 
 /**
@@ -2305,52 +2481,9 @@ public suspend fun TelegramBotApi.answerInlineQuery(
 }
 
 /**
- * Use this method to set the result of an interaction with a Web App and send a corresponding message on behalf of the user to the chat from which the query originated. On success, a SentWebAppMessage object is returned.
- *
- * @param webAppQueryId Unique identifier for the query to be answered
- * @param result A JSON-serialized object describing the message to be sent
- */
-public suspend fun TelegramBotApi.answerWebAppQuery(webAppQueryId: String, result: InlineQueryResult): TelegramResponse<SentWebAppMessage> {
-    val request = AnswerWebAppQueryRequest(
-        webAppQueryId = webAppQueryId,
-        result = result
-    )
-    return answerWebAppQuery(request)
-}
-
-/**
- * Stores a message that can be sent by a user of a Mini App. Returns a PreparedInlineMessage object.
- *
- * @param userId Unique identifier of the target user that can use the prepared message
- * @param result A JSON-serialized object describing the message to be sent
- * @param allowUserChats Pass *True* if the message can be sent to private chats with users
- * @param allowBotChats Pass *True* if the message can be sent to private chats with bots
- * @param allowGroupChats Pass *True* if the message can be sent to group and supergroup chats
- * @param allowChannelChats Pass *True* if the message can be sent to channel chats
- */
-public suspend fun TelegramBotApi.savePreparedInlineMessage(
-    userId: Long,
-    result: InlineQueryResult,
-    allowUserChats: Boolean? = null,
-    allowBotChats: Boolean? = null,
-    allowGroupChats: Boolean? = null,
-    allowChannelChats: Boolean? = null,
-): TelegramResponse<PreparedInlineMessage> {
-    val request = SavePreparedInlineMessageRequest(
-        userId = userId,
-        result = result,
-        allowUserChats = allowUserChats,
-        allowBotChats = allowBotChats,
-        allowGroupChats = allowGroupChats,
-        allowChannelChats = allowChannelChats
-    )
-    return savePreparedInlineMessage(request)
-}
-
-/**
  * Use this method to send invoices. On success, the sent Message is returned.
  *
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target bot, supergroup or channel in the format `@username`
  * @param messageThreadId Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only
  * @param directMessagesTopicId Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat
  * @param title Product name, 1-32 characters
@@ -2361,7 +2494,7 @@ public suspend fun TelegramBotApi.savePreparedInlineMessage(
  * @param prices Price breakdown, a JSON-serialized list of components (e.g. product price, tax, discount, delivery cost, delivery tax, bonus, etc.). Must contain exactly one item for payments in [Telegram Stars](https://t.me/BotNews/90).
  * @param maxTipAmount The maximum accepted amount for tips in the *smallest units* of the currency (integer, **not** float/double). For example, for a maximum tip of `US$ 1.45` pass `max_tip_amount = 145`. See the *exp* parameter in [currencies.json](https://core.telegram.org/bots/payments/currencies.json), it shows the number of digits past the decimal point for each currency (2 for the majority of currencies). Defaults to 0. Not supported for payments in [Telegram Stars](https://t.me/BotNews/90).
  * @param suggestedTipAmounts A JSON-serialized array of suggested amounts of tips in the *smallest units* of the currency (integer, **not** float/double). At most 4 suggested tip amounts can be specified. The suggested tip amounts must be positive, passed in a strictly increased order and must not exceed *max_tip_amount*.
- * @param startParameter Unique deep-linking parameter. If left empty, **forwarded copies** of the sent message will have a *Pay* button, allowing multiple users to pay directly from the forwarded message, using the same invoice. If non-empty, forwarded copies of the sent message will have a *URL* button with a deep link to the bot (instead of a *Pay* button), with the value used as the start parameter
+ * @param startParameter Unique deep-linking parameter. If left empty, **forwarded copies** of the sent message will have a *Pay* button, allowing multiple users to pay directly from the forwarded message, using the same invoice. If non-empty, forwarded copies of the sent message will have a *URL* button with a deep link to the bot (instead of a *Pay* button), with the value used as the start parameter.
  * @param providerData JSON-serialized data about the invoice, which will be shared with the payment provider. A detailed description of required fields should be provided by the payment provider.
  * @param photoUrl URL of the product photo for the invoice. Can be a photo of the goods or a marketing image for a service. People like it better when they see what they are paying for.
  * @param photoSize Photo size in bytes
@@ -2376,7 +2509,7 @@ public suspend fun TelegramBotApi.savePreparedInlineMessage(
  * @param isFlexible Pass *True* if the final price depends on the shipping method. Ignored for payments in [Telegram Stars](https://t.me/BotNews/90).
  * @param disableNotification Sends the message [silently](https://telegram.org/blog/channels-2-0#silent-messages). Users will receive a notification with no sound.
  * @param protectContent Protects the contents of the sent message from forwarding and saving
- * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance
+ * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance.
  * @param messageEffectId Unique identifier of the message effect to be added to the message; for private chats only
  * @param suggestedPostParameters A JSON-serialized object containing the parameters of the suggested post to send; for direct messages chats only. If the message is sent as a reply to another suggested post, then that suggested post is automatically declined.
  * @param replyParameters Description of the message to reply to
@@ -2624,19 +2757,19 @@ public suspend fun TelegramBotApi.setPassportDataErrors(userId: Long, errors: Li
  * Use this method to send a game. On success, the sent Message is returned.
  *
  * @param businessConnectionId Unique identifier of the business connection on behalf of which the message will be sent
- * @param chatId Unique identifier for the target chat. Games can't be sent to channel direct messages chats and channel chats.
+ * @param chatId Unique identifier for the target chat or username of the target bot in the format `@username`. Games can't be sent to channel direct messages chats and channel chats.
  * @param messageThreadId Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only
  * @param gameShortName Short name of the game, serves as the unique identifier for the game. Set up your games via [@BotFather](https://t.me/botfather).
  * @param disableNotification Sends the message [silently](https://telegram.org/blog/channels-2-0#silent-messages). Users will receive a notification with no sound.
  * @param protectContent Protects the contents of the sent message from forwarding and saving
- * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance
+ * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance.
  * @param messageEffectId Unique identifier of the message effect to be added to the message; for private chats only
  * @param replyParameters Description of the message to reply to
  * @param replyMarkup A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards). If empty, one 'Play game_title' button will be shown. If not empty, the first button must launch the game.
  */
 public suspend fun TelegramBotApi.sendGame(
     businessConnectionId: String? = null,
-    chatId: Long,
+    chatId: String,
     messageThreadId: Long? = null,
     gameShortName: String,
     disableNotification: Boolean? = null,
@@ -2666,11 +2799,11 @@ public suspend fun TelegramBotApi.sendGame(
  *
  * @param userId User identifier
  * @param score New score, must be non-negative
- * @param force Pass *True* if the high score is allowed to decrease. This can be useful when fixing mistakes or banning cheaters
+ * @param force Pass *True* if the high score is allowed to decrease. This can be useful when fixing mistakes or banning cheaters.
  * @param disableEditMessage Pass *True* if the game message should not be automatically edited to include the current scoreboard
- * @param chatId Required if *inline_message_id* is not specified. Unique identifier for the target chat
- * @param messageId Required if *inline_message_id* is not specified. Identifier of the sent message
- * @param inlineMessageId Required if *chat_id* and *message_id* are not specified. Identifier of the inline message
+ * @param chatId Required if *inline_message_id* is not specified. Unique identifier for the target chat.
+ * @param messageId Required if *inline_message_id* is not specified. Identifier of the sent message.
+ * @param inlineMessageId Required if *chat_id* and *message_id* are not specified. Identifier of the inline message.
  */
 public suspend fun TelegramBotApi.setGameScore(
     userId: Long,

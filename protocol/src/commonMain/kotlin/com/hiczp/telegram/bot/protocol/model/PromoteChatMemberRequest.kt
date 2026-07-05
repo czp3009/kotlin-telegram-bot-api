@@ -10,7 +10,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 public data class PromoteChatMemberRequest(
     /**
-     * Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+     * Unique identifier for the target chat or username of the target channel in the format `@username`
      */
     @SerialName("chat_id")
     public val chatId: String,
@@ -40,7 +40,7 @@ public data class PromoteChatMemberRequest(
     @SerialName("can_manage_video_chats")
     public val canManageVideoChats: Boolean? = null,
     /**
-     * Pass *True* if the administrator can restrict, ban or unban chat members, or access supergroup statistics. For backward compatibility, defaults to *True* for promotions of channel administrators
+     * Pass *True* if the administrator can restrict, ban or unban chat members, or access supergroup statistics. For backward compatibility, defaults to *True* for promotions of channel administrators.
      */
     @SerialName("can_restrict_members")
     public val canRestrictMembers: Boolean? = null,

@@ -2,7 +2,7 @@
 
 A high-level Kotlin Multiplatform client wrapper for the Telegram Bot API.
 
-It provides `TelegramBotClient` — a pre-configured client with sensible defaults, built on top of
+It provides `TelegramBotClient`, a pre-configured client with sensible defaults, built on top of
 the [protocol](../protocol) module.
 
 ## Key Features
@@ -156,8 +156,7 @@ import com.hiczp.telegram.bot.protocol.event.*
 
 val updates = client.getUpdates().getOrThrow()
 for (update in updates) {
-    val event = update.toTelegramBotEvent()
-    when (event) {
+  when (val event = update.toTelegramBotEvent()) {
         is MessageEvent -> handleMessage(event.message)
         is EditedMessageEvent -> handleEditedMessage(event.editedMessage)
         is CallbackQueryEvent -> handleCallbackQuery(event.callbackQuery)
@@ -240,9 +239,10 @@ TelegramBotClient(
 
 ## Supported Platforms
 
-JVM, Android, JS, WASM, Linux, macOS, Windows, iOS, watchOS, tvOS, Android Native.
+JVM, Android, JS, WASM, Linux, Windows, Android Native, macOS ARM64, iOS, watchOS ARM/simulator ARM64, and tvOS
+ARM/simulator ARM64.
 
-Tests only run on JVM and desktop native targets (Linux, macOS, Windows).
+Some test tasks can make real Telegram API calls. Use `./gradlew assemble` for build-only verification.
 
 ## Related Links
 

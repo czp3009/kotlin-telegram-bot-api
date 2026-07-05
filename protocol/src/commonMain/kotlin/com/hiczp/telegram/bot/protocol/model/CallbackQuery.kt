@@ -1,8 +1,7 @@
 // Auto-generated from Swagger specification, do not modify this file manually
 package com.hiczp.telegram.bot.protocol.model
 
-import com.hiczp.telegram.bot.protocol.`annotation`.IncomingUpdate
-import kotlin.String
+import com.hiczp.telegram.bot.protocol.annotation.IncomingUpdate
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -25,7 +24,7 @@ public data class CallbackQuery(
      */
     public val message: Message? = null,
     /**
-     * *Optional*. Identifier of the message sent via the bot in inline mode, that originated the query.
+     * *Optional*. Identifier of the message sent via the bot in inline mode, that originated the query
      */
     @SerialName("inline_message_id")
     public val inlineMessageId: String? = null,

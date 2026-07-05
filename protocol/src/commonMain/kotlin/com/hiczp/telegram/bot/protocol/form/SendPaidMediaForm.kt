@@ -1,17 +1,8 @@
 // Auto-generated from Swagger specification, do not modify this file manually
 package com.hiczp.telegram.bot.protocol.form
 
-import com.hiczp.telegram.bot.protocol.model.InputPaidMedia
-import com.hiczp.telegram.bot.protocol.model.MessageEntity
-import com.hiczp.telegram.bot.protocol.model.ReplyMarkup
-import com.hiczp.telegram.bot.protocol.model.ReplyParameters
-import com.hiczp.telegram.bot.protocol.model.SuggestedPostParameters
-import io.ktor.client.request.forms.ChannelProvider
-import io.ktor.client.request.forms.FormPart
-import kotlin.Boolean
-import kotlin.Long
-import kotlin.String
-import kotlin.collections.List
+import com.hiczp.telegram.bot.protocol.model.*
+import io.ktor.client.request.forms.*
 import kotlinx.serialization.SerialName
 
 public data class SendPaidMediaForm(
@@ -21,7 +12,7 @@ public data class SendPaidMediaForm(
     @SerialName("business_connection_id")
     public val businessConnectionId: String? = null,
     /**
-     * Unique identifier for the target chat or username of the target channel (in the format `@channelusername`). If the chat is a channel, all Telegram Star proceeds from this media will be credited to the chat's balance. Otherwise, they will be credited to the bot's balance.
+     * Unique identifier for the target chat or username of the target bot, supergroup or channel in the format `@username`. If the chat is a channel, all Telegram Star proceeds from this media will be credited to the chat's balance. Otherwise, they will be credited to the bot's balance.
      */
     @SerialName("chat_id")
     public val chatId: String,
@@ -78,7 +69,7 @@ public data class SendPaidMediaForm(
     @SerialName("protect_content")
     public val protectContent: Boolean? = null,
     /**
-     * Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance
+     * Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance.
      */
     @SerialName("allow_paid_broadcast")
     public val allowPaidBroadcast: Boolean? = null,
@@ -93,7 +84,7 @@ public data class SendPaidMediaForm(
     @SerialName("reply_parameters")
     public val replyParameters: ReplyParameters? = null,
     /**
-     * Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user
+     * Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user.
      */
     @SerialName("reply_markup")
     public val replyMarkup: ReplyMarkup? = null,

@@ -1,16 +1,13 @@
 // Auto-generated from Swagger specification, do not modify this file manually
 package com.hiczp.telegram.bot.protocol.model
 
-import kotlin.Boolean
-import kotlin.Long
-import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 public data class EditChatInviteLinkRequest(
     /**
-     * Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+     * Unique identifier for the target chat or username of the target channel in the format `@username`
      */
     @SerialName("chat_id")
     public val chatId: String,
@@ -34,7 +31,7 @@ public data class EditChatInviteLinkRequest(
     @SerialName("member_limit")
     public val memberLimit: Long? = null,
     /**
-     * *True*, if users joining the chat via the link need to be approved by chat administrators. If *True*, *member_limit* can't be specified
+     * *True*, if users joining the chat via the link need to be approved by chat administrators. If *True*, *member_limit* can't be specified.
      */
     @SerialName("creates_join_request")
     public val createsJoinRequest: Boolean? = null,

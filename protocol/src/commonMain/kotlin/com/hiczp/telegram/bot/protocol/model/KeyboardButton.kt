@@ -12,7 +12,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 public data class KeyboardButton(
     /**
-     * Text of the button. If none of the fields other than *text*, *icon_custom_emoji_id*, and *style* are used, it will be sent as a message when the button is pressed
+     * Text of the button. If none of the fields other than *text*, *icon_custom_emoji_id*, and *style* are used, it will be sent as a message when the button is pressed.
      */
     public val text: String,
     /**
@@ -34,6 +34,11 @@ public data class KeyboardButton(
      */
     @SerialName("request_chat")
     public val requestChat: KeyboardButtonRequestChat? = null,
+    /**
+     * *Optional*. If specified, pressing the button will ask the user to create and share a bot that will be managed by the current bot. Available for bots that enabled management of other bots in the [@BotFather](https://t.me/BotFather) Mini App. Available in private chats only.
+     */
+    @SerialName("request_managed_bot")
+    public val requestManagedBot: KeyboardButtonRequestManagedBot? = null,
     /**
      * *Optional*. If *True*, the user's phone number will be sent as a contact when the button is pressed. Available in private chats only.
      */

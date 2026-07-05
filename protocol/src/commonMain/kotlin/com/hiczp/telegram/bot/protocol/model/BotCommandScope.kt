@@ -1,9 +1,6 @@
 // Auto-generated from Swagger specification, do not modify this file manually
 package com.hiczp.telegram.bot.protocol.model
 
-import kotlin.Long
-import kotlin.OptIn
-import kotlin.String
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -53,7 +50,7 @@ public class BotCommandScopeAllChatAdministrators : BotCommandScope
 @SerialName("chat")
 public data class BotCommandScopeChat(
     /**
-     * Unique identifier for the target chat or username of the target supergroup (in the format `@supergroupusername`). Channel direct messages chats and channel chats aren't supported.
+     * Unique identifier for the target chat or username of the target supergroup in the format `@username`. Channel direct messages chats and channel chats aren't supported.
      */
     @SerialName("chat_id")
     public val chatId: String,
@@ -66,7 +63,7 @@ public data class BotCommandScopeChat(
 @SerialName("chat_administrators")
 public data class BotCommandScopeChatAdministrators(
     /**
-     * Unique identifier for the target chat or username of the target supergroup (in the format `@supergroupusername`). Channel direct messages chats and channel chats aren't supported.
+     * Unique identifier for the target chat or username of the target supergroup in the format `@username`. Channel direct messages chats and channel chats aren't supported.
      */
     @SerialName("chat_id")
     public val chatId: String,
@@ -79,7 +76,7 @@ public data class BotCommandScopeChatAdministrators(
 @SerialName("chat_member")
 public data class BotCommandScopeChatMember(
     /**
-     * Unique identifier for the target chat or username of the target supergroup (in the format `@supergroupusername`). Channel direct messages chats and channel chats aren't supported.
+     * Unique identifier for the target chat or username of the target supergroup in the format `@username`. Channel direct messages chats and channel chats aren't supported.
      */
     @SerialName("chat_id")
     public val chatId: String,

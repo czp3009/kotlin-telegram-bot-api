@@ -1,16 +1,13 @@
 // Auto-generated from Swagger specification, do not modify this file manually
 package com.hiczp.telegram.bot.protocol.model
 
-import kotlin.Boolean
-import kotlin.Long
-import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 public data class ForwardMessageRequest(
     /**
-     * Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+     * Unique identifier for the target chat or username of the target bot, supergroup or channel in the format `@username`
      */
     @SerialName("chat_id")
     public val chatId: String,
@@ -25,7 +22,7 @@ public data class ForwardMessageRequest(
     @SerialName("direct_messages_topic_id")
     public val directMessagesTopicId: Long? = null,
     /**
-     * Unique identifier for the chat where the original message was sent (or channel username in the format `@channelusername`)
+     * Unique identifier for the chat where the original message was sent (or username of the target bot, supergroup or channel in the format `@username`)
      */
     @SerialName("from_chat_id")
     public val fromChatId: String,

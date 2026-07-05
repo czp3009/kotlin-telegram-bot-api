@@ -1,9 +1,7 @@
 // Auto-generated from Swagger specification, do not modify this file manually
 package com.hiczp.telegram.bot.protocol.model
 
-import com.hiczp.telegram.bot.protocol.`annotation`.IncomingUpdate
-import kotlin.Boolean
-import kotlin.Long
+import com.hiczp.telegram.bot.protocol.annotation.IncomingUpdate
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -35,7 +33,7 @@ public data class ChatMemberUpdated(
     @SerialName("new_chat_member")
     public val newChatMember: ChatMember,
     /**
-     * *Optional*. Chat invite link, which was used by the user to join the chat; for joining by invite link events only.
+     * *Optional*. Chat invite link, which was used by the user to join the chat; for joining by invite link events only
      */
     @SerialName("invite_link")
     public val inviteLink: ChatInviteLink? = null,

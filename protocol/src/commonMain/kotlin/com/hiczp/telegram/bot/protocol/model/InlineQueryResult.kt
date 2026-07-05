@@ -4,25 +4,43 @@ package com.hiczp.telegram.bot.protocol.model
 import kotlin.Boolean
 import kotlin.Double
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.SerialKind
+import kotlinx.serialization.descriptors.buildSerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.JsonEncoder
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.decodeFromJsonElement
 
 /**
  * This object represents one result of an inline query. Telegram clients currently support results of the following 20 types:
  * InlineQueryResultCachedAudio InlineQueryResultCachedDocument InlineQueryResultCachedGif InlineQueryResultCachedMpeg4Gif InlineQueryResultCachedPhoto InlineQueryResultCachedSticker InlineQueryResultCachedVideo InlineQueryResultCachedVoice InlineQueryResultArticle InlineQueryResultAudio InlineQueryResultContact InlineQueryResultGame InlineQueryResultDocument InlineQueryResultGif InlineQueryResultLocation InlineQueryResultMpeg4Gif InlineQueryResultPhoto InlineQueryResultVenue InlineQueryResultVideo InlineQueryResultVoice
  * Note: All URLs passed in inline query results will be available to end users and therefore must be assumed to be public.
  */
-@Serializable
+@Serializable(with = InlineQueryResultSerializer::class)
 public sealed interface InlineQueryResult
 
 /**
  * Represents a link to an MP3 audio file stored on the Telegram servers. By default, this audio file will be sent by the user. Alternatively, you can use input_message_content to send a message with the specified content instead of the audio.
  */
 @Serializable
-@SerialName("audio")
 public data class InlineQueryResultCachedAudio(
+    /**
+     * Type of the result, must be *audio*
+     */
     public val type: String = "audio",
     /**
      * Unique identifier for this result, 1-64 bytes
@@ -57,14 +75,16 @@ public data class InlineQueryResultCachedAudio(
      */
     @SerialName("input_message_content")
     public val inputMessageContent: InputMessageContent? = null,
-)
+) : InlineQueryResult
 
 /**
  * Represents a link to a file stored on the Telegram servers. By default, this file will be sent by the user with an optional caption. Alternatively, you can use input_message_content to send a message with the specified content instead of the file.
  */
 @Serializable
-@SerialName("document")
 public data class InlineQueryResultCachedDocument(
+    /**
+     * Type of the result, must be *document*
+     */
     public val type: String = "document",
     /**
      * Unique identifier for this result, 1-64 bytes
@@ -107,14 +127,16 @@ public data class InlineQueryResultCachedDocument(
      */
     @SerialName("input_message_content")
     public val inputMessageContent: InputMessageContent? = null,
-)
+) : InlineQueryResult
 
 /**
  * Represents a link to an animated GIF file stored on the Telegram servers. By default, this animated GIF file will be sent by the user with an optional caption. Alternatively, you can use input_message_content to send a message with specified content instead of the animation.
  */
 @Serializable
-@SerialName("gif")
 public data class InlineQueryResultCachedGif(
+    /**
+     * Type of the result, must be *gif*
+     */
     public val type: String = "gif",
     /**
      * Unique identifier for this result, 1-64 bytes
@@ -158,14 +180,16 @@ public data class InlineQueryResultCachedGif(
      */
     @SerialName("input_message_content")
     public val inputMessageContent: InputMessageContent? = null,
-)
+) : InlineQueryResult
 
 /**
  * Represents a link to a video animation (H.264/MPEG-4 AVC video without sound) stored on the Telegram servers. By default, this animated MPEG-4 file will be sent by the user with an optional caption. Alternatively, you can use input_message_content to send a message with the specified content instead of the animation.
  */
 @Serializable
-@SerialName("mpeg4_gif")
 public data class InlineQueryResultCachedMpeg4Gif(
+    /**
+     * Type of the result, must be *mpeg4_gif*
+     */
     public val type: String = "mpeg4_gif",
     /**
      * Unique identifier for this result, 1-64 bytes
@@ -209,14 +233,16 @@ public data class InlineQueryResultCachedMpeg4Gif(
      */
     @SerialName("input_message_content")
     public val inputMessageContent: InputMessageContent? = null,
-)
+) : InlineQueryResult
 
 /**
  * Represents a link to a photo stored on the Telegram servers. By default, this photo will be sent by the user with an optional caption. Alternatively, you can use input_message_content to send a message with the specified content instead of the photo.
  */
 @Serializable
-@SerialName("photo")
 public data class InlineQueryResultCachedPhoto(
+    /**
+     * Type of the result, must be *photo*
+     */
     public val type: String = "photo",
     /**
      * Unique identifier for this result, 1-64 bytes
@@ -264,14 +290,16 @@ public data class InlineQueryResultCachedPhoto(
      */
     @SerialName("input_message_content")
     public val inputMessageContent: InputMessageContent? = null,
-)
+) : InlineQueryResult
 
 /**
  * Represents a link to a sticker stored on the Telegram servers. By default, this sticker will be sent by the user. Alternatively, you can use input_message_content to send a message with the specified content instead of the sticker.
  */
 @Serializable
-@SerialName("sticker")
 public data class InlineQueryResultCachedSticker(
+    /**
+     * Type of the result, must be *sticker*
+     */
     public val type: String = "sticker",
     /**
      * Unique identifier for this result, 1-64 bytes
@@ -292,14 +320,16 @@ public data class InlineQueryResultCachedSticker(
      */
     @SerialName("input_message_content")
     public val inputMessageContent: InputMessageContent? = null,
-)
+) : InlineQueryResult
 
 /**
  * Represents a link to a video file stored on the Telegram servers. By default, this video file will be sent by the user with an optional caption. Alternatively, you can use input_message_content to send a message with the specified content instead of the video.
  */
 @Serializable
-@SerialName("video")
 public data class InlineQueryResultCachedVideo(
+    /**
+     * Type of the result, must be *video*
+     */
     public val type: String = "video",
     /**
      * Unique identifier for this result, 1-64 bytes
@@ -347,14 +377,16 @@ public data class InlineQueryResultCachedVideo(
      */
     @SerialName("input_message_content")
     public val inputMessageContent: InputMessageContent? = null,
-)
+) : InlineQueryResult
 
 /**
  * Represents a link to a voice message stored on the Telegram servers. By default, this voice message will be sent by the user. Alternatively, you can use input_message_content to send a message with the specified content instead of the voice message.
  */
 @Serializable
-@SerialName("voice")
 public data class InlineQueryResultCachedVoice(
+    /**
+     * Type of the result, must be *voice*
+     */
     public val type: String = "voice",
     /**
      * Unique identifier for this result, 1-64 bytes
@@ -393,14 +425,16 @@ public data class InlineQueryResultCachedVoice(
      */
     @SerialName("input_message_content")
     public val inputMessageContent: InputMessageContent? = null,
-)
+) : InlineQueryResult
 
 /**
  * Represents a link to an article or web page.
  */
 @Serializable
-@SerialName("article")
 public data class InlineQueryResultArticle(
+    /**
+     * Type of the result, must be *article*
+     */
     public val type: String = "article",
     /**
      * Unique identifier for this result, 1-64 Bytes
@@ -443,14 +477,16 @@ public data class InlineQueryResultArticle(
      */
     @SerialName("thumbnail_height")
     public val thumbnailHeight: Long? = null,
-)
+) : InlineQueryResult
 
 /**
  * Represents a link to an MP3 audio file. By default, this audio file will be sent by the user. Alternatively, you can use input_message_content to send a message with the specified content instead of the audio.
  */
 @Serializable
-@SerialName("audio")
 public data class InlineQueryResultAudio(
+    /**
+     * Type of the result, must be *audio*
+     */
     public val type: String = "audio",
     /**
      * Unique identifier for this result, 1-64 bytes
@@ -498,14 +534,16 @@ public data class InlineQueryResultAudio(
      */
     @SerialName("input_message_content")
     public val inputMessageContent: InputMessageContent? = null,
-)
+) : InlineQueryResult
 
 /**
  * Represents a contact with a phone number. By default, this contact will be sent by the user. Alternatively, you can use input_message_content to send a message with the specified content instead of the contact.
  */
 @Serializable
-@SerialName("contact")
 public data class InlineQueryResultContact(
+    /**
+     * Type of the result, must be *contact*
+     */
     public val type: String = "contact",
     /**
      * Unique identifier for this result, 1-64 Bytes
@@ -555,14 +593,16 @@ public data class InlineQueryResultContact(
      */
     @SerialName("thumbnail_height")
     public val thumbnailHeight: Long? = null,
-)
+) : InlineQueryResult
 
 /**
  * Represents a Game.
  */
 @Serializable
-@SerialName("game")
 public data class InlineQueryResultGame(
+    /**
+     * Type of the result, must be *game*
+     */
     public val type: String = "game",
     /**
      * Unique identifier for this result, 1-64 bytes
@@ -578,14 +618,16 @@ public data class InlineQueryResultGame(
      */
     @SerialName("reply_markup")
     public val replyMarkup: InlineKeyboardMarkup? = null,
-)
+) : InlineQueryResult
 
 /**
  * Represents a link to a file. By default, this file will be sent by the user with an optional caption. Alternatively, you can use input_message_content to send a message with the specified content instead of the file. Currently, only .PDF and .ZIP files can be sent using this method.
  */
 @Serializable
-@SerialName("document")
 public data class InlineQueryResultDocument(
+    /**
+     * Type of the result, must be *document*
+     */
     public val type: String = "document",
     /**
      * Unique identifier for this result, 1-64 bytes
@@ -648,14 +690,16 @@ public data class InlineQueryResultDocument(
      */
     @SerialName("thumbnail_height")
     public val thumbnailHeight: Long? = null,
-)
+) : InlineQueryResult
 
 /**
  * Represents a link to an animated GIF file. By default, this animated GIF file will be sent by the user with optional caption. Alternatively, you can use input_message_content to send a message with the specified content instead of the animation.
  */
 @Serializable
-@SerialName("gif")
 public data class InlineQueryResultGif(
+    /**
+     * Type of the result, must be *gif*
+     */
     public val type: String = "gif",
     /**
      * Unique identifier for this result, 1-64 bytes
@@ -687,7 +731,7 @@ public data class InlineQueryResultGif(
     @SerialName("thumbnail_url")
     public val thumbnailUrl: String,
     /**
-     * *Optional*. MIME type of the thumbnail, must be one of “image/jpeg”, “image/gif”, or “video/mp4”. Defaults to “image/jpeg”
+     * *Optional*. MIME type of the thumbnail, must be one of “image/jpeg”, “image/gif”, or “video/mp4”. Defaults to “image/jpeg”.
      */
     @SerialName("thumbnail_mime_type")
     public val thumbnailMimeType: String? = null,
@@ -724,14 +768,16 @@ public data class InlineQueryResultGif(
      */
     @SerialName("input_message_content")
     public val inputMessageContent: InputMessageContent? = null,
-)
+) : InlineQueryResult
 
 /**
  * Represents a location on a map. By default, the location will be sent by the user. Alternatively, you can use input_message_content to send a message with the specified content instead of the location.
  */
 @Serializable
-@SerialName("location")
 public data class InlineQueryResultLocation(
+    /**
+     * Type of the result, must be *location*
+     */
     public val type: String = "location",
     /**
      * Unique identifier for this result, 1-64 Bytes
@@ -755,7 +801,7 @@ public data class InlineQueryResultLocation(
     @SerialName("horizontal_accuracy")
     public val horizontalAccuracy: Double? = null,
     /**
-     * *Optional*. Period in seconds during which the location can be updated, should be between 60 and 86400, or 0x7FFFFFFF for live locations that can be edited indefinitely.
+     * *Optional*. Period in seconds during which the location can be updated, must be between 60 and 86400, or 0x7FFFFFFF for live locations that can be edited indefinitely
      */
     @SerialName("live_period")
     public val livePeriod: Long? = null,
@@ -793,14 +839,16 @@ public data class InlineQueryResultLocation(
      */
     @SerialName("thumbnail_height")
     public val thumbnailHeight: Long? = null,
-)
+) : InlineQueryResult
 
 /**
  * Represents a link to a video animation (H.264/MPEG-4 AVC video without sound). By default, this animated MPEG-4 file will be sent by the user with optional caption. Alternatively, you can use input_message_content to send a message with the specified content instead of the animation.
  */
 @Serializable
-@SerialName("mpeg4_gif")
 public data class InlineQueryResultMpeg4Gif(
+    /**
+     * Type of the result, must be *mpeg4_gif*
+     */
     public val type: String = "mpeg4_gif",
     /**
      * Unique identifier for this result, 1-64 bytes
@@ -832,7 +880,7 @@ public data class InlineQueryResultMpeg4Gif(
     @SerialName("thumbnail_url")
     public val thumbnailUrl: String,
     /**
-     * *Optional*. MIME type of the thumbnail, must be one of “image/jpeg”, “image/gif”, or “video/mp4”. Defaults to “image/jpeg”
+     * *Optional*. MIME type of the thumbnail, must be one of “image/jpeg”, “image/gif”, or “video/mp4”. Defaults to “image/jpeg”.
      */
     @SerialName("thumbnail_mime_type")
     public val thumbnailMimeType: String? = null,
@@ -869,21 +917,23 @@ public data class InlineQueryResultMpeg4Gif(
      */
     @SerialName("input_message_content")
     public val inputMessageContent: InputMessageContent? = null,
-)
+) : InlineQueryResult
 
 /**
  * Represents a link to a photo. By default, this photo will be sent by the user with optional caption. Alternatively, you can use input_message_content to send a message with the specified content instead of the photo.
  */
 @Serializable
-@SerialName("photo")
 public data class InlineQueryResultPhoto(
+    /**
+     * Type of the result, must be *photo*
+     */
     public val type: String = "photo",
     /**
      * Unique identifier for this result, 1-64 bytes
      */
     public val id: String,
     /**
-     * A valid URL of the photo. Photo must be in **JPEG** format. Photo size must not exceed 5MB
+     * A valid URL of the photo. Photo must be in **JPEG** format. Photo size must not exceed 5MB.
      */
     @SerialName("photo_url")
     public val photoUrl: String,
@@ -939,14 +989,16 @@ public data class InlineQueryResultPhoto(
      */
     @SerialName("input_message_content")
     public val inputMessageContent: InputMessageContent? = null,
-)
+) : InlineQueryResult
 
 /**
  * Represents a venue. By default, the venue will be sent by the user. Alternatively, you can use input_message_content to send a message with the specified content instead of the venue.
  */
 @Serializable
-@SerialName("venue")
 public data class InlineQueryResultVenue(
+    /**
+     * Type of the result, must be *venue*
+     */
     public val type: String = "venue",
     /**
      * Unique identifier for this result, 1-64 Bytes
@@ -1013,15 +1065,17 @@ public data class InlineQueryResultVenue(
      */
     @SerialName("thumbnail_height")
     public val thumbnailHeight: Long? = null,
-)
+) : InlineQueryResult
 
 /**
  * Represents a link to a page containing an embedded video player or a video file. By default, this video file will be sent by the user with an optional caption. Alternatively, you can use input_message_content to send a message with the specified content instead of the video.
  * If an InlineQueryResultVideo message contains an embedded video (e.g., YouTube), you must replace its content using input_message_content.
  */
 @Serializable
-@SerialName("video")
 public data class InlineQueryResultVideo(
+    /**
+     * Type of the result, must be *video*
+     */
     public val type: String = "video",
     /**
      * Unique identifier for this result, 1-64 bytes
@@ -1094,14 +1148,16 @@ public data class InlineQueryResultVideo(
      */
     @SerialName("input_message_content")
     public val inputMessageContent: InputMessageContent? = null,
-)
+) : InlineQueryResult
 
 /**
  * Represents a link to a voice recording in an .OGG container encoded with OPUS. By default, this voice recording will be sent by the user. Alternatively, you can use input_message_content to send a message with the specified content instead of the the voice message.
  */
 @Serializable
-@SerialName("voice")
 public data class InlineQueryResultVoice(
+    /**
+     * Type of the result, must be *voice*
+     */
     public val type: String = "voice",
     /**
      * Unique identifier for this result, 1-64 bytes
@@ -1145,4 +1201,370 @@ public data class InlineQueryResultVoice(
      */
     @SerialName("input_message_content")
     public val inputMessageContent: InputMessageContent? = null,
-)
+) : InlineQueryResult
+
+@OptIn(InternalSerializationApi::class)
+public object InlineQueryResultSerializer : KSerializer<InlineQueryResult> {
+    override val descriptor: SerialDescriptor =
+        buildSerialDescriptor("com.hiczp.telegram.bot.protocol.model.InlineQueryResult", SerialKind.CONTEXTUAL)
+
+    override fun deserialize(decoder: Decoder): InlineQueryResult {
+        require(decoder is JsonDecoder) { "Only JSON is supported" }
+        val jsonElement = decoder.decodeJsonElement()
+        if (jsonElement is JsonObject) {
+            val discriminatorValue = (jsonElement["type"] as? JsonPrimitive)?.content
+            when (discriminatorValue) {
+                "audio" -> {
+                    runCatching {
+                        decoder.json.decodeFromJsonElement(
+                            InlineQueryResultAudio.serializer(),
+                            jsonElement
+                        )
+                    }.getOrNull()?.let { return it }
+                    runCatching {
+                        decoder.json.decodeFromJsonElement(
+                            InlineQueryResultCachedAudio.serializer(),
+                            jsonElement
+                        )
+                    }.getOrNull()?.let { return it }
+                }
+
+                "document" -> {
+                    runCatching {
+                        decoder.json.decodeFromJsonElement(
+                            InlineQueryResultDocument.serializer(),
+                            jsonElement
+                        )
+                    }.getOrNull()?.let { return it }
+                    runCatching {
+                        decoder.json.decodeFromJsonElement(
+                            InlineQueryResultCachedDocument.serializer(),
+                            jsonElement
+                        )
+                    }.getOrNull()?.let { return it }
+                }
+
+                "gif" -> {
+                    runCatching {
+                        decoder.json.decodeFromJsonElement(
+                            InlineQueryResultGif.serializer(),
+                            jsonElement
+                        )
+                    }.getOrNull()?.let { return it }
+                    runCatching {
+                        decoder.json.decodeFromJsonElement(
+                            InlineQueryResultCachedGif.serializer(),
+                            jsonElement
+                        )
+                    }.getOrNull()?.let { return it }
+                }
+
+                "mpeg4_gif" -> {
+                    runCatching {
+                        decoder.json.decodeFromJsonElement(
+                            InlineQueryResultMpeg4Gif.serializer(),
+                            jsonElement
+                        )
+                    }.getOrNull()?.let { return it }
+                    runCatching {
+                        decoder.json.decodeFromJsonElement(
+                            InlineQueryResultCachedMpeg4Gif.serializer(),
+                            jsonElement
+                        )
+                    }.getOrNull()?.let { return it }
+                }
+
+                "photo" -> {
+                    runCatching {
+                        decoder.json.decodeFromJsonElement(
+                            InlineQueryResultPhoto.serializer(),
+                            jsonElement
+                        )
+                    }.getOrNull()?.let { return it }
+                    runCatching {
+                        decoder.json.decodeFromJsonElement(
+                            InlineQueryResultCachedPhoto.serializer(),
+                            jsonElement
+                        )
+                    }.getOrNull()?.let { return it }
+                }
+
+                "sticker" -> {
+                    runCatching {
+                        decoder.json.decodeFromJsonElement(
+                            InlineQueryResultCachedSticker.serializer(),
+                            jsonElement
+                        )
+                    }.getOrNull()?.let { return it }
+                }
+
+                "video" -> {
+                    runCatching {
+                        decoder.json.decodeFromJsonElement(
+                            InlineQueryResultVideo.serializer(),
+                            jsonElement
+                        )
+                    }.getOrNull()?.let { return it }
+                    runCatching {
+                        decoder.json.decodeFromJsonElement(
+                            InlineQueryResultCachedVideo.serializer(),
+                            jsonElement
+                        )
+                    }.getOrNull()?.let { return it }
+                }
+
+                "voice" -> {
+                    runCatching {
+                        decoder.json.decodeFromJsonElement(
+                            InlineQueryResultVoice.serializer(),
+                            jsonElement
+                        )
+                    }.getOrNull()?.let { return it }
+                    runCatching {
+                        decoder.json.decodeFromJsonElement(
+                            InlineQueryResultCachedVoice.serializer(),
+                            jsonElement
+                        )
+                    }.getOrNull()?.let { return it }
+                }
+
+                "article" -> {
+                    runCatching {
+                        decoder.json.decodeFromJsonElement(
+                            InlineQueryResultArticle.serializer(),
+                            jsonElement
+                        )
+                    }.getOrNull()?.let { return it }
+                }
+
+                "contact" -> {
+                    runCatching {
+                        decoder.json.decodeFromJsonElement(
+                            InlineQueryResultContact.serializer(),
+                            jsonElement
+                        )
+                    }.getOrNull()?.let { return it }
+                }
+
+                "game" -> {
+                    runCatching {
+                        decoder.json.decodeFromJsonElement(
+                            InlineQueryResultGame.serializer(),
+                            jsonElement
+                        )
+                    }.getOrNull()?.let { return it }
+                }
+
+                "location" -> {
+                    runCatching {
+                        decoder.json.decodeFromJsonElement(
+                            InlineQueryResultLocation.serializer(),
+                            jsonElement
+                        )
+                    }.getOrNull()?.let { return it }
+                }
+
+                "venue" -> {
+                    runCatching {
+                        decoder.json.decodeFromJsonElement(
+                            InlineQueryResultVenue.serializer(),
+                            jsonElement
+                        )
+                    }.getOrNull()?.let { return it }
+                }
+            }
+            runCatching {
+                decoder.json.decodeFromJsonElement(
+                    InlineQueryResultVideo.serializer(),
+                    jsonElement
+                )
+            }.getOrNull()?.let { return it }
+            runCatching {
+                decoder.json.decodeFromJsonElement(
+                    InlineQueryResultVenue.serializer(),
+                    jsonElement
+                )
+            }.getOrNull()?.let { return it }
+            runCatching {
+                decoder.json.decodeFromJsonElement(
+                    InlineQueryResultDocument.serializer(),
+                    jsonElement
+                )
+            }.getOrNull()?.let { return it }
+            runCatching {
+                decoder.json.decodeFromJsonElement(
+                    InlineQueryResultLocation.serializer(),
+                    jsonElement
+                )
+            }.getOrNull()?.let { return it }
+            runCatching {
+                decoder.json.decodeFromJsonElement(
+                    InlineQueryResultGif.serializer(),
+                    jsonElement
+                )
+            }.getOrNull()?.let { return it }
+            runCatching {
+                decoder.json.decodeFromJsonElement(
+                    InlineQueryResultMpeg4Gif.serializer(),
+                    jsonElement
+                )
+            }.getOrNull()?.let { return it }
+            runCatching {
+                decoder.json.decodeFromJsonElement(
+                    InlineQueryResultPhoto.serializer(),
+                    jsonElement
+                )
+            }.getOrNull()?.let { return it }
+            runCatching {
+                decoder.json.decodeFromJsonElement(
+                    InlineQueryResultCachedVideo.serializer(),
+                    jsonElement
+                )
+            }.getOrNull()?.let { return it }
+            runCatching {
+                decoder.json.decodeFromJsonElement(
+                    InlineQueryResultAudio.serializer(),
+                    jsonElement
+                )
+            }.getOrNull()?.let { return it }
+            runCatching {
+                decoder.json.decodeFromJsonElement(
+                    InlineQueryResultContact.serializer(),
+                    jsonElement
+                )
+            }.getOrNull()?.let { return it }
+            runCatching {
+                decoder.json.decodeFromJsonElement(
+                    InlineQueryResultCachedDocument.serializer(),
+                    jsonElement
+                )
+            }.getOrNull()?.let { return it }
+            runCatching {
+                decoder.json.decodeFromJsonElement(
+                    InlineQueryResultArticle.serializer(),
+                    jsonElement
+                )
+            }.getOrNull()?.let { return it }
+            runCatching {
+                decoder.json.decodeFromJsonElement(
+                    InlineQueryResultVoice.serializer(),
+                    jsonElement
+                )
+            }.getOrNull()?.let { return it }
+            runCatching {
+                decoder.json.decodeFromJsonElement(
+                    InlineQueryResultCachedVoice.serializer(),
+                    jsonElement
+                )
+            }.getOrNull()?.let { return it }
+            runCatching {
+                decoder.json.decodeFromJsonElement(
+                    InlineQueryResultCachedPhoto.serializer(),
+                    jsonElement
+                )
+            }.getOrNull()?.let { return it }
+            runCatching {
+                decoder.json.decodeFromJsonElement(
+                    InlineQueryResultCachedGif.serializer(),
+                    jsonElement
+                )
+            }.getOrNull()?.let { return it }
+            runCatching {
+                decoder.json.decodeFromJsonElement(
+                    InlineQueryResultCachedMpeg4Gif.serializer(),
+                    jsonElement
+                )
+            }.getOrNull()?.let { return it }
+            runCatching {
+                decoder.json.decodeFromJsonElement(
+                    InlineQueryResultCachedAudio.serializer(),
+                    jsonElement
+                )
+            }.getOrNull()?.let { return it }
+            runCatching {
+                decoder.json.decodeFromJsonElement(
+                    InlineQueryResultCachedSticker.serializer(),
+                    jsonElement
+                )
+            }.getOrNull()?.let { return it }
+            runCatching {
+                decoder.json.decodeFromJsonElement(
+                    InlineQueryResultGame.serializer(),
+                    jsonElement
+                )
+            }.getOrNull()?.let { return it }
+        }
+        throw SerializationException("Could not deserialize InlineQueryResult")
+    }
+
+    override fun serialize(encoder: Encoder, `value`: InlineQueryResult) {
+        require(encoder is JsonEncoder) { "Only JSON is supported" }
+        when (value) {
+            is InlineQueryResultCachedAudio -> encoder.encodeSerializableValue(
+                InlineQueryResultCachedAudio.serializer(),
+                value
+            )
+
+            is InlineQueryResultCachedDocument -> encoder.encodeSerializableValue(
+                InlineQueryResultCachedDocument.serializer(),
+                value
+            )
+
+            is InlineQueryResultCachedGif -> encoder.encodeSerializableValue(
+                InlineQueryResultCachedGif.serializer(),
+                value
+            )
+
+            is InlineQueryResultCachedMpeg4Gif -> encoder.encodeSerializableValue(
+                InlineQueryResultCachedMpeg4Gif.serializer(),
+                value
+            )
+
+            is InlineQueryResultCachedPhoto -> encoder.encodeSerializableValue(
+                InlineQueryResultCachedPhoto.serializer(),
+                value
+            )
+
+            is InlineQueryResultCachedSticker -> encoder.encodeSerializableValue(
+                InlineQueryResultCachedSticker.serializer(),
+                value
+            )
+
+            is InlineQueryResultCachedVideo -> encoder.encodeSerializableValue(
+                InlineQueryResultCachedVideo.serializer(),
+                value
+            )
+
+            is InlineQueryResultCachedVoice -> encoder.encodeSerializableValue(
+                InlineQueryResultCachedVoice.serializer(),
+                value
+            )
+
+            is InlineQueryResultArticle -> encoder.encodeSerializableValue(InlineQueryResultArticle.serializer(), value)
+            is InlineQueryResultAudio -> encoder.encodeSerializableValue(InlineQueryResultAudio.serializer(), value)
+            is InlineQueryResultContact -> encoder.encodeSerializableValue(InlineQueryResultContact.serializer(), value)
+            is InlineQueryResultGame -> encoder.encodeSerializableValue(InlineQueryResultGame.serializer(), value)
+            is InlineQueryResultDocument -> encoder.encodeSerializableValue(
+                InlineQueryResultDocument.serializer(),
+                value
+            )
+
+            is InlineQueryResultGif -> encoder.encodeSerializableValue(InlineQueryResultGif.serializer(), value)
+            is InlineQueryResultLocation -> encoder.encodeSerializableValue(
+                InlineQueryResultLocation.serializer(),
+                value
+            )
+
+            is InlineQueryResultMpeg4Gif -> encoder.encodeSerializableValue(
+                InlineQueryResultMpeg4Gif.serializer(),
+                value
+            )
+
+            is InlineQueryResultPhoto -> encoder.encodeSerializableValue(InlineQueryResultPhoto.serializer(), value)
+            is InlineQueryResultVenue -> encoder.encodeSerializableValue(InlineQueryResultVenue.serializer(), value)
+            is InlineQueryResultVideo -> encoder.encodeSerializableValue(InlineQueryResultVideo.serializer(), value)
+            is InlineQueryResultVoice -> encoder.encodeSerializableValue(InlineQueryResultVoice.serializer(), value)
+            else -> throw SerializationException("Unsupported InlineQueryResult implementation")
+        }
+    }
+}

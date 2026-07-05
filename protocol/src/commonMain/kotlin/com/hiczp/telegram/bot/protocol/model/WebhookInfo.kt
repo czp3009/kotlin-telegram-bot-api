@@ -53,7 +53,7 @@ public data class WebhookInfo(
     @SerialName("max_connections")
     public val maxConnections: Long? = null,
     /**
-     * *Optional*. A list of update types the bot is subscribed to. Defaults to all update types except *chat_member*
+     * *Optional*. A list of update types the bot is subscribed to. Defaults to all update types except *chat_member*, *message_reaction*, and *message_reaction_count*.
      */
     @SerialName("allowed_updates")
     public val allowedUpdates: List<String>? = null,

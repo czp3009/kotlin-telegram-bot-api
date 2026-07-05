@@ -17,7 +17,7 @@ public data class UsersShared(
     @SerialName("request_id")
     public val requestId: Long,
     /**
-     * Information about users shared with the bot.
+     * Information about users shared with the bot
      */
     public val users: List<SharedUser>,
 )

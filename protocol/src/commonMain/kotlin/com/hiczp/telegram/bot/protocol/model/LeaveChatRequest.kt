@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 public data class LeaveChatRequest(
     /**
-     * Unique identifier for the target chat or username of the target supergroup or channel (in the format `@channelusername`). Channel direct messages chats aren't supported; leave the corresponding channel instead.
+     * Unique identifier for the target chat or username of the target supergroup or channel in the format `@username`. Channel direct messages chats aren't supported; leave the corresponding channel instead.
      */
     @SerialName("chat_id")
     public val chatId: String,

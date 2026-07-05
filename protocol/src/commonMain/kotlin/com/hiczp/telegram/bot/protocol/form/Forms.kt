@@ -17,33 +17,12 @@
 package com.hiczp.telegram.bot.protocol.form
 
 import com.hiczp.telegram.bot.protocol.TelegramBotApi
-import com.hiczp.telegram.bot.protocol.model.File
-import com.hiczp.telegram.bot.protocol.model.InlineKeyboardMarkup
-import com.hiczp.telegram.bot.protocol.model.InputMedia
-import com.hiczp.telegram.bot.protocol.model.InputPaidMedia
-import com.hiczp.telegram.bot.protocol.model.InputProfilePhoto
-import com.hiczp.telegram.bot.protocol.model.InputSticker
-import com.hiczp.telegram.bot.protocol.model.InputStoryContent
-import com.hiczp.telegram.bot.protocol.model.Message
-import com.hiczp.telegram.bot.protocol.model.MessageEntity
-import com.hiczp.telegram.bot.protocol.model.ReplyMarkup
-import com.hiczp.telegram.bot.protocol.model.ReplyParameters
-import com.hiczp.telegram.bot.protocol.model.Story
-import com.hiczp.telegram.bot.protocol.model.StoryArea
-import com.hiczp.telegram.bot.protocol.model.SuggestedPostParameters
+import com.hiczp.telegram.bot.protocol.model.*
 import com.hiczp.telegram.bot.protocol.type.InputFile
 import com.hiczp.telegram.bot.protocol.type.TelegramResponse
 import com.hiczp.telegram.bot.protocol.type.toFormPart
 import com.hiczp.telegram.bot.protocol.union.Union
-import io.ktor.client.request.forms.ChannelProvider
-import io.ktor.client.request.forms.FormPart
-import io.ktor.client.request.forms.MultiPartFormDataContent
-import io.ktor.client.request.forms.formData
-import kotlin.Boolean
-import kotlin.Long
-import kotlin.String
-import kotlin.Suppress
-import kotlin.collections.List
+import io.ktor.client.request.forms.*
 import kotlinx.serialization.json.Json
 
 /**
@@ -51,7 +30,7 @@ import kotlinx.serialization.json.Json
  * If you'd like to make sure that the webhook was set by you, you can specify secret data in the parameter secret_token. If specified, the request will contain a header “X-Telegram-Bot-Api-Secret-Token” with the secret token as content.
  * Notes 1. You will not be able to receive updates using getUpdates for as long as an outgoing webhook is set up. 2. To use a self-signed certificate, you need to upload your public key certificate using certificate parameter. Please upload as InputFile, sending a String will not work. 3. Ports currently supported for webhooks: 443, 80, 88, 8443. If you're having any trouble setting up webhooks, please check out this amazing guide to webhooks.
  *
- * @param url HTTPS URL to send updates to. Use an empty string to remove webhook integration
+ * @param url HTTPS URL to send updates to. Use an empty string to remove webhook integration.
  * @param certificate Upload your public key certificate so that the root certificate in use can be checked. See our [self-signed guide](https://core.telegram.org/bots/self-signed) for details.
  * @param ipAddress The fixed IP address which will be used to send webhook requests instead of the IP address resolved through DNS
  * @param maxConnections The maximum allowed number of simultaneous HTTPS connections to the webhook for update delivery, 1-100. Defaults to *40*. Use lower values to limit the load on your bot's server, and higher values to increase your bot's throughput.
@@ -111,7 +90,7 @@ public suspend fun TelegramBotApi.setWebhook(form: SetWebhookForm): TelegramResp
  * Use this method to send photos. On success, the sent Message is returned.
  *
  * @param businessConnectionId Unique identifier of the business connection on behalf of which the message will be sent
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target bot, supergroup or channel in the format `@username`
  * @param messageThreadId Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only
  * @param directMessagesTopicId Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat
  * @param photo Photo to send. Pass a file_id as String to send a photo that exists on the Telegram servers (recommended), pass an HTTP URL as a String for Telegram to get a photo from the Internet, or upload a new photo using multipart/form-data. The photo must be at most 10 MB in size. The photo's width and height must not exceed 10000 in total. Width and height ratio must be at most 20. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files)
@@ -122,11 +101,11 @@ public suspend fun TelegramBotApi.setWebhook(form: SetWebhookForm): TelegramResp
  * @param hasSpoiler Pass *True* if the photo needs to be covered with a spoiler animation
  * @param disableNotification Sends the message [silently](https://telegram.org/blog/channels-2-0#silent-messages). Users will receive a notification with no sound.
  * @param protectContent Protects the contents of the sent message from forwarding and saving
- * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance
+ * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance.
  * @param messageEffectId Unique identifier of the message effect to be added to the message; for private chats only
  * @param suggestedPostParameters A JSON-serialized object containing the parameters of the suggested post to send; for direct messages chats only. If the message is sent as a reply to another suggested post, then that suggested post is automatically declined.
  * @param replyParameters Description of the message to reply to
- * @param replyMarkup Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user
+ * @param replyMarkup Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user.
  */
 public suspend fun TelegramBotApi.sendPhoto(
     businessConnectionId: String? = null,
@@ -225,11 +204,132 @@ public suspend fun TelegramBotApi.sendPhoto(form: SendPhotoForm): TelegramRespon
 )
 
 /**
+ * Use this method to send live photos. On success, the sent Message is returned.
+ *
+ * @param businessConnectionId Unique identifier of the business connection on behalf of which the message will be sent
+ * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param messageThreadId Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only
+ * @param directMessagesTopicId Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat
+ * @param livePhoto Live photo video to send. The video must be no longer than 10 seconds and must not exceed 10 MB in size. Pass a file_id as String to send a video that exists on the Telegram servers (recommended) or upload a new video using multipart/form-data. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files). Sending live photos by a URL is currently unsupported.
+ * @param photo The static photo to send. Pass a file_id as String to send a photo that exists on the Telegram servers (recommended) or upload a new video using multipart/form-data. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files). Sending live photos by a URL is currently unsupported.
+ * @param caption Video caption (may also be used when resending videos by *file_id*), 0-1024 characters after entities parsing
+ * @param parseMode Mode for parsing entities in the video caption. See [formatting options](https://core.telegram.org/bots/api#formatting-options) for more details.
+ * @param captionEntities A JSON-serialized list of special entities that appear in the caption, which can be specified instead of *parse_mode*
+ * @param showCaptionAboveMedia Pass *True*, if the caption must be shown above the message media
+ * @param hasSpoiler Pass *True* if the video needs to be covered with a spoiler animation
+ * @param disableNotification Sends the message [silently](https://telegram.org/blog/channels-2-0#silent-messages). Users will receive a notification with no sound.
+ * @param protectContent Protects the contents of the sent message from forwarding and saving
+ * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance.
+ * @param messageEffectId Unique identifier of the message effect to be added to the message; for private chats only
+ * @param suggestedPostParameters A JSON-serialized object containing the parameters of the suggested post to send; for direct messages chats only. If the message is sent as a reply to another suggested post, then that suggested post is automatically declined.
+ * @param replyParameters Description of the message to reply to
+ * @param replyMarkup Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user.
+ */
+public suspend fun TelegramBotApi.sendLivePhoto(
+    businessConnectionId: String? = null,
+    chatId: String,
+    messageThreadId: Long? = null,
+    directMessagesTopicId: Long? = null,
+    livePhoto: InputFile,
+    photo: InputFile,
+    caption: String? = null,
+    parseMode: String? = null,
+    captionEntities: List<MessageEntity>? = null,
+    showCaptionAboveMedia: Boolean? = null,
+    hasSpoiler: Boolean? = null,
+    disableNotification: Boolean? = null,
+    protectContent: Boolean? = null,
+    allowPaidBroadcast: Boolean? = null,
+    messageEffectId: String? = null,
+    suggestedPostParameters: SuggestedPostParameters? = null,
+    replyParameters: ReplyParameters? = null,
+    replyMarkup: ReplyMarkup? = null,
+): TelegramResponse<Message> {
+    val formData = MultiPartFormDataContent(formData {
+        businessConnectionId?.let {
+            append("business_connection_id", it)
+        }
+        append("chat_id", chatId)
+        messageThreadId?.let {
+            append("message_thread_id", it.toString())
+        }
+        directMessagesTopicId?.let {
+            append("direct_messages_topic_id", it.toString())
+        }
+        append(livePhoto.toFormPart("live_photo"))
+        append(photo.toFormPart("photo"))
+        caption?.let {
+            append("caption", it)
+        }
+        parseMode?.let {
+            append("parse_mode", it)
+        }
+        captionEntities?.let {
+            append("caption_entities", Json.encodeToString(it))
+        }
+        showCaptionAboveMedia?.let {
+            append("show_caption_above_media", it.toString())
+        }
+        hasSpoiler?.let {
+            append("has_spoiler", it.toString())
+        }
+        disableNotification?.let {
+            append("disable_notification", it.toString())
+        }
+        protectContent?.let {
+            append("protect_content", it.toString())
+        }
+        allowPaidBroadcast?.let {
+            append("allow_paid_broadcast", it.toString())
+        }
+        messageEffectId?.let {
+            append("message_effect_id", it)
+        }
+        suggestedPostParameters?.let {
+            append("suggested_post_parameters", Json.encodeToString(it))
+        }
+        replyParameters?.let {
+            append("reply_parameters", Json.encodeToString(it))
+        }
+        replyMarkup?.let {
+            append("reply_markup", Json.encodeToString(it))
+        }
+    })
+    return sendLivePhoto(formData)
+}
+
+/**
+ * Use this method to send live photos. On success, the sent Message is returned.
+ *
+ * @param form Multipart form object for this operation
+ */
+public suspend fun TelegramBotApi.sendLivePhoto(form: SendLivePhotoForm): TelegramResponse<Message> = sendLivePhoto(
+    businessConnectionId = form.businessConnectionId,
+    chatId = form.chatId,
+    messageThreadId = form.messageThreadId,
+    directMessagesTopicId = form.directMessagesTopicId,
+    livePhoto = form.livePhoto,
+    photo = form.photo,
+    caption = form.caption,
+    parseMode = form.parseMode,
+    captionEntities = form.captionEntities,
+    showCaptionAboveMedia = form.showCaptionAboveMedia,
+    hasSpoiler = form.hasSpoiler,
+    disableNotification = form.disableNotification,
+    protectContent = form.protectContent,
+    allowPaidBroadcast = form.allowPaidBroadcast,
+    messageEffectId = form.messageEffectId,
+    suggestedPostParameters = form.suggestedPostParameters,
+    replyParameters = form.replyParameters,
+    replyMarkup = form.replyMarkup
+)
+
+/**
  * Use this method to send audio files, if you want Telegram clients to display them in the music player. Your audio must be in the .MP3 or .M4A format. On success, the sent Message is returned. Bots can currently send audio files of up to 50 MB in size, this limit may be changed in the future.
  * For sending voice messages, use the sendVoice method instead.
  *
  * @param businessConnectionId Unique identifier of the business connection on behalf of which the message will be sent
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target bot, supergroup or channel in the format `@username`
  * @param messageThreadId Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only
  * @param directMessagesTopicId Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat
  * @param audio Audio file to send. Pass a file_id as String to send an audio file that exists on the Telegram servers (recommended), pass an HTTP URL as a String for Telegram to get an audio file from the Internet, or upload a new one using multipart/form-data. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files)
@@ -239,14 +339,14 @@ public suspend fun TelegramBotApi.sendPhoto(form: SendPhotoForm): TelegramRespon
  * @param duration Duration of the audio in seconds
  * @param performer Performer
  * @param title Track name
- * @param thumbnail Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side. The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using multipart/form-data. Thumbnails can't be reused and can be only uploaded as a new file, so you can pass “attach://<file_attach_name>” if the thumbnail was uploaded using multipart/form-data under <file_attach_name>. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files)
+ * @param thumbnail Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side. The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using multipart/form-data. Thumbnails can't be reused and can be only uploaded as a new file, so you can pass "attach://<file_attach_name>" if the thumbnail was uploaded using multipart/form-data under <file_attach_name>. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files)
  * @param disableNotification Sends the message [silently](https://telegram.org/blog/channels-2-0#silent-messages). Users will receive a notification with no sound.
  * @param protectContent Protects the contents of the sent message from forwarding and saving
- * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance
+ * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance.
  * @param messageEffectId Unique identifier of the message effect to be added to the message; for private chats only
  * @param suggestedPostParameters A JSON-serialized object containing the parameters of the suggested post to send; for direct messages chats only. If the message is sent as a reply to another suggested post, then that suggested post is automatically declined.
  * @param replyParameters Description of the message to reply to
- * @param replyMarkup Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user
+ * @param replyMarkup Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user.
  */
 public suspend fun TelegramBotApi.sendAudio(
     businessConnectionId: String? = null,
@@ -357,22 +457,22 @@ public suspend fun TelegramBotApi.sendAudio(form: SendAudioForm): TelegramRespon
  * Use this method to send general files. On success, the sent Message is returned. Bots can currently send files of any type of up to 50 MB in size, this limit may be changed in the future.
  *
  * @param businessConnectionId Unique identifier of the business connection on behalf of which the message will be sent
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target bot, supergroup or channel in the format `@username`
  * @param messageThreadId Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only
  * @param directMessagesTopicId Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat
  * @param document File to send. Pass a file_id as String to send a file that exists on the Telegram servers (recommended), pass an HTTP URL as a String for Telegram to get a file from the Internet, or upload a new one using multipart/form-data. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files)
- * @param thumbnail Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side. The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using multipart/form-data. Thumbnails can't be reused and can be only uploaded as a new file, so you can pass “attach://<file_attach_name>” if the thumbnail was uploaded using multipart/form-data under <file_attach_name>. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files)
+ * @param thumbnail Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side. The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using multipart/form-data. Thumbnails can't be reused and can be only uploaded as a new file, so you can pass "attach://<file_attach_name>" if the thumbnail was uploaded using multipart/form-data under <file_attach_name>. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files)
  * @param caption Document caption (may also be used when resending documents by *file_id*), 0-1024 characters after entities parsing
  * @param parseMode Mode for parsing entities in the document caption. See [formatting options](https://core.telegram.org/bots/api#formatting-options) for more details.
  * @param captionEntities A JSON-serialized list of special entities that appear in the caption, which can be specified instead of *parse_mode*
  * @param disableContentTypeDetection Disables automatic server-side content type detection for files uploaded using multipart/form-data
  * @param disableNotification Sends the message [silently](https://telegram.org/blog/channels-2-0#silent-messages). Users will receive a notification with no sound.
  * @param protectContent Protects the contents of the sent message from forwarding and saving
- * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance
+ * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance.
  * @param messageEffectId Unique identifier of the message effect to be added to the message; for private chats only
  * @param suggestedPostParameters A JSON-serialized object containing the parameters of the suggested post to send; for direct messages chats only. If the message is sent as a reply to another suggested post, then that suggested post is automatically declined.
  * @param replyParameters Description of the message to reply to
- * @param replyMarkup Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user
+ * @param replyMarkup Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user.
  */
 public suspend fun TelegramBotApi.sendDocument(
     businessConnectionId: String? = null,
@@ -472,15 +572,15 @@ public suspend fun TelegramBotApi.sendDocument(form: SendDocumentForm): Telegram
  * Use this method to send video files, Telegram clients support MPEG4 videos (other formats may be sent as Document). On success, the sent Message is returned. Bots can currently send video files of up to 50 MB in size, this limit may be changed in the future.
  *
  * @param businessConnectionId Unique identifier of the business connection on behalf of which the message will be sent
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target bot, supergroup or channel in the format `@username`
  * @param messageThreadId Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only
  * @param directMessagesTopicId Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat
  * @param video Video to send. Pass a file_id as String to send a video that exists on the Telegram servers (recommended), pass an HTTP URL as a String for Telegram to get a video from the Internet, or upload a new video using multipart/form-data. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files)
  * @param duration Duration of sent video in seconds
  * @param width Video width
  * @param height Video height
- * @param thumbnail Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side. The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using multipart/form-data. Thumbnails can't be reused and can be only uploaded as a new file, so you can pass “attach://<file_attach_name>” if the thumbnail was uploaded using multipart/form-data under <file_attach_name>. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files)
- * @param cover Cover for the video in the message. Pass a file_id to send a file that exists on the Telegram servers (recommended), pass an HTTP URL for Telegram to get a file from the Internet, or pass “attach://<file_attach_name>” to upload a new one using multipart/form-data under <file_attach_name> name. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files)
+ * @param thumbnail Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side. The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using multipart/form-data. Thumbnails can't be reused and can be only uploaded as a new file, so you can pass "attach://<file_attach_name>" if the thumbnail was uploaded using multipart/form-data under <file_attach_name>. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files)
+ * @param cover Cover for the video in the message. Pass a file_id to send a file that exists on the Telegram servers (recommended), pass an HTTP URL for Telegram to get a file from the Internet, or pass "attach://<file_attach_name>" to upload a new one using multipart/form-data under <file_attach_name> name. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files)
  * @param startTimestamp Start timestamp for the video in the message
  * @param caption Video caption (may also be used when resending videos by *file_id*), 0-1024 characters after entities parsing
  * @param parseMode Mode for parsing entities in the video caption. See [formatting options](https://core.telegram.org/bots/api#formatting-options) for more details.
@@ -490,11 +590,11 @@ public suspend fun TelegramBotApi.sendDocument(form: SendDocumentForm): Telegram
  * @param supportsStreaming Pass *True* if the uploaded video is suitable for streaming
  * @param disableNotification Sends the message [silently](https://telegram.org/blog/channels-2-0#silent-messages). Users will receive a notification with no sound.
  * @param protectContent Protects the contents of the sent message from forwarding and saving
- * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance
+ * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance.
  * @param messageEffectId Unique identifier of the message effect to be added to the message; for private chats only
  * @param suggestedPostParameters A JSON-serialized object containing the parameters of the suggested post to send; for direct messages chats only. If the message is sent as a reply to another suggested post, then that suggested post is automatically declined.
  * @param replyParameters Description of the message to reply to
- * @param replyMarkup Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user
+ * @param replyMarkup Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user.
  */
 public suspend fun TelegramBotApi.sendVideo(
     businessConnectionId: String? = null,
@@ -627,14 +727,14 @@ public suspend fun TelegramBotApi.sendVideo(form: SendVideoForm): TelegramRespon
  * Use this method to send animation files (GIF or H.264/MPEG-4 AVC video without sound). On success, the sent Message is returned. Bots can currently send animation files of up to 50 MB in size, this limit may be changed in the future.
  *
  * @param businessConnectionId Unique identifier of the business connection on behalf of which the message will be sent
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target bot, supergroup or channel in the format `@username`
  * @param messageThreadId Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only
  * @param directMessagesTopicId Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat
  * @param animation Animation to send. Pass a file_id as String to send an animation that exists on the Telegram servers (recommended), pass an HTTP URL as a String for Telegram to get an animation from the Internet, or upload a new animation using multipart/form-data. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files)
  * @param duration Duration of sent animation in seconds
  * @param width Animation width
  * @param height Animation height
- * @param thumbnail Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side. The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using multipart/form-data. Thumbnails can't be reused and can be only uploaded as a new file, so you can pass “attach://<file_attach_name>” if the thumbnail was uploaded using multipart/form-data under <file_attach_name>. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files)
+ * @param thumbnail Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side. The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using multipart/form-data. Thumbnails can't be reused and can be only uploaded as a new file, so you can pass "attach://<file_attach_name>" if the thumbnail was uploaded using multipart/form-data under <file_attach_name>. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files)
  * @param caption Animation caption (may also be used when resending animation by *file_id*), 0-1024 characters after entities parsing
  * @param parseMode Mode for parsing entities in the animation caption. See [formatting options](https://core.telegram.org/bots/api#formatting-options) for more details.
  * @param captionEntities A JSON-serialized list of special entities that appear in the caption, which can be specified instead of *parse_mode*
@@ -642,11 +742,11 @@ public suspend fun TelegramBotApi.sendVideo(form: SendVideoForm): TelegramRespon
  * @param hasSpoiler Pass *True* if the animation needs to be covered with a spoiler animation
  * @param disableNotification Sends the message [silently](https://telegram.org/blog/channels-2-0#silent-messages). Users will receive a notification with no sound.
  * @param protectContent Protects the contents of the sent message from forwarding and saving
- * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance
+ * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance.
  * @param messageEffectId Unique identifier of the message effect to be added to the message; for private chats only
  * @param suggestedPostParameters A JSON-serialized object containing the parameters of the suggested post to send; for direct messages chats only. If the message is sent as a reply to another suggested post, then that suggested post is automatically declined.
  * @param replyParameters Description of the message to reply to
- * @param replyMarkup Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user
+ * @param replyMarkup Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user.
  */
 public suspend fun TelegramBotApi.sendAnimation(
     businessConnectionId: String? = null,
@@ -766,7 +866,7 @@ public suspend fun TelegramBotApi.sendAnimation(form: SendAnimationForm): Telegr
  * Use this method to send audio files, if you want Telegram clients to display the file as a playable voice message. For this to work, your audio must be in an .OGG file encoded with OPUS, or in .MP3 format, or in .M4A format (other formats may be sent as Audio or Document). On success, the sent Message is returned. Bots can currently send voice messages of up to 50 MB in size, this limit may be changed in the future.
  *
  * @param businessConnectionId Unique identifier of the business connection on behalf of which the message will be sent
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target bot, supergroup or channel in the format `@username`
  * @param messageThreadId Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only
  * @param directMessagesTopicId Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat
  * @param voice Audio file to send. Pass a file_id as String to send a file that exists on the Telegram servers (recommended), pass an HTTP URL as a String for Telegram to get a file from the Internet, or upload a new one using multipart/form-data. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files)
@@ -776,11 +876,11 @@ public suspend fun TelegramBotApi.sendAnimation(form: SendAnimationForm): Telegr
  * @param duration Duration of the voice message in seconds
  * @param disableNotification Sends the message [silently](https://telegram.org/blog/channels-2-0#silent-messages). Users will receive a notification with no sound.
  * @param protectContent Protects the contents of the sent message from forwarding and saving
- * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance
+ * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance.
  * @param messageEffectId Unique identifier of the message effect to be added to the message; for private chats only
  * @param suggestedPostParameters A JSON-serialized object containing the parameters of the suggested post to send; for direct messages chats only. If the message is sent as a reply to another suggested post, then that suggested post is automatically declined.
  * @param replyParameters Description of the message to reply to
- * @param replyMarkup Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user
+ * @param replyMarkup Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user.
  */
 public suspend fun TelegramBotApi.sendVoice(
     businessConnectionId: String? = null,
@@ -877,20 +977,20 @@ public suspend fun TelegramBotApi.sendVoice(form: SendVoiceForm): TelegramRespon
  * As of v.4.0, Telegram clients support rounded square MPEG4 videos of up to 1 minute long. Use this method to send video messages. On success, the sent Message is returned.
  *
  * @param businessConnectionId Unique identifier of the business connection on behalf of which the message will be sent
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target bot, supergroup or channel in the format `@username`
  * @param messageThreadId Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only
  * @param directMessagesTopicId Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat
- * @param videoNote Video note to send. Pass a file_id as String to send a video note that exists on the Telegram servers (recommended) or upload a new video using multipart/form-data. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files). Sending video notes by a URL is currently unsupported
+ * @param videoNote Video note to send. Pass a file_id as String to send a video note that exists on the Telegram servers (recommended) or upload a new video using multipart/form-data. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files). Sending video notes by a URL is currently unsupported.
  * @param duration Duration of sent video in seconds
  * @param length Video width and height, i.e. diameter of the video message
- * @param thumbnail Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side. The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using multipart/form-data. Thumbnails can't be reused and can be only uploaded as a new file, so you can pass “attach://<file_attach_name>” if the thumbnail was uploaded using multipart/form-data under <file_attach_name>. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files)
+ * @param thumbnail Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side. The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using multipart/form-data. Thumbnails can't be reused and can be only uploaded as a new file, so you can pass "attach://<file_attach_name>" if the thumbnail was uploaded using multipart/form-data under <file_attach_name>. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files)
  * @param disableNotification Sends the message [silently](https://telegram.org/blog/channels-2-0#silent-messages). Users will receive a notification with no sound.
  * @param protectContent Protects the contents of the sent message from forwarding and saving
- * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance
+ * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance.
  * @param messageEffectId Unique identifier of the message effect to be added to the message; for private chats only
  * @param suggestedPostParameters A JSON-serialized object containing the parameters of the suggested post to send; for direct messages chats only. If the message is sent as a reply to another suggested post, then that suggested post is automatically declined.
  * @param replyParameters Description of the message to reply to
- * @param replyMarkup Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user
+ * @param replyMarkup Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user.
  */
 public suspend fun TelegramBotApi.sendVideoNote(
     businessConnectionId: String? = null,
@@ -980,7 +1080,7 @@ public suspend fun TelegramBotApi.sendVideoNote(form: SendVideoNoteForm): Telegr
  * Use this method to send paid media. On success, the sent Message is returned.
  *
  * @param businessConnectionId Unique identifier of the business connection on behalf of which the message will be sent
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`). If the chat is a channel, all Telegram Star proceeds from this media will be credited to the chat's balance. Otherwise, they will be credited to the bot's balance.
+ * @param chatId Unique identifier for the target chat or username of the target bot, supergroup or channel in the format `@username`. If the chat is a channel, all Telegram Star proceeds from this media will be credited to the chat's balance. Otherwise, they will be credited to the bot's balance.
  * @param messageThreadId Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only
  * @param directMessagesTopicId Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat
  * @param starCount The number of Telegram Stars that must be paid to buy access to the media; 1-25000
@@ -992,10 +1092,10 @@ public suspend fun TelegramBotApi.sendVideoNote(form: SendVideoNoteForm): Telegr
  * @param showCaptionAboveMedia Pass *True*, if the caption must be shown above the message media
  * @param disableNotification Sends the message [silently](https://telegram.org/blog/channels-2-0#silent-messages). Users will receive a notification with no sound.
  * @param protectContent Protects the contents of the sent message from forwarding and saving
- * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance
+ * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance.
  * @param suggestedPostParameters A JSON-serialized object containing the parameters of the suggested post to send; for direct messages chats only. If the message is sent as a reply to another suggested post, then that suggested post is automatically declined.
  * @param replyParameters Description of the message to reply to
- * @param replyMarkup Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user
+ * @param replyMarkup Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user.
  * @param attachments Additional file attachments referenced via attach://<file_attach_name> in media fields
  */
 public suspend fun TelegramBotApi.sendPaidMedia(
@@ -1096,16 +1196,16 @@ public suspend fun TelegramBotApi.sendPaidMedia(form: SendPaidMediaForm): Telegr
 )
 
 /**
- * Use this method to send a group of photos, videos, documents or audios as an album. Documents and audio files can be only grouped in an album with messages of the same type. On success, an array of Message objects that were sent is returned.
+ * Use this method to send a group of photos, live photos, videos, documents or audios as an album. Documents and audio files can be only grouped in an album with messages of the same type. On success, an array of Message objects that were sent is returned.
  *
  * @param businessConnectionId Unique identifier of the business connection on behalf of which the message will be sent
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target bot, supergroup or channel in the format `@username`
  * @param messageThreadId Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only
  * @param directMessagesTopicId Identifier of the direct messages topic to which the messages will be sent; required if the messages are sent to a direct messages chat
  * @param media A JSON-serialized array describing messages to be sent, must include 2-10 items
  * @param disableNotification Sends messages [silently](https://telegram.org/blog/channels-2-0#silent-messages). Users will receive a notification with no sound.
  * @param protectContent Protects the contents of the sent messages from forwarding and saving
- * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance
+ * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance.
  * @param messageEffectId Unique identifier of the message effect to be added to the message; for private chats only
  * @param replyParameters Description of the message to reply to
  * @param attachments Additional file attachments referenced via attach://<file_attach_name> in media fields
@@ -1115,7 +1215,7 @@ public suspend fun TelegramBotApi.sendMediaGroup(
     chatId: String,
     messageThreadId: Long? = null,
     directMessagesTopicId: Long? = null,
-    media: List<InputMedia>,
+    media: List<SendMediaGroupMedia>,
     disableNotification: Boolean? = null,
     protectContent: Boolean? = null,
     allowPaidBroadcast: Boolean? = null,
@@ -1156,7 +1256,7 @@ public suspend fun TelegramBotApi.sendMediaGroup(
 }
 
 /**
- * Use this method to send a group of photos, videos, documents or audios as an album. Documents and audio files can be only grouped in an album with messages of the same type. On success, an array of Message objects that were sent is returned.
+ * Use this method to send a group of photos, live photos, videos, documents or audios as an album. Documents and audio files can be only grouped in an album with messages of the same type. On success, an array of Message objects that were sent is returned.
  *
  * @param form Multipart form object for this operation
  */
@@ -1175,9 +1275,230 @@ public suspend fun TelegramBotApi.sendMediaGroup(form: SendMediaGroupForm): Tele
 )
 
 /**
+ * Use this method to send a native poll. On success, the sent Message is returned.
+ *
+ * @param businessConnectionId Unique identifier of the business connection on behalf of which the message will be sent
+ * @param chatId Unique identifier for the target chat or username of the target bot, supergroup or channel in the format `@username`. Polls can't be sent to channel direct messages chats.
+ * @param messageThreadId Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only
+ * @param question Poll question, 1-300 characters
+ * @param questionParseMode Mode for parsing entities in the question. See [formatting options](https://core.telegram.org/bots/api#formatting-options) for more details. Currently, only custom emoji entities are allowed.
+ * @param questionEntities A JSON-serialized list of special entities that appear in the poll question. It can be specified instead of *question_parse_mode*.
+ * @param options A JSON-serialized list of 1-12 answer options
+ * @param isAnonymous *True*, if the poll needs to be anonymous, defaults to *True*
+ * @param type Poll type, “quiz” or “regular”, defaults to “regular”
+ * @param allowsMultipleAnswers Pass *True*, if the poll allows multiple answers, defaults to *False*
+ * @param allowsRevoting Pass *True*, if the poll allows to change chosen answer options, defaults to *False* for quizzes and to *True* for regular polls
+ * @param shuffleOptions Pass *True*, if the poll options must be shown in random order
+ * @param allowAddingOptions Pass *True*, if answer options can be added to the poll after creation; not supported for anonymous polls and quizzes
+ * @param hideResultsUntilCloses Pass *True*, if poll results must be shown only after the poll closes
+ * @param membersOnly Pass *True*, if voting is limited to users who have been members of the chat where the poll is being sent for more than 24 hours; for channel chats only
+ * @param countryCodes A JSON-serialized list of 0-12 two-letter [ISO 3166-1 alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2) country codes indicating the countries from which users can vote in the poll; for channel chats only. Use “FT” as a country code to allow users with anonymous numbers to vote. If omitted or empty, then users from any country can participate in the poll.
+ * @param correctOptionIds A JSON-serialized list of monotonically increasing 0-based identifiers of the correct answer options, required for polls in quiz mode
+ * @param explanation Text that is shown when a user chooses an incorrect answer or taps on the lamp icon in a quiz-style poll, 0-200 characters with at most 2 line feeds after entities parsing
+ * @param explanationParseMode Mode for parsing entities in the explanation. See [formatting options](https://core.telegram.org/bots/api#formatting-options) for more details.
+ * @param explanationEntities A JSON-serialized list of special entities that appear in the poll explanation. It can be specified instead of *explanation_parse_mode*.
+ * @param explanationMedia Media added to the quiz explanation
+ * @param openPeriod Amount of time in seconds the poll will be active after creation, 5-2628000. Can't be used together with *close_date*.
+ * @param closeDate Point in time (Unix timestamp) when the poll will be automatically closed. Must be at least 5 and no more than 2628000 seconds in the future. Can't be used together with *open_period*.
+ * @param isClosed Pass *True* if the poll needs to be immediately closed. This can be useful for poll preview.
+ * @param description Description of the poll to be sent, 0-1024 characters after entities parsing
+ * @param descriptionParseMode Mode for parsing entities in the poll description. See [formatting options](https://core.telegram.org/bots/api#formatting-options) for more details.
+ * @param descriptionEntities A JSON-serialized list of special entities that appear in the poll description, which can be specified instead of *description_parse_mode*
+ * @param media Media added to the poll description
+ * @param disableNotification Sends the message [silently](https://telegram.org/blog/channels-2-0#silent-messages). Users will receive a notification with no sound.
+ * @param protectContent Protects the contents of the sent message from forwarding and saving
+ * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance.
+ * @param messageEffectId Unique identifier of the message effect to be added to the message; for private chats only
+ * @param replyParameters Description of the message to reply to
+ * @param replyMarkup Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user.
+ * @param attachments Additional file attachments referenced via attach://<file_attach_name> in media fields
+ */
+public suspend fun TelegramBotApi.sendPoll(
+    businessConnectionId: String? = null,
+    chatId: String,
+    messageThreadId: Long? = null,
+    question: String,
+    questionParseMode: String? = null,
+    questionEntities: List<MessageEntity>? = null,
+    options: List<InputPollOption>,
+    isAnonymous: Boolean? = null,
+    type: String? = null,
+    allowsMultipleAnswers: Boolean? = null,
+    allowsRevoting: Boolean? = null,
+    shuffleOptions: Boolean? = null,
+    allowAddingOptions: Boolean? = null,
+    hideResultsUntilCloses: Boolean? = null,
+    membersOnly: Boolean? = null,
+    countryCodes: List<String>? = null,
+    correctOptionIds: List<Long>? = null,
+    explanation: String? = null,
+    explanationParseMode: String? = null,
+    explanationEntities: List<MessageEntity>? = null,
+    explanationMedia: InputPollMedia? = null,
+    openPeriod: Long? = null,
+    closeDate: Long? = null,
+    isClosed: Boolean? = null,
+    description: String? = null,
+    descriptionParseMode: String? = null,
+    descriptionEntities: List<MessageEntity>? = null,
+    media: InputPollMedia? = null,
+    disableNotification: Boolean? = null,
+    protectContent: Boolean? = null,
+    allowPaidBroadcast: Boolean? = null,
+    messageEffectId: String? = null,
+    replyParameters: ReplyParameters? = null,
+    replyMarkup: ReplyMarkup? = null,
+    attachments: List<FormPart<ChannelProvider>>? = null,
+): TelegramResponse<Message> {
+    val formData = MultiPartFormDataContent(formData {
+        businessConnectionId?.let {
+            append("business_connection_id", it)
+        }
+        append("chat_id", chatId)
+        messageThreadId?.let {
+            append("message_thread_id", it.toString())
+        }
+        append("question", question)
+        questionParseMode?.let {
+            append("question_parse_mode", it)
+        }
+        questionEntities?.let {
+            append("question_entities", Json.encodeToString(it))
+        }
+        append("options", Json.encodeToString(options))
+        isAnonymous?.let {
+            append("is_anonymous", it.toString())
+        }
+        type?.let {
+            append("type", it)
+        }
+        allowsMultipleAnswers?.let {
+            append("allows_multiple_answers", it.toString())
+        }
+        allowsRevoting?.let {
+            append("allows_revoting", it.toString())
+        }
+        shuffleOptions?.let {
+            append("shuffle_options", it.toString())
+        }
+        allowAddingOptions?.let {
+            append("allow_adding_options", it.toString())
+        }
+        hideResultsUntilCloses?.let {
+            append("hide_results_until_closes", it.toString())
+        }
+        membersOnly?.let {
+            append("members_only", it.toString())
+        }
+        countryCodes?.let {
+            append("country_codes", Json.encodeToString(it))
+        }
+        correctOptionIds?.let {
+            append("correct_option_ids", Json.encodeToString(it))
+        }
+        explanation?.let {
+            append("explanation", it)
+        }
+        explanationParseMode?.let {
+            append("explanation_parse_mode", it)
+        }
+        explanationEntities?.let {
+            append("explanation_entities", Json.encodeToString(it))
+        }
+        explanationMedia?.let {
+            append("explanation_media", Json.encodeToString(it))
+        }
+        openPeriod?.let {
+            append("open_period", it.toString())
+        }
+        closeDate?.let {
+            append("close_date", it.toString())
+        }
+        isClosed?.let {
+            append("is_closed", it.toString())
+        }
+        description?.let {
+            append("description", it)
+        }
+        descriptionParseMode?.let {
+            append("description_parse_mode", it)
+        }
+        descriptionEntities?.let {
+            append("description_entities", Json.encodeToString(it))
+        }
+        media?.let {
+            append("media", Json.encodeToString(it))
+        }
+        disableNotification?.let {
+            append("disable_notification", it.toString())
+        }
+        protectContent?.let {
+            append("protect_content", it.toString())
+        }
+        allowPaidBroadcast?.let {
+            append("allow_paid_broadcast", it.toString())
+        }
+        messageEffectId?.let {
+            append("message_effect_id", it)
+        }
+        replyParameters?.let {
+            append("reply_parameters", Json.encodeToString(it))
+        }
+        replyMarkup?.let {
+            append("reply_markup", Json.encodeToString(it))
+        }
+        attachments?.forEach { append(it) }
+    })
+    return sendPoll(formData)
+}
+
+/**
+ * Use this method to send a native poll. On success, the sent Message is returned.
+ *
+ * @param form Multipart form object for this operation
+ */
+public suspend fun TelegramBotApi.sendPoll(form: SendPollForm): TelegramResponse<Message> = sendPoll(
+    businessConnectionId = form.businessConnectionId,
+    chatId = form.chatId,
+    messageThreadId = form.messageThreadId,
+    question = form.question,
+    questionParseMode = form.questionParseMode,
+    questionEntities = form.questionEntities,
+    options = form.options,
+    isAnonymous = form.isAnonymous,
+    type = form.type,
+    allowsMultipleAnswers = form.allowsMultipleAnswers,
+    allowsRevoting = form.allowsRevoting,
+    shuffleOptions = form.shuffleOptions,
+    allowAddingOptions = form.allowAddingOptions,
+    hideResultsUntilCloses = form.hideResultsUntilCloses,
+    membersOnly = form.membersOnly,
+    countryCodes = form.countryCodes,
+    correctOptionIds = form.correctOptionIds,
+    explanation = form.explanation,
+    explanationParseMode = form.explanationParseMode,
+    explanationEntities = form.explanationEntities,
+    explanationMedia = form.explanationMedia,
+    openPeriod = form.openPeriod,
+    closeDate = form.closeDate,
+    isClosed = form.isClosed,
+    description = form.description,
+    descriptionParseMode = form.descriptionParseMode,
+    descriptionEntities = form.descriptionEntities,
+    media = form.media,
+    disableNotification = form.disableNotification,
+    protectContent = form.protectContent,
+    allowPaidBroadcast = form.allowPaidBroadcast,
+    messageEffectId = form.messageEffectId,
+    replyParameters = form.replyParameters,
+    replyMarkup = form.replyMarkup,
+    attachments = form.attachments
+)
+
+/**
  * Use this method to set a new profile photo for the chat. Photos can't be changed for private chats. The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights. Returns True on success.
  *
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target channel in the format `@username`
  * @param photo New chat photo, uploaded using multipart/form-data
  */
 public suspend fun TelegramBotApi.setChatPhoto(chatId: String, photo: InputFile): TelegramResponse<Boolean> {
@@ -1390,14 +1711,14 @@ public suspend fun TelegramBotApi.editStory(form: EditStoryForm): TelegramRespon
 )
 
 /**
- * Use this method to edit animation, audio, document, photo, or video messages, or to add media to text messages. If a message is part of a message album, then it can be edited only to an audio for audio albums, only to a document for document albums and to a photo or a video otherwise. When an inline message is edited, a new file can't be uploaded; use a previously uploaded file via its file_id or specify a URL. On success, if the edited message is not an inline message, the edited Message is returned, otherwise True is returned. Note that business messages that were not sent by the bot and do not contain an inline keyboard can only be edited within 48 hours from the time they were sent.
+ * Use this method to edit animation, audio, document, live photo, photo, or video messages, or to replace a text or a rich message with a media. If a message is part of a message album, then it can be edited only to an audio for audio albums, only to a document for document albums and to a photo, a live photo, or a video otherwise. When an inline message is edited, a new file can't be uploaded; use a previously uploaded file via its file_id or specify a URL. On success, if the edited message is not an inline message, the edited Message is returned, otherwise True is returned. Note that business messages that were not sent by the bot and do not contain an inline keyboard can only be edited within 48 hours from the time they were sent.
  *
  * @param businessConnectionId Unique identifier of the business connection on behalf of which the message to be edited was sent
- * @param chatId Required if *inline_message_id* is not specified. Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
- * @param messageId Required if *inline_message_id* is not specified. Identifier of the message to edit
- * @param inlineMessageId Required if *chat_id* and *message_id* are not specified. Identifier of the inline message
+ * @param chatId Required if *inline_message_id* is not specified. Unique identifier for the target chat or username of the target bot, supergroup or channel in the format `@username`.
+ * @param messageId Required if *inline_message_id* is not specified. Identifier of the message to edit.
+ * @param inlineMessageId Required if *chat_id* and *message_id* are not specified. Identifier of the inline message.
  * @param media A JSON-serialized object for a new media content of the message
- * @param replyMarkup A JSON-serialized object for a new [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards).
+ * @param replyMarkup A JSON-serialized object for a new [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards)
  * @param attachments Additional file attachments referenced via attach://<file_attach_name> in media fields
  */
 public suspend fun TelegramBotApi.editMessageMedia(
@@ -1432,7 +1753,7 @@ public suspend fun TelegramBotApi.editMessageMedia(
 }
 
 /**
- * Use this method to edit animation, audio, document, photo, or video messages, or to add media to text messages. If a message is part of a message album, then it can be edited only to an audio for audio albums, only to a document for document albums and to a photo or a video otherwise. When an inline message is edited, a new file can't be uploaded; use a previously uploaded file via its file_id or specify a URL. On success, if the edited message is not an inline message, the edited Message is returned, otherwise True is returned. Note that business messages that were not sent by the bot and do not contain an inline keyboard can only be edited within 48 hours from the time they were sent.
+ * Use this method to edit animation, audio, document, live photo, photo, or video messages, or to replace a text or a rich message with a media. If a message is part of a message album, then it can be edited only to an audio for audio albums, only to a document for document albums and to a photo, a live photo, or a video otherwise. When an inline message is edited, a new file can't be uploaded; use a previously uploaded file via its file_id or specify a URL. On success, if the edited message is not an inline message, the edited Message is returned, otherwise True is returned. Note that business messages that were not sent by the bot and do not contain an inline keyboard can only be edited within 48 hours from the time they were sent.
  *
  * @param form Multipart form object for this operation
  */
@@ -1450,18 +1771,18 @@ public suspend fun TelegramBotApi.editMessageMedia(form: EditMessageMediaForm): 
  * Use this method to send static .WEBP, animated .TGS, or video .WEBM stickers. On success, the sent Message is returned.
  *
  * @param businessConnectionId Unique identifier of the business connection on behalf of which the message will be sent
- * @param chatId Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+ * @param chatId Unique identifier for the target chat or username of the target bot, supergroup or channel in the format `@username`
  * @param messageThreadId Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only
  * @param directMessagesTopicId Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat
  * @param sticker Sticker to send. Pass a file_id as String to send a file that exists on the Telegram servers (recommended), pass an HTTP URL as a String for Telegram to get a .WEBP sticker from the Internet, or upload a new .WEBP, .TGS, or .WEBM sticker using multipart/form-data. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files). Video and animated stickers can't be sent via an HTTP URL.
  * @param emoji Emoji associated with the sticker; only for just uploaded stickers
  * @param disableNotification Sends the message [silently](https://telegram.org/blog/channels-2-0#silent-messages). Users will receive a notification with no sound.
  * @param protectContent Protects the contents of the sent message from forwarding and saving
- * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance
+ * @param allowPaidBroadcast Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance.
  * @param messageEffectId Unique identifier of the message effect to be added to the message; for private chats only
  * @param suggestedPostParameters A JSON-serialized object containing the parameters of the suggested post to send; for direct messages chats only. If the message is sent as a reply to another suggested post, then that suggested post is automatically declined.
  * @param replyParameters Description of the message to reply to
- * @param replyMarkup Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user
+ * @param replyMarkup Additional interface options. A JSON-serialized object for an [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards), [custom reply keyboard](https://core.telegram.org/bots/features#keyboards), instructions to remove a reply keyboard or to force a reply from the user.
  */
 public suspend fun TelegramBotApi.sendSticker(
     businessConnectionId: String? = null,
@@ -1543,7 +1864,7 @@ public suspend fun TelegramBotApi.sendSticker(form: SendStickerForm): TelegramRe
  * Use this method to upload a file with a sticker for later use in the createNewStickerSet, addStickerToSet, or replaceStickerInSet methods (the file can be used multiple times). Returns the uploaded File on success.
  *
  * @param userId User identifier of sticker file owner
- * @param sticker A file with the sticker in .WEBP, .PNG, .TGS, or .WEBM format. See [](https://core.telegram.org/stickers)[https://core.telegram.org/stickers](https://core.telegram.org/stickers) for technical requirements. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files)
+ * @param sticker A file with the sticker in .WEBP, .PNG, .TGS, or .WEBM format. See https://core.telegram.org/stickers for technical requirements. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files)
  * @param stickerFormat Format of the sticker, must be one of “static”, “animated”, “video”
  */
 public suspend fun TelegramBotApi.uploadStickerFile(
@@ -1700,7 +2021,7 @@ public suspend fun TelegramBotApi.replaceStickerInSet(form: ReplaceStickerInSetF
  *
  * @param name Sticker set name
  * @param userId User identifier of the sticker set owner
- * @param thumbnail A **.WEBP** or **.PNG** image with the thumbnail, must be up to 128 kilobytes in size and have a width and height of exactly 100px, or a **.TGS** animation with a thumbnail up to 32 kilobytes in size (see [](https://core.telegram.org/stickers#animation-requirements)[https://core.telegram.org/stickers#animation-requirements](https://core.telegram.org/stickers#animation-requirements) for animated sticker technical requirements), or a **.WEBM** video with the thumbnail up to 32 kilobytes in size; see [](https://core.telegram.org/stickers#video-requirements)[https://core.telegram.org/stickers#video-requirements](https://core.telegram.org/stickers#video-requirements) for video sticker technical requirements. Pass a *file_id* as a String to send a file that already exists on the Telegram servers, pass an HTTP URL as a String for Telegram to get a file from the Internet, or upload a new one using multipart/form-data. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files). Animated and video sticker set thumbnails can't be uploaded via HTTP URL. If omitted, then the thumbnail is dropped and the first sticker is used as the thumbnail.
+ * @param thumbnail A **.WEBP** or **.PNG** image with the thumbnail, must be up to 128 kilobytes in size and have a width and height of exactly 100px, or a **.TGS** animation with a thumbnail up to 32 kilobytes in size (see https://core.telegram.org/stickers#animation-requirements for animated sticker technical requirements), or a **.WEBM** video with the thumbnail up to 32 kilobytes in size; see https://core.telegram.org/stickers#video-requirements for video sticker technical requirements. Pass a *file_id* as a String to send a file that already exists on the Telegram servers, pass an HTTP URL as a String for Telegram to get a file from the Internet, or upload a new one using multipart/form-data. [More information on Sending Files ](https://core.telegram.org/bots/api#sending-files). Animated and video sticker set thumbnails can't be uploaded via HTTP URL. If omitted, then the thumbnail is dropped and the first sticker is used as the thumbnail.
  * @param format Format of the thumbnail, must be one of “static” for a **.WEBP** or **.PNG** image, “animated” for a **.TGS** animation, or “video” for a **.WEBM** video
  */
 public suspend fun TelegramBotApi.setStickerSetThumbnail(

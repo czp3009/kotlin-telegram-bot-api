@@ -15,7 +15,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 public data class Message(
     /**
-     * Unique message identifier inside this chat. In specific instances (e.g., message containing a video sent to a big chat), the server might automatically schedule a message instead of sending it immediately. In such cases, this field will be 0 and the relevant message will be unusable until it is actually sent
+     * Unique message identifier inside this chat. In specific instances (e.g., message containing a video sent to a big chat), the server might automatically schedule a message instead of sending it immediately. In such cases, this field will be 0 and the relevant message will be unusable until it is actually sent.
      */
     @SerialName("message_id")
     public val messageId: Long,
@@ -30,7 +30,7 @@ public data class Message(
     @SerialName("direct_messages_topic")
     public val directMessagesTopic: DirectMessagesTopic? = null,
     /**
-     * *Optional*. Sender of the message; may be empty for messages sent to channels. For backward compatibility, if the message was sent on behalf of a chat, the field contains a fake sender user in non-channel chats
+     * *Optional*. Sender of the message; may be empty for messages sent to channels. For backward compatibility, if the message was sent on behalf of a chat, the field contains a fake sender user in non-channel chats.
      */
     public val from: User? = null,
     /**
@@ -57,6 +57,11 @@ public data class Message(
      * Date the message was sent in Unix time. It is always a positive number, representing a valid date.
      */
     public val date: Long,
+    /**
+     * *Optional*. The unique identifier for the guest query. Use this identifier with the method [answerGuestQuery](https://core.telegram.org/bots/api#answerguestquery) to send a response message. If non-empty, the message belongs to the chat where the guest bot was summoned, which may not coincide with other existing bot chats sharing the same identifier.
+     */
+    @SerialName("guest_query_id")
+    public val guestQueryId: String? = null,
     /**
      * *Optional*. Unique identifier of the business connection from which the message was received. If non-empty, the message belongs to a chat of the corresponding business account that is independent from any potential bot chat which might share the same identifier.
      */
@@ -106,10 +111,25 @@ public data class Message(
     @SerialName("reply_to_checklist_task_id")
     public val replyToChecklistTaskId: Long? = null,
     /**
+     * *Optional*. Persistent identifier of the specific poll option that is being replied to
+     */
+    @SerialName("reply_to_poll_option_id")
+    public val replyToPollOptionId: String? = null,
+    /**
      * *Optional*. Bot through which the message was sent
      */
     @SerialName("via_bot")
     public val viaBot: User? = null,
+    /**
+     * *Optional*. For a message sent by a guest bot, this is the user whose original message triggered the bot's response
+     */
+    @SerialName("guest_bot_caller_user")
+    public val guestBotCallerUser: User? = null,
+    /**
+     * *Optional*. For a message sent by a guest bot, this is the chat whose original message triggered the bot's response
+     */
+    @SerialName("guest_bot_caller_chat")
+    public val guestBotCallerChat: Chat? = null,
     /**
      * *Optional*. Date the message was last edited in Unix time
      */
@@ -169,7 +189,12 @@ public data class Message(
     @SerialName("effect_id")
     public val effectId: String? = null,
     /**
-     * *Optional*. Message is an animation, information about the animation. For backward compatibility, when this field is set, the *document* field will also be set
+     * *Optional*. Message is a rich formatted message
+     */
+    @SerialName("rich_message")
+    public val richMessage: RichMessage? = null,
+    /**
+     * *Optional*. Message is an animation, information about the animation. For backward compatibility, when this field is set, the *document* field will also be set.
      */
     public val animation: Animation? = null,
     /**
@@ -180,6 +205,11 @@ public data class Message(
      * *Optional*. Message is a general file, information about the file
      */
     public val document: Document? = null,
+    /**
+     * *Optional*. Message is a live photo, information about the live photo. For backward compatibility, when this field is set, the *photo* field will also be set.
+     */
+    @SerialName("live_photo")
+    public val livePhoto: LivePhoto? = null,
     /**
      * *Optional*. Message contains paid media; information about the paid media
      */
@@ -250,7 +280,7 @@ public data class Message(
      */
     public val poll: Poll? = null,
     /**
-     * *Optional*. Message is a venue, information about the venue. For backward compatibility, when this field is set, the *location* field will also be set
+     * *Optional*. Message is a venue, information about the venue. For backward compatibility, when this field is set, the *location* field will also be set.
      */
     public val venue: Venue? = null,
     /**
@@ -460,10 +490,25 @@ public data class Message(
     @SerialName("giveaway_completed")
     public val giveawayCompleted: GiveawayCompleted? = null,
     /**
+     * *Optional*. Service message: user created a bot that will be managed by the current bot
+     */
+    @SerialName("managed_bot_created")
+    public val managedBotCreated: ManagedBotCreated? = null,
+    /**
      * *Optional*. Service message: the price for paid messages has changed in the chat
      */
     @SerialName("paid_message_price_changed")
     public val paidMessagePriceChanged: PaidMessagePriceChanged? = null,
+    /**
+     * *Optional*. Service message: answer option was added to a poll
+     */
+    @SerialName("poll_option_added")
+    public val pollOptionAdded: PollOptionAdded? = null,
+    /**
+     * *Optional*. Service message: answer option was deleted from a poll
+     */
+    @SerialName("poll_option_deleted")
+    public val pollOptionDeleted: PollOptionDeleted? = null,
     /**
      * *Optional*. Service message: a suggested post was approved
      */
@@ -519,4 +564,5 @@ public data class Message(
      */
     @SerialName("reply_markup")
     public val replyMarkup: InlineKeyboardMarkup? = null,
-) : IncomingUpdate
+) : IncomingUpdate,
+    MaybeInaccessibleMessage

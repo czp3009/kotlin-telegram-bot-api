@@ -35,19 +35,19 @@ kotlin {
             implementation(libs.ktor.client.cio)
         }
 
-        val commonTest by getting
-        val desktopNativeTest by creating {
-            dependsOn(commonTest)
+        val commonTestSourceSet = commonTest.get()
+        val desktopNativeTest = create("desktopNativeTest") {
+            dependsOn(commonTestSourceSet)
             dependencies {
                 implementation(libs.ktor.client.curl)
             }
         }
-        val otherTest by creating {
-            dependsOn(commonTest)
+        val otherTest = create("otherTest") {
+            dependsOn(commonTestSourceSet)
         }
 
         //only support running unit test on jvm and desktopNative
-        val desktopNativeTargets = setOf("mingwX64", "linuxArm64", "linuxX64", "macosArm64", "macosX64")
+        val desktopNativeTargets = setOf("mingwX64", "linuxArm64", "linuxX64", "macosArm64")
         targets.configureEach {
             val testCompilation = compilations.findByName("test") ?: return@configureEach
             val testSourceSet = testCompilation.defaultSourceSet
@@ -60,14 +60,9 @@ kotlin {
     }
 }
 
-ktorfit {
-    //https://github.com/Foso/Ktorfit/issues/1015
-    compilerPluginVersion.set("2.3.3")
-}
+val downloadSwagger = tasks.register<DownloadTelegramBotApiSwaggerTask>("downloadSwagger")
 
-val downloadSwagger by tasks.registering(DownloadTelegramBotApiSwaggerTask::class)
-
-val generateKtorfitInterfaces by tasks.registering(GenerateKtorfitInterfacesTask::class) {
+val generateKtorfitInterfaces = tasks.register<GenerateKtorfitInterfacesTask>("generateKtorfitInterfaces") {
     swaggerFile.set(downloadSwagger.flatMap { it.outputFile })
     dependsOn(downloadSwagger)
 }

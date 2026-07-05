@@ -14,7 +14,7 @@ public data class StopPollRequest(
     @SerialName("business_connection_id")
     public val businessConnectionId: String? = null,
     /**
-     * Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+     * Unique identifier for the target chat or username of the target bot, supergroup or channel in the format `@username`
      */
     @SerialName("chat_id")
     public val chatId: String,
@@ -24,7 +24,7 @@ public data class StopPollRequest(
     @SerialName("message_id")
     public val messageId: Long,
     /**
-     * A JSON-serialized object for a new message [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards).
+     * A JSON-serialized object for a new message [inline keyboard](https://core.telegram.org/bots/features#inline-keyboards)
      */
     @SerialName("reply_markup")
     public val replyMarkup: InlineKeyboardMarkup? = null,

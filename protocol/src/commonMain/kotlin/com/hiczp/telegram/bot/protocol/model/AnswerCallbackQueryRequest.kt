@@ -1,9 +1,6 @@
 // Auto-generated from Swagger specification, do not modify this file manually
 package com.hiczp.telegram.bot.protocol.model
 
-import kotlin.Boolean
-import kotlin.Long
-import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -15,7 +12,7 @@ public data class AnswerCallbackQueryRequest(
     @SerialName("callback_query_id")
     public val callbackQueryId: String,
     /**
-     * Text of the notification. If not specified, nothing will be shown to the user, 0-200 characters
+     * Text of the notification. If not specified, nothing will be shown to the user, 0-200 characters.
      */
     public val text: String? = null,
     /**

@@ -8,12 +8,12 @@ import kotlinx.serialization.Serializable
 @Serializable
 public data class SetChatMenuButtonRequest(
     /**
-     * Unique identifier for the target private chat. If not specified, default bot's menu button will be changed
+     * Unique identifier for the target private chat. If not specified, the bot's default menu button will be changed.
      */
     @SerialName("chat_id")
     public val chatId: Long? = null,
     /**
-     * A JSON-serialized object for the bot's new menu button. Defaults to [MenuButtonDefault](https://core.telegram.org/bots/api#menubuttondefault)
+     * A JSON-serialized object for the bot's new menu button. Defaults to [MenuButtonDefault](https://core.telegram.org/bots/api#menubuttondefault).
      */
     @SerialName("menu_button")
     public val menuButton: MenuButton? = null,

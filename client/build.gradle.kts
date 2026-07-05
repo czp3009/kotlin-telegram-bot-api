@@ -30,9 +30,9 @@ kotlin {
             implementation(libs.ktor.client.cio)
         }
 
-        val commonTest by getting
-        val otherTest by creating {
-            dependsOn(commonTest)
+        val commonTestSourceSet = commonTest.get()
+        val otherTest = create("otherTest") {
+            dependsOn(commonTestSourceSet)
         }
 
         //only support running unit test on jvm

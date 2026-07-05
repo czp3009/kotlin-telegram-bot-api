@@ -17,7 +17,7 @@ public data class LinkPreviewOptions(
     @SerialName("is_disabled")
     public val isDisabled: Boolean? = null,
     /**
-     * *Optional*. URL to use for the link preview. If empty, then the first URL found in the message text will be used
+     * *Optional*. URL to use for the link preview. If empty, then the first URL found in the message text will be used.
      */
     public val url: String? = null,
     /**

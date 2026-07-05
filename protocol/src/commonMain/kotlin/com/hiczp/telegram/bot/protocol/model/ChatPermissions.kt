@@ -1,7 +1,6 @@
 // Auto-generated from Swagger specification, do not modify this file manually
 package com.hiczp.telegram.bot.protocol.model
 
-import kotlin.Boolean
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -11,7 +10,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 public data class ChatPermissions(
     /**
-     * *Optional*. *True*, if the user is allowed to send text messages, contacts, giveaways, giveaway winners, invoices, locations and venues
+     * *Optional*. *True*, if the user is allowed to send text messages, rich messages, contacts, giveaways, giveaway winners, invoices, locations and venues
      */
     @SerialName("can_send_messages")
     public val canSendMessages: Boolean? = null,
@@ -61,12 +60,17 @@ public data class ChatPermissions(
     @SerialName("can_add_web_page_previews")
     public val canAddWebPagePreviews: Boolean? = null,
     /**
-     * *Optional*. *True*, if the user is allowed to edit their own tag
+     * *Optional*. *True*, if the user is allowed to react to messages. If omitted, defaults to the value of *can_send_messages*.
+     */
+    @SerialName("can_react_to_messages")
+    public val canReactToMessages: Boolean? = null,
+    /**
+     * *Optional*. *True*, if the user is allowed to edit their own tag. If omitted, defaults to the value of *can_pin_messages*.
      */
     @SerialName("can_edit_tag")
     public val canEditTag: Boolean? = null,
     /**
-     * *Optional*. *True*, if the user is allowed to change the chat title, photo and other settings. Ignored in public supergroups
+     * *Optional*. *True*, if the user is allowed to change the chat title, photo and other settings. Ignored in public supergroups.
      */
     @SerialName("can_change_info")
     public val canChangeInfo: Boolean? = null,
@@ -76,12 +80,12 @@ public data class ChatPermissions(
     @SerialName("can_invite_users")
     public val canInviteUsers: Boolean? = null,
     /**
-     * *Optional*. *True*, if the user is allowed to pin messages. Ignored in public supergroups
+     * *Optional*. *True*, if the user is allowed to pin messages. Ignored in public supergroups.
      */
     @SerialName("can_pin_messages")
     public val canPinMessages: Boolean? = null,
     /**
-     * *Optional*. *True*, if the user is allowed to create forum topics. If omitted defaults to the value of can_pin_messages
+     * *Optional*. *True*, if the user is allowed to create forum topics. If omitted defaults to the value of can_pin_messages.
      */
     @SerialName("can_manage_topics")
     public val canManageTopics: Boolean? = null,

@@ -9,7 +9,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 public data class SetChatPermissionsRequest(
     /**
-     * Unique identifier for the target chat or username of the target supergroup (in the format `@supergroupusername`)
+     * Unique identifier for the target chat or username of the target supergroup in the format `@username`
      */
     @SerialName("chat_id")
     public val chatId: String,

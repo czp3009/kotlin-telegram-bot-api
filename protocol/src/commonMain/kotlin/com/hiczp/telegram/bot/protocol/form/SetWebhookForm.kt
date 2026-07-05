@@ -2,15 +2,11 @@
 package com.hiczp.telegram.bot.protocol.form
 
 import com.hiczp.telegram.bot.protocol.type.InputFile
-import kotlin.Boolean
-import kotlin.Long
-import kotlin.String
-import kotlin.collections.List
 import kotlinx.serialization.SerialName
 
 public data class SetWebhookForm(
     /**
-     * HTTPS URL to send updates to. Use an empty string to remove webhook integration
+     * HTTPS URL to send updates to. Use an empty string to remove webhook integration.
      */
     public val url: String,
     /**

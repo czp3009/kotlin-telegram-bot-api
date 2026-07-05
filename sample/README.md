@@ -3,6 +3,13 @@
 This directory contains example bot implementations demonstrating various features of the kotlin-telegram-bot-api
 library.
 
+## Build Notes
+
+- Samples are built with Kotlin 2.4.0. Context parameters are stable, so no `-Xcontext-parameters` compiler flag is
+  required.
+- Use `./gradlew :sample:assemble` to compile the sample module without running tests.
+- Running a sample bot performs real Telegram API calls and requires a valid bot token.
+
 ## Running Samples
 
 All samples require a bot token from [@BotFather](https://t.me/botfather). Run them using Gradle:
@@ -159,23 +166,23 @@ CommandBot.
 
 ```
 sample/
-└── src/commonMain/kotlin/com/hiczp/telegram/bot/sample/
-    ├── basic/
-    │   ├── echo/
-    │   │   └── EchoBot.kt                    # Minimal echo bot
-    │   ├── command/
-    │   │   └── CommandBot.kt                 # Command handling demo
-    │   └── interceptor/
-    │       ├── InterceptorBot.kt             # Custom interceptor demo
-    │       ├── LocalizationInterceptor.kt    # Extracts user language code
-    │       ├── TimeoutInterceptor.kt         # Cancels slow operations
-    │       ├── ExceptionCatchingInterceptor.kt # Global exception handler
-    │       └── BlacklistInterceptor.kt       # Blocks blacklisted users
-    ├── advanced/
-    │   ├── file/
-    │   │   └── FileBot.kt                    # File operations demo
-    │   └── conversation/
-    │       └── ConversationBot.kt            # Multi-turn conversation demo
-    └── dsl/
-        └── AuthDsl.kt                        # Reusable auth DSL
++-- src/commonMain/kotlin/com/hiczp/telegram/bot/sample/
+    +-- basic/
+    |   +-- echo/
+    |   |   +-- EchoBot.kt                    # Minimal echo bot
+    |   +-- command/
+    |   |   +-- CommandBot.kt                 # Command handling demo
+    |   +-- interceptor/
+    |       +-- InterceptorBot.kt             # Custom interceptor demo
+    |       +-- LocalizationInterceptor.kt    # Extracts user language code
+    |       +-- TimeoutInterceptor.kt         # Cancels slow operations
+    |       +-- ExceptionCatchingInterceptor.kt # Global exception handler
+    |       +-- BlacklistInterceptor.kt       # Blocks blacklisted users
+    +-- advanced/
+    |   +-- file/
+    |   |   +-- FileBot.kt                    # File operations demo
+    |   +-- conversation/
+    |       +-- ConversationBot.kt            # Multi-turn conversation demo
+    +-- dsl/
+        +-- AuthDsl.kt                        # Reusable auth DSL
 ```

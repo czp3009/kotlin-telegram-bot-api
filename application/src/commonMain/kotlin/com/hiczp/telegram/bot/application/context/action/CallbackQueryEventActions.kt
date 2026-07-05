@@ -83,7 +83,7 @@ suspend fun TelegramBotEventContext<CallbackQueryEvent>.editMessageChecklist(
     val errorMessage = { "Message must be sent by business connection" }
     return client.editMessageChecklist(
         businessConnectionId = checkNotNull(event.callbackQuery.message?.businessConnectionId, errorMessage),
-        chatId = checkNotNull(event.callbackQuery.message?.chat?.id, errorMessage),
+        chatId = checkNotNull(event.callbackQuery.message?.chat?.id, errorMessage).toString(),
         messageId = checkNotNull(event.callbackQuery.message?.messageId, errorMessage),
         checklist = checklist,
         replyMarkup = inlineKeyboardMarkup,

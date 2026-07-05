@@ -26,7 +26,7 @@ public data class InputChecklistTask(
     @SerialName("parse_mode")
     public val parseMode: String? = null,
     /**
-     * *Optional*. List of special entities that appear in the text, which can be specified instead of parse_mode. Currently, only *bold*, *italic*, *underline*, *strikethrough*, *spoiler*, and *custom_emoji* entities are allowed.
+     * *Optional*. List of special entities that appear in the text, which can be specified instead of parse_mode. Currently, only *bold*, *italic*, *underline*, *strikethrough*, *spoiler*, *custom_emoji*, and *date_time* entities are allowed.
      */
     @SerialName("text_entities")
     public val textEntities: List<MessageEntity>? = null,

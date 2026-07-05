@@ -62,7 +62,7 @@ their processor classpath. No manual configuration required.
 
 ## Supported Platforms
 
-JVM only (KSP processors run on JVM).
+JVM only. KSP processors run on the JVM and generate common source artifacts for the multiplatform `:protocol` module.
 
 ## Related Modules
 

@@ -59,7 +59,8 @@ data class Message(/* ... */) : IncomingUpdate
 
 ## Supported Platforms
 
-JVM, Android, JS, WASM, Linux, macOS, Windows, iOS, watchOS, tvOS, Android Native.
+JVM, Android, JS, WASM, Linux, Windows, Android Native, macOS ARM64, iOS, watchOS ARM/simulator ARM64, and tvOS
+ARM/simulator ARM64.
 
 ## Related Modules
 

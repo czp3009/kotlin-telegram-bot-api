@@ -23,7 +23,7 @@ public data class UniqueGift(
     @SerialName("base_name")
     public val baseName: String,
     /**
-     * Unique name of the gift. This name can be used in `https://t.me/nft/...` links and story areas
+     * Unique name of the gift. This name can be used in `https://t.me/nft/...` links and story areas.
      */
     public val name: String,
     /**

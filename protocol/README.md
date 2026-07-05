@@ -5,6 +5,8 @@ Kotlin Multiplatform protocol module for the Telegram Bot API.
 It provides type-safe API definitions generated from the Telegram Bot API OpenAPI specification, including models,
 API interfaces, multipart form wrappers, and query/body helper extensions.
 
+Current generated API version: Telegram Bot API 10.1.
+
 ## Key Features
 
 ### Auto-Generated API Definitions
@@ -49,6 +51,13 @@ Code is generated from the
   - `unionSerializersModule` provides contextual serializers for all Union types
   - Used when Telegram API returns either a `Message` object or a `Boolean` (e.g., `sendMessage` with
     `business_connection_id`)
+
+- **Telegram model unions**
+  - Telegram object unions are generated as model types when possible, including unions with custom JSON shape handling
+    such as `MaybeInaccessibleMessage`, `InputMessageContent`, `InlineQueryResult`, and `RichText`.
+  - Field-overlapping unions can still appear through a representative model type in API fields. For example,
+    inaccessible message references are represented as `Message?` in common call paths and can be checked with
+    `Message.isInaccessible`.
 
 ### Handwritten Types and Utilities
 
@@ -333,7 +342,8 @@ Do not edit generated files manually; update generation inputs and regenerate in
 
 ## Supported Platforms
 
-JVM, Android, JS, WASM, Linux, macOS, Windows, iOS, watchOS, tvOS, Android Native.
+JVM, Android, JS, WASM, Linux, Windows, Android Native, macOS ARM64, iOS, watchOS ARM/simulator ARM64, and tvOS
+ARM/simulator ARM64.
 
 ## Related Links
 

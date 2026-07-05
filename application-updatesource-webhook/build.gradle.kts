@@ -20,23 +20,19 @@ kotlin {
 
     // macOS
     macosArm64()
-    macosX64()
 
     // iOS
     iosSimulatorArm64()
     iosArm64()
-    iosX64()
 
     // watchOS
     watchosSimulatorArm64()
     watchosArm32()
     watchosArm64()
-    watchosX64()
 
     // tvOS
     tvosSimulatorArm64()
     tvosArm64()
-    tvosX64()
 
     // Android Native
     androidNativeArm32()
@@ -48,7 +44,7 @@ kotlin {
     jvm()
 
     // Android
-    androidLibrary {
+    android {
         namespace = "com.hiczp.telegram.bot.application.updatesource.webhook"
         compileSdk = 36
         minSdk = 34

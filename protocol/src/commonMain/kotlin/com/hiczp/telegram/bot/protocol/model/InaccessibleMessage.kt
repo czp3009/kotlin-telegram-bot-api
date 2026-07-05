@@ -1,7 +1,6 @@
 // Auto-generated from Swagger specification, do not modify this file manually
 package com.hiczp.telegram.bot.protocol.model
 
-import kotlin.Long
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -23,4 +22,4 @@ public data class InaccessibleMessage(
      * Always 0. The field can be used to differentiate regular and inaccessible messages.
      */
     public val date: Long,
-)
+) : MaybeInaccessibleMessage

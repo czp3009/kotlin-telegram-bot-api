@@ -89,7 +89,7 @@ public data class OwnedGiftRegular(
     @SerialName("is_upgrade_separate")
     public val isUpgradeSeparate: Boolean? = null,
     /**
-     * *Optional*. Unique number reserved for this gift when upgraded. See the *number* field in [UniqueGift](https://core.telegram.org/bots/api#uniquegift)
+     * *Optional*. Unique number reserved for this gift when upgraded. See the *number* field in [UniqueGift](https://core.telegram.org/bots/api#uniquegift).
      */
     @SerialName("unique_gift_number")
     public val uniqueGiftNumber: Long? = null,
@@ -136,7 +136,7 @@ public data class OwnedGiftUnique(
     @SerialName("transfer_star_count")
     public val transferStarCount: Long? = null,
     /**
-     * *Optional*. Point in time (Unix timestamp) when the gift can be transferred. If it is in the past, then the gift can be transferred now
+     * *Optional*. Point in time (Unix timestamp) when the gift can be transferred. If it is in the past, then the gift can be transferred now.
      */
     @SerialName("next_transfer_date")
     public val nextTransferDate: Long? = null,

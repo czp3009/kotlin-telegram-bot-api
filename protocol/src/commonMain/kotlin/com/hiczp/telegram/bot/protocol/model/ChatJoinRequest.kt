@@ -1,9 +1,7 @@
 // Auto-generated from Swagger specification, do not modify this file manually
 package com.hiczp.telegram.bot.protocol.model
 
-import com.hiczp.telegram.bot.protocol.`annotation`.IncomingUpdate
-import kotlin.Long
-import kotlin.String
+import com.hiczp.telegram.bot.protocol.annotation.IncomingUpdate
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -30,7 +28,7 @@ public data class ChatJoinRequest(
      */
     public val date: Long,
     /**
-     * *Optional*. Bio of the user.
+     * *Optional*. Bio of the user
      */
     public val bio: String? = null,
     /**
@@ -38,4 +36,9 @@ public data class ChatJoinRequest(
      */
     @SerialName("invite_link")
     public val inviteLink: ChatInviteLink? = null,
+    /**
+     * *Optional*. Identifier of the join request query; for bots assigned to process join request only. If present, then the bot must call [sendChatJoinRequestWebApp](https://core.telegram.org/bots/api#sendchatjoinrequestwebapp) or directly call [answerChatJoinRequestQuery](https://core.telegram.org/bots/api#answerchatjoinrequestquery) within 10 seconds.
+     */
+    @SerialName("query_id")
+    public val queryId: String? = null,
 ) : IncomingUpdate

@@ -3,6 +3,14 @@
 A Kotlin coroutines-based Telegram bot application framework providing lifecycle management, event dispatching, Handler
 DSL, Command DSL, and interceptor pipeline.
 
+## Project Compatibility
+
+- Kotlin 2.4.0, with stable context parameters. No `-Xcontext-parameters` compiler flag is required.
+- The repository is built with Gradle 9.6.1 and Ktor 3.5.1.
+- For build-only verification, use `./gradlew assemble`. Some test tasks can make real Telegram API calls.
+- Supported targets follow the shared multiplatform configuration: JVM, Android, JS, WASM, Linux, Windows, Android
+  Native, macOS ARM64, iOS, watchOS ARM/simulator ARM64, and tvOS ARM/simulator ARM64.
+
 ## Table of Contents
 
 - [Quick Start](#quick-start)
@@ -68,7 +76,7 @@ app.join() // Suspend until stopped
 ### State Transitions
 
 ```
-NEW → RUNNING → STOPPING → STOPPED
+NEW -> RUNNING -> STOPPING -> STOPPED
 ```
 
 - **NEW**: Initial state, not yet started
@@ -240,7 +248,7 @@ where updates are received by one component and processed by another:
 
 ```kotlin
 // Architecture pattern:
-// Webhook Server → Message Queue (Kafka/RabbitMQ) → Worker Node (SimpleTelegramUpdateSource)
+// Webhook Server -> Message Queue (Kafka/RabbitMQ) -> Worker Node (SimpleTelegramUpdateSource)
 
 val source = SimpleTelegramUpdateSource()
 
@@ -411,8 +419,7 @@ A minimal dispatcher that delegates all events to a single lambda. Best for simp
 
 ```kotlin
 val dispatcher = SimpleTelegramEventDispatcher { context ->
-    val event = context.event
-    when (event) {
+    when (val event = context.event) {
         is MessageEvent -> {
             context.client.sendMessage(
                 chatId = event.message.chat.id.toString(),
@@ -878,10 +885,10 @@ handling {
     }
 }
 
-// /admin           → showAdminHelp()
-// /admin status    → showStatus()
-// /admin user list → listUsers()
-// /admin user ban john → banUser("john")
+// /admin           -> showAdminHelp()
+// /admin status    -> showStatus()
+// /admin user list -> listUsers()
+// /admin user ban john -> banUser("john")
 ```
 
 ### Argument Validation
@@ -1014,8 +1021,8 @@ This is useful for passing information through the pipeline without modifying th
 import io.ktor.util.AttributeKey
 
 // Define attribute keys
-val UserAuthenticatedKey = AttributeKey<Boolean>("user_authenticated")
-val UserDataKey = AttributeKey<UserData>("user_data")
+val userAuthenticatedKey = AttributeKey<Boolean>("user_authenticated")
+val userDataKey = AttributeKey<UserData>("user_data")
 
 // Set attributes in interceptor
 val authInterceptor: TelegramEventInterceptor = { context ->
@@ -1027,8 +1034,8 @@ val authInterceptor: TelegramEventInterceptor = { context ->
 
     if (userId != null) {
         val userData = fetchUserData(userId)
-        context.attributes.put(UserDataKey, userData)
-        context.attributes.put(UserAuthenticatedKey, true)
+        context.attributes.put(userDataKey, userData)
+        context.attributes.put(userAuthenticatedKey, true)
     }
 
     this.process(context)
@@ -1038,8 +1045,8 @@ val authInterceptor: TelegramEventInterceptor = { context ->
 handling {
     onMessageEvent {
         handle {
-            val isAuthenticated = attributes.getOrNull(UserAuthenticatedKey) ?: false
-            val userData = attributes.getOrNull(UserDataKey)
+            val isAuthenticated = attributes.getOrNull(userAuthenticatedKey) ?: false
+            val userData = attributes.getOrNull(userDataKey)
 
             if (isAuthenticated && userData != null) {
                 sendMessage("Welcome back, ${userData.name}!")

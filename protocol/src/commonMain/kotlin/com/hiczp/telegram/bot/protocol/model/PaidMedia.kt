@@ -11,12 +11,37 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 
 /**
  * This object describes paid media. Currently, it can be one of
- * PaidMediaPreview PaidMediaPhoto PaidMediaVideo
+ * PaidMediaLivePhoto PaidMediaPhoto PaidMediaPreview PaidMediaVideo
  */
 @Serializable
 @JsonClassDiscriminator("type")
 @OptIn(ExperimentalSerializationApi::class)
 public sealed interface PaidMedia
+
+/**
+ * The paid media is a live photo.
+ */
+@Serializable
+@SerialName("live_photo")
+public data class PaidMediaLivePhoto(
+    /**
+     * The photo
+     */
+    @SerialName("live_photo")
+    public val livePhoto: LivePhoto,
+) : PaidMedia
+
+/**
+ * The paid media is a photo.
+ */
+@Serializable
+@SerialName("photo")
+public data class PaidMediaPhoto(
+    /**
+     * The photo
+     */
+    public val photo: List<PhotoSize>,
+) : PaidMedia
 
 /**
  * The paid media isn't available before the payment.
@@ -36,18 +61,6 @@ public data class PaidMediaPreview(
      * *Optional*. Duration of the media in seconds as defined by the sender
      */
     public val duration: Long? = null,
-) : PaidMedia
-
-/**
- * The paid media is a photo.
- */
-@Serializable
-@SerialName("photo")
-public data class PaidMediaPhoto(
-    /**
-     * The photo
-     */
-    public val photo: List<PhotoSize>,
 ) : PaidMedia
 
 /**

@@ -513,7 +513,7 @@ suspend fun TelegramBotEventContext<MessageEvent>.replyVideoNote(
 )
 
 suspend fun TelegramBotEventContext<MessageEvent>.sendMediaGroup(
-    media: List<InputMedia>,
+    media: List<SendMediaGroupMedia>,
     disableNotification: Boolean? = null,
     protectContent: Boolean? = null,
     allowPaidBroadcast: Boolean? = null,
@@ -535,7 +535,7 @@ suspend fun TelegramBotEventContext<MessageEvent>.sendMediaGroup(
 )
 
 suspend fun TelegramBotEventContext<MessageEvent>.replyMediaGroup(
-    media: List<InputMedia>,
+    media: List<SendMediaGroupMedia>,
     disableNotification: Boolean? = null,
     protectContent: Boolean? = null,
     allowPaidBroadcast: Boolean? = null,
@@ -760,7 +760,7 @@ suspend fun TelegramBotEventContext<MessageEvent>.sendPoll(
     isAnonymous: Boolean? = null,
     type: String? = null,
     allowsMultipleAnswers: Boolean? = null,
-    correctOptionId: Long? = null,
+    correctOptionIds: List<Long>? = null,
     explanation: String? = null,
     explanationParseMode: String? = null,
     explanationEntities: List<MessageEntity>? = null,
@@ -773,6 +773,9 @@ suspend fun TelegramBotEventContext<MessageEvent>.sendPoll(
     messageEffectId: String? = null,
     replyParameters: ReplyParameters? = null,
     replyMarkup: ReplyMarkup? = null,
+    explanationMedia: InputPollMedia? = null,
+    media: InputPollMedia? = null,
+    attachments: List<FormPart<ChannelProvider>>? = null,
 ) = client.sendPoll(
     businessConnectionId = event.message.businessConnectionId,
     chatId = event.message.chat.id.toString(),
@@ -784,7 +787,7 @@ suspend fun TelegramBotEventContext<MessageEvent>.sendPoll(
     isAnonymous = isAnonymous,
     type = type,
     allowsMultipleAnswers = allowsMultipleAnswers,
-    correctOptionId = correctOptionId,
+    correctOptionIds = correctOptionIds,
     explanation = explanation,
     explanationParseMode = explanationParseMode,
     explanationEntities = explanationEntities,
@@ -797,6 +800,9 @@ suspend fun TelegramBotEventContext<MessageEvent>.sendPoll(
     messageEffectId = messageEffectId,
     replyParameters = replyParameters,
     replyMarkup = replyMarkup,
+    explanationMedia = explanationMedia,
+    media = media,
+    attachments = attachments,
 )
 
 suspend fun TelegramBotEventContext<MessageEvent>.replyPoll(
@@ -807,7 +813,7 @@ suspend fun TelegramBotEventContext<MessageEvent>.replyPoll(
     isAnonymous: Boolean? = null,
     type: String? = null,
     allowsMultipleAnswers: Boolean? = null,
-    correctOptionId: Long? = null,
+    correctOptionIds: List<Long>? = null,
     explanation: String? = null,
     explanationParseMode: String? = null,
     explanationEntities: List<MessageEntity>? = null,
@@ -819,6 +825,9 @@ suspend fun TelegramBotEventContext<MessageEvent>.replyPoll(
     allowPaidBroadcast: Boolean? = null,
     messageEffectId: String? = null,
     replyMarkup: ReplyMarkup? = null,
+    explanationMedia: InputPollMedia? = null,
+    media: InputPollMedia? = null,
+    attachments: List<FormPart<ChannelProvider>>? = null,
 ) = sendPoll(
     question = question,
     options = options,
@@ -827,7 +836,7 @@ suspend fun TelegramBotEventContext<MessageEvent>.replyPoll(
     isAnonymous = isAnonymous,
     type = type,
     allowsMultipleAnswers = allowsMultipleAnswers,
-    correctOptionId = correctOptionId,
+    correctOptionIds = correctOptionIds,
     explanation = explanation,
     explanationParseMode = explanationParseMode,
     explanationEntities = explanationEntities,
@@ -843,6 +852,9 @@ suspend fun TelegramBotEventContext<MessageEvent>.replyPoll(
         chatId = event.message.chat.id.toString()
     ),
     replyMarkup = replyMarkup,
+    explanationMedia = explanationMedia,
+    media = media,
+    attachments = attachments,
 )
 
 suspend fun TelegramBotEventContext<MessageEvent>.sendDice(
@@ -901,7 +913,7 @@ suspend fun TelegramBotEventContext<MessageEvent>.sendGame(
     replyMarkup: InlineKeyboardMarkup? = null,
 ) = client.sendGame(
     businessConnectionId = event.message.businessConnectionId,
-    chatId = event.message.chat.id,
+    chatId = event.message.chat.id.toString(),
     messageThreadId = event.message.messageThreadId,
     gameShortName = gameShortName,
     disableNotification = disableNotification,

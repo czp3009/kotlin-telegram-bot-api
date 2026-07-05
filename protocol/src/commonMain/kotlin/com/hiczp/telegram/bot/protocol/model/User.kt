@@ -61,12 +61,17 @@ public data class User(
     @SerialName("can_read_all_group_messages")
     public val canReadAllGroupMessages: Boolean? = null,
     /**
+     * *Optional*. *True*, if the bot supports guest queries from chats it is not a member of. Returned only in [getMe](https://core.telegram.org/bots/api#getme).
+     */
+    @SerialName("supports_guest_queries")
+    public val supportsGuestQueries: Boolean? = null,
+    /**
      * *Optional*. *True*, if the bot supports inline queries. Returned only in [getMe](https://core.telegram.org/bots/api#getme).
      */
     @SerialName("supports_inline_queries")
     public val supportsInlineQueries: Boolean? = null,
     /**
-     * *Optional*. *True*, if the bot can be connected to a Telegram Business account to receive its messages. Returned only in [getMe](https://core.telegram.org/bots/api#getme).
+     * *Optional*. *True*, if the bot can be connected to a user account to manage it. Returned only in [getMe](https://core.telegram.org/bots/api#getme).
      */
     @SerialName("can_connect_to_business")
     public val canConnectToBusiness: Boolean? = null,
@@ -85,4 +90,14 @@ public data class User(
      */
     @SerialName("allows_users_to_create_topics")
     public val allowsUsersToCreateTopics: Boolean? = null,
+    /**
+     * *Optional*. *True*, if other bots can be created to be controlled by the bot. Returned only in [getMe](https://core.telegram.org/bots/api#getme).
+     */
+    @SerialName("can_manage_bots")
+    public val canManageBots: Boolean? = null,
+    /**
+     * *Optional*. *True*, if the bot supports join request queries and can be assigned to process them. Returned only in [getMe](https://core.telegram.org/bots/api#getme).
+     */
+    @SerialName("supports_join_request_queries")
+    public val supportsJoinRequestQueries: Boolean? = null,
 )

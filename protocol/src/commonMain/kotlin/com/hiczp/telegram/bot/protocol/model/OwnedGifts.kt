@@ -22,7 +22,7 @@ public data class OwnedGifts(
      */
     public val gifts: List<OwnedGift>,
     /**
-     * *Optional*. Offset for the next request. If empty, then there are no more results
+     * *Optional*. Offset for the next request. If empty, then there are no more results.
      */
     @SerialName("next_offset")
     public val nextOffset: String? = null,

@@ -1,19 +1,34 @@
-// Auto-generated from Swagger specification, do not modify this file manuallyWARNING: This sealed interface does not have a clear discriminator field
+// Auto-generated from Swagger specification, do not modify this file manually
 package com.hiczp.telegram.bot.protocol.model
 
 import kotlin.Boolean
 import kotlin.Double
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.SerialKind
+import kotlinx.serialization.descriptors.buildSerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.JsonEncoder
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.decodeFromJsonElement
 
 /**
- * This object represents the content of a message to be sent as a result of an inline query. Telegram clients currently support the following 5 types:
- * InputTextMessageContent InputLocationMessageContent InputVenueMessageContent InputContactMessageContent InputInvoiceMessageContent
+ * This object represents the content of a message to be sent as a result of an inline query. Telegram clients currently support the following types:
+ * InputTextMessageContent InputRichMessageContent InputLocationMessageContent InputVenueMessageContent InputContactMessageContent InputInvoiceMessageContent
  */
-@Serializable
+@Serializable(with = InputMessageContentSerializer::class)
 public sealed interface InputMessageContent
 
 /**
@@ -43,6 +58,18 @@ public data class InputTextMessageContent(
 ) : InputMessageContent
 
 /**
+ * Represents the content of a rich message to be sent as the result of an inline query.
+ */
+@Serializable
+public data class InputRichMessageContent(
+    /**
+     * The message to be sent
+     */
+    @SerialName("rich_message")
+    public val richMessage: InputRichMessage,
+) : InputMessageContent
+
+/**
  * Represents the content of a location message to be sent as the result of an inline query.
  */
 @Serializable
@@ -61,7 +88,7 @@ public data class InputLocationMessageContent(
     @SerialName("horizontal_accuracy")
     public val horizontalAccuracy: Double? = null,
     /**
-     * *Optional*. Period in seconds during which the location can be updated, should be between 60 and 86400, or 0x7FFFFFFF for live locations that can be edited indefinitely.
+     * *Optional*. Period in seconds during which the location can be updated, must be between 60 and 86400, or 0x7FFFFFFF for live locations that can be edited indefinitely
      */
     @SerialName("live_period")
     public val livePeriod: Long? = null,
@@ -246,3 +273,78 @@ public data class InputInvoiceMessageContent(
     @SerialName("is_flexible")
     public val isFlexible: Boolean? = null,
 ) : InputMessageContent
+
+@OptIn(InternalSerializationApi::class)
+public object InputMessageContentSerializer : KSerializer<InputMessageContent> {
+    override val descriptor: SerialDescriptor =
+        buildSerialDescriptor("com.hiczp.telegram.bot.protocol.model.InputMessageContent", SerialKind.CONTEXTUAL)
+
+    override fun deserialize(decoder: Decoder): InputMessageContent {
+        require(decoder is JsonDecoder) { "Only JSON is supported" }
+        val jsonElement = decoder.decodeJsonElement()
+        if (jsonElement is JsonObject) {
+            runCatching {
+                decoder.json.decodeFromJsonElement(
+                    InputInvoiceMessageContent.serializer(),
+                    jsonElement
+                )
+            }.getOrNull()?.let { return it }
+            runCatching {
+                decoder.json.decodeFromJsonElement(
+                    InputVenueMessageContent.serializer(),
+                    jsonElement
+                )
+            }.getOrNull()?.let { return it }
+            runCatching {
+                decoder.json.decodeFromJsonElement(
+                    InputLocationMessageContent.serializer(),
+                    jsonElement
+                )
+            }.getOrNull()?.let { return it }
+            runCatching {
+                decoder.json.decodeFromJsonElement(
+                    InputContactMessageContent.serializer(),
+                    jsonElement
+                )
+            }.getOrNull()?.let { return it }
+            runCatching {
+                decoder.json.decodeFromJsonElement(
+                    InputTextMessageContent.serializer(),
+                    jsonElement
+                )
+            }.getOrNull()?.let { return it }
+            runCatching {
+                decoder.json.decodeFromJsonElement(
+                    InputRichMessageContent.serializer(),
+                    jsonElement
+                )
+            }.getOrNull()?.let { return it }
+        }
+        throw SerializationException("Could not deserialize InputMessageContent")
+    }
+
+    override fun serialize(encoder: Encoder, `value`: InputMessageContent) {
+        require(encoder is JsonEncoder) { "Only JSON is supported" }
+        when (value) {
+            is InputTextMessageContent -> encoder.encodeSerializableValue(InputTextMessageContent.serializer(), value)
+            is InputRichMessageContent -> encoder.encodeSerializableValue(InputRichMessageContent.serializer(), value)
+            is InputLocationMessageContent -> encoder.encodeSerializableValue(
+                InputLocationMessageContent.serializer(),
+                value
+            )
+
+            is InputVenueMessageContent -> encoder.encodeSerializableValue(InputVenueMessageContent.serializer(), value)
+            is InputContactMessageContent -> encoder.encodeSerializableValue(
+                InputContactMessageContent.serializer(),
+                value
+            )
+
+            is InputInvoiceMessageContent -> encoder.encodeSerializableValue(
+                InputInvoiceMessageContent.serializer(),
+                value
+            )
+
+            else -> throw SerializationException("Unsupported InputMessageContent implementation")
+        }
+    }
+}

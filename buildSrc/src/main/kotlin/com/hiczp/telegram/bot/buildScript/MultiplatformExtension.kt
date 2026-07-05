@@ -17,7 +17,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
  * - Android Library (minSdk 34, compileSdk 36, JVM 17)
  * - JS (browser, nodejs)
  * - WASM (browser, nodejs, d8)
- * - Native targets: Windows, Linux, macOS, iOS, watchOS, tvOS, Android Native
+ * - Native targets: Windows, Linux, macOS ARM64, iOS, watchOS ARM/simulator ARM64, tvOS ARM/simulator ARM64, Android Native
  *
  * @param namespace The namespace for the Android library configuration.
  *
@@ -38,23 +38,19 @@ inline fun KotlinMultiplatformExtension.configureAllTargets(namespace: String) {
 
     // macOS
     macosArm64()
-    macosX64()
 
     // iOS
     iosSimulatorArm64()
     iosArm64()
-    iosX64()
 
     // watchOS
     watchosSimulatorArm64()
     watchosArm32()
     watchosArm64()
-    watchosX64()
 
     // tvOS
     tvosSimulatorArm64()
     tvosArm64()
-    tvosX64()
 
     // Android Native
     androidNativeArm32()

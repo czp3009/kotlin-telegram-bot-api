@@ -15,10 +15,10 @@ public data class SendGameRequest(
     @SerialName("business_connection_id")
     public val businessConnectionId: String? = null,
     /**
-     * Unique identifier for the target chat. Games can't be sent to channel direct messages chats and channel chats.
+     * Unique identifier for the target chat or username of the target bot in the format `@username`. Games can't be sent to channel direct messages chats and channel chats.
      */
     @SerialName("chat_id")
-    public val chatId: Long,
+    public val chatId: String,
     /**
      * Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only
      */
@@ -40,7 +40,7 @@ public data class SendGameRequest(
     @SerialName("protect_content")
     public val protectContent: Boolean? = null,
     /**
-     * Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance
+     * Pass *True* to allow up to 1000 messages per second, ignoring [broadcasting limits](https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once) for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance.
      */
     @SerialName("allow_paid_broadcast")
     public val allowPaidBroadcast: Boolean? = null,

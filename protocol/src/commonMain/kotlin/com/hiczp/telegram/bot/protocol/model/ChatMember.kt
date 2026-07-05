@@ -1,10 +1,6 @@
 // Auto-generated from Swagger specification, do not modify this file manually
 package com.hiczp.telegram.bot.protocol.model
 
-import kotlin.Boolean
-import kotlin.Long
-import kotlin.OptIn
-import kotlin.String
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -189,7 +185,7 @@ public data class ChatMemberRestricted(
     @SerialName("is_member")
     public val isMember: Boolean,
     /**
-     * *True*, if the user is allowed to send text messages, contacts, giveaways, giveaway winners, invoices, locations and venues
+     * *True*, if the user is allowed to send text messages, rich messages, contacts, giveaways, giveaway winners, invoices, locations and venues
      */
     @SerialName("can_send_messages")
     public val canSendMessages: Boolean,
@@ -239,6 +235,11 @@ public data class ChatMemberRestricted(
     @SerialName("can_add_web_page_previews")
     public val canAddWebPagePreviews: Boolean,
     /**
+     * *True*, if the user is allowed to react to messages
+     */
+    @SerialName("can_react_to_messages")
+    public val canReactToMessages: Boolean,
+    /**
      * *True*, if the user is allowed to edit their own tag
      */
     @SerialName("can_edit_tag")
@@ -264,7 +265,7 @@ public data class ChatMemberRestricted(
     @SerialName("can_manage_topics")
     public val canManageTopics: Boolean,
     /**
-     * Date when restrictions will be lifted for this user; Unix time. If 0, then the user is restricted forever
+     * Date when restrictions will be lifted for this user; Unix time. If 0, then the user is restricted forever.
      */
     @SerialName("until_date")
     public val untilDate: Long,
@@ -293,7 +294,7 @@ public data class ChatMemberBanned(
      */
     public val user: User,
     /**
-     * Date when restrictions will be lifted for this user; Unix time. If 0, then the user is banned forever
+     * Date when restrictions will be lifted for this user; Unix time. If 0, then the user is banned forever.
      */
     @SerialName("until_date")
     public val untilDate: Long,

@@ -2,12 +2,11 @@
 package com.hiczp.telegram.bot.protocol.form
 
 import com.hiczp.telegram.bot.protocol.type.InputFile
-import kotlin.String
 import kotlinx.serialization.SerialName
 
 public data class SetChatPhotoForm(
     /**
-     * Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+     * Unique identifier for the target chat or username of the target channel in the format `@username`
      */
     @SerialName("chat_id")
     public val chatId: String,

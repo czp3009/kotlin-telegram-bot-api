@@ -1,8 +1,6 @@
 // Auto-generated from Swagger specification, do not modify this file manually
 package com.hiczp.telegram.bot.protocol.model
 
-import kotlin.Long
-import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -14,10 +12,10 @@ public data class EditMessageChecklistRequest(
     @SerialName("business_connection_id")
     public val businessConnectionId: String,
     /**
-     * Unique identifier for the target chat
+     * Unique identifier for the target chat or username of the target bot in the format `@username`
      */
     @SerialName("chat_id")
-    public val chatId: Long,
+    public val chatId: String,
     /**
      * Unique identifier for the target message
      */

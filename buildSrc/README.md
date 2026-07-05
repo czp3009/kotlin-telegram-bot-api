@@ -70,7 +70,8 @@ Generates Kotlin code from the Telegram Bot API OpenAPI/Swagger specification.
 
 - **ReplyMarkup** - Collected types implement a sealed interface with `@JsonClassDiscriminator("type")`
 - **IncomingUpdate** - Types in `Update`'s optional fields implement `IncomingUpdate` interface
-- **MaybeInaccessibleMessage** - Uses `Message` type for deserialization (field-overlapping union)
+- **Field-overlapping unions** - All union models are generated; references to a union can resolve to a richer
+  representative member when the schema shows that member can represent every branch without data loss
 - **Response Unions** - Generic `Union<T1, T2>`, `Union3<T1, T2, T3>` classes for mixed-type responses
 
 **Preserved Directory:**
@@ -110,7 +111,8 @@ supported Kotlin multiplatform targets:
 - **Android Library** (minSdk 34, compileSdk 36)
 - **JS** (browser, nodejs)
 - **WASM** (browser, nodejs, d8)
-- **Native**: Windows, Linux, macOS, iOS, watchOS, tvOS, Android Native
+- **Native**: Windows, Linux, macOS ARM64, iOS ARM/simulator ARM64, watchOS ARM/simulator ARM64,
+  tvOS ARM/simulator ARM64, Android Native
 
 **Usage in module `build.gradle.kts`:**
 

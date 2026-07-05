@@ -9,7 +9,7 @@ implementation of `TelegramUpdateSource` that receives updates via HTTP webhook 
 - **Flexible Engine Support**: Works with any Ktor application engine (Netty, CIO, Jetty, etc.)
 - **Graceful Shutdown**: Proper lifecycle management with graceful shutdown support
 - **Convenient Factory Method**: One-liner setup with `TelegramBotApplication.webhook()`
-- **Multiplatform**: Supports JVM, Android, JS (Node.js), WASM (Node.js), and native targets
+- **Multiplatform**: Supports JVM, Android, JS (Node.js), WASM (Node.js), and configured native targets
 
 ## Installation
 
@@ -190,19 +190,19 @@ see [Telegram Webhooks Guide](https://core.telegram.org/bots/webhooks).
 
 ## Platform Support
 
-| Platform       | Support |
-|----------------|---------|
-| JVM            | ✅       |
-| Android        | ✅       |
-| JS             | ✅       |
-| WASM           | ✅       |
-| Linux          | ✅       |
-| macOS          | ✅       |
-| Windows        | ✅       |
-| iOS            | ✅       |
-| watchOS        | ✅       |
-| tvOS           | ✅       |
-| Android Native | ✅       |
+| Platform       | Targets                                                                            |
+|----------------|------------------------------------------------------------------------------------|
+| JVM            | JVM 17 toolchain                                                                   |
+| Android        | Android Kotlin Multiplatform library                                               |
+| JS             | Node.js                                                                            |
+| WASM           | Node.js                                                                            |
+| Linux          | `linuxX64`, `linuxArm64`                                                           |
+| macOS          | `macosArm64`                                                                       |
+| Windows        | `mingwX64`                                                                         |
+| iOS            | `iosArm64`, `iosSimulatorArm64`                                                    |
+| watchOS        | `watchosArm32`, `watchosArm64`, `watchosSimulatorArm64`                            |
+| tvOS           | `tvosArm64`, `tvosSimulatorArm64`                                                  |
+| Android Native | `androidNativeArm32`, `androidNativeArm64`, `androidNativeX64`, `androidNativeX86` |
 
 **Note**: The JS and WASM targets only support Node.js runtime (not browser) since HTTP server functionality is not
 available in browsers.

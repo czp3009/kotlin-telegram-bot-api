@@ -20,14 +20,14 @@ public data class SendMessageDraftRequest(
     @SerialName("message_thread_id")
     public val messageThreadId: Long? = null,
     /**
-     * Unique identifier of the message draft; must be non-zero. Changes of drafts with the same identifier are animated
+     * Unique identifier of the message draft; must be non-zero. Changes to drafts with the same identifier are animated.
      */
     @SerialName("draft_id")
     public val draftId: Long,
     /**
-     * Text of the message to be sent, 1-4096 characters after entities parsing
+     * Text of the message to be sent, 0-4096 characters after entities parsing. Pass an empty text to show a “Thinking…” placeholder.
      */
-    public val text: String,
+    public val text: String? = null,
     /**
      * Mode for parsing entities in the message text. See [formatting options](https://core.telegram.org/bots/api#formatting-options) for more details.
      */

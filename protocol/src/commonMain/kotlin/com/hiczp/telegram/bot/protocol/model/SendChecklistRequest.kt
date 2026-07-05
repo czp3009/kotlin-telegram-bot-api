@@ -2,7 +2,6 @@
 package com.hiczp.telegram.bot.protocol.model
 
 import kotlin.Boolean
-import kotlin.Long
 import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -15,10 +14,10 @@ public data class SendChecklistRequest(
     @SerialName("business_connection_id")
     public val businessConnectionId: String,
     /**
-     * Unique identifier for the target chat
+     * Unique identifier for the target chat or username of the target bot in the format `@username`
      */
     @SerialName("chat_id")
-    public val chatId: Long,
+    public val chatId: String,
     /**
      * A JSON-serialized object for the checklist to send
      */

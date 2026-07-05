@@ -1,0 +1,20 @@
+// Auto-generated from Swagger specification, do not modify this file manually
+package com.hiczp.telegram.bot.protocol.model
+
+import com.hiczp.telegram.bot.protocol.`annotation`.IncomingUpdate
+import kotlinx.serialization.Serializable
+
+/**
+ * This object contains information about the creation, token update, or owner update of a bot that is managed by the current bot.
+ */
+@Serializable
+public data class ManagedBotUpdated(
+    /**
+     * User that created the bot
+     */
+    public val user: User,
+    /**
+     * Information about the bot. Token of the bot can be fetched using the method [getManagedBotToken](https://core.telegram.org/bots/api#getmanagedbottoken).
+     */
+    public val bot: User,
+) : IncomingUpdate

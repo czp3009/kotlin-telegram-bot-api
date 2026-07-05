@@ -26,7 +26,8 @@ import java.io.File
  * ## Special Type Handling
  * - **ReplyMarkup**: Collected types implement a sealed interface with `@JsonClassDiscriminator("type")`
  * - **IncomingUpdate**: Types in `Update`'s optional fields implement `IncomingUpdate` interface
- * - **MaybeInaccessibleMessage**: Uses `Message` type for deserialization (field-overlapping union)
+ * - **Field-overlapping unions**: Unions whose branches can be represented without data loss by one richer branch
+ *   resolve to that branch type instead of a generated parent interface
  * - **Discriminator extraction**: Multiple strategies (explicit mapping, enum fields, description patterns, name inference)
  */
 @CacheableTask
@@ -51,8 +52,6 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         private const val INCOMING_UPDATE_CONTAINER_ANNOTATION = "IncomingUpdateContainer"
         private const val UPDATE_TYPE = "Update"
         private const val INPUT_FILE_TYPE = "InputFile"
-        private const val MESSAGE_TYPE = "Message"
-        private const val MAYBE_INACCESSIBLE_MESSAGE_TYPE = "MaybeInaccessibleMessage"
         private const val TELEGRAM_FILE_DOWNLOAD_ANNOTATION = "TelegramFileDownload"
         private const val TELEGRAM_BOT_API_VERSION_ANNOTATION = "TelegramBotApiVersion"
         private const val HTTP_STATEMENT_TYPE = "HttpStatement"
@@ -126,6 +125,17 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     private val jsonBodyOperations = mutableMapOf<String, JsonBodyOperationInfo>() // operationId -> info
     private val replyMarkupTypes = mutableSetOf<String>() // Collected ReplyMarkup types
     private val updateFieldTypes = mutableSetOf<String>() // Types used in Update's optional non-primitive fields
+
+    /**
+     * Union schema names that should resolve to a richer member type instead of a generated parent.
+     *
+     * A union is collapsible when one object branch can decode every other branch without dropping fields:
+     * its property set contains all other branch property sets, and its required fields are present in every
+     * other branch. This covers field-overlapping virtual parents without matching Telegram type names.
+     */
+    private val collapsedUnionTypes = mutableMapOf<String, String>()
+
+    private val unionParentInterfacesByMember = mutableMapOf<String, MutableSet<String>>()
 
     /**
      * Represents a member of a response union type.
@@ -220,6 +230,11 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         allSchemas = swagger.get("components")?.get("schemas")?.properties()
             ?.associate { it.key to it.value } ?: emptyMap()
 
+        collectCollapsedUnionTypes()
+        if (collapsedUnionTypes.isNotEmpty()) {
+            logger.lifecycle("Detected field-overlapping unions: $collapsedUnionTypes")
+        }
+
         // Collect all ReplyMarkup types from the swagger spec
         collectReplyMarkupTypes(swagger)
         logger.lifecycle("Detected ReplyMarkup types: $replyMarkupTypes")
@@ -232,6 +247,13 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         collectResponseUnionTypes(swagger)
         logger.lifecycle("Detected response union sizes: $responseUnionSizes, operations: ${responseUnionOperations.keys}")
 
+        collectSyntheticUnionTypes(swagger)
+        if (syntheticUnionTypesByMembers.isNotEmpty()) {
+            logger.lifecycle("Detected synthetic union types: ${syntheticUnionTypesByMembers.values.map { it.name }}")
+        }
+
+        collectUnionParentInterfaces()
+
         // Generate Union generic classes as needed
         if (responseUnionSizes.isNotEmpty()) {
             generateUnionClasses(outputDirectory, responseUnionSizes)
@@ -241,6 +263,8 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         if (replyMarkupTypes.isNotEmpty()) {
             generateReplyMarkupInterface(outputDirectory)
         }
+
+        generateSyntheticUnionInterfaces(outputDirectory)
 
         // Generate models
         generateModels(swagger, outputDirectory)
@@ -285,7 +309,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
      * 1. Locates the `Update` schema in the specification
      * 2. Iterates through all properties, skipping required fields (like `update_id`)
      * 3. For each optional field, extracts the type name from direct $ref or allOf arrays
-     * 4. Excludes `MaybeInaccessibleMessage` as it's handled as a field-overlapping union
+     * 4. Resolves field-overlapping unions to their representative member type
      *
      * The collected types are stored in `updateFieldTypes` and will implement the `IncomingUpdate` interface
      * for polymorphic handling when deserializing Update objects.
@@ -305,18 +329,13 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             // Handle direct $ref
             if (typeInfo.ref != null) {
                 val typeName = typeInfo.ref.substringAfterLast("/")
-                // Skip primitive types and special cases
-                if (typeName != MAYBE_INACCESSIBLE_MESSAGE_TYPE) {
-                    updateFieldTypes.add(typeName)
-                }
+                updateFieldTypes.add(resolveReferenceTypeName(typeName))
             }
 
             // Handle allOf
             if (typeInfo.allOf != null && typeInfo.allOf.isArray) {
                 extractTypeNamesFromRefArray(typeInfo.allOf).forEach { typeName ->
-                    if (typeName != MAYBE_INACCESSIBLE_MESSAGE_TYPE) {
-                        updateFieldTypes.add(typeName)
-                    }
+                    updateFieldTypes.add(resolveReferenceTypeName(typeName))
                 }
             }
         }
@@ -425,6 +444,61 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         }
     }
 
+    private fun collectCollapsedUnionTypes() {
+        allSchemas.forEach { (schemaName, schema) ->
+            val oneOf = schema.get("oneOf")
+            if (oneOf == null || !oneOf.isArray) return@forEach
+            if (oneOf.any { it.get($$"$ref") == null }) return@forEach
+            if (schema.has("discriminator")) return@forEach
+
+            val unionMembers = extractTypeNamesFromRefArray(oneOf)
+            if (unionMembers.size < 2) return@forEach
+            if (findDiscriminatorInfo(unionMembers) != null) return@forEach
+
+            findFieldSupersetUnionRepresentative(unionMembers)?.let { representative ->
+                collapsedUnionTypes[schemaName] = representative
+            }
+        }
+    }
+
+    private data class ObjectSchemaShape(
+        val name: String,
+        val properties: Set<String>,
+        val required: Set<String>
+    )
+
+    private fun findFieldSupersetUnionRepresentative(unionMembers: List<String>): String? {
+        val shapes = unionMembers.mapNotNull { memberName ->
+            val schema = allSchemas[memberName] ?: return@mapNotNull null
+            val properties = schema.get("properties")
+            if (schema.get("type")?.asText() != "object" || properties == null || !properties.isObject) {
+                return null
+            }
+
+            ObjectSchemaShape(
+                name = memberName,
+                properties = properties.properties().asSequence().map { it.key }.toSet(),
+                required = schema.get("required")?.map { it.asText() }?.toSet() ?: emptySet()
+            )
+        }
+
+        if (shapes.size != unionMembers.size) return null
+
+        val candidates = shapes.filter { candidate ->
+            shapes.all { other ->
+                candidate.properties.containsAll(other.properties) &&
+                        other.properties.containsAll(candidate.required)
+            } && shapes.any { other -> candidate.properties.size > other.properties.size }
+        }
+
+        return candidates
+            .maxWithOrNull(compareBy<ObjectSchemaShape> { it.properties.size }.thenBy { it.required.size })
+            ?.takeIf { best ->
+                candidates.count { it.properties.size == best.properties.size && it.required.size == best.required.size } == 1
+            }
+            ?.name
+    }
+
     private fun collectReplyMarkupFromField(field: JsonNode) {
         // Check for oneOf
         val oneOf = field.get("oneOf")
@@ -437,6 +511,146 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         extractTypeNamesFromRefArray(allOf).forEach { typeName ->
             replyMarkupTypes.add(typeName)
         }
+    }
+
+    private fun collectUnionParentInterfaces() {
+        allSchemas.forEach { (schemaName, schema) ->
+            val oneOf = schema.get("oneOf")
+            if (oneOf == null || !oneOf.isArray) return@forEach
+
+            val unionMembers = extractTypeNamesFromRefArray(oneOf)
+            if (unionMembers.isEmpty()) return@forEach
+
+            val discriminatorResult = extractDiscriminatorFromSchema(schema, unionMembers)
+            val fallbackDiscriminatorInfo =
+                if (discriminatorResult == null) findDiscriminatorInfo(unionMembers) else null
+
+            // Incomplete explicit discriminator mappings intentionally generate standalone classes.
+            if (discriminatorResult != null && !discriminatorResult.isComplete) return@forEach
+
+            if (discriminatorResult == null && fallbackDiscriminatorInfo == null) {
+                // These still generate simple subclasses, so members can be shared safely.
+            }
+
+            unionMembers.forEach { memberName ->
+                unionParentInterfacesByMember.getOrPut(memberName) { mutableSetOf() }.add(schemaName)
+            }
+        }
+
+        syntheticUnionTypesByMembers.values.forEach { syntheticUnion ->
+            syntheticUnion.members.forEach { memberName ->
+                unionParentInterfacesByMember.getOrPut(memberName) { mutableSetOf() }.add(syntheticUnion.name)
+            }
+        }
+    }
+
+    private fun TypeSpec.Builder.addAdditionalUnionParentInterfaces(
+        className: String,
+        packageName: String,
+        primaryParent: String? = null
+    ): TypeSpec.Builder {
+        unionParentInterfacesByMember[className]
+            .orEmpty()
+            .asSequence()
+            .filter { it != primaryParent }
+            .forEach { addSuperinterface(ClassName(packageName, it)) }
+
+        return this
+    }
+
+    private fun collectSyntheticUnionTypes(swagger: JsonNode) {
+        fun scanSchema(schema: JsonNode?, contextName: String, description: String? = null) {
+            if (schema == null || schema.isNull) return
+
+            val oneOf = schema.get("oneOf")
+            if (oneOf != null && oneOf.isArray) {
+                registerSyntheticUnionIfNeeded(oneOf, contextName, description ?: schema.get("description")?.asText())
+            }
+
+            if (schema.get("type")?.asText() == "array") {
+                scanSchema(schema.get("items"), contextName, description ?: schema.get("description")?.asText())
+            }
+
+            schema.get("properties")?.properties()?.forEach { (propertyName, propertySchema) ->
+                scanSchema(
+                    propertySchema,
+                    contextName + snakeToCamelCase(propertyName).capitalize(),
+                    propertySchema.get("description")?.asText()
+                )
+            }
+        }
+
+        allSchemas.forEach { (schemaName, schema) ->
+            scanSchema(schema, schemaName, schema.get("description")?.asText())
+        }
+
+        swagger.get("paths")?.properties()?.forEach { (_, methods) ->
+            methods.properties().forEach { (_, operation) ->
+                val operationId = operation.get("operationId")?.asText() ?: return@forEach
+                val baseName = operationId.capitalize()
+
+                operation.get("parameters")?.forEach { parameter ->
+                    val parameterName = parameter.get("name")?.asText() ?: return@forEach
+                    scanSchema(
+                        parameter.get("schema"),
+                        baseName + snakeToCamelCase(parameterName).capitalize(),
+                        parameter.get("description")?.asText()
+                    )
+                }
+
+                operation.get("requestBody")
+                    ?.get("content")
+                    ?.properties()
+                    ?.forEach { (_, content) ->
+                        scanSchema(content.get("schema"), baseName)
+                    }
+
+                operation.get("responses")
+                    ?.properties()
+                    ?.forEach { (_, response) ->
+                        response.get("content")
+                            ?.properties()
+                            ?.forEach { (_, content) ->
+                                scanSchema(content.get("schema"), baseName + "Response")
+                            }
+                    }
+            }
+        }
+    }
+
+    private fun registerSyntheticUnionIfNeeded(oneOf: JsonNode, contextName: String, description: String?) {
+        val members = extractTypeNamesFromRefArray(oneOf)
+        if (members.size < 2) return
+
+        val memberSet = members.toSet()
+        if (findExactParentTypeForOneOf(memberSet) != null) return
+        if (findSmallestParentSupersetForOneOf(memberSet) == null) return
+
+        syntheticUnionTypesByMembers.getOrPut(memberSet) {
+            SyntheticUnionInfo(
+                name = uniqueSyntheticUnionName(contextName),
+                members = members,
+                description = description
+            )
+        }
+    }
+
+    private fun uniqueSyntheticUnionName(contextName: String): String {
+        val sanitized = contextName
+            .split(Regex("[^A-Za-z0-9]+"))
+            .filter { it.isNotBlank() }
+            .joinToString("") { it.capitalize() }
+            .ifBlank { "AnonymousUnion" }
+
+        val baseName = sanitized.removeSuffix("Form")
+        var candidate = baseName
+        var index = 2
+        val existingNames = allSchemas.keys + syntheticUnionTypesByMembers.values.map { it.name }.toSet()
+        while (candidate in existingNames) {
+            candidate = "$baseName$index"
+            index++
+        }
+        return candidate
     }
 
     /**
@@ -547,6 +761,20 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         val required: Set<String>
     )
 
+    private data class AdditionalUnionBranch(
+        val className: String,
+        val schema: JsonNode,
+        val typeName: TypeName
+    )
+
+    private data class SyntheticUnionInfo(
+        val name: String,
+        val members: List<String>,
+        val description: String?
+    )
+
+    private val syntheticUnionTypesByMembers = mutableMapOf<Set<String>, SyntheticUnionInfo>()
+
     /**
      * Extracts common class generation information from an object schema.
      * Returns null if the schema doesn't have properties.
@@ -621,6 +849,10 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             if (parentType != null) {
                 return ClassName(MODEL_PACKAGE, parentType)
             }
+
+            syntheticUnionTypesByMembers[refs.toSet()]?.let { syntheticUnion ->
+                return ClassName(MODEL_PACKAGE, syntheticUnion.name)
+            }
         }
 
         // Handle oneOf for basic types - choose the "largest" type
@@ -677,26 +909,45 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     }
 
     /**
-     * Finds a parent type in allSchemas that has a oneOf containing all the given refs.
-     * Skips MaybeInaccessibleMessage since it's specially handled and not generated.
+     * Finds a parent type in allSchemas that has a oneOf matching the given refs.
      */
     private fun findParentTypeForOneOf(refs: List<String>): String? {
         val refsSet = refs.toSet()
+        if (refsSet.isEmpty()) return null
+
+        return findExactParentTypeForOneOf(refsSet)
+    }
+
+    private fun findExactParentTypeForOneOf(refsSet: Set<String>): String? {
+        if (refsSet.isEmpty()) return null
 
         for ((schemaName, schema) in allSchemas) {
-            // Skip MaybeInaccessibleMessage - it's specially handled and shouldn't be used as a parent type
-            if (schemaName == MAYBE_INACCESSIBLE_MESSAGE_TYPE) continue
-
             val schemaOneOf = schema.get("oneOf")
             if (schemaOneOf != null && schemaOneOf.isArray) {
                 val schemaRefs = extractTypeNamesFromRefArray(schemaOneOf).toSet()
-                // Check if the refs are a subset of the schema's oneOf refs
-                if (refsSet.isNotEmpty() && refsSet.all { it in schemaRefs }) {
+                if (refsSet == schemaRefs) {
                     return schemaName
                 }
             }
         }
+
         return null
+    }
+
+    private fun findSmallestParentSupersetForOneOf(refsSet: Set<String>): String? {
+        if (refsSet.isEmpty()) return null
+
+        return allSchemas
+            .asSequence()
+            .mapNotNull { (schemaName, schema) ->
+                val schemaOneOf = schema.get("oneOf")
+                if (schemaOneOf == null || !schemaOneOf.isArray) return@mapNotNull null
+
+                val schemaRefs = extractTypeNamesFromRefArray(schemaOneOf).toSet()
+                if (schemaRefs.containsAll(refsSet)) schemaName to schemaRefs.size else null
+            }
+            .minByOrNull { (_, size) -> size }
+            ?.first
     }
 
     /**
@@ -738,11 +989,14 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     private fun createParameterBuilder(
         propName: String,
         propType: TypeName,
-        isRequired: Boolean
+        isRequired: Boolean,
+        defaultValue: CodeBlock? = null
     ): ParameterSpec.Builder {
         val camelCaseName = snakeToCamelCase(propName)
         val paramBuilder = ParameterSpec.builder(camelCaseName, propType)
-        if (!isRequired) {
+        if (defaultValue != null) {
+            paramBuilder.defaultValue(defaultValue)
+        } else if (!isRequired) {
             paramBuilder.defaultValue("null")
         }
         return paramBuilder
@@ -759,7 +1013,8 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         propName: String,
         propSchema: JsonNode,
         isRequired: Boolean,
-        className: String? = null
+        className: String? = null,
+        defaultValue: CodeBlock? = null
     ) {
         val context = className?.let { "$it.$propName" }
         val propType = determinePropertyType(propSchema, context = context)
@@ -767,7 +1022,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         val propDescription = propSchema.get("description")?.asText()
 
         val propertyBuilder = createPropertyBuilder(propName, finalType, propDescription)
-        val paramBuilder = createParameterBuilder(propName, finalType, isRequired)
+        val paramBuilder = createParameterBuilder(propName, finalType, isRequired, defaultValue)
 
         constructorBuilder.addParameter(paramBuilder.build())
         classBuilder.addProperty(propertyBuilder.build())
@@ -784,12 +1039,13 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         propName: String,
         propType: TypeName,
         propDescription: String?,
-        isRequired: Boolean
+        isRequired: Boolean,
+        defaultValue: CodeBlock? = null
     ) {
         val finalType = if (isRequired) propType else propType.copy(nullable = true)
 
         val propertyBuilder = createPropertyBuilder(propName, finalType, propDescription)
-        val paramBuilder = createParameterBuilder(propName, finalType, isRequired)
+        val paramBuilder = createParameterBuilder(propName, finalType, isRequired, defaultValue)
 
         constructorBuilder.addParameter(paramBuilder.build())
         classBuilder.addProperty(propertyBuilder.build())
@@ -1235,24 +1491,11 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         // Handle union types
         if (oneOf != null && oneOf.isArray) {
             val unionMembers = extractTypeNamesFromRefArray(oneOf)
+            val hasNonRefUnionMembers = oneOf.any { it.get($$"$ref") == null }
 
-            // Special handling for MaybeInaccessibleMessage: use Message as the deserialization type
-            // instead of generating a sealed interface. This is because Message and InaccessibleMessage
-            // have overlapping fields and we want to deserialize to the richer Message type.
-            if (className == MAYBE_INACCESSIBLE_MESSAGE_TYPE) {
-                logger.lifecycle("Using $MESSAGE_TYPE for $MAYBE_INACCESSIBLE_MESSAGE_TYPE (special handling)")
-                // Don't generate the union type itself, but ensure all member types are still generated
+            if (hasNonRefUnionMembers) {
+                generateCustomSerializedUnionInterface(packageName, className, description, oneOf, unionMembers, outputDir)
                 processedSchemas.add(className)
-
-                // Generate member types if not already processed
-                unionMembers.forEach { memberName ->
-                    if (memberName !in processedSchemas) {
-                        val memberSchema = allSchemas[memberName]
-                        if (memberSchema != null) {
-                            generateModel(packageName, memberName, memberSchema, outputDir)
-                        }
-                    }
-                }
                 return
             }
 
@@ -1294,7 +1537,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                 )
             } else {
                 logger.warn("Cannot determine discriminator for $className with members: $unionMembers")
-                generateSealedInterfaceWithoutPolymorphism(packageName, className, description, unionMembers, outputDir)
+                generateCustomSerializedUnionInterface(packageName, className, description, oneOf, unionMembers, outputDir)
             }
             processedSchemas.add(className)
             return
@@ -1327,6 +1570,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                     val classBuilder = TypeSpec.classBuilder(className)
                         .addModifiers(KModifier.DATA)
                         .configureTypeBuilder(className, description, isFormClass)
+                        .addAdditionalUnionParentInterfaces(className, packageName)
 
                     val required = schema.get("required")?.map { it.asText() }?.toSet() ?: emptySet()
                     val constructorBuilder = FunSpec.constructorBuilder()
@@ -1515,6 +1759,39 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         return null
     }
 
+    private fun findDiscriminatorInfoAllowingDuplicateValues(unionMembers: List<String>): DiscriminatorInfo? {
+        val commonDiscriminators = listOf("type", "source", "kind", "status")
+
+        for (discriminator in commonDiscriminators) {
+            val memberValues = mutableMapOf<String, String>()
+
+            val allHaveField = unionMembers.all { memberName ->
+                val schema = allSchemas[memberName] ?: return@all false
+                val properties = schema.get("properties") ?: return@all false
+                properties.has(discriminator)
+            }
+
+            if (!allHaveField) continue
+
+            unionMembers.forEach { memberName ->
+                val schema = allSchemas[memberName] ?: return@forEach
+                val properties = schema.get("properties") ?: return@forEach
+                val field = properties.get(discriminator) ?: return@forEach
+
+                val value = extractDiscriminatorValue(field, memberName)
+                if (value != null) {
+                    memberValues[memberName] = value
+                }
+            }
+
+            if (memberValues.size == unionMembers.size) {
+                return DiscriminatorInfo(discriminator, memberValues)
+            }
+        }
+
+        return null
+    }
+
     private fun extractDiscriminatorValue(field: JsonNode, memberName: String): String? {
         // Check for enum with a single value
         val enumValues = field.get("enum")
@@ -1525,15 +1802,15 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         // Extract from description patterns like: always "value" or must be "value"
         val description = field.get("description")?.asText() ?: return null
 
-        // Pattern: always "value" or Type of ..., always "value"
-        val alwaysPattern = """always\s+"([^"]+)"""".toRegex()
+        // Pattern: always "value" / always curly-quoted value, or Type of ..., always "value"
+        val alwaysPattern = Regex("always\\s+[\"\\u201c\\u201d]([^\"\\u201c\\u201d]+)[\"\\u201c\\u201d]")
         val match = alwaysPattern.find(description)
         if (match != null) {
             return match.groupValues[1]
         }
 
-        // Pattern: must be "value" (with quotes)
-        val mustBePattern = """must be\s+"([^"]+)"""".toRegex()
+        // Pattern: must be "value" / must be curly-quoted value
+        val mustBePattern = Regex("must be\\s+[\"\\u201c\\u201d]([^\"\\u201c\\u201d]+)[\"\\u201c\\u201d]")
         val mustMatch = mustBePattern.find(description)
         if (mustMatch != null) {
             return mustMatch.groupValues[1]
@@ -1548,6 +1825,19 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
         // Fallback: try to infer from the class name (e.g., BackgroundFillSolid -> "solid")
         return inferDiscriminatorFromClassName(memberName)
+    }
+
+    private fun defaultValueForRequiredConstantField(
+        propName: String,
+        propSchema: JsonNode,
+        className: String,
+        isRequired: Boolean
+    ): CodeBlock? {
+        if (!isRequired || propName !in listOf("type", "source", "kind", "status")) return null
+        if (propSchema.get("type")?.asText() != "string") return null
+
+        val value = extractDiscriminatorValue(propSchema, className) ?: return null
+        return CodeBlock.of("%S", value)
     }
 
     private fun inferDiscriminatorFromClassName(className: String): String? {
@@ -1600,6 +1890,8 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
         // Generate subclasses in the same file
         unionMembers.forEach { memberName ->
+            if (memberName in processedSchemas) return@forEach
+
             val memberSchema = allSchemas[memberName]
             if (memberSchema != null) {
                 val memberClass =
@@ -1627,6 +1919,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         val classBuilder = TypeSpec.classBuilder(className)
             .addModifiers(KModifier.DATA)
             .addSuperinterface(ClassName(packageName, parentInterface))
+            .addAdditionalUnionParentInterfaces(className, packageName, parentInterface)
             .addAnnotation(
                 AnnotationSpec.builder(ClassName("kotlinx.serialization", "Serializable"))
                     .build()
@@ -1710,9 +2003,12 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
         // Generate each member as a standalone class in the same file
         unionMembers.forEach { memberName ->
+            if (memberName in processedSchemas) return@forEach
+
             val memberSchema = allSchemas[memberName]
             if (memberSchema != null) {
                 val memberClass = generateStandaloneClassWithDiscriminator(
+                    packageName,
                     memberName,
                     memberSchema,
                     discriminatorInfo
@@ -1732,6 +2028,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
      * Returns a TypeSpec to be added to the parent file.
      */
     private fun generateStandaloneClassWithDiscriminator(
+        packageName: String,
         className: String,
         schema: JsonNode,
         discriminatorInfo: DiscriminatorInfo
@@ -1741,6 +2038,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
         val classBuilder = TypeSpec.classBuilder(className)
             .addModifiers(KModifier.DATA)
+            .addAdditionalUnionParentInterfaces(className, packageName)
             .addAnnotation(
                 AnnotationSpec.builder(ClassName("kotlinx.serialization", "Serializable"))
                     .build()
@@ -1802,23 +2100,72 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         return classBuilder.build()
     }
 
-    private fun generateSealedInterfaceWithoutPolymorphism(
+    private fun generateSyntheticUnionInterfaces(outputDir: File) {
+        syntheticUnionTypesByMembers.values.forEach { syntheticUnion ->
+            val discriminatorInfo = findDiscriminatorInfo(syntheticUnion.members)
+            if (discriminatorInfo != null) {
+                generateSyntheticPolymorphicInterface(syntheticUnion, discriminatorInfo, outputDir)
+            } else {
+                generateCustomSerializedUnionInterface(
+                    MODEL_PACKAGE,
+                    syntheticUnion.name,
+                    syntheticUnion.description,
+                    null,
+                    syntheticUnion.members,
+                    outputDir
+                )
+            }
+        }
+    }
+
+    private fun generateSyntheticPolymorphicInterface(
+        syntheticUnion: SyntheticUnionInfo,
+        discriminatorInfo: DiscriminatorInfo,
+        outputDir: File
+    ) {
+        val fileSpec = createFileSpec(MODEL_PACKAGE, syntheticUnion.name)
+        val interfaceBuilder = TypeSpec.interfaceBuilder(syntheticUnion.name)
+            .addModifiers(KModifier.SEALED)
+            .addAnnotation(
+                AnnotationSpec.builder(ClassName("kotlinx.serialization", "Serializable"))
+                    .build()
+            )
+            .addAnnotation(
+                AnnotationSpec.builder(ClassName("kotlinx.serialization.json", "JsonClassDiscriminator"))
+                    .addMember("%S", discriminatorInfo.fieldName)
+                    .build()
+            )
+            .addAnnotation(
+                AnnotationSpec.builder(ClassName("kotlin", "OptIn"))
+                    .addMember("%T::class", ClassName("kotlinx.serialization", "ExperimentalSerializationApi"))
+                    .build()
+            )
+            .addKDocIfPresent(syntheticUnion.description)
+
+        fileSpec.addType(interfaceBuilder.build())
+        fileSpec.build().writeToWithUnixLineEndings(outputDir)
+    }
+
+    private fun generateCustomSerializedUnionInterface(
         packageName: String,
         interfaceName: String,
         description: String?,
+        oneOf: JsonNode?,
         unionMembers: List<String>,
         outputDir: File
     ) {
-        val fileSpec = createFileSpec(
-            packageName,
-            interfaceName,
-            "WARNING: This sealed interface does not have a clear discriminator field"
-        )
+        val fileSpec = createFileSpec(packageName, interfaceName)
+        fileSpec.addImport("kotlinx.serialization.builtins", "ListSerializer", "serializer")
+        fileSpec.addImport("kotlinx.serialization.json", "decodeFromJsonElement")
+
+        val additionalBranches = extractAdditionalUnionBranches(interfaceName, oneOf)
+        val serializerName = serializerNameForUnion(interfaceName)
 
         val interfaceBuilder = TypeSpec.interfaceBuilder(interfaceName)
             .addModifiers(KModifier.SEALED)
             .addAnnotation(
                 AnnotationSpec.builder(ClassName("kotlinx.serialization", "Serializable"))
+                    .addMember("with = %T::class", ClassName(packageName, serializerName))
                     .build()
             )
 
@@ -1826,10 +2173,30 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             interfaceBuilder.addKdoc(sanitizeKDoc(description))
         }
 
+        if (additionalBranches.isNotEmpty()) {
+            val companion = TypeSpec.companionObjectBuilder()
+            additionalBranches.forEach { branch ->
+                companion.addFunction(
+                    FunSpec.builder("of")
+                        .addParameter("value", branch.typeName)
+                        .returns(ClassName(packageName, interfaceName))
+                        .addStatement("return %T(value)", ClassName(packageName, branch.className))
+                        .build()
+                )
+            }
+            interfaceBuilder.addType(companion.build())
+        }
+
         fileSpec.addType(interfaceBuilder.build())
+
+        additionalBranches.forEach { branch ->
+            fileSpec.addType(generateAdditionalUnionBranch(packageName, interfaceName, branch))
+        }
 
         // Generate subclasses in the same file
         unionMembers.forEach { memberName ->
+            if (memberName in processedSchemas) return@forEach
+
             val memberSchema = allSchemas[memberName]
             if (memberSchema != null) {
                 val memberClass = generateSimpleSubclass(packageName, memberName, memberSchema, interfaceName)
@@ -1840,7 +2207,395 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             }
         }
 
+        fileSpec.addType(generateCustomUnionSerializer(packageName, interfaceName, unionMembers, additionalBranches))
         fileSpec.build().writeToWithUnixLineEndings(outputDir)
+    }
+
+    private fun extractAdditionalUnionBranches(interfaceName: String, oneOf: JsonNode?): List<AdditionalUnionBranch> {
+        if (oneOf == null || !oneOf.isArray) return emptyList()
+
+        return oneOf
+            .filter { it.get($$"$ref") == null }
+            .mapNotNull { schema ->
+                val type = schema.get("type")?.asText() ?: return@mapNotNull null
+                val className = additionalUnionBranchClassName(interfaceName, type)
+                AdditionalUnionBranch(
+                    className = className,
+                    schema = schema,
+                    typeName = determinePropertyType(schema, context = "$className.value")
+                )
+            }
+    }
+
+    private fun additionalUnionBranchClassName(interfaceName: String, type: String): String {
+        val suffix = when (type) {
+            "array" -> "Array"
+            "string" -> "String"
+            "integer" -> "Integer"
+            "number" -> "Number"
+            "boolean" -> "Boolean"
+            else -> type.capitalize()
+        }
+
+        var candidate = "$interfaceName$suffix"
+        if (candidate in allSchemas || candidate == interfaceName) {
+            candidate += "Value"
+        }
+        return candidate
+    }
+
+    private fun generateAdditionalUnionBranch(
+        packageName: String,
+        interfaceName: String,
+        branch: AdditionalUnionBranch
+    ): TypeSpec {
+        val constructorBuilder = FunSpec.constructorBuilder()
+            .addParameter("value", branch.typeName)
+
+        return TypeSpec.classBuilder(branch.className)
+            .addModifiers(KModifier.DATA)
+            .addSuperinterface(ClassName(packageName, interfaceName))
+            .addAnnotation(
+                AnnotationSpec.builder(ClassName("kotlinx.serialization", "Serializable"))
+                    .build()
+            )
+            .primaryConstructor(constructorBuilder.build())
+            .addProperty(
+                PropertySpec.builder("value", branch.typeName)
+                    .initializer("value")
+                    .build()
+            )
+            .build()
+    }
+
+    private fun serializerNameForUnion(interfaceName: String): String = "${interfaceName}Serializer"
+
+    private fun generateCustomUnionSerializer(
+        packageName: String,
+        interfaceName: String,
+        unionMembers: List<String>,
+        additionalBranches: List<AdditionalUnionBranch>
+    ): TypeSpec {
+        val interfaceType = ClassName(packageName, interfaceName)
+        val serializerName = serializerNameForUnion(interfaceName)
+        val discriminatorInfo = findDiscriminatorInfoAllowingDuplicateValues(unionMembers)
+
+        val serializerBuilder = TypeSpec.objectBuilder(serializerName)
+            .addSuperinterface(
+                ClassName("kotlinx.serialization", "KSerializer").parameterizedBy(interfaceType)
+            )
+            .addAnnotation(
+                AnnotationSpec.builder(ClassName("kotlin", "OptIn"))
+                    .addMember("%T::class", ClassName("kotlinx.serialization", "InternalSerializationApi"))
+                    .build()
+            )
+            .addProperty(
+                PropertySpec.builder(
+                    "descriptor",
+                    ClassName("kotlinx.serialization.descriptors", "SerialDescriptor"),
+                    KModifier.OVERRIDE
+                )
+                    .initializer(
+                        "%M(%S, %T.CONTEXTUAL)",
+                        MemberName("kotlinx.serialization.descriptors", "buildSerialDescriptor"),
+                        "$packageName.$interfaceName",
+                        ClassName("kotlinx.serialization.descriptors", "SerialKind")
+                    )
+                    .build()
+            )
+
+        serializerBuilder.addFunction(
+            FunSpec.builder("deserialize")
+                .addModifiers(KModifier.OVERRIDE)
+                .addParameter("decoder", ClassName("kotlinx.serialization.encoding", "Decoder"))
+                .returns(interfaceType)
+                .addCode(
+                    buildCustomUnionDeserializeCode(
+                        packageName,
+                        interfaceName,
+                        unionMembers,
+                        additionalBranches,
+                        discriminatorInfo
+                    )
+                )
+                .build()
+        )
+
+        serializerBuilder.addFunction(
+            FunSpec.builder("serialize")
+                .addModifiers(KModifier.OVERRIDE)
+                .addParameter("encoder", ClassName("kotlinx.serialization.encoding", "Encoder"))
+                .addParameter("value", interfaceType)
+                .addCode(
+                    buildCustomUnionSerializeCode(
+                        packageName,
+                        interfaceName,
+                        unionMembers,
+                        additionalBranches
+                    )
+                )
+                .build()
+        )
+
+        return serializerBuilder.build()
+    }
+
+    private fun buildCustomUnionDeserializeCode(
+        packageName: String,
+        interfaceName: String,
+        unionMembers: List<String>,
+        additionalBranches: List<AdditionalUnionBranch>,
+        discriminatorInfo: DiscriminatorInfo?
+    ): CodeBlock {
+        val code = CodeBlock.builder()
+        val jsonDecoder = ClassName("kotlinx.serialization.json", "JsonDecoder")
+        val jsonPrimitive = ClassName("kotlinx.serialization.json", "JsonPrimitive")
+        val jsonArray = ClassName("kotlinx.serialization.json", "JsonArray")
+        val jsonObject = ClassName("kotlinx.serialization.json", "JsonObject")
+        val serializationException = ClassName("kotlinx.serialization", "SerializationException")
+
+        code.addStatement("require(decoder is %T) { %S }", jsonDecoder, "Only JSON is supported")
+        code.addStatement("val jsonElement = decoder.decodeJsonElement()")
+
+        additionalBranches.forEach { branch ->
+            when (branch.schema.get("type")?.asText()) {
+                "string" -> {
+                    code.beginControlFlow("if (jsonElement is %T && jsonElement.isString)", jsonPrimitive)
+                    code.addStatement("return %T(jsonElement.content)", ClassName(packageName, branch.className))
+                    code.endControlFlow()
+                }
+
+                "array" -> {
+                    val items = branch.schema.get("items")
+                    val itemSerializer = serializerExpressionForSchema(packageName, interfaceName, items)
+                    code.beginControlFlow("if (jsonElement is %T)", jsonArray)
+                    code.addStatement(
+                        "return %T(decoder.json.decodeFromJsonElement(%T(%L), jsonElement))",
+                        ClassName(packageName, branch.className),
+                        ClassName("kotlinx.serialization.builtins", "ListSerializer"),
+                        itemSerializer
+                    )
+                    code.endControlFlow()
+                }
+            }
+        }
+
+        code.beginControlFlow("if (jsonElement is %T)", jsonObject)
+
+        if (discriminatorInfo != null) {
+            val fieldName = discriminatorInfo.fieldName
+            val groupedMembers = discriminatorInfo.memberValues.entries.groupBy({ it.value }, { it.key })
+            code.addStatement("val discriminatorValue = (jsonElement[%S] as? %T)?.content", fieldName, jsonPrimitive)
+            code.beginControlFlow("when (discriminatorValue)")
+            groupedMembers.forEach { (discriminatorValue, members) ->
+                code.beginControlFlow("%S ->", discriminatorValue)
+                addDecodeMemberAttempts(
+                    code,
+                    packageName,
+                    orderUnionMembersForDeserialization(interfaceName, members)
+                )
+                code.endControlFlow()
+            }
+            code.endControlFlow()
+        }
+
+        addDecodeMemberAttempts(code, packageName, orderUnionMembersForDeserialization(interfaceName, unionMembers))
+        code.endControlFlow()
+
+        code.addStatement(
+            "throw %T(%S)",
+            serializationException,
+            "Could not deserialize $interfaceName"
+        )
+        return code.build()
+    }
+
+    private fun addDecodeMemberAttempts(
+        code: CodeBlock.Builder,
+        packageName: String,
+        members: List<String>
+    ) {
+        members.forEach { memberName ->
+            val guard = constantFieldGuardExpression(memberName)
+            if (guard != null) {
+                code.beginControlFlow("if (%L)", guard)
+            }
+            code.addStatement(
+                "runCatching { decoder.json.decodeFromJsonElement(%T.serializer(), jsonElement) }.getOrNull()?.let { return it }",
+                ClassName(packageName, memberName)
+            )
+            if (guard != null) {
+                code.endControlFlow()
+            }
+        }
+    }
+
+    private fun orderUnionMembersForDeserialization(interfaceName: String, members: List<String>): List<String> {
+        val fieldOverlappingRepresentative = collapsedUnionTypes[interfaceName]
+        return members.sortedWith(
+            compareBy<String> { member ->
+                when {
+                    fieldOverlappingRepresentative == null -> 0
+                    member != fieldOverlappingRepresentative && constantFieldValueCount(member) > 0 -> 0
+                    member == fieldOverlappingRepresentative -> 1
+                    else -> 2
+                }
+            }
+                .thenByDescending { requiredPropertyCount(it) }
+                .thenByDescending { declaredPropertyCount(it) }
+                .thenBy { members.indexOf(it) }
+        )
+    }
+
+    private fun declaredPropertyCount(typeName: String): Int =
+        allSchemas[typeName]?.get("properties")?.takeIf { it.isObject }?.properties()?.asSequence()?.count() ?: 0
+
+    private fun requiredPropertyCount(typeName: String): Int =
+        allSchemas[typeName]?.get("required")?.takeIf { it.isArray }?.size() ?: 0
+
+    private data class ConstantFieldValue(
+        val fieldName: String,
+        val value: String
+    )
+
+    private fun constantFieldValueCount(typeName: String): Int = constantFieldValues(typeName).size
+
+    private fun constantFieldGuardExpression(typeName: String): CodeBlock? {
+        val constants = constantFieldValues(typeName)
+        if (constants.isEmpty()) return null
+
+        val jsonPrimitive = ClassName("kotlinx.serialization.json", "JsonPrimitive")
+        val code = CodeBlock.builder()
+        constants.forEachIndexed { index, constant ->
+            if (index > 0) {
+                code.add(" && ")
+            }
+            code.add(
+                "(jsonElement[%S] as? %T)?.content == %S",
+                constant.fieldName,
+                jsonPrimitive,
+                constant.value
+            )
+        }
+        return code.build()
+    }
+
+    private fun constantFieldValues(typeName: String): List<ConstantFieldValue> {
+        val schema = allSchemas[typeName] ?: return emptyList()
+        val properties = schema.get("properties") ?: return emptyList()
+
+        return properties.properties().asSequence()
+            .mapNotNull { (fieldName, fieldSchema) ->
+                extractConstantPrimitiveValue(fieldSchema)?.let { ConstantFieldValue(fieldName, it) }
+            }
+            .toList()
+    }
+
+    private fun extractConstantPrimitiveValue(field: JsonNode): String? {
+        val enumValues = field.get("enum")
+        if (enumValues != null && enumValues.isArray && enumValues.size() == 1) {
+            return enumValues.first().asText()
+        }
+
+        val description = field.get("description")?.asText() ?: return null
+
+        val quotedPattern = Regex("(?i)(?:always|must be)\\s+[\"\\u201c\\u201d]([^\"\\u201c\\u201d]+)[\"\\u201c\\u201d]")
+        quotedPattern.find(description)?.let { return it.groupValues[1] }
+
+        val numberPattern = """(?i)(?:always|must be)\s+(-?\d+(?:\.\d+)?)\b""".toRegex()
+        numberPattern.find(description)?.let { return it.groupValues[1] }
+
+        val booleanPattern = """(?i)(?:always|must be)\s+(true|false)\b""".toRegex()
+        booleanPattern.find(description)?.let { return it.groupValues[1].lowercase() }
+
+        return null
+    }
+
+    private fun buildCustomUnionSerializeCode(
+        packageName: String,
+        interfaceName: String,
+        unionMembers: List<String>,
+        additionalBranches: List<AdditionalUnionBranch>
+    ): CodeBlock {
+        val code = CodeBlock.builder()
+        val jsonEncoder = ClassName("kotlinx.serialization.json", "JsonEncoder")
+        val serializationException = ClassName("kotlinx.serialization", "SerializationException")
+
+        code.addStatement("require(encoder is %T) { %S }", jsonEncoder, "Only JSON is supported")
+        code.beginControlFlow("when (value)")
+
+        additionalBranches.forEach { branch ->
+            val branchType = ClassName(packageName, branch.className)
+            when (branch.schema.get("type")?.asText()) {
+                "string" -> code.addStatement("is %T -> encoder.encodeString(value.value)", branchType)
+                "array" -> {
+                    val items = branch.schema.get("items")
+                    val itemSerializer = serializerExpressionForSchema(packageName, interfaceName, items)
+                    code.addStatement(
+                        "is %T -> encoder.encodeSerializableValue(%T(%L), value.value)",
+                        branchType,
+                        ClassName("kotlinx.serialization.builtins", "ListSerializer"),
+                        itemSerializer
+                    )
+                }
+            }
+        }
+
+        unionMembers.forEach { memberName ->
+            code.addStatement(
+                "is %T -> encoder.encodeSerializableValue(%T.serializer(), value)",
+                ClassName(packageName, memberName),
+                ClassName(packageName, memberName)
+            )
+        }
+
+        code.addStatement(
+            "else -> throw %T(%S)",
+            serializationException,
+            "Unsupported $interfaceName implementation"
+        )
+        code.endControlFlow()
+        return code.build()
+    }
+
+    private fun serializerExpressionForSchema(
+        packageName: String,
+        currentInterfaceName: String,
+        schema: JsonNode?
+    ): CodeBlock {
+        val typeInfo = extractSchemaTypeInfo(schema)
+        return when {
+            typeInfo.ref != null -> {
+                val typeName = typeInfo.ref.substringAfterLast("/")
+                if (typeName == currentInterfaceName) {
+                    CodeBlock.of("%T", ClassName(packageName, serializerNameForUnion(currentInterfaceName)))
+                } else {
+                    CodeBlock.of("%T.serializer()", resolveTypeName(typeName))
+                }
+            }
+
+            typeInfo.type == "array" -> {
+                CodeBlock.of(
+                    "%T(%L)",
+                    ClassName("kotlinx.serialization.builtins", "ListSerializer"),
+                    serializerExpressionForSchema(packageName, currentInterfaceName, schema?.get("items"))
+                )
+            }
+
+            typeInfo.type == "string" -> CodeBlock.of("%T.serializer()", STRING)
+            typeInfo.type == "integer" -> {
+                if (typeInfo.format == "int64") CodeBlock.of("%T.serializer()", LONG)
+                else CodeBlock.of("%T.serializer()", INT)
+            }
+
+            typeInfo.type == "number" -> {
+                if (typeInfo.format == "float") CodeBlock.of("%T.serializer()", FLOAT)
+                else CodeBlock.of("%T.serializer()", DOUBLE)
+            }
+
+            typeInfo.type == "boolean" -> CodeBlock.of("%T.serializer()", BOOLEAN)
+            else -> CodeBlock.of("%T.serializer()", JSON_ELEMENT_TYPE)
+        }
     }
 
     private fun generateSimpleSubclass(
@@ -1854,6 +2609,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         val classBuilder = TypeSpec.classBuilder(className)
             .addModifiers(KModifier.DATA)
             .addSuperinterface(ClassName(packageName, parentInterface))
+            .addAdditionalUnionParentInterfaces(className, packageName, parentInterface)
             .addAnnotation(
                 AnnotationSpec.builder(ClassName("kotlinx.serialization", "Serializable"))
                     .build()
@@ -1868,13 +2624,15 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         val constructorBuilder = FunSpec.constructorBuilder()
 
         info.properties.properties().forEach { (propName, propSchema) ->
+            val isRequired = info.required.contains(propName)
             addPropertyWithParameter(
                 classBuilder,
                 constructorBuilder,
                 propName,
                 propSchema,
-                info.required.contains(propName),
-                className
+                isRequired,
+                className,
+                defaultValueForRequiredConstantField(propName, propSchema, className, isRequired)
             )
         }
 
@@ -1979,11 +2737,12 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     /**
      * Resolve a type name to a TypeName, including special handling for handwritten InputFile.
      */
+    private fun resolveReferenceTypeName(typeName: String): String = collapsedUnionTypes[typeName] ?: typeName
+
     private fun resolveTypeName(typeName: String): TypeName {
-        return when (typeName) {
-            MAYBE_INACCESSIBLE_MESSAGE_TYPE -> ClassName(MODEL_PACKAGE, MESSAGE_TYPE)
+        return when (val resolvedTypeName = resolveReferenceTypeName(typeName)) {
             INPUT_FILE_TYPE -> STRING  // InputFile schema maps to String in non-form contexts; multipart uses InputFile-aware mapping
-            else -> ClassName(MODEL_PACKAGE, typeName)
+            else -> ClassName(MODEL_PACKAGE, resolvedTypeName)
         }
     }
 

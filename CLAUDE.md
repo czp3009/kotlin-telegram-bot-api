@@ -10,15 +10,18 @@ Telegram Bot API OpenAPI specification using Ktorfit.
 ## Build Commands
 
 ```bash
-# Build the entire project
+# Build the entire project without executing tests
+./gradlew assemble
+
+# Full verification, including test tasks. Some tests may call real Telegram APIs.
 ./gradlew build
 
-# Build a specific module
-./gradlew :protocol:build
-./gradlew :client:build
-./gradlew :application:build
+# Build a specific module without executing tests
+./gradlew :protocol:assemble
+./gradlew :client:assemble
+./gradlew :application:assemble
 
-# Run tests (JVM only - tests only run on JVM and desktop native targets)
+# Run tests only when explicitly intended
 ./gradlew :protocol:jvmTest
 ./gradlew :client:jvmTest
 ./gradlew :application:jvmTest
@@ -40,6 +43,8 @@ not edit generated files manually.
 ./gradlew downloadSwagger
 ./gradlew generateKtorfitInterfaces
 ```
+
+The currently generated protocol sources target Telegram Bot API 10.1.
 
 Generated files are marked with:
 
@@ -66,35 +71,35 @@ The `type/` directory contains handwritten code and is preserved during regenera
 
 ```
 kotlin-telegram-bot-api/
-├── protocol-annotation/   # Annotations for KSP code generation (IncomingUpdate, IncomingUpdateContainer)
-├── protocol/              # Core protocol definitions (Kotlin Multiplatform)
-│   ├── model/            # Auto-generated data classes (Message, User, Chat, etc.) and JSON body extensions
-│   ├── form/             # Auto-generated multipart form wrappers and extension functions
-│   ├── query/            # Auto-generated query extension functions for JSON-serialized GET params
-│   ├── type/             # Handwritten types (TelegramResponse, InputFile, etc.)
-│   ├── union/            # Union type handling (Union sealed class, UnionSerializer)
-│   ├── plugin/           # Handwritten Ktor client plugins (long polling, error handling, file download)
-│   ├── exception/        # Handwritten exception types
-│   ├── extension/        # Handwritten extension functions
-│   └── TelegramBotApi.kt # Auto-generated Ktorfit interface
-├── protocol-update-codegen/ # KSP processor that generates TelegramBotEvent sealed interface from Update model
-├── client/                # High-level client wrapper
-│   └── TelegramBotClient.kt
-├── application/           # Bot application framework with lifecycle management
-│   ├── TelegramBotApplication.kt      # Main orchestrator
-│   ├── updatesource/                  # Update sources (long polling, mock, simple)
-│   ├── interceptor/                   # Interceptor infrastructure and built-in interceptors
-│   │   └── builtin/conversation/      # Conversation FSM support
-│   ├── dispatcher/                    # Event dispatching
-│   │   └── handler/                   # Handler DSL (handling {}, command(), etc.)
-│   ├── context/                       # Event context and helper extensions
-│   └── command/                       # Command parsing utilities
-├── application-updatesource-webhook/  # Webhook update source module
-│   └── WebhookTelegramUpdateSource.kt # Webhook-based update source using embedded Ktor server
-├── buildSrc/              # Custom Gradle build scripts (configureAllTargets, etc.)
-└── sample/               # Example bot implementations
-    ├── basic/            # EchoBot and CommandBot samples
-    └── advanced/         # FileBot and ConversationBot samples
++-- protocol-annotation/   # Annotations for KSP code generation (IncomingUpdate, IncomingUpdateContainer)
++-- protocol/              # Core protocol definitions (Kotlin Multiplatform)
+|   +-- model/             # Auto-generated data classes (Message, User, Chat, etc.) and JSON body extensions
+|   +-- form/              # Auto-generated multipart form wrappers and extension functions
+|   +-- query/             # Auto-generated query extension functions for JSON-serialized GET params
+|   +-- type/              # Handwritten types (TelegramResponse, InputFile, etc.)
+|   +-- union/             # Union type handling (Union sealed class, UnionSerializer)
+|   +-- plugin/            # Handwritten Ktor client plugins (long polling, error handling, file download)
+|   +-- exception/         # Handwritten exception types
+|   +-- extension/         # Handwritten extension functions
+|   +-- TelegramBotApi.kt  # Auto-generated Ktorfit interface
++-- protocol-update-codegen/ # KSP processor that generates TelegramBotEvent sealed interface from Update model
++-- client/                # High-level client wrapper
+|   +-- TelegramBotClient.kt
++-- application/           # Bot application framework with lifecycle management
+|   +-- TelegramBotApplication.kt      # Main orchestrator
+|   +-- updatesource/                  # Update sources (long polling, mock, simple)
+|   +-- interceptor/                   # Interceptor infrastructure and built-in interceptors
+|   |   +-- builtin/conversation/      # Conversation FSM support
+|   +-- dispatcher/                    # Event dispatching
+|   |   +-- handler/                   # Handler DSL (handling {}, command(), etc.)
+|   +-- context/                       # Event context and helper extensions
+|   +-- command/                       # Command parsing utilities
++-- application-updatesource-webhook/  # Webhook update source module
+|   +-- WebhookTelegramUpdateSource.kt # Webhook-based update source using embedded Ktor server
++-- buildSrc/              # Custom Gradle build scripts (configureAllTargets, etc.)
++-- sample/                # Example bot implementations
+    +-- basic/             # EchoBot and CommandBot samples
+    +-- advanced/          # FileBot and ConversationBot samples
 ```
 
 ### Key Dependencies
@@ -107,8 +112,8 @@ kotlin-telegram-bot-api/
 
 ### Compiler Options
 
-The sample module uses `-Xcontext-parameters` for context parameters. When adding new code that uses context parameters,
-ensure this compiler flag is enabled.
+The project uses Kotlin 2.4.0. Context parameters are stable, so `-Xcontext-parameters` is no longer needed. Do not add
+deprecated or experimental compiler flags unless the code requires a specific language feature.
 
 ### Protocol Module (`:protocol`)
 
@@ -120,6 +125,17 @@ The core module containing:
 - Multipart form wrappers for file uploads
 - Query extensions for JSON-serialized GET parameters
 - JSON body extensions for parameter-scattered API calls (in `model/Bodies.kt`)
+
+#### Generated Model Rules
+
+- Generate all Telegram API schemas as models whenever possible, including virtual or field-overlapping union parents
+  such as `MaybeInaccessibleMessage`.
+- Reference types are a separate decision from model generation. A field may use a richer representative type when the
+  schema shows that type can represent every union branch without data loss.
+- Keep code generation logic generic by inspecting schema structure, discriminators, required fields, constant fields,
+  and JSON shape. Avoid matching specific Telegram type names unless there is no defensible generic rule.
+- Generated `protocol` sources must remain Kotlin Multiplatform-compatible. `buildSrc` is a JVM-only development-time
+  code generator and may use JVM APIs, but generated common code must not.
 
 #### Generated Events (`protocol-update-codegen`)
 
@@ -712,10 +728,10 @@ app.stop()
 **Architecture Pattern:**
 
 ```
-┌─────────────────┐     ┌─────────────────┐     ┌──────────────────────────────┐
-│  Webhook Server │────>│  Message Queue  │────>│  Worker Node                 │
-│  (Bot Instance) │     │  (Kafka/Rabbit) │     │  SimpleTelegramUpdateSource  │
-└─────────────────┘     └─────────────────┘     └──────────────────────────────┘
++-----------------+     +-----------------+     +------------------------------+
+|  Webhook Server |---->|  Message Queue  |---->|  Worker Node                 |
+|  (Bot Instance) |     |  (Kafka/Rabbit) |     |  SimpleTelegramUpdateSource  |
++-----------------+     +-----------------+     +------------------------------+
 ```
 
 **Key Features:**
@@ -840,16 +856,16 @@ Example bot implementations in `:sample`:
 
 ```
 sample/src/commonMain/kotlin/com/hiczp/telegram/bot/sample/
-├── basic/
-│   ├── command/CommandBot.kt      # Typed arguments, subcommands
-│   ├── echo/EchoBot.kt            # Minimal long-polling echo bot
-│   └── interceptor/               # Custom interceptors (Blacklist, Timeout, etc.)
-├── advanced/
-│   ├── conversation/ConversationBot.kt  # Multi-turn conversations, surveys
-│   └── file/FileBot.kt                  # File upload/download, stickers
-├── dsl/
-│   └── AuthDsl.kt                 # Reusable `requireAuth` middleware DSL
-└── expert/                        # (placeholder for complex examples)
++-- basic/
+|   +-- command/CommandBot.kt      # Typed arguments, subcommands
+|   +-- echo/EchoBot.kt            # Minimal long-polling echo bot
+|   +-- interceptor/               # Custom interceptors (Blacklist, Timeout, etc.)
++-- advanced/
+|   +-- conversation/ConversationBot.kt  # Multi-turn conversations, surveys
+|   +-- file/FileBot.kt                  # File upload/download, stickers
++-- dsl/
+|   +-- AuthDsl.kt                 # Reusable `requireAuth` middleware DSL
++-- expert/                        # Placeholder for complex examples
 ```
 
 **Basic Samples:**
@@ -866,15 +882,18 @@ sample/src/commonMain/kotlin/com/hiczp/telegram/bot/sample/
 
 ### Supported Platforms
 
-All modules target: JVM, Android, JS, WASM, Linux, macOS, Windows, iOS, watchOS, tvOS, Android Native.
+All modules target JVM, Android, JS, WASM, Linux, Windows, Android Native, macOS ARM64, iOS ARM/simulator ARM64,
+watchOS ARM/simulator ARM64, and tvOS ARM/simulator ARM64. Apple x64 targets `macosX64`, `iosX64`, `watchosX64`,
+and `tvosX64` are not configured.
 
 **Test Source Sets:**
 
 - `jvmTest` - JVM tests
-- `desktopNativeTest` - Linux, macOS, Windows native tests
+- `desktopNativeTest` - Linux, macOS ARM64, Windows native tests
 - `otherTest` / `commonTest` - Other platform tests (not all platforms support running tests)
 
-Tests only run on JVM and desktop native targets (Linux, macOS, Windows).
+Some tests can make real Telegram API calls. Use `./gradlew assemble` for build-only verification, and run tests only
+when explicitly intended.
 
 ## Concurrency Model
 

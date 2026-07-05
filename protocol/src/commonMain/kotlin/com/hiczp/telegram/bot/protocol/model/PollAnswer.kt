@@ -32,4 +32,9 @@ public data class PollAnswer(
      */
     @SerialName("option_ids")
     public val optionIds: List<Long>,
+    /**
+     * Persistent identifiers of the chosen answer options. May be empty if the vote was retracted.
+     */
+    @SerialName("option_persistent_ids")
+    public val optionPersistentIds: List<String>,
 ) : IncomingUpdate

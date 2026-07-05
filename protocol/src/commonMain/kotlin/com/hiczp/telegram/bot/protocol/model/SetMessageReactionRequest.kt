@@ -11,7 +11,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 public data class SetMessageReactionRequest(
     /**
-     * Unique identifier for the target chat or username of the target channel (in the format `@channelusername`)
+     * Unique identifier for the target chat or username of the target bot, supergroup or channel in the format `@username`
      */
     @SerialName("chat_id")
     public val chatId: String,

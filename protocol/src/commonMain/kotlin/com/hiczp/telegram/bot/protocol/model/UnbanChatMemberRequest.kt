@@ -10,7 +10,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 public data class UnbanChatMemberRequest(
     /**
-     * Unique identifier for the target group or username of the target supergroup or channel (in the format `@channelusername`)
+     * Unique identifier for the target group or username of the target supergroup or channel in the format `@username`
      */
     @SerialName("chat_id")
     public val chatId: String,

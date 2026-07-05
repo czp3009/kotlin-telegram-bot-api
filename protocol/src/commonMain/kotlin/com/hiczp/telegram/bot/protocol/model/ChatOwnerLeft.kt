@@ -10,7 +10,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 public data class ChatOwnerLeft(
     /**
-     * *Optional*. The user which will be the new owner of the chat if the previous owner does not return to the chat
+     * *Optional*. The user who will become the new owner of the chat if the previous owner does not return to the chat
      */
     @SerialName("new_owner")
     public val newOwner: User? = null,

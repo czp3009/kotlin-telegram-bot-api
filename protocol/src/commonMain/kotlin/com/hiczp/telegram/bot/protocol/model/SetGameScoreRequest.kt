@@ -19,7 +19,7 @@ public data class SetGameScoreRequest(
      */
     public val score: Long,
     /**
-     * Pass *True* if the high score is allowed to decrease. This can be useful when fixing mistakes or banning cheaters
+     * Pass *True* if the high score is allowed to decrease. This can be useful when fixing mistakes or banning cheaters.
      */
     public val force: Boolean? = null,
     /**
@@ -28,17 +28,17 @@ public data class SetGameScoreRequest(
     @SerialName("disable_edit_message")
     public val disableEditMessage: Boolean? = null,
     /**
-     * Required if *inline_message_id* is not specified. Unique identifier for the target chat
+     * Required if *inline_message_id* is not specified. Unique identifier for the target chat.
      */
     @SerialName("chat_id")
     public val chatId: Long? = null,
     /**
-     * Required if *inline_message_id* is not specified. Identifier of the sent message
+     * Required if *inline_message_id* is not specified. Identifier of the sent message.
      */
     @SerialName("message_id")
     public val messageId: Long? = null,
     /**
-     * Required if *chat_id* and *message_id* are not specified. Identifier of the inline message
+     * Required if *chat_id* and *message_id* are not specified. Identifier of the inline message.
      */
     @SerialName("inline_message_id")
     public val inlineMessageId: String? = null,
