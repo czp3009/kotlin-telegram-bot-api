@@ -2,6 +2,10 @@
 package com.hiczp.telegram.bot.protocol.form
 
 import com.hiczp.telegram.bot.protocol.type.InputFile
+import kotlin.Boolean
+import kotlin.Long
+import kotlin.String
+import kotlin.collections.List
 import kotlinx.serialization.SerialName
 
 public data class SetWebhookForm(

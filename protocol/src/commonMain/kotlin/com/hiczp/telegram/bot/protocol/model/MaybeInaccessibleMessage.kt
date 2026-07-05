@@ -29,22 +29,16 @@ public sealed interface MaybeInaccessibleMessage
 @OptIn(InternalSerializationApi::class)
 public object MaybeInaccessibleMessageSerializer : KSerializer<MaybeInaccessibleMessage> {
     override val descriptor: SerialDescriptor =
-        buildSerialDescriptor("com.hiczp.telegram.bot.protocol.model.MaybeInaccessibleMessage", SerialKind.CONTEXTUAL)
+            buildSerialDescriptor("com.hiczp.telegram.bot.protocol.model.MaybeInaccessibleMessage", SerialKind.CONTEXTUAL)
 
     override fun deserialize(decoder: Decoder): MaybeInaccessibleMessage {
         require(decoder is JsonDecoder) { "Only JSON is supported" }
         val jsonElement = decoder.decodeJsonElement()
         if (jsonElement is JsonObject) {
             if ((jsonElement["date"] as? JsonPrimitive)?.content == "0") {
-                runCatching {
-                    decoder.json.decodeFromJsonElement(
-                        InaccessibleMessage.serializer(),
-                        jsonElement
-                    )
-                }.getOrNull()?.let { return it }
+                runCatching { decoder.json.decodeFromJsonElement(InaccessibleMessage.serializer(), jsonElement) }.getOrNull()?.let { return it }
             }
-            runCatching { decoder.json.decodeFromJsonElement(Message.serializer(), jsonElement) }.getOrNull()
-                ?.let { return it }
+            runCatching { decoder.json.decodeFromJsonElement(Message.serializer(), jsonElement) }.getOrNull()?.let { return it }
         }
         throw SerializationException("Could not deserialize MaybeInaccessibleMessage")
     }

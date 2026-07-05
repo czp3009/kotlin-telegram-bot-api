@@ -495,7 +495,7 @@ public data class RichTextReferenceLink(
 @OptIn(InternalSerializationApi::class)
 public object RichTextSerializer : KSerializer<RichText> {
     override val descriptor: SerialDescriptor =
-        buildSerialDescriptor("com.hiczp.telegram.bot.protocol.model.RichText", SerialKind.CONTEXTUAL)
+            buildSerialDescriptor("com.hiczp.telegram.bot.protocol.model.RichText", SerialKind.CONTEXTUAL)
 
     override fun deserialize(decoder: Decoder): RichText {
         require(decoder is JsonDecoder) { "Only JSON is supported" }
@@ -511,454 +511,204 @@ public object RichTextSerializer : KSerializer<RichText> {
             when (discriminatorValue) {
                 "bold" -> {
                     if ((jsonElement["type"] as? JsonPrimitive)?.content == "bold") {
-                        runCatching {
-                            decoder.json.decodeFromJsonElement(
-                                RichTextBold.serializer(),
-                                jsonElement
-                            )
-                        }.getOrNull()?.let { return it }
+                        runCatching { decoder.json.decodeFromJsonElement(RichTextBold.serializer(), jsonElement) }.getOrNull()?.let { return it }
                     }
                 }
-
                 "italic" -> {
                     if ((jsonElement["type"] as? JsonPrimitive)?.content == "italic") {
-                        runCatching {
-                            decoder.json.decodeFromJsonElement(
-                                RichTextItalic.serializer(),
-                                jsonElement
-                            )
-                        }.getOrNull()?.let { return it }
+                        runCatching { decoder.json.decodeFromJsonElement(RichTextItalic.serializer(), jsonElement) }.getOrNull()?.let { return it }
                     }
                 }
-
                 "underline" -> {
                     if ((jsonElement["type"] as? JsonPrimitive)?.content == "underline") {
-                        runCatching {
-                            decoder.json.decodeFromJsonElement(
-                                RichTextUnderline.serializer(),
-                                jsonElement
-                            )
-                        }.getOrNull()?.let { return it }
+                        runCatching { decoder.json.decodeFromJsonElement(RichTextUnderline.serializer(), jsonElement) }.getOrNull()?.let { return it }
                     }
                 }
-
                 "strikethrough" -> {
                     if ((jsonElement["type"] as? JsonPrimitive)?.content == "strikethrough") {
-                        runCatching {
-                            decoder.json.decodeFromJsonElement(
-                                RichTextStrikethrough.serializer(),
-                                jsonElement
-                            )
-                        }.getOrNull()?.let { return it }
+                        runCatching { decoder.json.decodeFromJsonElement(RichTextStrikethrough.serializer(), jsonElement) }.getOrNull()?.let { return it }
                     }
                 }
-
                 "spoiler" -> {
                     if ((jsonElement["type"] as? JsonPrimitive)?.content == "spoiler") {
-                        runCatching {
-                            decoder.json.decodeFromJsonElement(
-                                RichTextSpoiler.serializer(),
-                                jsonElement
-                            )
-                        }.getOrNull()?.let { return it }
+                        runCatching { decoder.json.decodeFromJsonElement(RichTextSpoiler.serializer(), jsonElement) }.getOrNull()?.let { return it }
                     }
                 }
-
                 "date_time" -> {
                     if ((jsonElement["type"] as? JsonPrimitive)?.content == "date_time") {
-                        runCatching {
-                            decoder.json.decodeFromJsonElement(
-                                RichTextDateTime.serializer(),
-                                jsonElement
-                            )
-                        }.getOrNull()?.let { return it }
+                        runCatching { decoder.json.decodeFromJsonElement(RichTextDateTime.serializer(), jsonElement) }.getOrNull()?.let { return it }
                     }
                 }
-
                 "text_mention" -> {
                     if ((jsonElement["type"] as? JsonPrimitive)?.content == "text_mention") {
-                        runCatching {
-                            decoder.json.decodeFromJsonElement(
-                                RichTextTextMention.serializer(),
-                                jsonElement
-                            )
-                        }.getOrNull()?.let { return it }
+                        runCatching { decoder.json.decodeFromJsonElement(RichTextTextMention.serializer(), jsonElement) }.getOrNull()?.let { return it }
                     }
                 }
-
                 "subscript" -> {
                     if ((jsonElement["type"] as? JsonPrimitive)?.content == "subscript") {
-                        runCatching {
-                            decoder.json.decodeFromJsonElement(
-                                RichTextSubscript.serializer(),
-                                jsonElement
-                            )
-                        }.getOrNull()?.let { return it }
+                        runCatching { decoder.json.decodeFromJsonElement(RichTextSubscript.serializer(), jsonElement) }.getOrNull()?.let { return it }
                     }
                 }
-
                 "superscript" -> {
                     if ((jsonElement["type"] as? JsonPrimitive)?.content == "superscript") {
-                        runCatching {
-                            decoder.json.decodeFromJsonElement(
-                                RichTextSuperscript.serializer(),
-                                jsonElement
-                            )
-                        }.getOrNull()?.let { return it }
+                        runCatching { decoder.json.decodeFromJsonElement(RichTextSuperscript.serializer(), jsonElement) }.getOrNull()?.let { return it }
                     }
                 }
-
                 "marked" -> {
                     if ((jsonElement["type"] as? JsonPrimitive)?.content == "marked") {
-                        runCatching {
-                            decoder.json.decodeFromJsonElement(
-                                RichTextMarked.serializer(),
-                                jsonElement
-                            )
-                        }.getOrNull()?.let { return it }
+                        runCatching { decoder.json.decodeFromJsonElement(RichTextMarked.serializer(), jsonElement) }.getOrNull()?.let { return it }
                     }
                 }
-
                 "code" -> {
                     if ((jsonElement["type"] as? JsonPrimitive)?.content == "code") {
-                        runCatching {
-                            decoder.json.decodeFromJsonElement(
-                                RichTextCode.serializer(),
-                                jsonElement
-                            )
-                        }.getOrNull()?.let { return it }
+                        runCatching { decoder.json.decodeFromJsonElement(RichTextCode.serializer(), jsonElement) }.getOrNull()?.let { return it }
                     }
                 }
-
                 "custom_emoji" -> {
                     if ((jsonElement["type"] as? JsonPrimitive)?.content == "custom_emoji") {
-                        runCatching {
-                            decoder.json.decodeFromJsonElement(
-                                RichTextCustomEmoji.serializer(),
-                                jsonElement
-                            )
-                        }.getOrNull()?.let { return it }
+                        runCatching { decoder.json.decodeFromJsonElement(RichTextCustomEmoji.serializer(), jsonElement) }.getOrNull()?.let { return it }
                     }
                 }
-
                 "mathematical_expression" -> {
                     if ((jsonElement["type"] as? JsonPrimitive)?.content == "mathematical_expression") {
-                        runCatching {
-                            decoder.json.decodeFromJsonElement(
-                                RichTextMathematicalExpression.serializer(),
-                                jsonElement
-                            )
-                        }.getOrNull()?.let { return it }
+                        runCatching { decoder.json.decodeFromJsonElement(RichTextMathematicalExpression.serializer(), jsonElement) }.getOrNull()?.let { return it }
                     }
                 }
-
                 "url" -> {
                     if ((jsonElement["type"] as? JsonPrimitive)?.content == "url") {
-                        runCatching {
-                            decoder.json.decodeFromJsonElement(
-                                RichTextUrl.serializer(),
-                                jsonElement
-                            )
-                        }.getOrNull()?.let { return it }
+                        runCatching { decoder.json.decodeFromJsonElement(RichTextUrl.serializer(), jsonElement) }.getOrNull()?.let { return it }
                     }
                 }
-
                 "email_address" -> {
                     if ((jsonElement["type"] as? JsonPrimitive)?.content == "email_address") {
-                        runCatching {
-                            decoder.json.decodeFromJsonElement(
-                                RichTextEmailAddress.serializer(),
-                                jsonElement
-                            )
-                        }.getOrNull()?.let { return it }
+                        runCatching { decoder.json.decodeFromJsonElement(RichTextEmailAddress.serializer(), jsonElement) }.getOrNull()?.let { return it }
                     }
                 }
-
                 "phone_number" -> {
                     if ((jsonElement["type"] as? JsonPrimitive)?.content == "phone_number") {
-                        runCatching {
-                            decoder.json.decodeFromJsonElement(
-                                RichTextPhoneNumber.serializer(),
-                                jsonElement
-                            )
-                        }.getOrNull()?.let { return it }
+                        runCatching { decoder.json.decodeFromJsonElement(RichTextPhoneNumber.serializer(), jsonElement) }.getOrNull()?.let { return it }
                     }
                 }
-
                 "bank_card_number" -> {
                     if ((jsonElement["type"] as? JsonPrimitive)?.content == "bank_card_number") {
-                        runCatching {
-                            decoder.json.decodeFromJsonElement(
-                                RichTextBankCardNumber.serializer(),
-                                jsonElement
-                            )
-                        }.getOrNull()?.let { return it }
+                        runCatching { decoder.json.decodeFromJsonElement(RichTextBankCardNumber.serializer(), jsonElement) }.getOrNull()?.let { return it }
                     }
                 }
-
                 "mention" -> {
                     if ((jsonElement["type"] as? JsonPrimitive)?.content == "mention") {
-                        runCatching {
-                            decoder.json.decodeFromJsonElement(
-                                RichTextMention.serializer(),
-                                jsonElement
-                            )
-                        }.getOrNull()?.let { return it }
+                        runCatching { decoder.json.decodeFromJsonElement(RichTextMention.serializer(), jsonElement) }.getOrNull()?.let { return it }
                     }
                 }
-
                 "hashtag" -> {
                     if ((jsonElement["type"] as? JsonPrimitive)?.content == "hashtag") {
-                        runCatching {
-                            decoder.json.decodeFromJsonElement(
-                                RichTextHashtag.serializer(),
-                                jsonElement
-                            )
-                        }.getOrNull()?.let { return it }
+                        runCatching { decoder.json.decodeFromJsonElement(RichTextHashtag.serializer(), jsonElement) }.getOrNull()?.let { return it }
                     }
                 }
-
                 "cashtag" -> {
                     if ((jsonElement["type"] as? JsonPrimitive)?.content == "cashtag") {
-                        runCatching {
-                            decoder.json.decodeFromJsonElement(
-                                RichTextCashtag.serializer(),
-                                jsonElement
-                            )
-                        }.getOrNull()?.let { return it }
+                        runCatching { decoder.json.decodeFromJsonElement(RichTextCashtag.serializer(), jsonElement) }.getOrNull()?.let { return it }
                     }
                 }
-
                 "bot_command" -> {
                     if ((jsonElement["type"] as? JsonPrimitive)?.content == "bot_command") {
-                        runCatching {
-                            decoder.json.decodeFromJsonElement(
-                                RichTextBotCommand.serializer(),
-                                jsonElement
-                            )
-                        }.getOrNull()?.let { return it }
+                        runCatching { decoder.json.decodeFromJsonElement(RichTextBotCommand.serializer(), jsonElement) }.getOrNull()?.let { return it }
                     }
                 }
-
                 "anchor" -> {
                     if ((jsonElement["type"] as? JsonPrimitive)?.content == "anchor") {
-                        runCatching {
-                            decoder.json.decodeFromJsonElement(
-                                RichTextAnchor.serializer(),
-                                jsonElement
-                            )
-                        }.getOrNull()?.let { return it }
+                        runCatching { decoder.json.decodeFromJsonElement(RichTextAnchor.serializer(), jsonElement) }.getOrNull()?.let { return it }
                     }
                 }
-
                 "anchor_link" -> {
                     if ((jsonElement["type"] as? JsonPrimitive)?.content == "anchor_link") {
-                        runCatching {
-                            decoder.json.decodeFromJsonElement(
-                                RichTextAnchorLink.serializer(),
-                                jsonElement
-                            )
-                        }.getOrNull()?.let { return it }
+                        runCatching { decoder.json.decodeFromJsonElement(RichTextAnchorLink.serializer(), jsonElement) }.getOrNull()?.let { return it }
                     }
                 }
-
                 "reference" -> {
                     if ((jsonElement["type"] as? JsonPrimitive)?.content == "reference") {
-                        runCatching {
-                            decoder.json.decodeFromJsonElement(
-                                RichTextReference.serializer(),
-                                jsonElement
-                            )
-                        }.getOrNull()?.let { return it }
+                        runCatching { decoder.json.decodeFromJsonElement(RichTextReference.serializer(), jsonElement) }.getOrNull()?.let { return it }
                     }
                 }
-
                 "reference_link" -> {
                     if ((jsonElement["type"] as? JsonPrimitive)?.content == "reference_link") {
-                        runCatching {
-                            decoder.json.decodeFromJsonElement(
-                                RichTextReferenceLink.serializer(),
-                                jsonElement
-                            )
-                        }.getOrNull()?.let { return it }
+                        runCatching { decoder.json.decodeFromJsonElement(RichTextReferenceLink.serializer(), jsonElement) }.getOrNull()?.let { return it }
                     }
                 }
             }
             if ((jsonElement["type"] as? JsonPrimitive)?.content == "date_time") {
-                runCatching {
-                    decoder.json.decodeFromJsonElement(
-                        RichTextDateTime.serializer(),
-                        jsonElement
-                    )
-                }.getOrNull()?.let { return it }
+                runCatching { decoder.json.decodeFromJsonElement(RichTextDateTime.serializer(), jsonElement) }.getOrNull()?.let { return it }
             }
             if ((jsonElement["type"] as? JsonPrimitive)?.content == "text_mention") {
-                runCatching {
-                    decoder.json.decodeFromJsonElement(
-                        RichTextTextMention.serializer(),
-                        jsonElement
-                    )
-                }.getOrNull()?.let { return it }
+                runCatching { decoder.json.decodeFromJsonElement(RichTextTextMention.serializer(), jsonElement) }.getOrNull()?.let { return it }
             }
             if ((jsonElement["type"] as? JsonPrimitive)?.content == "custom_emoji") {
-                runCatching {
-                    decoder.json.decodeFromJsonElement(
-                        RichTextCustomEmoji.serializer(),
-                        jsonElement
-                    )
-                }.getOrNull()?.let { return it }
+                runCatching { decoder.json.decodeFromJsonElement(RichTextCustomEmoji.serializer(), jsonElement) }.getOrNull()?.let { return it }
             }
             if ((jsonElement["type"] as? JsonPrimitive)?.content == "url") {
-                runCatching { decoder.json.decodeFromJsonElement(RichTextUrl.serializer(), jsonElement) }.getOrNull()
-                    ?.let { return it }
+                runCatching { decoder.json.decodeFromJsonElement(RichTextUrl.serializer(), jsonElement) }.getOrNull()?.let { return it }
             }
             if ((jsonElement["type"] as? JsonPrimitive)?.content == "email_address") {
-                runCatching {
-                    decoder.json.decodeFromJsonElement(
-                        RichTextEmailAddress.serializer(),
-                        jsonElement
-                    )
-                }.getOrNull()?.let { return it }
+                runCatching { decoder.json.decodeFromJsonElement(RichTextEmailAddress.serializer(), jsonElement) }.getOrNull()?.let { return it }
             }
             if ((jsonElement["type"] as? JsonPrimitive)?.content == "phone_number") {
-                runCatching {
-                    decoder.json.decodeFromJsonElement(
-                        RichTextPhoneNumber.serializer(),
-                        jsonElement
-                    )
-                }.getOrNull()?.let { return it }
+                runCatching { decoder.json.decodeFromJsonElement(RichTextPhoneNumber.serializer(), jsonElement) }.getOrNull()?.let { return it }
             }
             if ((jsonElement["type"] as? JsonPrimitive)?.content == "bank_card_number") {
-                runCatching {
-                    decoder.json.decodeFromJsonElement(
-                        RichTextBankCardNumber.serializer(),
-                        jsonElement
-                    )
-                }.getOrNull()?.let { return it }
+                runCatching { decoder.json.decodeFromJsonElement(RichTextBankCardNumber.serializer(), jsonElement) }.getOrNull()?.let { return it }
             }
             if ((jsonElement["type"] as? JsonPrimitive)?.content == "mention") {
-                runCatching {
-                    decoder.json.decodeFromJsonElement(
-                        RichTextMention.serializer(),
-                        jsonElement
-                    )
-                }.getOrNull()?.let { return it }
+                runCatching { decoder.json.decodeFromJsonElement(RichTextMention.serializer(), jsonElement) }.getOrNull()?.let { return it }
             }
             if ((jsonElement["type"] as? JsonPrimitive)?.content == "hashtag") {
-                runCatching {
-                    decoder.json.decodeFromJsonElement(
-                        RichTextHashtag.serializer(),
-                        jsonElement
-                    )
-                }.getOrNull()?.let { return it }
+                runCatching { decoder.json.decodeFromJsonElement(RichTextHashtag.serializer(), jsonElement) }.getOrNull()?.let { return it }
             }
             if ((jsonElement["type"] as? JsonPrimitive)?.content == "cashtag") {
-                runCatching {
-                    decoder.json.decodeFromJsonElement(
-                        RichTextCashtag.serializer(),
-                        jsonElement
-                    )
-                }.getOrNull()?.let { return it }
+                runCatching { decoder.json.decodeFromJsonElement(RichTextCashtag.serializer(), jsonElement) }.getOrNull()?.let { return it }
             }
             if ((jsonElement["type"] as? JsonPrimitive)?.content == "bot_command") {
-                runCatching {
-                    decoder.json.decodeFromJsonElement(
-                        RichTextBotCommand.serializer(),
-                        jsonElement
-                    )
-                }.getOrNull()?.let { return it }
+                runCatching { decoder.json.decodeFromJsonElement(RichTextBotCommand.serializer(), jsonElement) }.getOrNull()?.let { return it }
             }
             if ((jsonElement["type"] as? JsonPrimitive)?.content == "anchor_link") {
-                runCatching {
-                    decoder.json.decodeFromJsonElement(
-                        RichTextAnchorLink.serializer(),
-                        jsonElement
-                    )
-                }.getOrNull()?.let { return it }
+                runCatching { decoder.json.decodeFromJsonElement(RichTextAnchorLink.serializer(), jsonElement) }.getOrNull()?.let { return it }
             }
             if ((jsonElement["type"] as? JsonPrimitive)?.content == "reference") {
-                runCatching {
-                    decoder.json.decodeFromJsonElement(
-                        RichTextReference.serializer(),
-                        jsonElement
-                    )
-                }.getOrNull()?.let { return it }
+                runCatching { decoder.json.decodeFromJsonElement(RichTextReference.serializer(), jsonElement) }.getOrNull()?.let { return it }
             }
             if ((jsonElement["type"] as? JsonPrimitive)?.content == "reference_link") {
-                runCatching {
-                    decoder.json.decodeFromJsonElement(
-                        RichTextReferenceLink.serializer(),
-                        jsonElement
-                    )
-                }.getOrNull()?.let { return it }
+                runCatching { decoder.json.decodeFromJsonElement(RichTextReferenceLink.serializer(), jsonElement) }.getOrNull()?.let { return it }
             }
             if ((jsonElement["type"] as? JsonPrimitive)?.content == "bold") {
-                runCatching { decoder.json.decodeFromJsonElement(RichTextBold.serializer(), jsonElement) }.getOrNull()
-                    ?.let { return it }
+                runCatching { decoder.json.decodeFromJsonElement(RichTextBold.serializer(), jsonElement) }.getOrNull()?.let { return it }
             }
             if ((jsonElement["type"] as? JsonPrimitive)?.content == "italic") {
-                runCatching { decoder.json.decodeFromJsonElement(RichTextItalic.serializer(), jsonElement) }.getOrNull()
-                    ?.let { return it }
+                runCatching { decoder.json.decodeFromJsonElement(RichTextItalic.serializer(), jsonElement) }.getOrNull()?.let { return it }
             }
             if ((jsonElement["type"] as? JsonPrimitive)?.content == "underline") {
-                runCatching {
-                    decoder.json.decodeFromJsonElement(
-                        RichTextUnderline.serializer(),
-                        jsonElement
-                    )
-                }.getOrNull()?.let { return it }
+                runCatching { decoder.json.decodeFromJsonElement(RichTextUnderline.serializer(), jsonElement) }.getOrNull()?.let { return it }
             }
             if ((jsonElement["type"] as? JsonPrimitive)?.content == "strikethrough") {
-                runCatching {
-                    decoder.json.decodeFromJsonElement(
-                        RichTextStrikethrough.serializer(),
-                        jsonElement
-                    )
-                }.getOrNull()?.let { return it }
+                runCatching { decoder.json.decodeFromJsonElement(RichTextStrikethrough.serializer(), jsonElement) }.getOrNull()?.let { return it }
             }
             if ((jsonElement["type"] as? JsonPrimitive)?.content == "spoiler") {
-                runCatching {
-                    decoder.json.decodeFromJsonElement(
-                        RichTextSpoiler.serializer(),
-                        jsonElement
-                    )
-                }.getOrNull()?.let { return it }
+                runCatching { decoder.json.decodeFromJsonElement(RichTextSpoiler.serializer(), jsonElement) }.getOrNull()?.let { return it }
             }
             if ((jsonElement["type"] as? JsonPrimitive)?.content == "subscript") {
-                runCatching {
-                    decoder.json.decodeFromJsonElement(
-                        RichTextSubscript.serializer(),
-                        jsonElement
-                    )
-                }.getOrNull()?.let { return it }
+                runCatching { decoder.json.decodeFromJsonElement(RichTextSubscript.serializer(), jsonElement) }.getOrNull()?.let { return it }
             }
             if ((jsonElement["type"] as? JsonPrimitive)?.content == "superscript") {
-                runCatching {
-                    decoder.json.decodeFromJsonElement(
-                        RichTextSuperscript.serializer(),
-                        jsonElement
-                    )
-                }.getOrNull()?.let { return it }
+                runCatching { decoder.json.decodeFromJsonElement(RichTextSuperscript.serializer(), jsonElement) }.getOrNull()?.let { return it }
             }
             if ((jsonElement["type"] as? JsonPrimitive)?.content == "marked") {
-                runCatching { decoder.json.decodeFromJsonElement(RichTextMarked.serializer(), jsonElement) }.getOrNull()
-                    ?.let { return it }
+                runCatching { decoder.json.decodeFromJsonElement(RichTextMarked.serializer(), jsonElement) }.getOrNull()?.let { return it }
             }
             if ((jsonElement["type"] as? JsonPrimitive)?.content == "code") {
-                runCatching { decoder.json.decodeFromJsonElement(RichTextCode.serializer(), jsonElement) }.getOrNull()
-                    ?.let { return it }
+                runCatching { decoder.json.decodeFromJsonElement(RichTextCode.serializer(), jsonElement) }.getOrNull()?.let { return it }
             }
             if ((jsonElement["type"] as? JsonPrimitive)?.content == "mathematical_expression") {
-                runCatching {
-                    decoder.json.decodeFromJsonElement(
-                        RichTextMathematicalExpression.serializer(),
-                        jsonElement
-                    )
-                }.getOrNull()?.let { return it }
+                runCatching { decoder.json.decodeFromJsonElement(RichTextMathematicalExpression.serializer(), jsonElement) }.getOrNull()?.let { return it }
             }
             if ((jsonElement["type"] as? JsonPrimitive)?.content == "anchor") {
-                runCatching { decoder.json.decodeFromJsonElement(RichTextAnchor.serializer(), jsonElement) }.getOrNull()
-                    ?.let { return it }
+                runCatching { decoder.json.decodeFromJsonElement(RichTextAnchor.serializer(), jsonElement) }.getOrNull()?.let { return it }
             }
         }
         throw SerializationException("Could not deserialize RichText")
@@ -981,11 +731,7 @@ public object RichTextSerializer : KSerializer<RichText> {
             is RichTextMarked -> encoder.encodeSerializableValue(RichTextMarked.serializer(), value)
             is RichTextCode -> encoder.encodeSerializableValue(RichTextCode.serializer(), value)
             is RichTextCustomEmoji -> encoder.encodeSerializableValue(RichTextCustomEmoji.serializer(), value)
-            is RichTextMathematicalExpression -> encoder.encodeSerializableValue(
-                RichTextMathematicalExpression.serializer(),
-                value
-            )
-
+            is RichTextMathematicalExpression -> encoder.encodeSerializableValue(RichTextMathematicalExpression.serializer(), value)
             is RichTextUrl -> encoder.encodeSerializableValue(RichTextUrl.serializer(), value)
             is RichTextEmailAddress -> encoder.encodeSerializableValue(RichTextEmailAddress.serializer(), value)
             is RichTextPhoneNumber -> encoder.encodeSerializableValue(RichTextPhoneNumber.serializer(), value)

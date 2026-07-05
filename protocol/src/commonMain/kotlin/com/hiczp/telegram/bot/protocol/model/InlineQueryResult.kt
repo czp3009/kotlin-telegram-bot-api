@@ -1206,7 +1206,7 @@ public data class InlineQueryResultVoice(
 @OptIn(InternalSerializationApi::class)
 public object InlineQueryResultSerializer : KSerializer<InlineQueryResult> {
     override val descriptor: SerialDescriptor =
-        buildSerialDescriptor("com.hiczp.telegram.bot.protocol.model.InlineQueryResult", SerialKind.CONTEXTUAL)
+            buildSerialDescriptor("com.hiczp.telegram.bot.protocol.model.InlineQueryResult", SerialKind.CONTEXTUAL)
 
     override fun deserialize(decoder: Decoder): InlineQueryResult {
         require(decoder is JsonDecoder) { "Only JSON is supported" }
@@ -1215,284 +1215,72 @@ public object InlineQueryResultSerializer : KSerializer<InlineQueryResult> {
             val discriminatorValue = (jsonElement["type"] as? JsonPrimitive)?.content
             when (discriminatorValue) {
                 "audio" -> {
-                    runCatching {
-                        decoder.json.decodeFromJsonElement(
-                            InlineQueryResultAudio.serializer(),
-                            jsonElement
-                        )
-                    }.getOrNull()?.let { return it }
-                    runCatching {
-                        decoder.json.decodeFromJsonElement(
-                            InlineQueryResultCachedAudio.serializer(),
-                            jsonElement
-                        )
-                    }.getOrNull()?.let { return it }
+                    runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultAudio.serializer(), jsonElement) }.getOrNull()?.let { return it }
+                    runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultCachedAudio.serializer(), jsonElement) }.getOrNull()?.let { return it }
                 }
-
                 "document" -> {
-                    runCatching {
-                        decoder.json.decodeFromJsonElement(
-                            InlineQueryResultDocument.serializer(),
-                            jsonElement
-                        )
-                    }.getOrNull()?.let { return it }
-                    runCatching {
-                        decoder.json.decodeFromJsonElement(
-                            InlineQueryResultCachedDocument.serializer(),
-                            jsonElement
-                        )
-                    }.getOrNull()?.let { return it }
+                    runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultDocument.serializer(), jsonElement) }.getOrNull()?.let { return it }
+                    runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultCachedDocument.serializer(), jsonElement) }.getOrNull()?.let { return it }
                 }
-
                 "gif" -> {
-                    runCatching {
-                        decoder.json.decodeFromJsonElement(
-                            InlineQueryResultGif.serializer(),
-                            jsonElement
-                        )
-                    }.getOrNull()?.let { return it }
-                    runCatching {
-                        decoder.json.decodeFromJsonElement(
-                            InlineQueryResultCachedGif.serializer(),
-                            jsonElement
-                        )
-                    }.getOrNull()?.let { return it }
+                    runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultGif.serializer(), jsonElement) }.getOrNull()?.let { return it }
+                    runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultCachedGif.serializer(), jsonElement) }.getOrNull()?.let { return it }
                 }
-
                 "mpeg4_gif" -> {
-                    runCatching {
-                        decoder.json.decodeFromJsonElement(
-                            InlineQueryResultMpeg4Gif.serializer(),
-                            jsonElement
-                        )
-                    }.getOrNull()?.let { return it }
-                    runCatching {
-                        decoder.json.decodeFromJsonElement(
-                            InlineQueryResultCachedMpeg4Gif.serializer(),
-                            jsonElement
-                        )
-                    }.getOrNull()?.let { return it }
+                    runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultMpeg4Gif.serializer(), jsonElement) }.getOrNull()?.let { return it }
+                    runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultCachedMpeg4Gif.serializer(), jsonElement) }.getOrNull()?.let { return it }
                 }
-
                 "photo" -> {
-                    runCatching {
-                        decoder.json.decodeFromJsonElement(
-                            InlineQueryResultPhoto.serializer(),
-                            jsonElement
-                        )
-                    }.getOrNull()?.let { return it }
-                    runCatching {
-                        decoder.json.decodeFromJsonElement(
-                            InlineQueryResultCachedPhoto.serializer(),
-                            jsonElement
-                        )
-                    }.getOrNull()?.let { return it }
+                    runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultPhoto.serializer(), jsonElement) }.getOrNull()?.let { return it }
+                    runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultCachedPhoto.serializer(), jsonElement) }.getOrNull()?.let { return it }
                 }
-
                 "sticker" -> {
-                    runCatching {
-                        decoder.json.decodeFromJsonElement(
-                            InlineQueryResultCachedSticker.serializer(),
-                            jsonElement
-                        )
-                    }.getOrNull()?.let { return it }
+                    runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultCachedSticker.serializer(), jsonElement) }.getOrNull()?.let { return it }
                 }
-
                 "video" -> {
-                    runCatching {
-                        decoder.json.decodeFromJsonElement(
-                            InlineQueryResultVideo.serializer(),
-                            jsonElement
-                        )
-                    }.getOrNull()?.let { return it }
-                    runCatching {
-                        decoder.json.decodeFromJsonElement(
-                            InlineQueryResultCachedVideo.serializer(),
-                            jsonElement
-                        )
-                    }.getOrNull()?.let { return it }
+                    runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultVideo.serializer(), jsonElement) }.getOrNull()?.let { return it }
+                    runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultCachedVideo.serializer(), jsonElement) }.getOrNull()?.let { return it }
                 }
-
                 "voice" -> {
-                    runCatching {
-                        decoder.json.decodeFromJsonElement(
-                            InlineQueryResultVoice.serializer(),
-                            jsonElement
-                        )
-                    }.getOrNull()?.let { return it }
-                    runCatching {
-                        decoder.json.decodeFromJsonElement(
-                            InlineQueryResultCachedVoice.serializer(),
-                            jsonElement
-                        )
-                    }.getOrNull()?.let { return it }
+                    runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultVoice.serializer(), jsonElement) }.getOrNull()?.let { return it }
+                    runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultCachedVoice.serializer(), jsonElement) }.getOrNull()?.let { return it }
                 }
-
                 "article" -> {
-                    runCatching {
-                        decoder.json.decodeFromJsonElement(
-                            InlineQueryResultArticle.serializer(),
-                            jsonElement
-                        )
-                    }.getOrNull()?.let { return it }
+                    runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultArticle.serializer(), jsonElement) }.getOrNull()?.let { return it }
                 }
-
                 "contact" -> {
-                    runCatching {
-                        decoder.json.decodeFromJsonElement(
-                            InlineQueryResultContact.serializer(),
-                            jsonElement
-                        )
-                    }.getOrNull()?.let { return it }
+                    runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultContact.serializer(), jsonElement) }.getOrNull()?.let { return it }
                 }
-
                 "game" -> {
-                    runCatching {
-                        decoder.json.decodeFromJsonElement(
-                            InlineQueryResultGame.serializer(),
-                            jsonElement
-                        )
-                    }.getOrNull()?.let { return it }
+                    runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultGame.serializer(), jsonElement) }.getOrNull()?.let { return it }
                 }
-
                 "location" -> {
-                    runCatching {
-                        decoder.json.decodeFromJsonElement(
-                            InlineQueryResultLocation.serializer(),
-                            jsonElement
-                        )
-                    }.getOrNull()?.let { return it }
+                    runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultLocation.serializer(), jsonElement) }.getOrNull()?.let { return it }
                 }
-
                 "venue" -> {
-                    runCatching {
-                        decoder.json.decodeFromJsonElement(
-                            InlineQueryResultVenue.serializer(),
-                            jsonElement
-                        )
-                    }.getOrNull()?.let { return it }
+                    runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultVenue.serializer(), jsonElement) }.getOrNull()?.let { return it }
                 }
             }
-            runCatching {
-                decoder.json.decodeFromJsonElement(
-                    InlineQueryResultVideo.serializer(),
-                    jsonElement
-                )
-            }.getOrNull()?.let { return it }
-            runCatching {
-                decoder.json.decodeFromJsonElement(
-                    InlineQueryResultVenue.serializer(),
-                    jsonElement
-                )
-            }.getOrNull()?.let { return it }
-            runCatching {
-                decoder.json.decodeFromJsonElement(
-                    InlineQueryResultDocument.serializer(),
-                    jsonElement
-                )
-            }.getOrNull()?.let { return it }
-            runCatching {
-                decoder.json.decodeFromJsonElement(
-                    InlineQueryResultLocation.serializer(),
-                    jsonElement
-                )
-            }.getOrNull()?.let { return it }
-            runCatching {
-                decoder.json.decodeFromJsonElement(
-                    InlineQueryResultGif.serializer(),
-                    jsonElement
-                )
-            }.getOrNull()?.let { return it }
-            runCatching {
-                decoder.json.decodeFromJsonElement(
-                    InlineQueryResultMpeg4Gif.serializer(),
-                    jsonElement
-                )
-            }.getOrNull()?.let { return it }
-            runCatching {
-                decoder.json.decodeFromJsonElement(
-                    InlineQueryResultPhoto.serializer(),
-                    jsonElement
-                )
-            }.getOrNull()?.let { return it }
-            runCatching {
-                decoder.json.decodeFromJsonElement(
-                    InlineQueryResultCachedVideo.serializer(),
-                    jsonElement
-                )
-            }.getOrNull()?.let { return it }
-            runCatching {
-                decoder.json.decodeFromJsonElement(
-                    InlineQueryResultAudio.serializer(),
-                    jsonElement
-                )
-            }.getOrNull()?.let { return it }
-            runCatching {
-                decoder.json.decodeFromJsonElement(
-                    InlineQueryResultContact.serializer(),
-                    jsonElement
-                )
-            }.getOrNull()?.let { return it }
-            runCatching {
-                decoder.json.decodeFromJsonElement(
-                    InlineQueryResultCachedDocument.serializer(),
-                    jsonElement
-                )
-            }.getOrNull()?.let { return it }
-            runCatching {
-                decoder.json.decodeFromJsonElement(
-                    InlineQueryResultArticle.serializer(),
-                    jsonElement
-                )
-            }.getOrNull()?.let { return it }
-            runCatching {
-                decoder.json.decodeFromJsonElement(
-                    InlineQueryResultVoice.serializer(),
-                    jsonElement
-                )
-            }.getOrNull()?.let { return it }
-            runCatching {
-                decoder.json.decodeFromJsonElement(
-                    InlineQueryResultCachedVoice.serializer(),
-                    jsonElement
-                )
-            }.getOrNull()?.let { return it }
-            runCatching {
-                decoder.json.decodeFromJsonElement(
-                    InlineQueryResultCachedPhoto.serializer(),
-                    jsonElement
-                )
-            }.getOrNull()?.let { return it }
-            runCatching {
-                decoder.json.decodeFromJsonElement(
-                    InlineQueryResultCachedGif.serializer(),
-                    jsonElement
-                )
-            }.getOrNull()?.let { return it }
-            runCatching {
-                decoder.json.decodeFromJsonElement(
-                    InlineQueryResultCachedMpeg4Gif.serializer(),
-                    jsonElement
-                )
-            }.getOrNull()?.let { return it }
-            runCatching {
-                decoder.json.decodeFromJsonElement(
-                    InlineQueryResultCachedAudio.serializer(),
-                    jsonElement
-                )
-            }.getOrNull()?.let { return it }
-            runCatching {
-                decoder.json.decodeFromJsonElement(
-                    InlineQueryResultCachedSticker.serializer(),
-                    jsonElement
-                )
-            }.getOrNull()?.let { return it }
-            runCatching {
-                decoder.json.decodeFromJsonElement(
-                    InlineQueryResultGame.serializer(),
-                    jsonElement
-                )
-            }.getOrNull()?.let { return it }
+            runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultVideo.serializer(), jsonElement) }.getOrNull()?.let { return it }
+            runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultVenue.serializer(), jsonElement) }.getOrNull()?.let { return it }
+            runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultDocument.serializer(), jsonElement) }.getOrNull()?.let { return it }
+            runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultLocation.serializer(), jsonElement) }.getOrNull()?.let { return it }
+            runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultGif.serializer(), jsonElement) }.getOrNull()?.let { return it }
+            runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultMpeg4Gif.serializer(), jsonElement) }.getOrNull()?.let { return it }
+            runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultPhoto.serializer(), jsonElement) }.getOrNull()?.let { return it }
+            runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultCachedVideo.serializer(), jsonElement) }.getOrNull()?.let { return it }
+            runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultAudio.serializer(), jsonElement) }.getOrNull()?.let { return it }
+            runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultContact.serializer(), jsonElement) }.getOrNull()?.let { return it }
+            runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultCachedDocument.serializer(), jsonElement) }.getOrNull()?.let { return it }
+            runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultArticle.serializer(), jsonElement) }.getOrNull()?.let { return it }
+            runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultVoice.serializer(), jsonElement) }.getOrNull()?.let { return it }
+            runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultCachedVoice.serializer(), jsonElement) }.getOrNull()?.let { return it }
+            runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultCachedPhoto.serializer(), jsonElement) }.getOrNull()?.let { return it }
+            runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultCachedGif.serializer(), jsonElement) }.getOrNull()?.let { return it }
+            runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultCachedMpeg4Gif.serializer(), jsonElement) }.getOrNull()?.let { return it }
+            runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultCachedAudio.serializer(), jsonElement) }.getOrNull()?.let { return it }
+            runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultCachedSticker.serializer(), jsonElement) }.getOrNull()?.let { return it }
+            runCatching { decoder.json.decodeFromJsonElement(InlineQueryResultGame.serializer(), jsonElement) }.getOrNull()?.let { return it }
         }
         throw SerializationException("Could not deserialize InlineQueryResult")
     }
@@ -1500,66 +1288,22 @@ public object InlineQueryResultSerializer : KSerializer<InlineQueryResult> {
     override fun serialize(encoder: Encoder, `value`: InlineQueryResult) {
         require(encoder is JsonEncoder) { "Only JSON is supported" }
         when (value) {
-            is InlineQueryResultCachedAudio -> encoder.encodeSerializableValue(
-                InlineQueryResultCachedAudio.serializer(),
-                value
-            )
-
-            is InlineQueryResultCachedDocument -> encoder.encodeSerializableValue(
-                InlineQueryResultCachedDocument.serializer(),
-                value
-            )
-
-            is InlineQueryResultCachedGif -> encoder.encodeSerializableValue(
-                InlineQueryResultCachedGif.serializer(),
-                value
-            )
-
-            is InlineQueryResultCachedMpeg4Gif -> encoder.encodeSerializableValue(
-                InlineQueryResultCachedMpeg4Gif.serializer(),
-                value
-            )
-
-            is InlineQueryResultCachedPhoto -> encoder.encodeSerializableValue(
-                InlineQueryResultCachedPhoto.serializer(),
-                value
-            )
-
-            is InlineQueryResultCachedSticker -> encoder.encodeSerializableValue(
-                InlineQueryResultCachedSticker.serializer(),
-                value
-            )
-
-            is InlineQueryResultCachedVideo -> encoder.encodeSerializableValue(
-                InlineQueryResultCachedVideo.serializer(),
-                value
-            )
-
-            is InlineQueryResultCachedVoice -> encoder.encodeSerializableValue(
-                InlineQueryResultCachedVoice.serializer(),
-                value
-            )
-
+            is InlineQueryResultCachedAudio -> encoder.encodeSerializableValue(InlineQueryResultCachedAudio.serializer(), value)
+            is InlineQueryResultCachedDocument -> encoder.encodeSerializableValue(InlineQueryResultCachedDocument.serializer(), value)
+            is InlineQueryResultCachedGif -> encoder.encodeSerializableValue(InlineQueryResultCachedGif.serializer(), value)
+            is InlineQueryResultCachedMpeg4Gif -> encoder.encodeSerializableValue(InlineQueryResultCachedMpeg4Gif.serializer(), value)
+            is InlineQueryResultCachedPhoto -> encoder.encodeSerializableValue(InlineQueryResultCachedPhoto.serializer(), value)
+            is InlineQueryResultCachedSticker -> encoder.encodeSerializableValue(InlineQueryResultCachedSticker.serializer(), value)
+            is InlineQueryResultCachedVideo -> encoder.encodeSerializableValue(InlineQueryResultCachedVideo.serializer(), value)
+            is InlineQueryResultCachedVoice -> encoder.encodeSerializableValue(InlineQueryResultCachedVoice.serializer(), value)
             is InlineQueryResultArticle -> encoder.encodeSerializableValue(InlineQueryResultArticle.serializer(), value)
             is InlineQueryResultAudio -> encoder.encodeSerializableValue(InlineQueryResultAudio.serializer(), value)
             is InlineQueryResultContact -> encoder.encodeSerializableValue(InlineQueryResultContact.serializer(), value)
             is InlineQueryResultGame -> encoder.encodeSerializableValue(InlineQueryResultGame.serializer(), value)
-            is InlineQueryResultDocument -> encoder.encodeSerializableValue(
-                InlineQueryResultDocument.serializer(),
-                value
-            )
-
+            is InlineQueryResultDocument -> encoder.encodeSerializableValue(InlineQueryResultDocument.serializer(), value)
             is InlineQueryResultGif -> encoder.encodeSerializableValue(InlineQueryResultGif.serializer(), value)
-            is InlineQueryResultLocation -> encoder.encodeSerializableValue(
-                InlineQueryResultLocation.serializer(),
-                value
-            )
-
-            is InlineQueryResultMpeg4Gif -> encoder.encodeSerializableValue(
-                InlineQueryResultMpeg4Gif.serializer(),
-                value
-            )
-
+            is InlineQueryResultLocation -> encoder.encodeSerializableValue(InlineQueryResultLocation.serializer(), value)
+            is InlineQueryResultMpeg4Gif -> encoder.encodeSerializableValue(InlineQueryResultMpeg4Gif.serializer(), value)
             is InlineQueryResultPhoto -> encoder.encodeSerializableValue(InlineQueryResultPhoto.serializer(), value)
             is InlineQueryResultVenue -> encoder.encodeSerializableValue(InlineQueryResultVenue.serializer(), value)
             is InlineQueryResultVideo -> encoder.encodeSerializableValue(InlineQueryResultVideo.serializer(), value)

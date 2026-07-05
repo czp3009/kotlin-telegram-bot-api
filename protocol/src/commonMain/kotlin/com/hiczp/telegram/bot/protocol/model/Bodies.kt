@@ -24,6 +24,12 @@ package com.hiczp.telegram.bot.protocol.model
 import com.hiczp.telegram.bot.protocol.TelegramBotApi
 import com.hiczp.telegram.bot.protocol.type.TelegramResponse
 import com.hiczp.telegram.bot.protocol.union.Union
+import kotlin.Boolean
+import kotlin.Double
+import kotlin.Long
+import kotlin.String
+import kotlin.Suppress
+import kotlin.collections.List
 
 /**
  * Use this method to remove webhook integration if you decide to switch back to getUpdates. Returns True on success.
@@ -1012,10 +1018,7 @@ public suspend fun TelegramBotApi.declineChatJoinRequest(chatId: String, userId:
  * @param chatJoinRequestQueryId Unique identifier of the join request query
  * @param result Result of the query. Must be either “approve” to allow the user to join the chat, “decline” to disallow the user to join the chat, or “queue” to leave the decision to other administrators.
  */
-public suspend fun TelegramBotApi.answerChatJoinRequestQuery(
-    chatJoinRequestQueryId: String,
-    result: String
-): TelegramResponse<Boolean> {
+public suspend fun TelegramBotApi.answerChatJoinRequestQuery(chatJoinRequestQueryId: String, result: String): TelegramResponse<Boolean> {
     val request = AnswerChatJoinRequestQueryRequest(
         chatJoinRequestQueryId = chatJoinRequestQueryId,
         result = result
@@ -1029,10 +1032,7 @@ public suspend fun TelegramBotApi.answerChatJoinRequestQuery(
  * @param chatJoinRequestQueryId Unique identifier of the join request query
  * @param webAppUrl The URL of the Mini App to be opened
  */
-public suspend fun TelegramBotApi.sendChatJoinRequestWebApp(
-    chatJoinRequestQueryId: String,
-    webAppUrl: String
-): TelegramResponse<Boolean> {
+public suspend fun TelegramBotApi.sendChatJoinRequestWebApp(chatJoinRequestQueryId: String, webAppUrl: String): TelegramResponse<Boolean> {
     val request = SendChatJoinRequestWebAppRequest(
         chatJoinRequestQueryId = chatJoinRequestQueryId,
         webAppUrl = webAppUrl
@@ -1382,10 +1382,7 @@ public suspend fun TelegramBotApi.answerCallbackQuery(
  * @param guestQueryId Unique identifier for the query to be answered
  * @param result A JSON-serialized object describing the message to be sent
  */
-public suspend fun TelegramBotApi.answerGuestQuery(
-    guestQueryId: String,
-    result: InlineQueryResult
-): TelegramResponse<SentGuestMessage> {
+public suspend fun TelegramBotApi.answerGuestQuery(guestQueryId: String, result: InlineQueryResult): TelegramResponse<SentGuestMessage> {
     val request = AnswerGuestQueryRequest(
         guestQueryId = guestQueryId,
         result = result
@@ -1881,10 +1878,7 @@ public suspend fun TelegramBotApi.deleteStory(businessConnectionId: String, stor
  * @param webAppQueryId Unique identifier for the query to be answered
  * @param result A JSON-serialized object describing the message to be sent
  */
-public suspend fun TelegramBotApi.answerWebAppQuery(
-    webAppQueryId: String,
-    result: InlineQueryResult
-): TelegramResponse<SentWebAppMessage> {
+public suspend fun TelegramBotApi.answerWebAppQuery(webAppQueryId: String, result: InlineQueryResult): TelegramResponse<SentWebAppMessage> {
     val request = AnswerWebAppQueryRequest(
         webAppQueryId = webAppQueryId,
         result = result
@@ -1927,10 +1921,7 @@ public suspend fun TelegramBotApi.savePreparedInlineMessage(
  * @param userId Unique identifier of the target user that can use the button
  * @param button A JSON-serialized object describing the button to be saved. The button must be of the type *request_users*, *request_chat*, or *request_managed_bot*.
  */
-public suspend fun TelegramBotApi.savePreparedKeyboardButton(
-    userId: Long,
-    button: KeyboardButton
-): TelegramResponse<PreparedKeyboardButton> {
+public suspend fun TelegramBotApi.savePreparedKeyboardButton(userId: Long, button: KeyboardButton): TelegramResponse<PreparedKeyboardButton> {
     val request = SavePreparedKeyboardButtonRequest(
         userId = userId,
         button = button

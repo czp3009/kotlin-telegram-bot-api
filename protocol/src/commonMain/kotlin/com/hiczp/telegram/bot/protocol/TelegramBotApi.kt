@@ -606,10 +606,7 @@ public interface TelegramBotApi {
      * @param returnBots Pass *True* to additionally receive all bots that are administrators of the chat. By default, bots other than the current bot are omitted.
      */
     @GET("getChatAdministrators")
-    public suspend fun getChatAdministrators(
-        @Query("chat_id") chatId: String,
-        @Query("return_bots") returnBots: Boolean? = null
-    ): TelegramResponse<List<ChatMember>>
+    public suspend fun getChatAdministrators(@Query("chat_id") chatId: String, @Query("return_bots") returnBots: Boolean? = null): TelegramResponse<List<ChatMember>>
 
     /**
      * Use this method to get the number of members in a chat. Returns Int on success.
@@ -635,10 +632,7 @@ public interface TelegramBotApi {
      * @param limit The maximum number of messages to return; 1-20
      */
     @GET("getUserPersonalChatMessages")
-    public suspend fun getUserPersonalChatMessages(
-        @Query("user_id") userId: Long,
-        @Query limit: Long
-    ): TelegramResponse<List<Message>>
+    public suspend fun getUserPersonalChatMessages(@Query("user_id") userId: Long, @Query limit: Long): TelegramResponse<List<Message>>
 
     /**
      * Use this method to set a new group sticker set for a supergroup. The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights. Use the field can_set_sticker_set optionally returned in getChat requests to check if the bot can use this method. Returns True on success.

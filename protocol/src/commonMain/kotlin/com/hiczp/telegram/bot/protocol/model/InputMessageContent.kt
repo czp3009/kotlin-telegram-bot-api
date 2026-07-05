@@ -277,48 +277,18 @@ public data class InputInvoiceMessageContent(
 @OptIn(InternalSerializationApi::class)
 public object InputMessageContentSerializer : KSerializer<InputMessageContent> {
     override val descriptor: SerialDescriptor =
-        buildSerialDescriptor("com.hiczp.telegram.bot.protocol.model.InputMessageContent", SerialKind.CONTEXTUAL)
+            buildSerialDescriptor("com.hiczp.telegram.bot.protocol.model.InputMessageContent", SerialKind.CONTEXTUAL)
 
     override fun deserialize(decoder: Decoder): InputMessageContent {
         require(decoder is JsonDecoder) { "Only JSON is supported" }
         val jsonElement = decoder.decodeJsonElement()
         if (jsonElement is JsonObject) {
-            runCatching {
-                decoder.json.decodeFromJsonElement(
-                    InputInvoiceMessageContent.serializer(),
-                    jsonElement
-                )
-            }.getOrNull()?.let { return it }
-            runCatching {
-                decoder.json.decodeFromJsonElement(
-                    InputVenueMessageContent.serializer(),
-                    jsonElement
-                )
-            }.getOrNull()?.let { return it }
-            runCatching {
-                decoder.json.decodeFromJsonElement(
-                    InputLocationMessageContent.serializer(),
-                    jsonElement
-                )
-            }.getOrNull()?.let { return it }
-            runCatching {
-                decoder.json.decodeFromJsonElement(
-                    InputContactMessageContent.serializer(),
-                    jsonElement
-                )
-            }.getOrNull()?.let { return it }
-            runCatching {
-                decoder.json.decodeFromJsonElement(
-                    InputTextMessageContent.serializer(),
-                    jsonElement
-                )
-            }.getOrNull()?.let { return it }
-            runCatching {
-                decoder.json.decodeFromJsonElement(
-                    InputRichMessageContent.serializer(),
-                    jsonElement
-                )
-            }.getOrNull()?.let { return it }
+            runCatching { decoder.json.decodeFromJsonElement(InputInvoiceMessageContent.serializer(), jsonElement) }.getOrNull()?.let { return it }
+            runCatching { decoder.json.decodeFromJsonElement(InputVenueMessageContent.serializer(), jsonElement) }.getOrNull()?.let { return it }
+            runCatching { decoder.json.decodeFromJsonElement(InputLocationMessageContent.serializer(), jsonElement) }.getOrNull()?.let { return it }
+            runCatching { decoder.json.decodeFromJsonElement(InputContactMessageContent.serializer(), jsonElement) }.getOrNull()?.let { return it }
+            runCatching { decoder.json.decodeFromJsonElement(InputTextMessageContent.serializer(), jsonElement) }.getOrNull()?.let { return it }
+            runCatching { decoder.json.decodeFromJsonElement(InputRichMessageContent.serializer(), jsonElement) }.getOrNull()?.let { return it }
         }
         throw SerializationException("Could not deserialize InputMessageContent")
     }
@@ -328,22 +298,10 @@ public object InputMessageContentSerializer : KSerializer<InputMessageContent> {
         when (value) {
             is InputTextMessageContent -> encoder.encodeSerializableValue(InputTextMessageContent.serializer(), value)
             is InputRichMessageContent -> encoder.encodeSerializableValue(InputRichMessageContent.serializer(), value)
-            is InputLocationMessageContent -> encoder.encodeSerializableValue(
-                InputLocationMessageContent.serializer(),
-                value
-            )
-
+            is InputLocationMessageContent -> encoder.encodeSerializableValue(InputLocationMessageContent.serializer(), value)
             is InputVenueMessageContent -> encoder.encodeSerializableValue(InputVenueMessageContent.serializer(), value)
-            is InputContactMessageContent -> encoder.encodeSerializableValue(
-                InputContactMessageContent.serializer(),
-                value
-            )
-
-            is InputInvoiceMessageContent -> encoder.encodeSerializableValue(
-                InputInvoiceMessageContent.serializer(),
-                value
-            )
-
+            is InputContactMessageContent -> encoder.encodeSerializableValue(InputContactMessageContent.serializer(), value)
+            is InputInvoiceMessageContent -> encoder.encodeSerializableValue(InputInvoiceMessageContent.serializer(), value)
             else -> throw SerializationException("Unsupported InputMessageContent implementation")
         }
     }
