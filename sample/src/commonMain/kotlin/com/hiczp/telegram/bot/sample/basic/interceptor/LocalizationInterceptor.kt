@@ -17,15 +17,17 @@
  * val interceptors = listOf(localizationInterceptor())
  *
  * // In handler, access via extension property:
- * commandEndpoint("greet") {
- *     val lang = languageCode ?: "en"
- *     val greeting = when (lang) {
- *         "zh" -> "你好"
- *         "ja" -> "こんにちは"
- *         "es" -> "Hola"
- *         else -> "Hello"
+ * command("greet") {
+ *     handle {
+ *         val lang = languageCode ?: "en"
+ *         val greeting = when (lang) {
+ *             "zh" -> "你好"
+ *             "ja" -> "こんにちは"
+ *             "es" -> "Hola"
+ *             else -> "Hello"
+ *         }
+ *         replyMessage(greeting)
  *     }
- *     replyMessage(greeting)
  * }
  * ```
  *

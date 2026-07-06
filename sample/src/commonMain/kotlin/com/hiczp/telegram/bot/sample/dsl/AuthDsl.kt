@@ -1,8 +1,6 @@
 package com.hiczp.telegram.bot.sample.dsl
 
-import com.hiczp.telegram.bot.application.dispatcher.handler.HandlerBotCall
 import com.hiczp.telegram.bot.application.dispatcher.handler.HandlerRoute
-import com.hiczp.telegram.bot.application.dispatcher.handler.middleware
 import com.hiczp.telegram.bot.protocol.event.MessageEvent
 import kotlinx.coroutines.delay
 
@@ -29,7 +27,7 @@ class MockAuthService {
 }
 
 /**
- * A user-defined authentication DSL that wraps [middleware] for authorization.
+ * A user-defined authentication DSL built from [HandlerRoute.filter].
  *
  * This example demonstrates how to create a reusable DSL that performs **async**
  * authorization checks (e.g., querying a database or external service).
@@ -39,30 +37,19 @@ class MockAuthService {
  * val authService = MockAuthService()
  *
  * handling {
- *     requireAuth(
- *         authService = authService,
- *         onRejected = { replyMessage("Unauthorized") }
- *     ) {
+ *     requireAuth(authService) {
  *         command("admin") {
  *             handle { /* Show admin help */ }
- *             subCommandEndpoint("status") { /* ... */ }
+ *             subCommand("status") { handle { /* ... */ } }
  *         }
  *     }
  * }
  * ```
  *
  * @param authService The authentication service to use for checking permissions.
- * @param onRejected Handler invoked when authorization fails.
  * @param build Lambda for defining protected child routes.
  */
 fun HandlerRoute<MessageEvent>.requireAuth(
     authService: MockAuthService,
-    onRejected: suspend HandlerBotCall<MessageEvent>.() -> Unit,
     build: HandlerRoute<MessageEvent>.() -> Unit
-) = middleware(
-    predicate = { context ->
-        authService.isAdmin(context.event.message.from?.id)
-    },
-    onRejected = onRejected,
-    build = build
-)
+) = filter({ authService.isAdmin(event.message.from?.id) }, build)

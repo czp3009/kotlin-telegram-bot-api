@@ -3,7 +3,7 @@ package com.hiczp.telegram.bot.application.dispatcher.handler.command
 /**
  * Thrown when an argument value fails validation or transformation.
  *
- * This exception is caught by [CommandRoute.executeEndpoint] and converted to a [CommandParseException].
+ * This exception is caught while typed command arguments are parsed and converted to a [CommandParseException].
  *
  * @property argumentName The name of the argument that failed validation, or null if not available.
  */

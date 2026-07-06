@@ -17,11 +17,12 @@ import com.hiczp.telegram.bot.application.context.action.replyMessage
 import com.hiczp.telegram.bot.application.context.action.replyPhoto
 import com.hiczp.telegram.bot.application.context.action.sendChatAction
 import com.hiczp.telegram.bot.application.dispatcher.handler.HandlerTelegramEventDispatcher
-import com.hiczp.telegram.bot.application.dispatcher.handler.command.commandEndpoint
+import com.hiczp.telegram.bot.application.dispatcher.handler.command.command
 import com.hiczp.telegram.bot.application.dispatcher.handler.handling
-import com.hiczp.telegram.bot.application.dispatcher.handler.matcher.onMessageEventPrivateChat
-import com.hiczp.telegram.bot.application.dispatcher.handler.matcher.whenMessageEventPhoto
-import com.hiczp.telegram.bot.application.dispatcher.handler.matcher.whenMessageEventSticker
+import com.hiczp.telegram.bot.application.dispatcher.handler.matcher.message
+import com.hiczp.telegram.bot.application.dispatcher.handler.matcher.photo
+import com.hiczp.telegram.bot.application.dispatcher.handler.matcher.privateChat
+import com.hiczp.telegram.bot.application.dispatcher.handler.matcher.sticker
 import com.hiczp.telegram.bot.protocol.constant.ChatAction
 import com.hiczp.telegram.bot.protocol.extension.asInputFile
 import com.hiczp.telegram.bot.protocol.extension.largestPhoto
@@ -40,11 +41,13 @@ import kotlinx.io.files.SystemFileSystem
  */
 private suspend fun runFileBot(botToken: String) {
     val eventDispatcher = HandlerTelegramEventDispatcher(handling {
-        onMessageEventPrivateChat {
+        message {
+            privateChat {
             // Help command
-            commandEndpoint("start") {
-                replyMessage(
-                    """
+                command("start") {
+                    handle {
+                        replyMessage(
+                            """
                     Welcome to FileBot!
     
                     **Commands:**
@@ -59,53 +62,63 @@ private suspend fun runFileBot(botToken: String) {
                     - Audio -> echo audio
                     - Animation -> echo animation
                     """.trimIndent()
-                )
-            }
+                        )
+                    }
+                }
 
             // Send a local file as photo
-            commandEndpoint("photo") {
-                val imagePath = Path("../resources/telegram.jpg")
-                try {
-                    val inputFile = InputFile.binary(
-                        content = ChannelProvider { ByteReadChannel(SystemFileSystem.source(imagePath).buffered()) },
-                        fileName = imagePath.name,
-                        contentType = ContentType.Image.JPEG,
-                    )
-                    replyPhoto(
-                        photo = inputFile,
-                        caption = "Here's telegram.jpg from local resources!"
-                    )
-                } catch (e: Throwable) {
-                    replyMessage("Error loading file: ${e.message}")
+                command("photo") {
+                    handle {
+                        val imagePath = Path("../resources/telegram.jpg")
+                        try {
+                            val inputFile = InputFile.binary(
+                                content = ChannelProvider {
+                                    ByteReadChannel(SystemFileSystem.source(imagePath).buffered())
+                                },
+                                fileName = imagePath.name,
+                                contentType = ContentType.Image.JPEG,
+                            )
+                            replyPhoto(
+                                photo = inputFile,
+                                caption = "Here's telegram.jpg from local resources!"
+                            )
+                        } catch (e: Throwable) {
+                            replyMessage("Error loading file: ${e.message}")
+                        }
+                    }
                 }
-            }
 
             // Echo sticker - send back the sticker photo
-            whenMessageEventSticker {
-                val sticker = event.message.sticker!!
-                // Send chat action to provide user feedback during processing
-                launch { sendChatAction(ChatAction.TYPING) }
-                val filePath = client.getFile(sticker.fileId).getOrThrow().filePath
-                checkNotNull(filePath) { "Can't resolve filePath for sticker: ${sticker.fileId}" }
-                client.downloadFile(filePath).execute { response ->
-                    val byteReadChannel = response.bodyAsChannel()
-                    replyPhoto(
-                        photo = InputFile.binary { byteReadChannel },
-                        caption = "Sticker echoed!\nFile ID: ${sticker.fileId}",
-                    )
+                sticker {
+                    handle {
+                        val sticker = event.message.sticker!!
+                        // Send chat action to provide user feedback during processing
+                        launch { sendChatAction(ChatAction.TYPING) }
+                        val filePath = client.getFile(sticker.fileId).getOrThrow().filePath
+                        checkNotNull(filePath) { "Can't resolve filePath for sticker: ${sticker.fileId}" }
+                        client.downloadFile(filePath).execute { response ->
+                            val byteReadChannel = response.bodyAsChannel()
+                            replyPhoto(
+                                photo = InputFile.binary { byteReadChannel },
+                                caption = "Sticker echoed!\nFile ID: ${sticker.fileId}",
+                            )
+                        }
+                    }
                 }
-            }
 
             // Echo photo
-            whenMessageEventPhoto {
-                val photo = event.message.largestPhoto
-                if (photo != null) {
-                    replyPhoto(
-                        photo = photo.asInputFile(),
-                        caption = "Echoed photo!\nFile ID: ${photo.fileId}"
-                    )
-                } else {
-                    replyMessage("No available photo resolution in this message")
+                photo {
+                    handle {
+                        val photo = event.message.largestPhoto
+                        if (photo != null) {
+                            replyPhoto(
+                                photo = photo.asInputFile(),
+                                caption = "Echoed photo!\nFile ID: ${photo.fileId}"
+                            )
+                        } else {
+                            replyMessage("No available photo resolution in this message")
+                        }
+                    }
                 }
             }
         }

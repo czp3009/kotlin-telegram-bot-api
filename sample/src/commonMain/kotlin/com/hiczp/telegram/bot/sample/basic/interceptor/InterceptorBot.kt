@@ -42,9 +42,10 @@ import com.hiczp.telegram.bot.application.context.action.replyMessage
 import com.hiczp.telegram.bot.application.context.castOrNull
 import com.hiczp.telegram.bot.application.context.extractChatId
 import com.hiczp.telegram.bot.application.dispatcher.handler.HandlerTelegramEventDispatcher
-import com.hiczp.telegram.bot.application.dispatcher.handler.command.commandEndpoint
+import com.hiczp.telegram.bot.application.dispatcher.handler.command.command
 import com.hiczp.telegram.bot.application.dispatcher.handler.handling
-import com.hiczp.telegram.bot.application.dispatcher.handler.matcher.onMessageEventPrivateChat
+import com.hiczp.telegram.bot.application.dispatcher.handler.matcher.message
+import com.hiczp.telegram.bot.application.dispatcher.handler.matcher.privateChat
 import com.hiczp.telegram.bot.application.interceptor.builtin.logging.loggingInterceptor
 import com.hiczp.telegram.bot.protocol.constant.ChatType
 import com.hiczp.telegram.bot.protocol.event.MessageEvent
@@ -79,11 +80,13 @@ private suspend fun runInterceptorBot(botToken: String) {
     )
 
     val eventDispatcher = HandlerTelegramEventDispatcher(handling {
-        onMessageEventPrivateChat {
+        message {
+            privateChat {
             // Help command
-            commandEndpoint("start") {
-                replyMessage(
-                    """
+                command("start") {
+                    handle {
+                        replyMessage(
+                            """
                     Welcome to InterceptorBot!
 
                     This bot demonstrates custom interceptor implementations.
@@ -96,44 +99,56 @@ private suspend fun runInterceptorBot(botToken: String) {
                     /ping - Health check
                     /ban - Ban yourself using banUser() (for testing)
                     """.trimIndent()
-                )
-            }
+                        )
+                    }
+                }
 
             // Health check with language info
-            commandEndpoint("ping") {
-                replyMessage("Pong!")
-            }
+                command("ping") {
+                    handle {
+                        replyMessage("Pong!")
+                    }
+                }
 
             // Show detected language code
-            commandEndpoint("lang") {
-                val lang = languageCode
-                if (lang != null) {
-                    replyMessage("Your detected language code: `$lang`")
-                } else {
-                    replyMessage("Could not detect your language code.")
+                command("lang") {
+                    handle {
+                        val lang = languageCode
+                        if (lang != null) {
+                            replyMessage("Your detected language code: `$lang`")
+                        } else {
+                            replyMessage("Could not detect your language code.")
+                        }
+                    }
                 }
-            }
 
             // Simulate a slow operation - will be cancelled by timeoutInterceptor
-            commandEndpoint("slow") {
-                replyMessage("Starting slow operation (will timeout in 5 seconds)...")
-                kotlinx.coroutines.delay(60.seconds) // This will be cancelled
-                replyMessage("Operation completed!") // This won't be reached
-            }
+                command("slow") {
+                    handle {
+                        replyMessage("Starting slow operation (will timeout in 5 seconds)...")
+                        kotlinx.coroutines.delay(60.seconds) // This will be cancelled
+                        replyMessage("Operation completed!") // This won't be reached
+                    }
+                }
 
             // Simulate an exception - will be caught by exceptionCatchingInterceptor
-            commandEndpoint("crash") {
-                throw RuntimeException("Simulated crash for testing exceptionCatchingInterceptor")
-            }
+                command("crash") {
+                    handle {
+                        throw RuntimeException("Simulated crash for testing exceptionCatchingInterceptor")
+                    }
+                }
 
             // Ban current user using banUser() extension function
-            commandEndpoint("ban") {
-                val userId = event.message.from?.id
-                if (userId != null) {
-                    banUser(userId)
-                    replyMessage("You have been marked for banning. You will be blocked after this message.")
-                } else {
-                    replyMessage("Could not determine your user ID.")
+                command("ban") {
+                    handle {
+                        val userId = event.message.from?.id
+                        if (userId != null) {
+                            banUser(userId)
+                            replyMessage("You have been marked for banning. You will be blocked after this message.")
+                        } else {
+                            replyMessage("Could not determine your user ID.")
+                        }
+                    }
                 }
             }
         }

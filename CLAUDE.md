@@ -191,7 +191,7 @@ Bot application framework providing:
 
 - **Lifecycle management**: Start/stop with graceful shutdown
 - **Update processing**: Consumes updates from `TelegramUpdateSource` (e.g., long polling)
-- **Interceptor pipeline**: "Onion model" middleware pattern for cross-cutting concerns
+- **Interceptor pipeline**: "Onion model" interceptor pattern for cross-cutting concerns
 - **Event dispatching**: Routes events to business logic handlers
 
 Key components:
@@ -312,238 +312,106 @@ val app = TelegramBotApplication.longPolling(
 
 ### Handler DSL (Application Module)
 
-The `HandlerTelegramEventDispatcher` provides a type-safe routing DSL for event handling. Core routing functions are in
-`application/src/commonMain/kotlin/com/hiczp/telegram/bot/application/dispatcher/handler/Handling.kt`, and specialized
-matchers are in `handler/matcher/`:
+The `HandlerTelegramEventDispatcher` routes events through a tree of async filters and explicit handlers. Core routing
+functions are in `application/src/commonMain/kotlin/com/hiczp/telegram/bot/application/dispatcher/handler/`, and
+specialized filter wrappers are in `handler/matcher/`:
 
-- **Handling.kt** - Core DSL (`handling`, `match`, `whenMatch`, `include`, `select`, `middleware`, `whenMiddleware`)
-- **CommandDsl.kt** - Command routing (`onCommand`, `command`, `commandEndpoint`, `subCommand`, `subCommandEndpoint`)
-- **Composite.kt** - Logic combinators (`allOf`, `anyOf`, `not`, `whenAllOf`, `whenAnyOf`, `whenNot`)
-- **EventType.kt** - Event type matchers (`on<MessageEvent>`, `on<CallbackQueryEvent>`, `on<InlineQueryEvent>`, etc.)
-- **MessageEvent.kt** - Message handlers (`whenMessageEventText`, `whenMessageEventTextRegex`,
-  `whenMessageEventTextContains`, `whenMessageEventTextStartsWith`,
-  `whenMessageEventTextEndsWith`, `whenMessageEventPhoto`, `whenMessageEventVideo`, `whenMessageEventAudio`,
-  `whenMessageEventDocument`, `whenMessageEventSticker`, `whenMessageEventVoice`,
-  `whenMessageEventVideoNote`, `whenMessageEventAnimation`, `whenMessageEventContact`, `whenMessageEventLocation`,
-  `whenMessageEventVenue`, `whenMessageEventPoll`, `whenMessageEventDice`, `whenMessageEventDiceWithEmoji`,
-  `whenMessageEventReply`,
-  `whenMessageEventReplyTo`, `whenMessageEventFromUser`, `whenMessageEventFromUsers`, `whenMessageEventInChat`,
-  `whenMessageEventInChats`, `whenMessageEventForwarded`, `whenMessageEventForwardedFromUser`,
-  `whenMessageEventForwardedFromChat`, `whenMessageEventForwardedHiddenUser`)
-- **CallbackQuery.kt** - Callback query handlers (`whenCallbackQueryEventData`, `whenCallbackQueryEventDataRegex`,
-  `whenCallbackQueryEventDataContains`, `whenCallbackQueryEventDataStartsWith`, `whenCallbackQueryEventFromUser`,
-  `whenCallbackQueryEventInChat`)
-- **InlineQuery.kt** - Inline query handlers (`whenInlineQueryEventQuery`, `whenInlineQueryEventQueryRegex`,
-  `whenInlineQueryEventQueryContains`,
-  `whenInlineQueryEventQueryStartsWith`, `whenInlineQueryEventFromUser`, `whenChosenInlineResultEventMatchAny`,
-  `whenChosenInlineResultEventFromUser`)
-- **ChatType.kt** - Chat type filters (`whenMessageEventPrivateChat`, `whenMessageEventGroupChat`,
-  `whenMessageEventSupergroupChat`, `whenMessageEventChannel`)
-- **EditedMessage.kt** - Edited message handlers (`whenEditedMessageEventText`, `whenEditedMessageEventTextRegex`,
-  `whenEditedMessageEventTextContains`,
-  `whenEditedMessageEventTextStartsWith`, `whenEditedMessageEventTextEndsWith`, `whenEditedMessageEventPhoto`,
-  `whenEditedMessageEventVideo`, `whenEditedMessageEventDocument`,
-  `whenEditedMessageEventAudio`, `whenEditedMessageEventFromUser`, `whenEditedMessageEventInChat`,
-  `whenEditedChannelPostEventText`,
-  `whenEditedChannelPostEventTextRegex`, `whenEditedChannelPostEventFromChat`)
-- **ChatEvent.kt** - Chat event handlers (`whenChatJoinRequestEventFromChat`, `whenChatJoinRequestEventFromUser`,
-  `whenChatMemberEventInChat`, `whenMyChatMemberEventInChat`, `whenChatBoostEventInChat`,
-  `whenRemovedChatBoostEventInChat`)
-- **ServiceMessage.kt** - Service message handlers (`whenMessageEventNewChatMembers`, `whenMessageEventLeftChatMember`,
-  `whenMessageEventNewChatTitle`,
-  `whenMessageEventNewChatPhoto`, `whenMessageEventDeleteChatPhoto`, `whenMessageEventPinnedMessage`,
-  `whenMessageEventGroupCreated`, `whenMessageEventSupergroupCreated`,
-  `whenMessageEventChannelCreated`, `whenMessageEventVideoChatStarted`, `whenMessageEventVideoChatEnded`,
-  `whenMessageEventVideoChatScheduled`,
-  `whenMessageEventVideoChatParticipantsInvited`, `whenMessageEventForumTopicCreated`,
-  `whenMessageEventForumTopicEdited`, `whenMessageEventForumTopicClosed`,
-  `whenMessageEventForumTopicReopened`, `whenMessageEventGeneralForumTopicHidden`,
-  `whenMessageEventGeneralForumTopicUnhidden`, `whenMessageEventGiveawayCreated`,
-  `whenMessageEventGiveawayCompleted`, `whenMessageEventBoostAdded`, `whenMessageEventMigrateToSupergroup`,
-  `whenMessageEventMigrateFromGroup`,
-  `whenMessageEventMessageAutoDeleteTimerChanged`, `whenMessageEventWebAppData`)
-- **Poll.kt** - Poll and reaction handlers (`whenPollEventPollId`, `whenPollAnswerEventPollId`,
-  `whenPollAnswerEventFromUser`,
-  `whenMessageReactionEventInChat`, `whenMessageReactionEventToMessage`, `whenMessageReactionCountEventInChat`)
-- **Payment.kt** - Payment event handlers (`whenShippingQueryEventFromUser`, `whenShippingQueryEventWithPayload`,
-  `whenPreCheckoutQueryEventFromUser`, `whenPreCheckoutQueryEventWithPayload`, `whenPreCheckoutQueryEventWithCurrency`,
-  `whenPurchasedPaidMediaEventFromUser`)
-- **Business.kt** - Business event handlers (`whenBusinessConnectionEventFromUser`, `whenBusinessMessageEventFromUser`,
-  `whenBusinessMessageEventInChat`, `whenEditedBusinessMessageEventFromUser`, `whenEditedBusinessMessageEventInChat`,
-  `whenDeletedBusinessMessagesEventInChat`)
+- **Handling.kt** - `handling` and `include`
+- **HandlerRoute.kt** - `filter { ... }`, `filter<T> { ... }`, and `handle { ... }`
+- **CommandDsl.kt** - `command`, typed `command`, and `subCommand`
+- **EventType.kt** - root event filters such as `message`, `callbackQuery`, `inlineQuery`
+- **Message.kt** - message filters such as `text`, `photo`, `privateChat`, `fromUser`, `inChat`
+- **Callback.kt** - callback query filters such as `data`, `dataStartsWith`, `fromUser`
+- **Inline.kt** - inline query filters such as `query`, `queryStartsWith`, `fromUser`
+- **OtherEvents.kt** - poll, payment, chat membership, and boost filters
 
-**Naming Convention:**
+Core rules:
 
-- Functions starting with `when` (e.g., `whenMessageEventText`, `whenMessageEventPhoto`, `whenMatch`) are **terminal
-  operations** that take a
-  handler directly and cannot be chained further.
-- Functions without `when` prefix (e.g., `match`, `allOf`, `anyOf`, `not`) are **composable** and take a build lambda
-  for further nesting.
-- All matcher functions follow the pattern: `on/when` + `EventName` + `Content` (e.g., `whenMessageEventText`,
-  `whenCallbackQueryEventData`).
-
-**Event Type Scoping:**
-
-There are two equivalent ways to scope to an event type:
-
-```kotlin
-// Generic reified type parameter
-on<MessageEvent> { /* handlers */ }
-on<CallbackQueryEvent> { /* handlers */ }
-
-// Convenience shorthand (only available at root level)
-onMessageEvent { /* handlers */ }
-onCallbackQueryEvent { /* handlers */ }
-```
-
-Inside an already-scoped route, use `on<T>` for further type narrowing.
-
-**Command Scoping:**
-
-Use `onCommand` to create a child route that only accepts command messages addressed to this bot. This is useful for
-scoping authentication middleware to commands only, preventing rejection of non-command text messages:
-
-```kotlin
-// Without onCommand, requireAuth would reject ALL non-admin messages, including regular text
-onCommand {
-  requireAuth(authService, onRejected = { replyMessage("Unauthorized") }) {
-    command("admin") { /* protected commands */ }
-  }
-}
-```
-
-Each matcher provides two variants: one for the specific event type scope (e.g., inside `on<MessageEvent>`) and one
-for the root level that auto-wraps with event type.
+- `filter({ ... }) { ... }` enters a child branch when the suspending predicate returns `true`.
+- `filter<T> { ... }` narrows the event type for the child branch.
+- Built-in matchers are filter wrappers and do not consume events by themselves.
+- `handle { ... }` runs runtime business logic and consumes the event.
+- Matching is depth-first with full backtracking. If a deep branch does not consume the event, matching returns through
+  ancestors and tries later siblings.
+- A parent `handle` acts as fallback for its branch after all child routes miss.
+- Route blocks run once while building the dispatcher; per-update side effects belong in filter predicates or
+  `handle` blocks.
 
 ```kotlin
 val dispatcher = HandlerTelegramEventDispatcher(handling {
-    // Simple command handlers (supports /command and /command@bot_username formats)
-    commandEndpoint("start") { ctx ->
-        ctx.client.sendMessage(ctx.event.message.chat.id, "Welcome!")
+    command("start") {
+        handle {
+            replyMessage("Welcome!")
+        }
     }
 
-    // Command with typed arguments using BotArguments
-    class BanArgs : BotArguments("Ban a user") {
-        val username: String by requireArgument("User to ban")
-        val duration: String? by optionalArgument("Ban duration")
-    }
-    command("ban", ::BanArgs) { ctx ->
-        // ctx.arguments.username and ctx.arguments.duration are typed
-        val username = ctx.arguments.username
-        val duration = ctx.arguments.duration
-    }
-
-  // Command with custom error handling
-  command("kick", ::KickArgs, onError = { e ->
-    replyMessage("Error: ${e.message}")
-  }) { ctx ->
-    // Custom error response
-    }
-
-    // Command with subcommands
     command("admin") {
-        handle { ctx -> /* Show admin help */ }
-        subCommandEndpoint("status") { ctx -> /* Show status */ }
-        subCommand("user") {
-            subCommandEndpoint("list") { ctx -> /* List users */ }
-            subCommandEndpoint("add") { ctx -> /* Add user */ }
+        subCommand("status") {
+            handle {
+                replyMessage("System status: OK")
+            }
+        }
+
+        handle {
+            replyMessage("Admin help")
         }
     }
 
-    // Event type matching
-  on<MessageEvent> {
-    whenMessageEventText("hello") { /* exact text match */ }
-    whenMessageEventTextRegex(Regex("(?i)^hello")) { /* regex match */ }
-    whenMessageEventTextContains("help", ignoreCase = true) { /* substring match */ }
-    whenMessageEventTextStartsWith("/admin") { /* prefix match */ }
+    message {
+        privateChat {
+            text("hello") {
+                handle {
+                    replyMessage("Hi!")
+                }
+            }
 
-        // Media type handlers
-    whenMessageEventPhoto { /* photo message */ }
-    whenMessageEventVideo { /* video message */ }
-    whenMessageEventDocument { /* document message */ }
-    whenMessageEventSticker { /* sticker message */ }
+            photo {
+                handle {
+                    replyMessage("Photo received")
+                }
+            }
 
-        // User/chat filters
-    whenMessageEventFromUser(123456L) { /* from specific user */ }
-    whenMessageEventInChat(-100123456L) { /* in specific chat */ }
-
-        // Reply detection
-    whenMessageEventReply { /* is a reply */ }
-    whenMessageEventReplyTo(messageId = 42L) { /* reply to specific message */ }
-
-        // Forwarded messages
-    whenMessageEventForwarded { /* forwarded message */ }
-    whenMessageEventForwardedFromChat(-100123L) { /* forwarded from specific chat */ }
-
-        // Conditional handler with whenMatch
-    whenMatch({ (it.event.message.text?.length ?: 0) > 10 }) {
-      client.sendMessage(event.message.chat.id, "Long message!")
-        }
-
-        // Composite matchers - terminal versions that take handler directly
-        whenAllOf(
-            { it.event.message.text != null },
-            { it.event.message.chat.id == 100L }
-        ) { println("Private text message in chat 100") }
-
-        whenAnyOf(
-            { it.event.message.photo != null },
-            { it.event.message.video != null }
-        ) { println("Photo or video") }
-
-    whenNot({ it.event.message.isCommand }) {
-            println("Not a command")
-        }
-
-        // Middleware for authentication/authorization guards
-        middleware(
-            predicate = { ctx -> ctx.event.message.from?.id in adminUserIds },
-            onRejected = { client.sendMessage(event.message.chat.id, "Unauthorized") }
-        ) {
-            handle { println("Admin only area") }
+            filter({ event.message.from?.id in adminUserIds }) {
+                command("reload") {
+                    handle {
+                        replyMessage("Reloading")
+                    }
+                }
+            }
         }
     }
 
-  // Custom reusable authentication DSL with async predicate
-  // See sample/basic/src/commonMain/kotlin/com/hiczp/telegram/bot/sample/dsl/AuthDsl.kt
-  // Use onCommand to scope auth checks to command messages only
-  // This prevents requireAuth from rejecting non-command text messages
-  onCommand {
-    requireAuth(
-      authService = authService,
-      onRejected = { replyMessage("Unauthorized: Admin access required") }
-    ) {
-      command("admin") {
-        handle { replyMessage("Admin panel") }
-        subCommandEndpoint("status") { replyMessage("System status: OK") }
-      }
-    }
-  }
-
-  // Chat type filters
-  whenMessageEventPrivateChat { /* private chat only */ }
-  whenMessageEventGroupChat { /* group chat only */ }
-  whenMessageEventSupergroupChat { /* supergroup only */ }
-  whenMessageEventChannel { /* channel only */ }
-
-  on<CallbackQueryEvent> {
-    whenCallbackQueryEventData("confirm") { /* callback handling */ }
-    whenCallbackQueryEventDataRegex(Regex("action_\\d+")) { /* pattern match */ }
+    callbackQuery {
+        data("confirm") {
+            handle {
+                client.answerCallbackQuery(event.callbackQuery.id)
+            }
+        }
     }
 
-  on<InlineQueryEvent> {
-    whenInlineQueryEventQuery("search") { /* exact query match */ }
-    whenInlineQueryEventQueryStartsWith("find:") { /* prefix match */ }
-    }
-
-    // Include routes from other modules
     include(adminRoutes)
 
-    // Dead letter handler - catches all unhandled events
-    handle { ctx ->
-        println("Unhandled event: ${ctx.event.updateId}")
+    handle {
+        println("Unhandled event: ${event.updateId}")
     }
 })
+```
+
+Typed command arguments use explicit `handle`:
+
+```kotlin
+class BanArgs : BotArguments("Ban a user") {
+    val username: String by requireArgument("User to ban")
+    val duration: String? by optionalArgument("Ban duration")
+}
+
+command("ban", ::BanArgs) {
+    handle {
+        val username = arguments.username
+        val duration = arguments.duration
+        replyMessage("Banned $username for ${duration ?: "unspecified duration"}")
+    }
+}
 ```
 
 #### Structured Concurrency in Handlers
@@ -570,13 +438,15 @@ command("process") {
 For fire-and-forget tasks that should outlive the current handler, use `applicationScope`:
 
 ```kotlin
-commandEndpoint("background") {
-  // In application scope - continues after handler returns
-  applicationScope.launch {
-    delay(10.seconds)
-    client.sendMessage(SendMessageRequest(chatId = event.message.chat.id.toString(), text = "Delayed message"))
+command("background") {
+  handle {
+    // In application scope - continues after handler returns
+    applicationScope.launch {
+      delay(10.seconds)
+      client.sendMessage(event.message.chat.id.toString(), "Delayed message")
+    }
+    // Handler returns immediately
   }
-  // Handler returns immediately
 }
 ```
 
@@ -587,8 +457,12 @@ dead letter mechanism:
 
 ```kotlin
 handling {
-  commandEndpoint("start") { /* ... */ }
-  commandEndpoint("help") { /* ... */ }
+  command("start") {
+    handle { /* ... */ }
+  }
+  command("help") {
+    handle { /* ... */ }
+  }
 
     // Catches all unhandled events (unknown commands, other event types, etc.)
   handle {
@@ -609,32 +483,34 @@ Multi-turn conversations are supported via the `conversationInterceptor` and `st
 val interceptors = listOf(conversationInterceptor())
 
 // In a handler, start a conversation
-commandEndpoint("survey") {
-  startConversation(
-    timeout = 5.minutes,
-    onTimeout = {
-      val chatId = event.extractChatId()
-      if (chatId != null) {
-        client.sendMessage(chatId.toString(), "Survey timed out.")
+command("survey") {
+  handle {
+    startConversation(
+      timeout = 5.minutes,
+      onTimeout = {
+        val chatId = event.extractChatId()
+        if (chatId != null) {
+          client.sendMessage(chatId.toString(), "Survey timed out.")
+        }
+      },
+      onCancel = {
+        val chatId = event.extractChatId()
+        if (chatId != null) {
+          client.sendMessage(chatId.toString(), "Survey cancelled.")
+        }
       }
-    },
-    onCancel = {
-      val chatId = event.extractChatId()
-      if (chatId != null) {
-        client.sendMessage(chatId.toString(), "Survey cancelled.")
-      }
+    ) {
+      // Use send() for simple messages
+      send("What is your name?")
+      val name = awaitText()
+
+      // Use reply() to respond to the most recent user message
+      reply("Hello, $name! How old are you?")
+      val age = awaitText()
+
+      // reply() automatically responds to the last awaited message
+      reply("Thanks! You are $age years old.")
     }
-  ) {
-    // Use send() for simple messages
-    send("What is your name?")
-    val name = awaitText()
-
-    // Use reply() to respond to the most recent user message
-    reply("Hello, $name! How old are you?")
-    val age = awaitText()
-
-    // reply() automatically responds to the last awaited message
-    reply("Thanks! You are $age years old.")
   }
 }
 ```
@@ -692,7 +568,7 @@ startConversation(
 }
 ```
 
-The `ConversationId` is a data class with `chatId`, `userId` (optional), and `threadId` (optional):
+The `ConversationId` is a data class with `chatId`, `threadId` (optional), and `userId` (optional):
 
 - `ConversationId(chatId)` - whole chat shares one conversation
 - `ConversationId(chatId, userId = userId)` - per-user conversation in a group
@@ -711,6 +587,7 @@ val source = SimpleTelegramUpdateSource()
 val app = TelegramBotApplication(
   client = client,
   updateSource = source,
+  interceptors = emptyList(),
   eventDispatcher = dispatcher
 )
 app.start()
@@ -740,11 +617,13 @@ app.stop()
 - `push(update)` processes updates synchronously via the consumer callback
 - Thread-safe - safe for concurrent use from multiple threads
 - Exceptions from the consumer propagate to the caller
+- The source can be started again after stopping, but a `TelegramBotApplication` instance cannot be restarted
 
 **Exception Semantics:**
 
 | Exception                          | Behavior                                         |
 |------------------------------------|--------------------------------------------------|
+| `IllegalStateException`            | Source is not currently started                  |
 | `TelegramBotShuttingDownException` | Propagates to caller, signals framework shutdown |
 | `CancellationException`            | Propagates if coroutine is being cancelled       |
 | Other `Throwable`                  | Logged and re-thrown to the caller               |
@@ -752,7 +631,7 @@ app.stop()
 **Graceful Shutdown:**
 
 1. `stop(gracePeriod)` clears the consumer callback (gracePeriod is ignored)
-2. Source can be restarted by calling `start()` again
+2. The source can be started again by another owner after shutdown
 3. `onFinalize()` is a no-op since all state is in-memory
 
 ### Webhook Update Source (`:application-updatesource-webhook`)
@@ -805,6 +684,7 @@ val updateSource = WebhookTelegramUpdateSource(
 val app = TelegramBotApplication(
   client = client,
   updateSource = updateSource,
+  interceptors = emptyList(),
   eventDispatcher = dispatcher
 )
 ```
@@ -864,7 +744,7 @@ sample/src/commonMain/kotlin/com/hiczp/telegram/bot/sample/
 |   +-- conversation/ConversationBot.kt  # Multi-turn conversations, surveys
 |   +-- file/FileBot.kt                  # File upload/download, stickers
 +-- dsl/
-|   +-- AuthDsl.kt                 # Reusable `requireAuth` middleware DSL
+|   +-- AuthDsl.kt                 # Reusable `requireAuth` handler filter DSL
 +-- expert/                        # Placeholder for complex examples
 ```
 

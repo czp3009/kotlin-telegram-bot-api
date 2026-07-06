@@ -21,9 +21,11 @@ private val logger = KotlinLogging.logger {}
  *    at the end of your routing configuration to catch all unhandled events:
  *    ```kotlin
  *    handling {
- *        commandEndpoint("start") { /* ... */ }
+ *        command("start") {
+ *            handle { /* ... */ }
+ *        }
  *        // ... other routes ...
- *        handle { ctx -> /* catches all unhandled events */ }
+ *        handle { /* catches all unhandled events */ }
  *    }
  *    ```
  *
@@ -42,13 +44,15 @@ private val logger = KotlinLogging.logger {}
  * ```kotlin
  * // Create dispatcher using the handling DSL with dead letter handler
  * val dispatcher = HandlerTelegramEventDispatcher(handling {
- *     commandEndpoint("start") { ctx ->
- *         ctx.client.sendMessage(ctx.event.message.chat.id, "Welcome!")
+ *     command("start") {
+ *         handle {
+ *             client.sendMessage(event.message.chat.id, "Welcome!")
+ *         }
  *     }
  *
  *     // Dead letter handler (recommended)
- *     handle { ctx ->
- *         ctx.client.sendMessage(ctx.event.extractChatId()!!, "Unknown command")
+ *     handle {
+ *         client.sendMessage(event.extractChatId()!!, "Unknown command")
  *     }
  * })
  * ```

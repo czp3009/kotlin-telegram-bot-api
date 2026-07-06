@@ -1,315 +1,259 @@
 # Architecture
 
-This page explains the architecture and design of the library.
+The project is split into generated protocol bindings, a configured client, and an application framework.
 
-## Module Overview
+## Modules
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│                        User Application                          │
-│  ┌─────────────┐  ┌────────────────┐  ┌──────────────────────┐  │
-│  │   Routes     │  │  Interceptors  │  │  Business Logic      │  │
-│  └─────────────┘  └────────────────┘  └──────────────────────┘  │
-└──────────────────────────────────────────────────────────────────┘
-                                 │
-                                 ▼
-┌──────────────────────────────────────────────────────────────────┐
-│                      Application Module                          │
-│  ┌───────────────────────┐  ┌─────────────────────────────────┐ │
-│  │ TelegramBotApplication │  │      Update Sources             │ │
-│  │  - Lifecycle          │  │  - LongPolling                  │ │
-│  │  - Event Processing   │  │  - Webhook (separate module)    │ │
-│  │  - startTime          │  │  - Mock (testing)               │ │
-│  └───────────────────────┘  │  - Simple (external injection)   │ │
-│                             └─────────────────────────────────┘ │
-│  ┌───────────────────────┐  ┌─────────────────────────────────┐ │
-│  │    Event Dispatcher   │  │      Interceptors               │ │
-│  │  - Handler DSL        │  │  - Conversation                 │ │
-│  │  - Route Matching     │  │  - Logging                      │ │
-│  └───────────────────────┘  │  - Custom                        │ │
-│                             └─────────────────────────────────┘ │
-└──────────────────────────────────────────────────────────────────┘
-                                 │
-                                 ▼
-┌──────────────────────────────────────────────────────────────────┐
-│                         Client Module                            │
-│  ┌──────────────────────────────────────────────────────────────┐│
-│  │                    TelegramBotClient                          ││
-│  │  - HTTP Client Wrapper (delegates to TelegramBotApi)         ││
-│  │  - Retry Logic (3 retries, respects retry_after)             ││
-│  │  - Rate Limiting (429 backoff with 1-2s jitter)               ││
-│  │  - File Download (TelegramFileDownloadPlugin)                 ││
-│  │  - Error Response Handling (throwOnErrorResponse)             ││
-│  └──────────────────────────────────────────────────────────────┘│
-└──────────────────────────────────────────────────────────────────┘
-                                 │
-                                 ▼
-┌──────────────────────────────────────────────────────────────────┐
-│                        Protocol Module                           │
-│  ┌────────────────┐  ┌────────────────┐  ┌────────────────────┐ │
-│  │ TelegramBotApi │  │    Models      │  │      Events        │ │
-│  │ (Ktorfit)      │  │  - Message     │  │  - MessageEvent    │ │
-│  │                │  │  - User        │  │  - CallbackQuery   │ │
-│  │                │  │  - Chat        │  │  - InlineQuery     │ │
-│  └────────────────┘  └────────────────┘  └────────────────────┘ │
-│  ┌────────────────┐  ┌────────────────┐  ┌────────────────────┐ │
-│  │  Extensions    │  │    Unions      │  │     Plugins        │ │
-│  │  - Keyboards   │  │  - Union<A, B> │  │  - FileDownload    │ │
-│  │  - Messages    │  │  - Serializer  │  │  - LongPolling     │ │
-│  └────────────────┘  └────────────────┘  └────────────────────┘ │
-└──────────────────────────────────────────────────────────────────┘
-                                 │
-                                 ▼
-                        Telegram Bot API
+```text
+User code
+  |
+  v
+:application
+  - TelegramBotApplication
+  - update sources
+  - interceptors
+  - dispatchers
+  |
+  v
+:client
+  - TelegramBotClient
+  |
+  v
+:protocol
+  - TelegramBotApi
+  - generated models
+  - generated events
+  - forms, queries, body helpers
+  - handwritten InputFile, TelegramResponse, plugins
+  |
+  v
+Telegram Bot API
 ```
 
 ## Request Flow
 
-```
-1. Update Fetching
-   UpdateSource (LongPoll/Webhook) ──> TelegramBotClient ──> Telegram API
-          │
-          ▼ Raw Update objects
+1. `TelegramUpdateSource` receives an `Update`.
+2. `Update.toTelegramBotEvent()` converts it to a generated `TelegramBotEvent`.
+3. `TelegramEventPipeline` creates a `TelegramBotEventContext`.
+4. Interceptors run as an onion pipeline.
+5. The dispatcher handles the event.
+6. Handler code calls `TelegramBotApi` through the context `client`.
 
-2. Event Conversion
-   Update.toTelegramBotEvent() ──> TelegramBotEvent (MessageEvent, CallbackQueryEvent, etc.)
-                               │
-                               ▼
-
-3. Interceptor Pipeline (Onion Model)
-   ┌────────────────────────────────────────────────┐
-   │ Interceptor 1 (before)                         │
-   │   ┌──────────────────────────────────────────┐ │
-   │   │ Interceptor 2 (before)                   │ │
-   │   │   ┌────────────────────────────────────┐ │ │
-   │   │   │     Event Dispatcher               │ │ │
-   │   │   │     (Route Matching)               │ │ │
-   │   │   └────────────────────────────────────┘ │ │
-   │   │ Interceptor 2 (after)                    │ │
-   │   └──────────────────────────────────────────┘ │
-   │ Interceptor 1 (after)                          │
-   └────────────────────────────────────────────────┘
-                               │
-                               ▼
-
-4. Handler Execution
-   Handler ──> TelegramBotClient ──> Telegram API
+```text
+UpdateSource -> Update -> TelegramBotEvent -> Interceptors -> Dispatcher -> Handler -> Telegram API
 ```
 
-## Module Details
+## Protocol Module
 
-### Protocol Module (`:protocol`)
+`protocol` contains generated Telegram Bot API definitions and a small set of handwritten support types.
 
-Auto-generated Telegram Bot API definitions.
+| Area                       | Description                                      |
+|----------------------------|--------------------------------------------------|
+| `TelegramBotApi.kt`        | Ktorfit interface                                |
+| `model/`                   | Generated serializable Telegram models           |
+| `model/Bodies.kt`          | Generated JSON body scatter extensions           |
+| `form/`                    | Generated multipart form wrappers and extensions |
+| `query/`                   | Generated query serialization extensions         |
+| `event/`                   | KSP-generated event classes from `Update`        |
+| `union/`                   | Generated response union type support            |
+| `type/TelegramResponse.kt` | Handwritten response wrapper                     |
+| `type/InputFile.kt`        | Handwritten upload type                          |
+| `plugin/`                  | Handwritten Ktor client plugins                  |
 
-| Directory           | Description                                                                               |
-|---------------------|-------------------------------------------------------------------------------------------|
-| `TelegramBotApi.kt` | Ktorfit interface with HTTP annotations                                                   |
-| `model/`            | Data classes for Telegram entities                                                        |
-| `form/`             | Multipart form wrappers for file uploads                                                  |
-| `query/`            | Extension functions for GET parameters                                                    |
-| `type/`             | Handwritten types (TelegramResponse, InputFile)                                           |
-| `constant/`         | Handwritten constants (ChatAction, ParseMode, ChatType, DiceEmoji, etc.)                  |
-| `union/`            | Union type handling for multi-return methods                                              |
-| `event/`            | Generated event types from Update model                                                   |
-| `extension/`        | Handwritten extension functions (keyboards, messages)                                     |
-| `plugin/`           | Handwritten Ktor client plugins (FileDownload, LongPolling, ServerError)                  |
-| `exception/`        | Handwritten exception types (TelegramErrorResponseException, UnrecognizedUpdateException) |
+Generated protocol sources are marked and should not be edited manually.
 
-### Client Module (`:client`)
+## Client Module
 
-High-level HTTP client wrapper:
+`TelegramBotClient` wraps `TelegramBotApi` with defaults:
 
-- Pre-configured `TelegramBotClient` with sensible defaults
-- Automatic retry for transient failures (3 retries, respects `retry_after`)
-- Rate limiting compliance (429 backoff with jitter between 1-2 seconds)
-- Long polling optimization (35-second timeout for getUpdates via `TelegramLongPollingPlugin`)
-- File download support via `TelegramFileDownloadPlugin`
-- Test environment support (`useTestEnvironment`)
-- Configurable error response handling (`throwOnErrorResponse`, defaults to `true`)
+- JSON content negotiation
+- Telegram server error handling
+- retry support for transient failures and rate limits
+- long-polling-friendly timeout plugin
+- file download URL rewriting
+- optional Telegram test environment support
 
-### Application Module (`:application`)
+The application does not close `TelegramBotClient.httpClient` when stopped. Close shared clients yourself when the
+process is done with them.
 
-Bot application framework:
+## Application Module
 
-| Component                         | Description                                     |
-|-----------------------------------|-------------------------------------------------|
-| `TelegramBotApplication`          | Main orchestrator for lifecycle                 |
-| `TelegramUpdateSource`            | Interface for fetching updates                  |
-| `LongPollingTelegramUpdateSource` | Long polling implementation                     |
-| `SimpleTelegramUpdateSource`      | External update injection (distributed systems) |
-| `MockTelegramUpdateSource`        | Testing utility (Channel-based)                 |
-| `TelegramEventInterceptor`        | Middleware function type                        |
-| `HandlerTelegramEventDispatcher`  | Type-safe routing DSL                           |
-| `SimpleTelegramEventDispatcher`   | Single lambda handler                           |
+`TelegramBotApplication` owns lifecycle and update processing.
 
-### Webhook Module (`:application-updatesource-webhook`)
+```kotlin
+val app = TelegramBotApplication(
+    client = client,
+    updateSource = updateSource,
+    interceptors = listOf(loggingInterceptor()),
+    eventDispatcher = dispatcher
+)
+```
 
-Webhook-based update receiving using an embedded Ktor server.
+The convenience long-polling factory creates the client and update source:
 
-## Key Design Patterns
+```kotlin
+val app = TelegramBotApplication.longPolling(
+    botToken = "YOUR_TOKEN",
+    eventDispatcher = dispatcher
+)
+```
 
-### Onion Model Interceptors
+An application instance can only be started once.
 
-Interceptors wrap around the event processing pipeline:
+## Update Sources
+
+| Source                            | Purpose                                            |
+|-----------------------------------|----------------------------------------------------|
+| `LongPollingTelegramUpdateSource` | Fetches updates with `getUpdates`                  |
+| `MockTelegramUpdateSource`        | Reads updates from a `Channel<Update>` for tests   |
+| `SimpleTelegramUpdateSource`      | Lets external code push updates into the framework |
+| `WebhookTelegramUpdateSource`     | Receives updates through an embedded Ktor server   |
+
+`WebhookTelegramUpdateSource` lives in `:application-updatesource-webhook`.
+
+See [Update Sources](Update-Sources) for processing modes, queue integration, and testing sources.
+
+## Interceptor Pipeline
+
+Interceptors wrap all dispatchers.
 
 ```kotlin
 val interceptor: TelegramEventInterceptor = { context ->
-    // Pre-processing
-    println("Before: ${context.event.updateId}")
-    process(context)  // Call next layer
-    // Post-processing
-    println("After: ${context.event.updateId}")
+    println("before ${context.event.updateId}")
+    process(context)
+    println("after ${context.event.updateId}")
 }
 ```
 
-### Handler DSL
+The first interceptor in the list is the outermost layer. Not calling `process(context)` short-circuits the event.
 
-Type-safe routing using Kotlin DSL
+## Dispatchers
+
+`TelegramEventDispatcher` is the final routing abstraction:
 
 ```kotlin
-handling {
-    onMessageEvent {
-        whenMessageEventText("hello") { replyMessage("Hi!") }
+interface TelegramEventDispatcher {
+    suspend fun dispatch(context: TelegramBotEventContext<TelegramBotEvent>)
+}
+```
+
+Built-in implementations:
+
+- `SimpleTelegramEventDispatcher` delegates every event to one lambda.
+- `HandlerTelegramEventDispatcher` executes a filter/handler route tree.
+
+## Handler DSL
+
+The handler DSL is based on composable filters and explicit handlers.
+
+```kotlin
+val routes = handling {
+    message {
+        privateChat {
+            text("hello") {
+                handle {
+                    replyMessage("Hi!")
+                }
+            }
+        }
+    }
+
+    command("start") {
+        handle {
+            replyMessage("Welcome!")
+        }
+    }
+
+    handle {
+        println("Unhandled event: $event")
     }
 }
 ```
 
-### Structured Concurrency
+Route matching is depth-first with full backtracking. A branch that matches but does not consume the event allows the
+dispatcher to try later sibling branches. A `handle` consumes the event.
 
-Handlers receive a `CoroutineScope`. Any coroutines launched inside a handler will be awaited before the dispatch
-completes.
+Route blocks run at dispatcher construction time. Runtime side effects belong in filter predicates or `handle` blocks.
+
+## Structured Concurrency
+
+`handle` receives a `CoroutineScope`. Child coroutines launched inside it complete before dispatch returns.
 
 ```kotlin
-commandEndpoint("process") {
-    launch { task1() }
-    launch { task2() }
-    // Both complete before dispatch finishes
+command("process") {
+    handle {
+        launch { processPartA() }
+        launch { processPartB() }
+    }
 }
 ```
 
-For fire-and-forget tasks that outlive the current handler, use `applicationScope`:
+Use `applicationScope` for work that should continue after the current handler returns:
 
 ```kotlin
-commandEndpoint("background") {
-    applicationScope.launch {
-        delay(10.seconds)
-        client.sendMessage(chatId.toString(), "Delayed message")
+command("background") {
+    handle {
+        applicationScope.launch {
+            delay(10.seconds)
+            client.sendMessage(event.message.chat.id.toString(), "Delayed message")
+        }
     }
 }
 ```
 
 ## Lifecycle
 
-```
-  NEW ──────> RUNNING ──────> STOPPING ──────> STOPPED
-   │                               ▲
-   └─────────── stop() ────────────┘
-         (before start)
+```text
+NEW -> RUNNING -> STOPPING -> STOPPED
 ```
 
-The `TelegramBotApplication` tracks its state:
+- `start()` transitions from `NEW` to `RUNNING`.
+- `stop(gracePeriod)` starts shutdown and returns a `Job`.
+- `stopSuspend(gracePeriod)` waits for shutdown and the application scope.
+- `join()` waits for the main update-source job.
 
-- `startTime: Instant?` - Set when `start()` is called, `null` before that.
-- `start()` - Can only be called once. Transitions `NEW` -> `RUNNING`.
-- `stop(gracePeriod)` - Idempotent. Returns a `Job`. Transitions to `STOPPING` -> `STOPPED`.
-- `stopSuspend(gracePeriod)` - Suspends until bot and all `applicationScope` coroutines have stopped.
-- `join()` - Suspends until the main job completes.
+Graceful shutdown:
 
-### Graceful Shutdown
+1. State becomes `STOPPING`.
+2. New updates are rejected with `TelegramBotShuttingDownException`.
+3. `updateSource.stop(gracePeriod)` cuts off the source.
+4. Existing handlers are allowed to finish within the grace period.
+5. `updateSource.onFinalize()` runs cleanup.
+6. The application scope is cancelled.
 
-1. Transition to `STOPPING` -> new updates rejected with `TelegramBotShuttingDownException`
-2. Call `TelegramUpdateSource.stop()` -> cuts off update source immediately
-3. Wait within grace period (default: 10 seconds) for main job to complete
-4. Force cancel if timeout
-5. Call `TelegramUpdateSource.onFinalize()` for final cleanup
-6. Cancel `applicationScope`
+## Long Polling Semantics
 
-### Unrecognized Updates
+| Mode               | Offset behavior                                                                        |
+|--------------------|----------------------------------------------------------------------------------------|
+| `SEQUENTIAL`       | Advances after each successful or failed business update; preserves offset on shutdown |
+| `CONCURRENT_BATCH` | Advances after the batch unless shutdown aborts the batch                              |
+| `CONCURRENT`       | Advances after launching the batch                                                     |
 
-When Telegram introduces new update types not yet supported, `Update.toTelegramBotEvent()` throws
-`UnrecognizedUpdateException`. By default, these are logged as warnings and skipped. Customize with
-the `onUnrecognizedUpdate` parameter:
+Business exceptions are logged so one bad update does not permanently block polling. Shutdown exceptions preserve data
+where the processing mode can still avoid acknowledging unprocessed updates.
+
+## Unrecognized Updates
+
+When Telegram adds a new update type, `Update.toTelegramBotEvent()` can throw `UnrecognizedUpdateException`. The
+application logs and skips it by default. Override `onUnrecognizedUpdate` to store or report it.
 
 ```kotlin
 val app = TelegramBotApplication(
     client = client,
     updateSource = updateSource,
-    interceptors = interceptors,
+    interceptors = emptyList(),
     eventDispatcher = dispatcher,
-    onUnrecognizedUpdate = { client, update ->
+    onUnrecognizedUpdate = { _, update ->
         logger.warn { "Unknown update type: $update" }
     }
 )
 ```
 
-## Exception Handling
-
-Exception handling occurs in two places: the `LongPollingTelegramUpdateSource` (per-update) and the
-`TelegramBotApplication` (lifecycle).
-
-### In Update Processing (LongPollingTelegramUpdateSource)
-
-Behavior differs by processing mode:
-
-#### SEQUENTIAL Mode
-
-| Exception                            | Behavior                | Offset       |
-|--------------------------------------|-------------------------|--------------|
-| `TelegramBotShuttingDownException`   | Breaks processing loop  | Not advanced |
-| `CancellationException` (`isActive`) | Logs warning, continues | Advanced     |
-| Other `Throwable`                    | Logs error, continues   | Advanced     |
-
-#### CONCURRENT_BATCH Mode
-
-| Exception                            | Behavior                            | Offset                    |
-|--------------------------------------|-------------------------------------|---------------------------|
-| `TelegramBotShuttingDownException`   | Sets abort flag, cancels child task | Not advanced (if aborted) |
-| `CancellationException` (`isActive`) | Logs warning, cancels child task    | Advanced (batch)          |
-| Other `Throwable`                    | Logs error, swallows                | Advanced (batch)          |
-
-#### CONCURRENT Mode
-
-| Exception                            | Behavior                         | Offset           |
-|--------------------------------------|----------------------------------|------------------|
-| `TelegramBotShuttingDownException`   | Cancels child task               | Advanced (batch) |
-| `CancellationException` (`isActive`) | Logs warning, cancels child task | Advanced (batch) |
-| Other `Throwable`                    | Logs error, swallows             | Advanced (batch) |
-
-**Note:** In CONCURRENT and CONCURRENT_BATCH modes, the offset is always advanced to the last update in the batch
-(unless shutdown aborts the batch in CONCURRENT_BATCH). Individual update failures do not prevent offset advancement.
-
-### In Application Lifecycle
-
-| Exception                          | Behavior                                      |
-|------------------------------------|-----------------------------------------------|
-| `TelegramBotShuttingDownException` | Signals framework shutdown, aborts processing |
-| `CancellationException`            | Bot lifecycle cancellation                    |
-| Other `Throwable`                  | Logged as error, triggers graceful shutdown   |
-
-### Resource Management
-
-- You can create multiple `TelegramBotApplication` instances sharing the same `TelegramBotClient`.
-- `TelegramBotApplication` does NOT close `TelegramBotClient.httpClient` when stopped.
-- For some `HttpClientEngine` implementations, you must explicitly close `httpClient` to release resources.
-
 ## Dependency Graph
 
+```text
+application -> client -> protocol
+application-updatesource-webhook -> application
+protocol-update-codegen -> protocol-annotation
+protocol -> protocol-annotation
 ```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│ application │────>│   client    │────>│  protocol   │
-└─────────────┘     └─────────────┘     └─────────────┘
-       │
-       │ (optional)
-       ▼
-┌─────────────────────────────┐
-│ application-updatesource-   │
-│ webhook                     │
-└─────────────────────────────┘
-```
-
-## Related Links
-
-- [Telegram Bot API Documentation](https://core.telegram.org/bots/api)
-- [Ktorfit](https://github.com/Foso/Ktorfit)
-- [Ktor](https://ktor.io/)

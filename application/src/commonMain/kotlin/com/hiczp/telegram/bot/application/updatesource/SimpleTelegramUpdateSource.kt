@@ -37,6 +37,9 @@ private val logger = KotlinLogging.logger {}
  * - After [start], updates are processed by the provided consumer callback.
  * - After [stop], the source can be restarted by calling [start] again.
  *
+ * A [TelegramBotApplication][com.hiczp.telegram.bot.application.TelegramBotApplication] instance is still single-use;
+ * create a new application instance if you want to reuse this source after an application stops.
+ *
  * ## Graceful Shutdown and External Coroutines
  *
  * **Important:** Calling [stop] does NOT cancel coroutines that are currently executing [push].
@@ -56,6 +59,7 @@ private val logger = KotlinLogging.logger {}
  * val app = TelegramBotApplication(
  *     client = client,
  *     updateSource = source,
+ *     interceptors = emptyList(),
  *     eventDispatcher = dispatcher
  * )
  * app.start()
@@ -77,7 +81,12 @@ private val logger = KotlinLogging.logger {}
  *
  * ```kotlin
  * val source = SimpleTelegramUpdateSource()
- * val app = TelegramBotApplication(client, source, dispatcher)
+ * val app = TelegramBotApplication(
+ *     client = client,
+ *     updateSource = source,
+ *     interceptors = emptyList(),
+ *     eventDispatcher = dispatcher
+ * )
  * app.start()
  *
  * // External scope for consuming from pubsub
@@ -116,7 +125,7 @@ class SimpleTelegramUpdateSource : TelegramUpdateSource {
      * Start consuming updates and pass them to the consumer callback.
      *
      * This method suspends until [stop] is called. This source supports multiple start/stop cycles.
-     * After [stop] is called, this method can be called again to restart consumption.
+     * After [stop] is called, this method can be called again by another owner to restart consumption.
      *
      * @param consume Suspended function to process each update.
      * @throws IllegalStateException if called while already running.
@@ -203,8 +212,7 @@ class SimpleTelegramUpdateSource : TelegramUpdateSource {
     /**
      * Trigger source shutdown.
      *
-     * Clears the consume callback and signals [start] to return, allowing the source to be restarted.
-     * After this method completes, the source can be restarted by calling [start] again.
+     * Clears the consume callback and signals [start] to return, allowing the source to be started again later.
      *
      * Called by [com.hiczp.telegram.bot.application.TelegramBotApplication.stop] before waiting for handlers.
      *

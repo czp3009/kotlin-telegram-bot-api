@@ -49,8 +49,7 @@ Code is generated from the
   - `Union<A, B>` sealed class for API responses that can return different types
   - `UnionSerializer` tries deserialization for each type in order (A first, then B)
   - `unionSerializersModule` provides contextual serializers for all Union types
-  - Used when Telegram API returns either a `Message` object or a `Boolean` (e.g., `sendMessage` with
-    `business_connection_id`)
+  - Used when Telegram API returns either a `Message` object or a `Boolean` (for example edit-message methods)
 
 - **Telegram model unions**
   - Telegram object unions are generated as model types when possible, including unions with custom JSON shape handling

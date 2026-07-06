@@ -1,11 +1,12 @@
 # Getting Started
 
-This guide will help you set up and create your first Telegram bot.
+This guide creates a long-polling bot and shows the two dispatcher styles currently available in the application
+module.
 
 ## Prerequisites
 
-- Kotlin 2.0+ (project uses Kotlin 2.3.10)
-- A Telegram bot token (obtain from [@BotFather](https://t.me/BotFather))
+- Kotlin 2.4.0 or compatible project setup
+- A Telegram bot token from [@BotFather](https://t.me/BotFather)
 
 ## Installation
 
@@ -19,9 +20,9 @@ dependencies {
 }
 ```
 
-## Your First Bot
+## Echo Bot
 
-### Echo Bot
+`SimpleTelegramEventDispatcher` is useful when one lambda is enough.
 
 ```kotlin
 import com.hiczp.telegram.bot.application.TelegramBotApplication
@@ -31,20 +32,20 @@ import com.hiczp.telegram.bot.protocol.event.MessageEvent
 suspend fun main(args: Array<String>) {
     val botToken = args.firstOrNull() ?: error("Bot token is required")
 
-  val eventDispatcher = SimpleTelegramEventDispatcher { context ->
-    val event = context.event
-    if (event is MessageEvent) {
-      val text = event.message.text ?: return@SimpleTelegramEventDispatcher
-      context.client.sendMessage(
-        chatId = event.message.chat.id.toString(),
-        text = text
-      )
+    val dispatcher = SimpleTelegramEventDispatcher { context ->
+        val event = context.event
+        if (event is MessageEvent) {
+            val text = event.message.text ?: return@SimpleTelegramEventDispatcher
+            context.client.sendMessage(
+                chatId = event.message.chat.id.toString(),
+                text = text
+            )
+        }
     }
-  }
 
-  val app = TelegramBotApplication.longPolling(
+    val app = TelegramBotApplication.longPolling(
         botToken = botToken,
-    eventDispatcher = eventDispatcher
+        eventDispatcher = dispatcher
     )
 
     app.start()
@@ -52,20 +53,32 @@ suspend fun main(args: Array<String>) {
 }
 ```
 
-### Command Bot
+## Command Bot
+
+`HandlerTelegramEventDispatcher` uses a route tree. Routes are filters; `handle` consumes the event.
 
 ```kotlin
 import com.hiczp.telegram.bot.application.TelegramBotApplication
+import com.hiczp.telegram.bot.application.context.action.replyMessage
 import com.hiczp.telegram.bot.application.dispatcher.handler.HandlerTelegramEventDispatcher
+import com.hiczp.telegram.bot.application.dispatcher.handler.command.command
 import com.hiczp.telegram.bot.application.dispatcher.handler.handling
-import com.hiczp.telegram.bot.application.dispatcher.handler.command.commandEndpoint
 
 suspend fun main(args: Array<String>) {
     val botToken = args.firstOrNull() ?: error("Bot token is required")
 
     val routes = handling {
-        commandEndpoint("start") { replyMessage("Welcome!") }
-        commandEndpoint("ping") { replyMessage("Pong!") }
+        command("start") {
+            handle {
+                replyMessage("Welcome!")
+            }
+        }
+
+        command("ping") {
+            handle {
+                replyMessage("Pong!")
+            }
+        }
     }
 
     val app = TelegramBotApplication.longPolling(
@@ -78,26 +91,18 @@ suspend fun main(args: Array<String>) {
 }
 ```
 
-## Running Your Bot
+## Running Samples
 
 ```bash
-# Build
-./gradlew build
-
-# Run with JVM
-./gradlew :your-module:jvmRun --args="YOUR_BOT_TOKEN" --quiet
-```
-
-### Running Samples
-
-```bash
-# EchoBot
 ./gradlew :sample:jvmRun --args="YOUR_BOT_TOKEN" -DmainClass="com.hiczp.telegram.bot.sample.basic.echo.EchoBotKt" --quiet
+./gradlew :sample:jvmRun --args="YOUR_BOT_TOKEN" -DmainClass="com.hiczp.telegram.bot.sample.basic.command.CommandBotKt" --quiet
 ```
 
-## Configuration
+Running a sample performs real Telegram API calls. Use `./gradlew :sample:assemble` for compile-only verification.
 
-### Basic Long Polling
+## Basic Configuration
+
+The long-polling factory creates a `TelegramBotClient` and a `LongPollingTelegramUpdateSource` with default settings.
 
 ```kotlin
 val app = TelegramBotApplication.longPolling(
@@ -106,77 +111,74 @@ val app = TelegramBotApplication.longPolling(
 )
 ```
 
-### With Interceptors
+Install interceptors around any dispatcher:
 
 ```kotlin
-import com.hiczp.telegram.bot.application.interceptor.builtin.logging.loggingInterceptor
-import com.hiczp.telegram.bot.application.interceptor.builtin.conversation.conversationInterceptor
-
 val app = TelegramBotApplication.longPolling(
     botToken = "YOUR_BOT_TOKEN",
     interceptors = listOf(loggingInterceptor(), conversationInterceptor()),
-    eventDispatcher = HandlerTelegramEventDispatcher(routes)
+    eventDispatcher = dispatcher
 )
 ```
 
-### Advanced Configuration
+Use the constructor when you need to configure the client or update source directly:
 
 ```kotlin
-import com.hiczp.telegram.bot.client.TelegramBotClient
+import com.hiczp.telegram.bot.application.TelegramBotApplication
 import com.hiczp.telegram.bot.application.updatesource.LongPollingTelegramUpdateSource
+import com.hiczp.telegram.bot.application.updatesource.LongPollingTelegramUpdateSource.ProcessingMode
+import com.hiczp.telegram.bot.client.TelegramBotClient
 
 val client = TelegramBotClient(botToken = "YOUR_BOT_TOKEN")
-
 val updateSource = LongPollingTelegramUpdateSource(
     client = client,
     allowedUpdates = listOf("message", "callback_query"),
-  processingMode = LongPollingTelegramUpdateSource.ProcessingMode.CONCURRENT_BATCH,
-  maxPendingUpdates = 50,
-  getUpdatesTimeout = 30,
-  fastFail = false,
+    processingMode = ProcessingMode.CONCURRENT_BATCH,
+    maxPendingUpdates = 50,
+    getUpdatesTimeout = 30,
+    fastFail = false,
 )
 
 val app = TelegramBotApplication(
     client = client,
     updateSource = updateSource,
-  interceptors = emptyList(),
-    eventDispatcher = HandlerTelegramEventDispatcher(routes)
+    interceptors = emptyList(),
+    eventDispatcher = dispatcher
 )
 ```
 
 ## Processing Modes
 
-| Mode               | Concurrency             | Backpressure                   | Delivery Guarantee          |
-|--------------------|-------------------------|--------------------------------|-----------------------------|
-| `SEQUENTIAL`       | One at a time           | Natural flow control           | At-Least-Once               |
-| `CONCURRENT_BATCH` | Concurrent within batch | Batch-level                    | At-Least-Once (recommended) |
-| `CONCURRENT`       | Fully concurrent        | None (use `maxPendingUpdates`) | At-Most-Once (**default**)  |
+| Mode               | Concurrency             | Backpressure                           | Delivery guarantee |
+|--------------------|-------------------------|----------------------------------------|--------------------|
+| `SEQUENTIAL`       | One update at a time    | Natural flow control                   | At-least-once      |
+| `CONCURRENT_BATCH` | Concurrent within batch | Batch-level                            | At-least-once      |
+| `CONCURRENT`       | Fully concurrent        | None unless `maxPendingUpdates` is set | At-most-once       |
 
-**Note:** Default mode is `CONCURRENT`. Global mutable state is NOT safe without synchronization.
+`CONCURRENT` is the default. Shared mutable state must be synchronized or replaced with thread-safe structures.
 
 ## Graceful Shutdown
 
 ```kotlin
 app.start()
 
-// Register shutdown hook (JVM)
 Runtime.getRuntime().addShutdownHook(Thread {
     runBlocking {
-        app.stop(5.seconds)
+        app.stopSuspend(5.seconds)
     }
 })
 
 app.join()
 ```
 
-### stop() vs stopSuspend()
-
-- `stop(gracePeriod)` - Returns a `Job` immediately, does not suspend. Use when you need to trigger shutdown from
-  non-suspending code or want to wait separately.
-- `stopSuspend(gracePeriod)` - Suspends until the bot AND all coroutines in `applicationScope` have fully stopped. Use
-  when you need to ensure complete cleanup.
+- `stop(gracePeriod)` starts shutdown and returns a `Job`.
+- `stopSuspend(gracePeriod)` waits for the shutdown job and the application scope to finish.
+- A `TelegramBotApplication` instance can only be started once. Create a new instance after it has stopped.
 
 ## Next Steps
 
-- [Handler DSL](Handler-DSL) - Advanced event handling
-- [Conversations](Conversations) - Multi-turn interactions
+- [Handler DSL](Handler-DSL)
+- [Command DSL](Command-DSL)
+- [Update Sources](Update-Sources)
+- [Interceptors](Interceptors)
+- [Conversations](Conversations)

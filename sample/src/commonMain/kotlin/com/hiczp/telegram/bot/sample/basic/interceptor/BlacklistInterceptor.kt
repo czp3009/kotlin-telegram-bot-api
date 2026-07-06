@@ -30,11 +30,13 @@
  * )
  *
  * // In handlers, use banUser() to add users to blacklist
- * commandEndpoint("ban") {
- *     val targetUserId = event.message.replyToMessage?.from?.id
- *     if (targetUserId != null) {
- *         banUser(targetUserId)
- *         replyMessage("User $targetUserId has been banned.")
+ * command("ban") {
+ *     handle {
+ *         val targetUserId = event.message.replyToMessage?.from?.id
+ *         if (targetUserId != null) {
+ *             banUser(targetUserId)
+ *             replyMessage("User $targetUserId has been banned.")
+ *         }
  *     }
  * }
  * ```

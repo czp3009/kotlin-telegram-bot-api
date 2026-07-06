@@ -2,329 +2,70 @@
 
 package com.hiczp.telegram.bot.application.dispatcher.handler.matcher
 
-import com.hiczp.telegram.bot.application.dispatcher.handler.HandlerBotCall
 import com.hiczp.telegram.bot.application.dispatcher.handler.HandlerRoute
 import com.hiczp.telegram.bot.protocol.event.*
-import kotlin.jvm.JvmName
 
-// ==================== MessageEvent ====================
+fun HandlerRoute<TelegramBotEvent>.message(build: HandlerRoute<MessageEvent>.() -> Unit) = filter<MessageEvent>(build)
+fun HandlerRoute<TelegramBotEvent>.channelPost(build: HandlerRoute<ChannelPostEvent>.() -> Unit) =
+    filter<ChannelPostEvent>(build)
 
-// --- onMessageEvent (stackable) ---
+fun HandlerRoute<TelegramBotEvent>.editedMessage(build: HandlerRoute<EditedMessageEvent>.() -> Unit) =
+    filter<EditedMessageEvent>(build)
 
-@JvmName("onMessageEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onMessageEvent(build: HandlerRoute<MessageEvent>.() -> Unit) =
-    on<MessageEvent> { build() }
+fun HandlerRoute<TelegramBotEvent>.editedChannelPost(build: HandlerRoute<EditedChannelPostEvent>.() -> Unit) =
+    filter<EditedChannelPostEvent>(build)
 
-// --- whenMessageEvent (terminal) ---
+fun HandlerRoute<TelegramBotEvent>.inlineQuery(build: HandlerRoute<InlineQueryEvent>.() -> Unit) =
+    filter<InlineQueryEvent>(build)
 
-@JvmName("whenMessageEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenMessageEvent(handler: suspend HandlerBotCall<MessageEvent>.() -> Unit) =
-    onMessageEvent { handle(handler) }
+fun HandlerRoute<TelegramBotEvent>.chosenInlineResult(build: HandlerRoute<ChosenInlineResultEvent>.() -> Unit) =
+    filter<ChosenInlineResultEvent>(build)
 
-// ==================== ChannelPostEvent ====================
+fun HandlerRoute<TelegramBotEvent>.callbackQuery(build: HandlerRoute<CallbackQueryEvent>.() -> Unit) =
+    filter<CallbackQueryEvent>(build)
 
-// --- onChannelPostEvent (stackable) ---
+fun HandlerRoute<TelegramBotEvent>.shippingQuery(build: HandlerRoute<ShippingQueryEvent>.() -> Unit) =
+    filter<ShippingQueryEvent>(build)
 
-@JvmName("onChannelPostEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onChannelPostEvent(build: HandlerRoute<ChannelPostEvent>.() -> Unit) =
-    on<ChannelPostEvent> { build() }
+fun HandlerRoute<TelegramBotEvent>.preCheckoutQuery(build: HandlerRoute<PreCheckoutQueryEvent>.() -> Unit) =
+    filter<PreCheckoutQueryEvent>(build)
 
-// --- whenChannelPostEvent (terminal) ---
+fun HandlerRoute<TelegramBotEvent>.purchasedPaidMedia(build: HandlerRoute<PurchasedPaidMediaEvent>.() -> Unit) =
+    filter<PurchasedPaidMediaEvent>(build)
 
-@JvmName("whenChannelPostEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenChannelPostEvent(handler: suspend HandlerBotCall<ChannelPostEvent>.() -> Unit) =
-    onChannelPostEvent { handle(handler) }
+fun HandlerRoute<TelegramBotEvent>.poll(build: HandlerRoute<PollEvent>.() -> Unit) = filter<PollEvent>(build)
+fun HandlerRoute<TelegramBotEvent>.pollAnswer(build: HandlerRoute<PollAnswerEvent>.() -> Unit) =
+    filter<PollAnswerEvent>(build)
 
-// ==================== EditedMessageEvent ====================
+fun HandlerRoute<TelegramBotEvent>.messageReaction(build: HandlerRoute<MessageReactionEvent>.() -> Unit) =
+    filter<MessageReactionEvent>(build)
 
-// --- onEditedMessageEvent (stackable) ---
+fun HandlerRoute<TelegramBotEvent>.messageReactionCount(build: HandlerRoute<MessageReactionCountEvent>.() -> Unit) =
+    filter<MessageReactionCountEvent>(build)
 
-@JvmName("onEditedMessageEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onEditedMessageEvent(build: HandlerRoute<EditedMessageEvent>.() -> Unit) =
-    on<EditedMessageEvent> { build() }
+fun HandlerRoute<TelegramBotEvent>.chatJoinRequest(build: HandlerRoute<ChatJoinRequestEvent>.() -> Unit) =
+    filter<ChatJoinRequestEvent>(build)
 
-// --- whenEditedMessageEvent (terminal) ---
+fun HandlerRoute<TelegramBotEvent>.chatMember(build: HandlerRoute<ChatMemberEvent>.() -> Unit) =
+    filter<ChatMemberEvent>(build)
 
-@JvmName("whenEditedMessageEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenEditedMessageEvent(handler: suspend HandlerBotCall<EditedMessageEvent>.() -> Unit) =
-    onEditedMessageEvent { handle(handler) }
+fun HandlerRoute<TelegramBotEvent>.myChatMember(build: HandlerRoute<MyChatMemberEvent>.() -> Unit) =
+    filter<MyChatMemberEvent>(build)
 
-// ==================== EditedChannelPostEvent ====================
+fun HandlerRoute<TelegramBotEvent>.chatBoost(build: HandlerRoute<ChatBoostEvent>.() -> Unit) =
+    filter<ChatBoostEvent>(build)
 
-// --- onEditedChannelPostEvent (stackable) ---
+fun HandlerRoute<TelegramBotEvent>.removedChatBoost(build: HandlerRoute<RemovedChatBoostEvent>.() -> Unit) =
+    filter<RemovedChatBoostEvent>(build)
 
-@JvmName("onEditedChannelPostEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onEditedChannelPostEvent(build: HandlerRoute<EditedChannelPostEvent>.() -> Unit) =
-    on<EditedChannelPostEvent> { build() }
+fun HandlerRoute<TelegramBotEvent>.businessConnection(build: HandlerRoute<BusinessConnectionEvent>.() -> Unit) =
+    filter<BusinessConnectionEvent>(build)
 
-// --- whenEditedChannelPostEvent (terminal) ---
+fun HandlerRoute<TelegramBotEvent>.businessMessage(build: HandlerRoute<BusinessMessageEvent>.() -> Unit) =
+    filter<BusinessMessageEvent>(build)
 
-@JvmName("whenEditedChannelPostEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenEditedChannelPostEvent(handler: suspend HandlerBotCall<EditedChannelPostEvent>.() -> Unit) =
-    onEditedChannelPostEvent { handle(handler) }
+fun HandlerRoute<TelegramBotEvent>.editedBusinessMessage(build: HandlerRoute<EditedBusinessMessageEvent>.() -> Unit) =
+    filter<EditedBusinessMessageEvent>(build)
 
-// ==================== InlineQueryEvent ====================
-
-// --- onInlineQueryEvent (stackable) ---
-
-@JvmName("onInlineQueryEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onInlineQueryEvent(build: HandlerRoute<InlineQueryEvent>.() -> Unit) =
-    on<InlineQueryEvent> { build() }
-
-// --- whenInlineQueryEvent (terminal) ---
-
-@JvmName("whenInlineQueryEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenInlineQueryEvent(handler: suspend HandlerBotCall<InlineQueryEvent>.() -> Unit) =
-    onInlineQueryEvent { handle(handler) }
-
-// ==================== ChosenInlineResultEvent ====================
-
-// --- onChosenInlineResultEvent (stackable) ---
-
-@JvmName("onChosenInlineResultEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onChosenInlineResultEvent(build: HandlerRoute<ChosenInlineResultEvent>.() -> Unit) =
-    on<ChosenInlineResultEvent> { build() }
-
-// --- whenChosenInlineResultEvent (terminal) ---
-
-@JvmName("whenChosenInlineResultEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenChosenInlineResultEvent(handler: suspend HandlerBotCall<ChosenInlineResultEvent>.() -> Unit) =
-    onChosenInlineResultEvent { handle(handler) }
-
-// ==================== CallbackQueryEvent ====================
-
-// --- onCallbackQueryEvent (stackable) ---
-
-@JvmName("onCallbackQueryEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onCallbackQueryEvent(build: HandlerRoute<CallbackQueryEvent>.() -> Unit) =
-    on<CallbackQueryEvent> { build() }
-
-// --- whenCallbackQueryEvent (terminal) ---
-
-@JvmName("whenCallbackQueryEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenCallbackQueryEvent(handler: suspend HandlerBotCall<CallbackQueryEvent>.() -> Unit) =
-    onCallbackQueryEvent { handle(handler) }
-
-// ==================== ShippingQueryEvent ====================
-
-// --- onShippingQueryEvent (stackable) ---
-
-@JvmName("onShippingQueryEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onShippingQueryEvent(build: HandlerRoute<ShippingQueryEvent>.() -> Unit) =
-    on<ShippingQueryEvent> { build() }
-
-// --- whenShippingQueryEvent (terminal) ---
-
-@JvmName("whenShippingQueryEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenShippingQueryEvent(handler: suspend HandlerBotCall<ShippingQueryEvent>.() -> Unit) =
-    onShippingQueryEvent { handle(handler) }
-
-// ==================== PreCheckoutQueryEvent ====================
-
-// --- onPreCheckoutQueryEvent (stackable) ---
-
-@JvmName("onPreCheckoutQueryEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onPreCheckoutQueryEvent(build: HandlerRoute<PreCheckoutQueryEvent>.() -> Unit) =
-    on<PreCheckoutQueryEvent> { build() }
-
-// --- whenPreCheckoutQueryEvent (terminal) ---
-
-@JvmName("whenPreCheckoutQueryEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenPreCheckoutQueryEvent(handler: suspend HandlerBotCall<PreCheckoutQueryEvent>.() -> Unit) =
-    onPreCheckoutQueryEvent { handle(handler) }
-
-// ==================== PurchasedPaidMediaEvent ====================
-
-// --- onPurchasedPaidMediaEvent (stackable) ---
-
-@JvmName("onPurchasedPaidMediaEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onPurchasedPaidMediaEvent(build: HandlerRoute<PurchasedPaidMediaEvent>.() -> Unit) =
-    on<PurchasedPaidMediaEvent> { build() }
-
-// --- whenPurchasedPaidMediaEvent (terminal) ---
-
-@JvmName("whenPurchasedPaidMediaEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenPurchasedPaidMediaEvent(handler: suspend HandlerBotCall<PurchasedPaidMediaEvent>.() -> Unit) =
-    onPurchasedPaidMediaEvent { handle(handler) }
-
-// ==================== PollEvent ====================
-
-// --- onPollEvent (stackable) ---
-
-@JvmName("onPollEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onPollEvent(build: HandlerRoute<PollEvent>.() -> Unit) =
-    on<PollEvent> { build() }
-
-// --- whenPollEvent (terminal) ---
-
-@JvmName("whenPollEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenPollEvent(handler: suspend HandlerBotCall<PollEvent>.() -> Unit) =
-    onPollEvent { handle(handler) }
-
-// ==================== PollAnswerEvent ====================
-
-// --- onPollAnswerEvent (stackable) ---
-
-@JvmName("onPollAnswerEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onPollAnswerEvent(build: HandlerRoute<PollAnswerEvent>.() -> Unit) =
-    on<PollAnswerEvent> { build() }
-
-// --- whenPollAnswerEvent (terminal) ---
-
-@JvmName("whenPollAnswerEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenPollAnswerEvent(handler: suspend HandlerBotCall<PollAnswerEvent>.() -> Unit) =
-    onPollAnswerEvent { handle(handler) }
-
-// ==================== MessageReactionEvent ====================
-
-// --- onMessageReactionEvent (stackable) ---
-
-@JvmName("onMessageReactionEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onMessageReactionEvent(build: HandlerRoute<MessageReactionEvent>.() -> Unit) =
-    on<MessageReactionEvent> { build() }
-
-// --- whenMessageReactionEvent (terminal) ---
-
-@JvmName("whenMessageReactionEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenMessageReactionEvent(handler: suspend HandlerBotCall<MessageReactionEvent>.() -> Unit) =
-    onMessageReactionEvent { handle(handler) }
-
-// ==================== MessageReactionCountEvent ====================
-
-// --- onMessageReactionCountEvent (stackable) ---
-
-@JvmName("onMessageReactionCountEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onMessageReactionCountEvent(build: HandlerRoute<MessageReactionCountEvent>.() -> Unit) =
-    on<MessageReactionCountEvent> { build() }
-
-// --- whenMessageReactionCountEvent (terminal) ---
-
-@JvmName("whenMessageReactionCountEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenMessageReactionCountEvent(handler: suspend HandlerBotCall<MessageReactionCountEvent>.() -> Unit) =
-    onMessageReactionCountEvent { handle(handler) }
-
-// ==================== ChatJoinRequestEvent ====================
-
-// --- onChatJoinRequestEvent (stackable) ---
-
-@JvmName("onChatJoinRequestEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onChatJoinRequestEvent(build: HandlerRoute<ChatJoinRequestEvent>.() -> Unit) =
-    on<ChatJoinRequestEvent> { build() }
-
-// --- whenChatJoinRequestEvent (terminal) ---
-
-@JvmName("whenChatJoinRequestEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenChatJoinRequestEvent(handler: suspend HandlerBotCall<ChatJoinRequestEvent>.() -> Unit) =
-    onChatJoinRequestEvent { handle(handler) }
-
-// ==================== ChatMemberEvent ====================
-
-// --- onChatMemberEvent (stackable) ---
-
-@JvmName("onChatMemberEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onChatMemberEvent(build: HandlerRoute<ChatMemberEvent>.() -> Unit) =
-    on<ChatMemberEvent> { build() }
-
-// --- whenChatMemberEvent (terminal) ---
-
-@JvmName("whenChatMemberEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenChatMemberEvent(handler: suspend HandlerBotCall<ChatMemberEvent>.() -> Unit) =
-    onChatMemberEvent { handle(handler) }
-
-// ==================== MyChatMemberEvent ====================
-
-// --- onMyChatMemberEvent (stackable) ---
-
-@JvmName("onMyChatMemberEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onMyChatMemberEvent(build: HandlerRoute<MyChatMemberEvent>.() -> Unit) =
-    on<MyChatMemberEvent> { build() }
-
-// --- whenMyChatMemberEvent (terminal) ---
-
-@JvmName("whenMyChatMemberEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenMyChatMemberEvent(handler: suspend HandlerBotCall<MyChatMemberEvent>.() -> Unit) =
-    onMyChatMemberEvent { handle(handler) }
-
-// ==================== ChatBoostEvent ====================
-
-// --- onChatBoostEvent (stackable) ---
-
-@JvmName("onChatBoostEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onChatBoostEvent(build: HandlerRoute<ChatBoostEvent>.() -> Unit) =
-    on<ChatBoostEvent> { build() }
-
-// --- whenChatBoostEvent (terminal) ---
-
-@JvmName("whenChatBoostEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenChatBoostEvent(handler: suspend HandlerBotCall<ChatBoostEvent>.() -> Unit) =
-    onChatBoostEvent { handle(handler) }
-
-// ==================== RemovedChatBoostEvent ====================
-
-// --- onRemovedChatBoostEvent (stackable) ---
-
-@JvmName("onRemovedChatBoostEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onRemovedChatBoostEvent(build: HandlerRoute<RemovedChatBoostEvent>.() -> Unit) =
-    on<RemovedChatBoostEvent> { build() }
-
-// --- whenRemovedChatBoostEvent (terminal) ---
-
-@JvmName("whenRemovedChatBoostEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenRemovedChatBoostEvent(handler: suspend HandlerBotCall<RemovedChatBoostEvent>.() -> Unit) =
-    onRemovedChatBoostEvent { handle(handler) }
-
-// ==================== BusinessConnectionEvent ====================
-
-// --- onBusinessConnectionEvent (stackable) ---
-
-@JvmName("onBusinessConnectionEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onBusinessConnectionEvent(build: HandlerRoute<BusinessConnectionEvent>.() -> Unit) =
-    on<BusinessConnectionEvent> { build() }
-
-// --- whenBusinessConnectionEvent (terminal) ---
-
-@JvmName("whenBusinessConnectionEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenBusinessConnectionEvent(handler: suspend HandlerBotCall<BusinessConnectionEvent>.() -> Unit) =
-    onBusinessConnectionEvent { handle(handler) }
-
-// ==================== BusinessMessageEvent ====================
-
-// --- onBusinessMessageEvent (stackable) ---
-
-@JvmName("onBusinessMessageEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onBusinessMessageEvent(build: HandlerRoute<BusinessMessageEvent>.() -> Unit) =
-    on<BusinessMessageEvent> { build() }
-
-// --- whenBusinessMessageEvent (terminal) ---
-
-@JvmName("whenBusinessMessageEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenBusinessMessageEvent(handler: suspend HandlerBotCall<BusinessMessageEvent>.() -> Unit) =
-    onBusinessMessageEvent { handle(handler) }
-
-// ==================== EditedBusinessMessageEvent ====================
-
-// --- onEditedBusinessMessageEvent (stackable) ---
-
-@JvmName("onEditedBusinessMessageEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onEditedBusinessMessageEvent(build: HandlerRoute<EditedBusinessMessageEvent>.() -> Unit) =
-    on<EditedBusinessMessageEvent> { build() }
-
-// --- whenEditedBusinessMessageEvent (terminal) ---
-
-@JvmName("whenEditedBusinessMessageEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenEditedBusinessMessageEvent(handler: suspend HandlerBotCall<EditedBusinessMessageEvent>.() -> Unit) =
-    onEditedBusinessMessageEvent { handle(handler) }
-
-// ==================== DeletedBusinessMessagesEvent ====================
-
-// --- onDeletedBusinessMessagesEvent (stackable) ---
-
-@JvmName("onDeletedBusinessMessagesEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.onDeletedBusinessMessagesEvent(build: HandlerRoute<DeletedBusinessMessagesEvent>.() -> Unit) =
-    on<DeletedBusinessMessagesEvent> { build() }
-
-// --- whenDeletedBusinessMessagesEvent (terminal) ---
-
-@JvmName("whenDeletedBusinessMessagesEventTelegramBotEvent")
-fun HandlerRoute<TelegramBotEvent>.whenDeletedBusinessMessagesEvent(handler: suspend HandlerBotCall<DeletedBusinessMessagesEvent>.() -> Unit) =
-    onDeletedBusinessMessagesEvent { handle(handler) }
+fun HandlerRoute<TelegramBotEvent>.deletedBusinessMessages(build: HandlerRoute<DeletedBusinessMessagesEvent>.() -> Unit) =
+    filter<DeletedBusinessMessagesEvent>(build)

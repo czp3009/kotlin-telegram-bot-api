@@ -38,14 +38,24 @@ implementation("com.hiczp:telegram-bot-api-application:$version")
 
 ```kotlin
 import com.hiczp.telegram.bot.application.TelegramBotApplication
+import com.hiczp.telegram.bot.application.context.action.replyMessage
 import com.hiczp.telegram.bot.application.dispatcher.handler.HandlerTelegramEventDispatcher
+import com.hiczp.telegram.bot.application.dispatcher.handler.command.command
 import com.hiczp.telegram.bot.application.dispatcher.handler.handling
-import com.hiczp.telegram.bot.application.dispatcher.handler.command.commandEndpoint
 
 suspend fun main() {
     val routes = handling {
-        commandEndpoint("start") { replyMessage("Welcome!") }
-        commandEndpoint("ping") { replyMessage("pong") }
+        command("start") {
+            handle {
+                replyMessage("Welcome!")
+            }
+        }
+
+        command("ping") {
+            handle {
+                replyMessage("pong")
+            }
+        }
     }
 
     val app = TelegramBotApplication.longPolling(

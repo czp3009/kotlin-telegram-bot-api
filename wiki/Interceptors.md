@@ -1,51 +1,57 @@
 # Interceptors
 
-Interceptors provide a middleware pipeline using the "onion model" pattern.
+Interceptors are the application-level onion pipeline. They wrap every dispatcher, including the handler dispatcher,
+simple dispatcher, and any future dispatcher implementations.
+
+Handler filters decide whether a route branch should be entered. Interceptors are a higher layer and are used for
+cross-cutting concerns such as logging, authentication, metrics, timeout guards, and conversations.
 
 ## Onion Model
 
 ```
-┌────────────────────────────────────────────┐
-│ Interceptor 1 (before)                     │
-│   ┌──────────────────────────────────────┐ │
-│   │ Interceptor 2 (before)               │ │
-│   │   ┌────────────────────────────────┐ │ │
-│   │   │   Event Dispatcher             │ │ │
-│   │   │   (Handler Execution)          │ │ │
-│   │   └────────────────────────────────┘ │ │
-│   │ Interceptor 2 (after)                │ │
-│   └──────────────────────────────────────┘ │
-│ Interceptor 1 (after)                      │
-└────────────────────────────────────────────┘
+Interceptor 1 before
+  Interceptor 2 before
+    Event Dispatcher
+  Interceptor 2 after
+Interceptor 1 after
 ```
+
+The first interceptor in the list is the outermost layer.
 
 ## Type Definition
-
-```kotlin
-typealias TelegramEventInterceptor =
-    suspend TelegramEventProcessor.(TelegramBotEventContext<TelegramBotEvent>) -> Unit
-```
-
-Where `TelegramEventProcessor` has a single method:
 
 ```kotlin
 interface TelegramEventProcessor {
     suspend fun process(context: TelegramBotEventContext<TelegramBotEvent>)
 }
+
+typealias TelegramEventInterceptor =
+    suspend TelegramEventProcessor.(TelegramBotEventContext<TelegramBotEvent>) -> Unit
 ```
+
+Call `process(context)` to continue to the next interceptor or dispatcher. Skip it to short-circuit the pipeline.
 
 ## Basic Interceptor
 
 ```kotlin
-val loggingInterceptor: TelegramEventInterceptor = Interceptor@{ context ->
+val loggingInterceptor: TelegramEventInterceptor = { context ->
     println("Before: ${context.event.updateId}")
-    process(context)  // Pass to next layer
+    process(context)
     println("After: ${context.event.updateId}")
 }
 ```
 
-Note: The return label `Interceptor@` comes from the `TelegramEventInterceptor` typealias's underlying type
-`Interceptor`.
+Use an explicit lambda label when you need to return early:
+
+```kotlin
+val blacklistInterceptor: TelegramEventInterceptor = blacklist@{ context ->
+    val userId = context.event.extractUserId()
+    if (userId != null && userId in blacklist) {
+        return@blacklist
+    }
+    process(context)
+}
+```
 
 ## Installing
 
@@ -62,16 +68,14 @@ val app = TelegramBotApplication.longPolling(
 
 ## Built-in Interceptors
 
-### LoggingInterceptor
-
-Logs all received events with configurable log level and formatter.
+### Logging
 
 ```kotlin
 import com.hiczp.telegram.bot.application.interceptor.builtin.logging.loggingInterceptor
 
-loggingInterceptor()  // Default: INFO level, toString() formatter
-loggingInterceptor(level = Level.DEBUG)  // Custom level
-loggingInterceptor(formatter = { event -> "Received: ${event.updateId}" })  // Custom formatter
+loggingInterceptor()
+loggingInterceptor(level = Level.DEBUG)
+loggingInterceptor(formatter = { event -> "Received: ${event.updateId}" })
 ```
 
 Signature:
@@ -83,32 +87,28 @@ fun loggingInterceptor(
 ): TelegramEventInterceptor
 ```
 
-### ConversationInterceptor
+### Conversations
 
-Enables multi-turn conversation support. Must be installed for `startConversation` to work.
+`conversationInterceptor()` enables `startConversation`. Install it once.
 
 ```kotlin
 import com.hiczp.telegram.bot.application.interceptor.builtin.conversation.conversationInterceptor
 
-interceptors = listOf(conversationInterceptor())
+val app = TelegramBotApplication.longPolling(
+    botToken = "YOUR_TOKEN",
+    interceptors = listOf(conversationInterceptor()),
+    eventDispatcher = dispatcher
+)
 ```
 
-Signature:
-
-```kotlin
-fun conversationInterceptor(
-    manager: ConversationManager = ConversationManager()
-): TelegramEventInterceptor
-```
-
-See [Conversations](Conversations) for detailed usage.
+See [Conversations](Conversations) for usage.
 
 ## Custom Interceptors
 
 ### Exception Handling
 
 ```kotlin
-val exceptionInterceptor: TelegramEventInterceptor = Interceptor@{ context ->
+val exceptionInterceptor: TelegramEventInterceptor = { context ->
     try {
         process(context)
     } catch (e: TelegramErrorResponseException) {
@@ -123,33 +123,17 @@ val exceptionInterceptor: TelegramEventInterceptor = Interceptor@{ context ->
 }
 ```
 
-### Blacklist Filter
-
-```kotlin
-val blacklistInterceptor: TelegramEventInterceptor = Interceptor@{ context ->
-    val userId = context.event.extractUserId()
-    if (userId != null && userId in blacklist) {
-        // Don't call process() — this stops the pipeline
-        return@Interceptor
-    }
-    process(context)
-}
-```
-
 ### Timeout Guard
 
 ```kotlin
-import kotlinx.coroutines.withTimeout
-import kotlinx.coroutines.TimeoutCancellationException
-
 fun timeoutInterceptor(
     timeout: Duration,
-    messageFilter: (TelegramBotEvent) -> Boolean,
-    onTimeout: (suspend (TelegramBotEventContext<TelegramBotEvent>, TimeoutCancellationException) -> Unit)? = null,
-): TelegramEventInterceptor = Interceptor@{ context ->
-    if (!messageFilter(context.event)) {
+    shouldApply: (TelegramBotEvent) -> Boolean,
+    onTimeout: suspend (TelegramBotEventContext<TelegramBotEvent>, TimeoutCancellationException) -> Unit = { _, _ -> },
+): TelegramEventInterceptor = interceptor@{ context ->
+    if (!shouldApply(context.event)) {
         process(context)
-        return@Interceptor
+        return@interceptor
     }
 
     try {
@@ -157,7 +141,7 @@ fun timeoutInterceptor(
             process(context)
         }
     } catch (e: TimeoutCancellationException) {
-        onTimeout?.invoke(context, e)
+        onTimeout(context, e)
         throw e
     }
 }
@@ -166,50 +150,45 @@ fun timeoutInterceptor(
 ### Localization
 
 ```kotlin
-import io.ktor.util.AttributeKey
+val languageCodeKey = AttributeKey<String>("languageCode")
 
-val LanguageCodeAttributeKey = AttributeKey<String>("LanguageCode")
-
-val localizationInterceptor: TelegramEventInterceptor = Interceptor@{ context ->
+val localizationInterceptor: TelegramEventInterceptor = { context ->
     val languageCode = context.event.extractLanguageCode()
     if (languageCode != null) {
-        context.attributes.put(LanguageCodeAttributeKey, languageCode)
+        context.attributes.put(languageCodeKey, languageCode)
     }
     process(context)
 }
 
-// Access in handler
 val TelegramBotEventContext<*>.languageCode: String?
-    get() = attributes.getOrNull(LanguageCodeAttributeKey)
+    get() = attributes.getOrNull(languageCodeKey)
 ```
 
 ## Sharing State
 
-Use attributes to share data between interceptors and handlers.
+`TelegramBotEventContext.attributes` is request-scoped storage shared by interceptors and handlers.
 
 ```kotlin
-import io.ktor.util.AttributeKey
+val userIdKey = AttributeKey<Long?>("userId")
 
-val UserIdKey = AttributeKey<Long?>("userId")
-
-// Set in interceptor
-val myInterceptor: TelegramEventInterceptor = Interceptor@{ context ->
-    context.attributes.put(UserIdKey, context.event.extractUserId())
+val userInterceptor: TelegramEventInterceptor = { context ->
+    context.attributes.put(userIdKey, context.event.extractUserId())
     process(context)
 }
 
-// Access in handler
-handle {
-    val userId = attributes.getOrNull(UserIdKey)
+handling {
+    handle {
+        val userId = attributes.getOrNull(userIdKey)
+    }
 }
 ```
 
-## Short-circuiting
+## Short-Circuiting
 
-Don't call `process()` to prevent further execution.
+Do not call `process(context)` when the event should not reach inner layers.
 
 ```kotlin
-val maintenanceInterceptor: TelegramEventInterceptor = Interceptor@{ context ->
+val maintenanceInterceptor: TelegramEventInterceptor = maintenance@{ context ->
     if (isMaintenanceMode) {
         val chatId = context.event.extractChatId()
         if (chatId != null) {
@@ -218,36 +197,40 @@ val maintenanceInterceptor: TelegramEventInterceptor = Interceptor@{ context ->
                 text = "Bot is under maintenance."
             )
         }
-        // Don't call process() — this stops the pipeline
-        return@Interceptor
+        return@maintenance
     }
+
     process(context)
 }
 ```
 
-## Order Matters
+## Handler Filters Vs Interceptors
 
-Interceptors execute in the order provided. The first interceptor is the outermost layer.
+Use a handler filter when the condition is part of route selection:
 
 ```kotlin
-interceptors = listOf(
-    loggingInterceptor(),          // 1. Logs entry (outermost)
-    authInterceptor,               // 2. Sets user info
-    exceptionInterceptor           // 3. Catches exceptions (innermost)
-)
+message {
+    filter({ event.message.chat.id in allowedChats }) {
+        command("admin") {
+            handle {
+                replyMessage("admin")
+            }
+        }
+    }
+}
 ```
+
+Use an interceptor when the logic should wrap all dispatching or should be shared across dispatcher implementations.
 
 ## TelegramBotEventContext
 
-The context object available in interceptors and handlers:
-
 ```kotlin
 interface TelegramBotEventContext<out T : TelegramBotEvent> {
-    val client: TelegramBotApi       // API client for sending responses
-    val event: T                     // The event being processed
-    val applicationScope: CoroutineScope  // Scope for fire-and-forget tasks
-    val attributes: Attributes       // Type-safe key-value storage
+    val client: TelegramBotApi
+    val event: T
+    val applicationScope: CoroutineScope
+    val attributes: Attributes
 
-    suspend fun me(): User           // Bot's own user info (cached)
+    suspend fun me(): User
 }
 ```

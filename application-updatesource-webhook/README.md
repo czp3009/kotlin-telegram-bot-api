@@ -69,6 +69,7 @@ val updateSource = WebhookTelegramUpdateSource(
 val app = TelegramBotApplication(
     client = client,
     updateSource = updateSource,
+    interceptors = emptyList(),
     eventDispatcher = dispatcher
 )
 

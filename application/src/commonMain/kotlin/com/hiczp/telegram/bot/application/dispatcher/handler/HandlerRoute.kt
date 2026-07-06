@@ -6,58 +6,21 @@ import com.hiczp.telegram.bot.protocol.event.TelegramBotEvent
 import kotlinx.coroutines.coroutineScope
 
 /**
- * Build-phase route constructor for the handler DSL.
+ * Build-time route constructor for the handler DSL.
  *
- * This class is used during route configuration (build phase) to construct
- * the routing tree. All methods are synchronous and non-suspending because
- * route configuration is a pure in-memory operation.
+ * Route blocks are evaluated when the dispatcher is built, not when an update is handled.
+ * Keep route blocks declarative: register filters and handlers here. Per-update work belongs
+ * in [filter] predicates or [handle] blocks.
  *
- * Routes form a tree structure where each node can:
- * - Match events using selectors
- * - Contain child routes for nested matching
- * - Have a handler that processes matched events
- *
- * The [TelegramBotDsl] annotation prevents implicit access to outer DSL scopes,
- * ensuring clean separation between different route levels.
- *
- * Example:
- * ```kotlin
- * handling {
- *     onMessageEvent {
- *         onText("ping") {
- *             handle {
- *                 client.sendMessage(event.message.chat.id.toString(), "pong")
- *             }
- *         }
- *     }
- * }
- * ```
- *
- * @param T The event type this route handles.
+ * @param T The event type visible at this route level.
  */
 @TelegramBotDsl
 class HandlerRoute<T : TelegramBotEvent>(internal val node: RouteNode) {
     /**
-     * Registers a handler for this route.
+     * Registers the runtime handler for this route.
      *
-     * The handler is invoked when an event reaches this route and no child
-     * route has consumed it. The handler receives a [HandlerBotCall] as its
-     * receiver, providing access to the event, client, and coroutine scope.
-     *
-     * Only one handler can be registered per route; subsequent calls will
-     * replace the previous handler.
-     *
-     * Example:
-     * ```kotlin
-     * onMessageEvent {
-     *     handle {
-     *         // `this` is HandlerBotCall<MessageEvent>
-     *         client.sendMessage(event.message.chat.id.toString(), "Hello!")
-     *     }
-     * }
-     * ```
-     *
-     * @param handler The handler function with [HandlerBotCall] receiver.
+     * The handler is invoked only after this route matches and none of its children consume the event.
+     * Registering a handler consumes the event and stops further route matching.
      */
     fun handle(handler: suspend HandlerBotCall<T>.() -> Unit) {
         node.handler = { context ->
@@ -73,72 +36,60 @@ class HandlerRoute<T : TelegramBotEvent>(internal val node: RouteNode) {
     }
 
     /**
-     * Creates a child route with a custom selector.
+     * Adds a child route guarded by an asynchronous predicate.
      *
-     * This is the core routing primitive. The selector determines whether
-     * an event should be routed to the child branch. If the selector returns
-     * a non-null context, the event is passed to the child; otherwise, the
-     * child is skipped.
-     *
-     * @param R The target event type for the child route.
-     * @param selector A function that receives the parent context and returns
-     *        a context with the target event type, or null if the event should
-     *        not be routed to this child.
-     * @param build A builder lambda for configuring the child [HandlerRoute].
+     * Returning `true` enters the child branch. Returning `false` marks this branch as not matched,
+     * and the dispatcher backtracks to the nearest ancestor with an untested sibling branch.
      */
-    fun <R : TelegramBotEvent> select(
-        selector: suspend (TelegramBotEventContext<T>) -> TelegramBotEventContext<R>?,
+    fun filter(
+        predicate: suspend HandlerFilterCall<T>.() -> Boolean,
+        build: HandlerRoute<T>.() -> Unit
+    ) {
+        filterContext(
+            selector = {
+                if (predicate(this)) context else null
+            },
+            build = build
+        )
+    }
+
+    /**
+     * Adds a child route that narrows the event type to [R].
+     */
+    inline fun <reified R : T> filter(noinline build: HandlerRoute<R>.() -> Unit) {
+        filterContext({ context.castOrNull<R>() }, build)
+    }
+
+    /**
+     * Internal child route primitive for filters that need to replace the runtime context
+     * while keeping the public DSL centered on [filter].
+     */
+    @PublishedApi
+    internal fun <R : TelegramBotEvent> filterContext(
+        selector: suspend HandlerRouteSelection<T>.() -> TelegramBotEventContext<R>?,
         build: HandlerRoute<R>.() -> Unit
     ) {
         val childNode = RouteNode { context ->
             @Suppress("UNCHECKED_CAST")
-            selector(context as TelegramBotEventContext<T>)
+            val typedContext = context as TelegramBotEventContext<T>
+            selector(
+                HandlerRouteSelection(
+                    context = typedContext,
+                    filterCall = DefaultHandlerFilterCall(typedContext)
+                )
+            )
         }
         node.children.add(childNode)
         HandlerRoute<R>(childNode).build()
     }
-
-    /**
-     * Creates a child route for a specific event subtype.
-     *
-     * This is a convenience method that uses [castOrNull] to safely match
-     * events by type. Events that are not of type [R] are not routed to
-     * the child branch.
-     *
-     * Example:
-     * ```kotlin
-     * handling {
-     *     onMessageEvent {
-     *         onText("hello") { ... }
-     *     }
-     *     onCallbackQueryEvent {
-     *         onCallbackData("confirm") { ... }
-     *     }
-     * }
-     * ```
-     *
-     * @param R The specific event subtype to handle.
-     * @param build A builder lambda for configuring the child route.
-     */
-    inline fun <reified R : T> on(noinline build: HandlerRoute<R>.() -> Unit) {
-        select({ it.castOrNull<R>() }, build)
-    }
 }
 
 /**
- * Creates a child [RouteNode] with the given selector and attaches it to the parent node.
- *
- * @param parentNode The parent node to attach the child to.
- * @param selector A function that receives a context and returns a transformed context, or null.
- * @return The created child [RouteNode].
+ * Internal receiver used by filters that can transform the route context.
  */
-internal inline fun createChildNode(
-    parentNode: RouteNode,
-    crossinline selector: suspend (TelegramBotEventContext<*>) -> TelegramBotEventContext<*>?
-): RouteNode {
-    val childNode = RouteNode { context ->
-        selector(context)
-    }
-    parentNode.children.add(childNode)
-    return childNode
-}
+@PublishedApi
+internal class HandlerRouteSelection<T : TelegramBotEvent>(
+    @PublishedApi
+    internal val context: TelegramBotEventContext<T>,
+    private val filterCall: HandlerFilterCall<T>,
+) : HandlerFilterCall<T> by filterCall

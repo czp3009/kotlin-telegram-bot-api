@@ -1,14 +1,12 @@
 # Conversations
 
-Multi-turn conversations allow bots to collect information across multiple messages.
+Conversations let a handler start a multi-turn flow and receive later events through a `ConversationScope`.
 
 ## Setup
 
-Install the conversation interceptor.
+Install `conversationInterceptor()` once. It is an application interceptor, so it sits above the dispatcher.
 
 ```kotlin
-import com.hiczp.telegram.bot.application.interceptor.builtin.conversation.conversationInterceptor
-
 val app = TelegramBotApplication.longPolling(
     botToken = "YOUR_TOKEN",
     interceptors = listOf(conversationInterceptor()),
@@ -16,85 +14,91 @@ val app = TelegramBotApplication.longPolling(
 )
 ```
 
-**Important:** The conversation interceptor must not be installed more than once.
-
 ## Basic Conversation
 
+Start conversations from runtime handler code.
+
 ```kotlin
-import com.hiczp.telegram.bot.application.interceptor.builtin.conversation.startConversation
-import kotlin.time.Duration.Companion.minutes
+command("survey") {
+    handle {
+        startConversation(
+            timeout = 5.minutes,
+            onTimeout = {
+                val chatId = event.extractChatId()
+                if (chatId != null) {
+                    client.sendMessage(chatId.toString(), "Survey timed out.")
+                }
+            },
+            onCancel = {
+                val chatId = event.extractChatId()
+                if (chatId != null) {
+                    client.sendMessage(chatId.toString(), "Survey cancelled.")
+                }
+            }
+        ) {
+            send("What is your name?")
+            val name = awaitText()
 
-commandEndpoint("survey") {
-    startConversation(
-        timeout = 5.minutes,
-      onTimeout = {
-        val chatId = event.extractChatId()
-        if (chatId != null) {
-          client.sendMessage(chatId.toString(), "Survey timed out.")
+            reply("Hello, $name! How old are you?")
+            val age = awaitText()
+
+            reply("Thanks! You are $age years old.")
         }
-      },
-      onCancel = {
-        val chatId = event.extractChatId()
-        if (chatId != null) {
-          client.sendMessage(chatId.toString(), "Survey cancelled.")
-        }
-      }
-    ) {
-        send("What is your name?")
-        val name = awaitText()
-
-        reply("Hello, $name! How old are you?")
-        val age = awaitText()
-
-        reply("Thanks! You are $age years old.")
     }
 }
 ```
 
+`startConversation` launches the conversation in `applicationScope` and returns a `Job`.
+
 ## Messaging Methods
 
-### send(text, replyMarkup?)
+### `send(text, replyMarkup?)`
 
-Sends a message to the conversation's chat without replying to any specific message. Returns `TelegramResponse<Message>`
-and updates `lastSentMessageId` on success.
-
-Requires a `TelegramBotEventContext` context receiver.
+Sends a message to the conversation chat. It returns `TelegramResponse<Message>` and updates `lastSentMessageId` on
+success.
 
 ```kotlin
-send("Hello!")  // Sends to conversation's chat
-send("Choose:", replyMarkup = ForceReply(forceReply = true))  // With reply markup
+send("Hello!")
+send("Choose:", replyMarkup = ForceReply(forceReply = true))
 ```
 
-### reply(text, replyToMessageId?)
+### `reply(text, replyToMessageId?)`
 
-Sends a message as a reply. The reply behavior follows this priority:
+Sends a reply using this priority:
 
-1. If `replyToMessageId` is provided, replies to that specific message.
-2. If `lastAwaitedMessageId` is available, replies to the most recent user input.
-3. If no message ID is available, behaves like `send()`.
+1. `replyToMessageId`, when provided
+2. `lastAwaitedMessageId`, when available
+3. regular `send()` behavior
 
-Returns `TelegramResponse<Message>` and updates `lastSentMessageId` on success.
-
-Requires a `TelegramBotEventContext` context receiver.
+It returns `TelegramResponse<Message>` and updates `lastSentMessageId` on success.
 
 ```kotlin
-reply("Got it!")  // Replies to last awaited message
-reply("Response", replyToMessageId = 123)  // Replies to specific message
+reply("Got it!")
+reply("Response", replyToMessageId = 123)
 ```
 
 ## Await Methods
 
-| Method                 | Description                                                                                           | Updates `lastAwaitedMessageId` |
-|------------------------|-------------------------------------------------------------------------------------------------------|--------------------------------|
-| `awaitEvent()`         | Awaits the next event (raw)                                                                           | No                             |
-| `awaitEvent<T>()`      | Awaits any event of type T                                                                            | No                             |
-| `awaitMessage()`       | Awaits the next message event                                                                         | Yes                            |
-| `awaitText()`          | Awaits the next text message                                                                          | Yes                            |
-| `awaitCommand()`       | Awaits the next command (validates bot username). Requires `TelegramBotEventContext` context receiver | Yes                            |
-| `awaitCallbackQuery()` | Awaits the next callback query event                                                                  | Yes (if message present)       |
-| `awaitReply(msgId?)`   | Awaits a reply to a specific message (defaults to `lastSentMessageId`)                                | Yes                            |
+| Method                 | Description                                                       | Updates `lastAwaitedMessageId` |
+|------------------------|-------------------------------------------------------------------|--------------------------------|
+| `awaitEvent()`         | Awaits the next raw event                                         | No                             |
+| `awaitEvent<T>()`      | Awaits the next event of type `T`                                 | No                             |
+| `awaitMessage()`       | Awaits the next `MessageEvent` and returns its `Message`          | Yes                            |
+| `awaitText()`          | Awaits the next message with text and returns the text            | Yes                            |
+| `awaitCommand()`       | Awaits a command intended for this bot                            | Yes                            |
+| `awaitCallbackQuery()` | Awaits the next callback query event                              | Yes, when callback has message |
+| `awaitReply(msgId?)`   | Awaits a reply to `msgId`, or to `lastSentMessageId` when omitted | Yes                            |
 
-### Example: Callback Query
+`awaitCommand()` needs the surrounding `TelegramBotEventContext` so it can validate `/command@bot_username`. This is
+available inside handler blocks.
+
+```kotlin
+send("Type /yes or /no to confirm:")
+val command = awaitCommand()
+reply("You typed: /${command.name}")
+```
+
+## Callback Query Example
 
 ```kotlin
 send("Choose an option:")
@@ -102,47 +106,38 @@ val callback = awaitCallbackQuery()
 reply("You selected: ${callback.callbackQuery.data}")
 ```
 
-### Example: Reply Waiting
+## Reply Waiting
 
 ```kotlin
 send("Please reply to this message with your answer.")
-val replyMessage = awaitReply()  // Waits for reply to last sent message
-```
-
-### Example: Command Waiting
-
-Note: `awaitCommand()` requires a `TelegramBotEventContext` context receiver to validate the bot username.
-
-```kotlin
-send("Type /yes or /no to confirm:")
-val command = awaitCommand()  // Validates against bot username
-reply("You typed: /${command.name}")
+val replyMessage = awaitReply()
+reply("You answered: ${replyMessage.text}")
 ```
 
 ## Conversation ID
 
-Conversations are identified by `ConversationId(chatId, threadId?, userId?)`.
+Conversations are keyed by `ConversationId`.
 
 ```kotlin
 data class ConversationId(
-  val chatId: Long,
-  val threadId: Long? = null,
-  val userId: Long? = null,
+    val chatId: Long,
+    val threadId: Long? = null,
+    val userId: Long? = null,
 )
 ```
 
-| Pattern                                          | Scope                          |
-|--------------------------------------------------|--------------------------------|
-| `ConversationId(chatId)`                         | Whole chat shares conversation |
-| `ConversationId(chatId, threadId = threadId)`    | Per-thread in forum            |
-| `ConversationId(chatId, userId = userId)`        | Per-user in group chat         |
-| `ConversationId(chatId, threadId, userId = uid)` | Per-user in specific thread    |
+| Pattern                                             | Scope                     |
+|-----------------------------------------------------|---------------------------|
+| `ConversationId(chatId)`                            | Whole chat                |
+| `ConversationId(chatId, threadId = threadId)`       | Whole forum topic/thread  |
+| `ConversationId(chatId, userId = userId)`           | One user in a chat        |
+| `ConversationId(chatId, threadId, userId = userId)` | One user in a forum topic |
 
-Default: Uses `chatId + threadId + userId` from the triggering event.
+The default id uses the triggering event's `chatId`, `threadId`, and `userId`.
 
-## Custom Intercept Predicate
+## Intercept Predicate
 
-By default, conversations intercept `MessageEvent`, `BusinessMessageEvent`, and `CallbackQueryEvent`.
+By default, active conversations intercept `MessageEvent`, `BusinessMessageEvent`, and `CallbackQueryEvent`.
 
 ```kotlin
 startConversation(
@@ -150,81 +145,78 @@ startConversation(
         context.event is MessageEvent
     }
 ) {
-    // Only messages are intercepted
+    // Only message events enter this conversation
 }
 ```
 
 ## Cancel Predicate
 
-By default, conversations cancel when the user sends `/cancel` (also recognizes `/cancel@bot_username`).
+By default, a message matching `/cancel` or `/cancel@bot_username` cancels the conversation.
 
 ```kotlin
 startConversation(
-  cancelPredicate = { context ->
-    val event = context.event
-    event is MessageEvent && event.message.text == "/quit"
-  }
+    cancelPredicate = { context ->
+        val event = context.event
+        event is MessageEvent && event.message.text == "/quit"
+    }
 ) {
-  // Cancels on /quit instead of /cancel
+    // Cancels on /quit
 }
 ```
 
 ## Channel Capacity
 
-The `capacity` parameter controls how events are buffered for the conversation:
+The conversation channel buffers events routed to the active conversation.
 
-| Capacity             | Behavior                                            |
-|----------------------|-----------------------------------------------------|
-| `Channel.UNLIMITED`  | (default) All matching events are buffered          |
-| `Channel.BUFFERED`   | Bounded buffer; new events are dropped when full    |
-| `Channel.RENDEZVOUS` | (capacity = 0) Only received when actively awaiting |
+| Capacity             | Behavior                                          |
+|----------------------|---------------------------------------------------|
+| `Channel.UNLIMITED`  | Default; buffers all matching events              |
+| `Channel.BUFFERED`   | Bounded buffer; events are dropped when full      |
+| `Channel.RENDEZVOUS` | Capacity 0; receives only while actively awaiting |
 
 ```kotlin
 startConversation(capacity = Channel.BUFFERED) {
-  // Limited buffer - excess events dropped with warning
+    val text = awaitText()
 }
 ```
 
 ## Coroutine Support
 
-`ConversationScope` implements `CoroutineScope`. Child coroutines are tied to the conversation's lifecycle.
+`ConversationScope` implements `CoroutineScope`. Child coroutines are tied to the conversation lifecycle.
 
 ```kotlin
 startConversation {
     launch { task1() }
     launch { task2() }
-    // Both complete before conversation ends
 }
 ```
 
 ## Properties
 
-| Property               | Description                                                       |
-|------------------------|-------------------------------------------------------------------|
-| `lastAwaitedMessageId` | Updated after await methods, used by `reply()` for auto-targeting |
-| `lastSentMessageId`    | Updated after `send()`/`reply()`, used by `awaitReply()`          |
-| `id`                   | The `ConversationId` identifying this conversation                |
-| `channel`              | Channel receiving events for this conversation                    |
-| `cancelPredicate`      | The predicate function used for cancellation                      |
+| Property               | Description                                              |
+|------------------------|----------------------------------------------------------|
+| `id`                   | Conversation id                                          |
+| `channel`              | Incoming event channel                                   |
+| `cancelPredicate`      | Predicate used by await methods to detect cancellation   |
+| `lastAwaitedMessageId` | Updated by message await methods and used by `reply()`   |
+| `lastSentMessageId`    | Updated by `send()`/`reply()` and used by `awaitReply()` |
+
+`lastAwaitedMessageId` and `lastSentMessageId` are mutable for advanced use cases, but normal code should let the
+conversation framework maintain them.
 
 ## Error Handling
 
-| Exception                        | Behavior                                 |
-|----------------------------------|------------------------------------------|
-| `TimeoutCancellationException`   | Triggers `onTimeout` callback            |
-| `ConversationCancelledException` | Triggers `onCancel` callback             |
-| `CancellationException`          | Re-thrown (coroutine cancellation)       |
-| Other `Throwable`                | Logged as error, conversation cleaned up |
+| Exception                        | Behavior                              |
+|----------------------------------|---------------------------------------|
+| `TimeoutCancellationException`   | Calls `onTimeout`                     |
+| `ConversationCancelledException` | Calls `onCancel`                      |
+| `CancellationException`          | Re-thrown                             |
+| Other `Throwable`                | Logged and conversation is cleaned up |
 
-## Important Notes
+## Notes
 
-- Messages routed to a conversation that are not consumed will be discarded when the conversation ends. They will NOT be
-  passed to other handlers.
-- Conversation state is in-memory only. States are lost on bot restart.
-- From the perspective of upper-layer interceptors, events routed to a conversation appear to be processed immediately
-  (the interceptor returns without waiting for the conversation to complete).
-
-## Next Steps
-
-- [Handler DSL](Handler-DSL) - Event routing
-- [Interceptors](Interceptors) - Middleware pipeline
+- Events routed to a conversation are not passed to normal handlers.
+- Unconsumed buffered events are dropped when the conversation ends.
+- Conversation state is in memory only and is lost on process restart.
+- From upper interceptors and update sources, routing an event into a conversation completes immediately; the active
+  conversation continues in `applicationScope`.

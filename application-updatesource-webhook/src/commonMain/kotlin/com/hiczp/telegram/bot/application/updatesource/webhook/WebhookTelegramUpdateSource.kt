@@ -34,7 +34,8 @@ private val logger = KotlinLogging.logger {}
  *
  * Exception semantics:
  * - [CancellationException]: Re-thrown to propagate coroutine cancellation.
- * - [Exception]: Business exceptions are logged and a 200 OK is returned to Telegram to prevent retries.
+ * - [TelegramBotShuttingDownException]: Re-thrown during framework shutdown.
+ * - [Exception]: Business exceptions are logged and re-thrown, so Telegram may retry the request.
  *
  * ## Usage Example
  *

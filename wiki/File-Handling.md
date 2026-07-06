@@ -1,36 +1,40 @@
 # File Handling
 
-This page covers file upload and download using the `InputFile` sealed type.
+File uploads use the handwritten `InputFile` type. File downloads use `getFile()` plus `downloadFile()`.
 
-## InputFile Types
+## InputFile
 
-`InputFile` is a sealed interface with two implementations, created via companion object factory methods.
+`InputFile` has two modes.
 
-### Reference (file_id or URL)
+### Reference
+
+Use an existing Telegram `file_id` or a public URL.
 
 ```kotlin
-// Reference by file_id string
 InputFile.reference("AgACAgIAAxkBAAIc...")
-
-// Reference by URL (use Ktor's Url type)
 InputFile.reference(Url("https://example.com/image.png"))
 ```
 
 ### Binary Upload
 
+Upload new bytes through a `ByteReadChannel` producer.
+
 ```kotlin
-// Upload from ByteReadChannel producer
 InputFile.binary(fileName = "document.pdf") {
     ByteReadChannel(bytes)
 }
 
-// With explicit content type
 InputFile.binary(
-    fileName = "image.png",
-    contentType = ContentType.Image.PNG
-) { ByteReadChannel(imageBytes) }
+    fileName = "image.jpg",
+    contentType = ContentType.Image.JPEG
+) {
+    ByteReadChannel(imageBytes)
+}
+```
 
-// From ChannelProvider directly
+You can also pass a `ChannelProvider` explicitly:
+
+```kotlin
 InputFile.binary(
     content = ChannelProvider { ByteReadChannel(bytes) },
     fileName = "report.pdf",
@@ -38,84 +42,95 @@ InputFile.binary(
 )
 ```
 
-## File Upload
-
-### Reference by File ID
-
-When a user sends a file, you can reference it by `file_id`.
+## Upload A Local File
 
 ```kotlin
-onMessageEvent {
-    whenMessageEventPhoto {
-        val photo = event.message.photo?.maxByOrNull { it.fileSize ?: 0 }
-        if (photo != null) {
+command("photo") {
+    handle {
+        val imagePath = Path("../resources/telegram.jpg")
+        val inputFile = InputFile.binary(
+            content = ChannelProvider {
+                ByteReadChannel(SystemFileSystem.source(imagePath).buffered())
+            },
+            fileName = imagePath.name,
+            contentType = ContentType.Image.JPEG,
+        )
+
+        replyPhoto(
+            photo = inputFile,
+            caption = "Here's telegram.jpg!"
+        )
+    }
+}
+```
+
+## Echo A Photo By File ID
+
+```kotlin
+message {
+    photo {
+        handle {
+            val photo = event.message.photo?.maxByOrNull { it.fileSize ?: 0 }
+                ?: return@handle
+
             replyPhoto(
                 photo = InputFile.reference(photo.fileId),
-                caption = "Echoed!"
+                caption = "Echoed photo"
             )
         }
     }
 }
 ```
 
-### Upload Binary Content
+When Telegram already has the file, referencing `file_id` is cheaper than downloading and re-uploading it.
 
-```kotlin
-import com.hiczp.telegram.bot.protocol.type.InputFile
-import io.ktor.utils.io.ByteReadChannel
+## Download Files
 
-// Upload from byte array
-val bytes = readFileBytes("document.pdf")
-client.sendDocument(
-    chatId = chatId.toString(),
-    document = InputFile.binary(fileName = "document.pdf") {
-        ByteReadChannel(bytes)
-    }
-)
-```
-
-### Upload from File System
-
-```kotlin
-import okio.Path
-import okio.SystemFileSystem
-import okio.buffered
-
-commandEndpoint("photo") {
-    val imagePath = Path("../resources/photo.jpg")
-    val inputFile = InputFile.binary(
-        content = ChannelProvider {
-            ByteReadChannel(SystemFileSystem.source(imagePath).buffered())
-        },
-        fileName = imagePath.name,
-        contentType = ContentType.Image.JPEG,
-    )
-    replyPhoto(photo = inputFile, caption = "Here's the file!")
-}
-```
-
-## File Download
-
-Use `client.getFile()` to get file metadata, then `client.downloadFile()` to download.
-
-`downloadFile()` returns an `HttpStatement`. Use `.execute { }` to process the response.
+Use `client.getFile()` to resolve a file path, then `client.downloadFile()` to download it. `downloadFile()` returns an
+`HttpStatement`, so process the response inside `execute`.
 
 ```kotlin
 val fileInfo = client.getFile(fileId).getOrThrow()
 val filePath = fileInfo.filePath ?: error("No file path")
 
 client.downloadFile(filePath).execute { response ->
-    val channel: ByteReadChannel = response.bodyAsChannel()
-    // Read bytes from channel
+    val channel = response.bodyAsChannel()
     val bytes = channel.readRemaining().readByteArray()
 }
 ```
 
-## Supported Methods
+## Download And Re-upload
 
-Methods that support file upload via `InputFile`:
+```kotlin
+message {
+    sticker {
+        handle {
+            val sticker = event.message.sticker ?: return@handle
 
-| Method          | File Parameter |
+            launch {
+                sendChatAction(ChatAction.TYPING)
+            }
+
+            val filePath = client.getFile(sticker.fileId).getOrThrow().filePath
+                ?: return@handle
+
+            client.downloadFile(filePath).execute { response ->
+                val channel = response.bodyAsChannel()
+                replyPhoto(
+                    photo = InputFile.binary { channel },
+                    caption = "Sticker echoed"
+                )
+            }
+        }
+    }
+}
+```
+
+## Multipart Methods
+
+Common upload methods include:
+
+| Method          | File parameter |
 |-----------------|----------------|
 | `sendPhoto`     | `photo`        |
 | `sendDocument`  | `document`     |
@@ -126,45 +141,29 @@ Methods that support file upload via `InputFile`:
 | `sendAudio`     | `audio`        |
 | `sendSticker`   | `sticker`      |
 
-All of these have both a base API method on `TelegramBotApi` and convenience `send*`/`reply*` extensions in
-`TelegramBotEventContext<MessageEvent>`.
+The protocol module generates multipart form wrappers and scatter functions for these calls. The application module
+also provides context actions such as `replyPhoto`, `replyDocument`, and `sendChatAction` for handler code.
 
-## Example: Echo Document
+## Dynamic Attachments
 
-```kotlin
-onMessageEvent {
-    whenMessageEventDocument {
-        val document = event.message.document ?: return@whenMessageEventDocument
-        replyDocument(
-            document = InputFile.reference(document.fileId)
-        )
-    }
-}
-```
-
-## Example: Download and Re-upload Sticker
+Some Telegram methods use `attach://name` references inside JSON-like multipart fields. Pass matching attachment parts
+with `InputFile.toFormPart(name)`.
 
 ```kotlin
-onMessageEvent {
-    whenMessageEventSticker {
-        val sticker = event.message.sticker ?: return@whenMessageEventSticker
-        sendChatAction(ChatAction.TYPING)
-
-        val filePath = client.getFile(sticker.fileId).getOrThrow().filePath
-            ?: return@whenMessageEventSticker
-
-        client.downloadFile(filePath).execute { response ->
-            val byteReadChannel = response.bodyAsChannel()
-            replyPhoto(
-                photo = InputFile.binary { byteReadChannel },
-                caption = "Echoed sticker!"
-            )
-        }
-    }
-}
+api.sendMediaGroup(
+    chatId = "123456789",
+    media = listOf(
+        InputMediaPhoto(media = "attach://photo1"),
+        InputMediaPhoto(media = "attach://photo2"),
+    ),
+    attachments = listOf(
+        InputFile.binary { ByteReadChannel(photo1Bytes) }.toFormPart("photo1"),
+        InputFile.binary { ByteReadChannel(photo2Bytes) }.toFormPart("photo2"),
+    )
+)
 ```
 
 ## Next Steps
 
-- [Handler DSL](Handler-DSL) - Event routing
-- [Advanced Topics](Advanced-Topics) - Error handling, union types
+- [Handler DSL](Handler-DSL)
+- [Advanced Topics](Advanced-Topics)

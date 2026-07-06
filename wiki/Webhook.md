@@ -1,12 +1,16 @@
 # Webhook
 
-The webhook module (`:application-updatesource-webhook`) provides webhook-based update receiving.
+The webhook update source lives in `:application-updatesource-webhook`. It receives Telegram updates through an
+embedded Ktor server.
 
 ## Installation
 
 ```kotlin
+implementation("com.hiczp:telegram-bot-api-application:$version")
 implementation("com.hiczp:telegram-bot-api-application-updatesource-webhook:$version")
 ```
+
+Add a Ktor server engine dependency such as Netty or CIO in the application that runs the bot.
 
 ## Quick Start
 
@@ -25,7 +29,8 @@ val app = TelegramBotApplication.webhook(
             port = 8443
         }
     },
-    eventDispatcher = dispatcher
+    eventDispatcher = dispatcher,
+    interceptors = listOf(loggingInterceptor())
 )
 
 app.start()
@@ -34,12 +39,10 @@ app.join()
 
 ## Manual Setup
 
-For more control, create the components separately.
-
 ```kotlin
-import com.hiczp.telegram.bot.client.TelegramBotClient
 import com.hiczp.telegram.bot.application.TelegramBotApplication
 import com.hiczp.telegram.bot.application.updatesource.webhook.WebhookTelegramUpdateSource
+import com.hiczp.telegram.bot.client.TelegramBotClient
 import io.ktor.server.netty.Netty
 
 val client = TelegramBotClient(botToken = "YOUR_TOKEN")
@@ -63,96 +66,102 @@ val app = TelegramBotApplication(
 )
 ```
 
-## Parameters
+## Factory Parameters
 
-### webhook() Factory
+| Parameter                  | Description                                      |
+|----------------------------|--------------------------------------------------|
+| `botToken`                 | Telegram bot token                               |
+| `applicationEngineFactory` | Ktor engine factory                              |
+| `path`                     | Webhook endpoint path, default `"/"`             |
+| `configureEngine`          | Engine configuration lambda                      |
+| `configureApplication`     | Additional Ktor application configuration        |
+| `eventDispatcher`          | Dispatcher used by the application               |
+| `interceptors`             | Application interceptors                         |
+| `coroutineDispatcher`      | Optional dispatcher for application/client scope |
+| `onUnrecognizedUpdate`     | Optional callback for unknown update types       |
 
-| Parameter                  | Type                                             | Default       | Description                            |
-|----------------------------|--------------------------------------------------|---------------|----------------------------------------|
-| `botToken`                 | `String`                                         | required      | Telegram bot token                     |
-| `applicationEngineFactory` | `ApplicationEngineFactory`                       | required      | Ktor engine (Netty, CIO, etc.)         |
-| `path`                     | `String`                                         | `"/"`         | Webhook endpoint path                  |
-| `configureEngine`          | `TConfiguration.() -> Unit`                      | `{}`          | Engine configuration (host, port, SSL) |
-| `configureApplication`     | `Application.() -> Unit`                         | `{}`          | Additional Ktor application config     |
-| `eventDispatcher`          | `TelegramEventDispatcher`                        | required      | Event dispatcher                       |
-| `interceptors`             | `List<TelegramEventInterceptor>`                 | `emptyList()` | Interceptors                           |
-| `coroutineDispatcher`      | `CoroutineDispatcher?`                           | `null`        | Coroutine dispatcher                   |
-| `onUnrecognizedUpdate`     | `(suspend (TelegramBotClient, Update) -> Unit)?` | `null`        | Custom unrecognized update handler     |
+## Registering The Webhook
 
-### WebhookTelegramUpdateSource Constructor
+After the server is reachable from the public internet, register its URL with Telegram.
 
 ```kotlin
-open class WebhookTelegramUpdateSource<TEngine, TConfiguration>(
-    applicationEngineFactory: ApplicationEngineFactory<TEngine, TConfiguration>,
-    path: String = "/",
-    configureEngine: TConfiguration.() -> Unit = {},
-    configureApplication: Application.() -> Unit = {},
-)
+client.setWebhook(
+    url = "https://bot.example.com/webhook"
+).getOrThrow()
 ```
 
-## SSL Configuration
+Delete the webhook before switching back to long polling:
 
-Telegram requires HTTPS. Use a reverse proxy for SSL termination, or configure SSL directly.
+```kotlin
+client.deleteWebhook().getOrThrow()
+```
 
-### Option 1: Reverse Proxy (Recommended)
+## HTTPS
+
+Telegram requires HTTPS for webhooks. The recommended setup is TLS termination in a reverse proxy.
 
 ```nginx
 server {
     listen 443 ssl;
     server_name bot.example.com;
 
-    ssl_certificate /path/to/cert.pem;
-    ssl_certificate_key /path/to/key.pem;
+    ssl_certificate /path/to/fullchain.pem;
+    ssl_certificate_key /path/to/privkey.pem;
 
     location /webhook {
-        proxy_pass http://localhost:8080;
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
     }
 }
 ```
 
-### Option 2: Self-signed Certificate
+The bot can then listen on local HTTP:
 
 ```kotlin
-configureEngine = {
-    sslConnector(
-        keyStorePath = Path.of("keystore.jks"),
-        keyStorePassword = "changeit"
-    ) {
-        host = "0.0.0.0"
-        port = 8443
+val updateSource = WebhookTelegramUpdateSource(
+    applicationEngineFactory = Netty,
+    path = "/webhook",
+    configureEngine = {
+        connector {
+            host = "127.0.0.1"
+            port = 8080
+        }
     }
-}
+)
 ```
 
-## Registering Webhook
-
-After starting your bot, register the webhook URL with Telegram.
-
-```bash
-curl -X POST "https://api.telegram.org/bot<TOKEN>/setWebhook" \
-     -d "url=https://bot.example.com:8443/webhook"
-```
+You can also configure SSL directly in the selected Ktor engine when that is more appropriate for your deployment.
 
 ## Lifecycle
 
-The `WebhookTelegramUpdateSource` manages an embedded Ktor server:
+- `start()` starts the embedded server and handles webhook requests.
+- `stop(gracePeriod)` waits for startup if needed and then stops the embedded server.
+- `onFinalize()` is a no-op for webhook mode.
 
-- `start()` - Starts the Ktor server and begins receiving updates
-- `stop()` - Stops the Ktor server
-- `onFinalize()` - Cleanup after shutdown
+`WebhookTelegramUpdateSource` can only be started once per instance.
 
-## Long Polling vs Webhook
+## Exception Semantics
 
-| Aspect    | Long Polling            | Webhook                     |
-|-----------|-------------------------|-----------------------------|
-| Server    | Not required            | Required (public IP, HTTPS) |
-| Latency   | Polling interval        | Near real-time              |
-| Resources | Continuous polling      | Event-driven                |
-| Setup     | Simple, no config       | Requires HTTPS, domain      |
-| Use case  | Development, small bots | Production, high-traffic    |
-| Scaling   | One instance            | Load balancer possible      |
+- Invalid request body: logs and responds `400 Bad Request`.
+- `TelegramBotShuttingDownException`: re-thrown for framework shutdown.
+- `CancellationException`: re-thrown for coroutine cancellation.
+- Other handler exceptions: logged and re-thrown.
+
+Because handler exceptions are re-thrown, Telegram can retry failed webhook requests. Make handlers idempotent when a
+retry could repeat a side effect.
+
+## Long Polling Vs Webhook
+
+| Aspect      | Long polling                     | Webhook                                   |
+|-------------|----------------------------------|-------------------------------------------|
+| Server      | Not required                     | Public HTTPS endpoint required            |
+| Latency     | Poll interval and network timing | Push-based                                |
+| Setup       | Simple                           | Requires HTTPS and routing                |
+| Scaling     | Usually one poller               | Can sit behind HTTP infrastructure        |
+| Development | Easiest default                  | Useful with tunnels or production ingress |
 
 ## Related Links
 
 - [Telegram Webhook Guide](https://core.telegram.org/bots/webhooks)
-- [Ktor Server Documentation](https://ktor.io/docs/server.html)
+- [Ktor Server Engines](https://ktor.io/docs/server-engines.html)

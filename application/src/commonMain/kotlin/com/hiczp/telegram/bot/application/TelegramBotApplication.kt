@@ -40,10 +40,9 @@ private val logger = KotlinLogging.logger {}
  * - [CancellationException]: Local business cancellation (e.g., `withTimeout`). Warns and advances the offset to prevent infinite retry loops (Stuck Bot).
  * - [Exception]: Unhandled business exception. Logs error and advances the offset to skip the poisonous update.
  *
- * The CancellationException mechanism:
- * - In sequential mode: instantly breaks the processing loop
- * - In concurrent mode (launch): silently cancels individual child tasks
- * - This leverages Kotlin's native coroutine cancellation semantics
+ * Cancellation handling depends on the update source and processing mode. Local business cancellations
+ * are generally logged and acknowledged to avoid retry loops; framework shutdown uses
+ * [TelegramBotShuttingDownException] to preserve offsets where the source can do so.
  *
  * Handling unrecognized updates:
  * When Telegram introduces new update types that are not yet supported by this library,
@@ -53,7 +52,7 @@ private val logger = KotlinLogging.logger {}
  * val app = TelegramBotApplication(
  *     client = client,
  *     updateSource = LongPollingTelegramUpdateSource(client),
- *     interceptors = listOf(loggingInterceptor),
+ *     interceptors = listOf(loggingInterceptor()),
  *     eventDispatcher = eventDispatcher,
  *     onUnrecognizedUpdate = { client, update ->
  *         // Custom handling: send alert, store for later analysis, etc.
@@ -68,7 +67,7 @@ private val logger = KotlinLogging.logger {}
  * val app = TelegramBotApplication(
  *     client = client,
  *     updateSource = LongPollingTelegramUpdateSource(client),
- *     interceptors = listOf(loggingInterceptor),
+ *     interceptors = listOf(loggingInterceptor()),
  *     eventDispatcher = eventDispatcher
  * )
  * app.start()
@@ -290,13 +289,15 @@ class TelegramBotApplication(
      *
      * Example of problematic code in a handler:
      * ```kotlin
-     * onMessageEvent {
-     *     whenText("bad") {
-     *         launch {
-     *             while (true) {
-     *                 // Missing isActive check - will never respond to cancellation
-     *                 delay(1000)
-     *                 println("Still running")
+     * message {
+     *     text("bad") {
+     *         handle {
+     *             launch {
+     *                 while (true) {
+     *                     // Missing isActive check - will never respond to cancellation
+     *                     delay(1000)
+     *                     println("Still running")
+     *                 }
      *             }
      *         }
      *     }

@@ -28,14 +28,7 @@ DSL, Command DSL, and interceptor pipeline.
     - [Handler Scope vs applicationScope](#handler-scope-vs-applicationscope)
     - [Limiting Concurrency](#limiting-concurrency)
 - [Handler DSL](#handler-dsl)
-    - [Event Type Routing](#event-type-routing)
-    - [Text Matching](#text-matching)
-    - [Composite Matchers](#composite-matchers)
-    - [Fallback Handler](#fallback-handler)
-    - [Route Modularization](#route-modularization)
 - [Command DSL](#command-dsl)
-    - [Simple Commands](#simple-commands)
-    - [Commands with Arguments](#commands-with-arguments)
     - [Subcommands](#subcommands)
     - [Argument Validation](#argument-validation)
     - [Error Handling](#error-handling)
@@ -44,7 +37,7 @@ DSL, Command DSL, and interceptor pipeline.
     - [Short-Circuit](#short-circuit)
     - [Attributes](#attributes)
     - [Built-in Interceptors](#built-in-interceptors)
-    - [Middleware](#middleware)
+  - [Custom Handler Filters](#custom-handler-filters)
 
 ## Quick Start
 
@@ -52,11 +45,15 @@ Create a simple long-polling bot using the factory method:
 
 ```kotlin
 val routes = handling {
-    commandEndpoint("start") {
-        sendMessage("Welcome!")
+  command("start") {
+    handle {
+      replyMessage("Welcome!")
     }
-    commandEndpoint("ping") {
-        replyMessage("pong")
+  }
+  command("ping") {
+    handle {
+      replyMessage("pong")
+    }
     }
 }
 
@@ -164,8 +161,10 @@ interface TelegramUpdateSource {
 The primary update source for production use, implementing long polling with configurable processing modes:
 
 ```kotlin
+val client = TelegramBotClient(botToken = "YOUR_TOKEN")
+
 val updateSource = LongPollingTelegramUpdateSource(
-    client = telegramBotApi,
+  client = client,
     allowedUpdates = listOf("message", "callback_query"),  // Filter update types
     processingMode = ProcessingMode.CONCURRENT_BATCH,      // Processing strategy
     maxPendingUpdates = 100,                               // Limit concurrent processing
@@ -174,8 +173,9 @@ val updateSource = LongPollingTelegramUpdateSource(
 )
 
 val app = TelegramBotApplication(
-    botToken = "YOUR_TOKEN",
+  client = client,
     updateSource = updateSource,
+  interceptors = emptyList(),
     eventDispatcher = dispatcher
 )
 ```
@@ -207,6 +207,8 @@ val app = TelegramBotApplication(
 A test-oriented update source that reads from a `Channel<Update>`:
 
 ```kotlin
+val client = TelegramBotClient(botToken = "TEST_TOKEN")
+
 // Create a channel for test updates
 val testChannel = Channel<Update>(Channel.UNLIMITED)
 
@@ -215,8 +217,9 @@ val mockSource = MockTelegramUpdateSource(testChannel)
 
 // Use in tests
 val app = TelegramBotApplication(
-    botToken = "TEST_TOKEN",
+    client = client,
     updateSource = mockSource,
+    interceptors = emptyList(),
     eventDispatcher = dispatcher
 )
 
@@ -226,20 +229,17 @@ app.start()
 testChannel.trySend(testUpdate1)
 testChannel.trySend(testUpdate2)
 
-// Stop and restart (mock source supports infinite cycles)
-app.stop()
-app.start()
-
-// Resume from where it left off
-testChannel.trySend(testUpdate3)
+app.stopSuspend()
 ```
 
 **Key Features:**
 
 - Supports infinite start/stop cycles (unlike network-based sources)
 - `stop(gracePeriod)` suspends consumption but keeps the channel open (gracePeriod is ignored)
-- Resumes from where it left off on restart
+- Keeps the channel open for a later source cycle
 - Naturally completes when the source channel is closed
+
+`TelegramBotApplication` instances cannot be restarted. Create a new application instance for another cycle.
 
 ### SimpleTelegramUpdateSource
 
@@ -250,12 +250,14 @@ where updates are received by one component and processed by another:
 // Architecture pattern:
 // Webhook Server -> Message Queue (Kafka/RabbitMQ) -> Worker Node (SimpleTelegramUpdateSource)
 
+val client = TelegramBotClient(botToken = "YOUR_TOKEN")
 val source = SimpleTelegramUpdateSource()
 
 val app = TelegramBotApplication(
-  botToken = "YOUR_TOKEN",
-  updateSource = source,
-  eventDispatcher = dispatcher
+    client = client,
+    updateSource = source,
+    interceptors = emptyList(),
+    eventDispatcher = dispatcher
 )
 app.start()
 
@@ -316,7 +318,13 @@ independently to allow graceful shutdown:
 
 ```kotlin
 val source = SimpleTelegramUpdateSource()
-val app = TelegramBotApplication(client, source, dispatcher)
+val client = TelegramBotClient(botToken = "YOUR_TOKEN")
+val app = TelegramBotApplication(
+    client = client,
+    updateSource = source,
+    interceptors = emptyList(),
+    eventDispatcher = dispatcher
+)
 app.start()
 
 // External scope for consuming from pubsub
@@ -346,8 +354,10 @@ managing their own coroutine lifecycle and cancellation.
 **Graceful Shutdown:**
 
 1. `stop(gracePeriod)` clears the consumer callback and signals `start()` to return
-2. Source can be restarted by calling `start()` again
+2. The source can be started again by another owner after shutdown
 3. `onFinalize()` is a no-op since all state is in-memory
+
+`TelegramBotApplication` instances are single-use; create a new application instance after stopping one.
 
 ### WebhookTelegramUpdateSource
 
@@ -357,6 +367,7 @@ embedded Ktor server.
 ```kotlin
 // Add dependency: com.hiczp:telegram-bot-api-application-updatesource-webhook
 
+val client = TelegramBotClient(botToken = "YOUR_TOKEN")
 val webhookSource = WebhookTelegramUpdateSource(
   applicationEngineFactory = CIO,  // or Netty, Jetty, etc.
   path = "/webhook",
@@ -370,9 +381,10 @@ val webhookSource = WebhookTelegramUpdateSource(
 )
 
 val app = TelegramBotApplication(
-  botToken = "YOUR_TOKEN",
-  updateSource = webhookSource,
-  eventDispatcher = dispatcher
+    client = client,
+    updateSource = webhookSource,
+    interceptors = emptyList(),
+    eventDispatcher = dispatcher
 )
 ```
 
@@ -388,7 +400,8 @@ val app = TelegramBotApplication(
 **Exception Handling:**
 
 - `CancellationException` - Re-thrown to propagate coroutine cancellation
-- `Exception` - Business exceptions are logged and a 200 OK is returned to prevent Telegram retries
+- `TelegramBotShuttingDownException` - Re-thrown during framework shutdown
+- Other exceptions - Logged and re-thrown; Telegram may retry the webhook request
 
 **Graceful Shutdown:**
 
@@ -399,7 +412,7 @@ val app = TelegramBotApplication(
 **Key Differences from LongPolling:**
 
 - Updates are processed synchronously within the HTTP request handler
-- No retry logic - all responses return 200 OK to Telegram
+- Handler failures can fail the HTTP request, so Telegram may retry
 - Requires public HTTPS endpoint with valid certificate (or local tunnel for development)
 
 ## Event Dispatchers
@@ -441,19 +454,29 @@ A full-featured dispatcher with type-safe routing DSL. Best for production bots:
 ```kotlin
 val routes = handling {
     // Command handlers
-    commandEndpoint("start") {
-        sendMessage("Welcome!")
+  command("start") {
+    handle {
+      replyMessage("Welcome!")
+    }
     }
 
     // Event type matching
-    onMessageEvent {
-        whenMessageEventText("hello") { /* exact match */ }
-        whenMessageEventTextRegex(Regex("(?i)^hello")) { /* regex */ }
-        whenMessageEventPhoto { /* photo message */ }
+  message {
+    text("hello") {
+      handle { /* exact match */ }
+    }
+    text(Regex("(?i)^hello")) {
+      handle { /* regex */ }
+    }
+    photo {
+      handle { /* photo message */ }
+    }
     }
 
-    onCallbackQueryEvent {
-        whenCallbackQueryEventData("confirm") { /* callback data */ }
+  callbackQuery {
+    data("confirm") {
+      handle { /* callback data */ }
+    }
     }
 
     // Dead letter handler (catches unhandled events)
@@ -493,9 +516,16 @@ Two options for handling unmatched events:
 The `LongPollingTelegramUpdateSource` supports three processing modes controlled by `processingMode` parameter:
 
 ```kotlin
-val app = TelegramBotApplication.longPolling(
-    botToken = "YOUR_TOKEN",
+val client = TelegramBotClient(botToken = "YOUR_TOKEN")
+val updateSource = LongPollingTelegramUpdateSource(
+  client = client,
     processingMode = ProcessingMode.CONCURRENT_BATCH,  // Default is CONCURRENT
+)
+
+val app = TelegramBotApplication(
+  client = client,
+  updateSource = updateSource,
+  interceptors = emptyList(),
     eventDispatcher = dispatcher
 )
 ```
@@ -533,17 +563,19 @@ Understanding coroutine scopes is critical for correct concurrency behavior:
 `launch` inside a handler creates child coroutines that **must complete before dispatch returns**:
 
 ```kotlin
-commandEndpoint("process") {
-    // These complete before the handler returns
-    launch {
-        val result1 = slowOperation1()
-        sendMessage("Result 1: $result1")
+command("process") {
+    handle {
+        // These complete before the handler returns
+        launch {
+            val result1 = slowOperation1()
+            sendMessage("Result 1: $result1")
+        }
+        launch {
+            val result2 = slowOperation2()
+            sendMessage("Result 2: $result2")
+        }
+        // Handler waits for all launches
     }
-    launch {
-        val result2 = slowOperation2()
-        sendMessage("Result 2: $result2")
-    }
-    // Handler waits for all launches
 }
 ```
 
@@ -558,20 +590,22 @@ commandEndpoint("process") {
 Use `applicationScope` for tasks that should **outlive the current handler**:
 
 ```kotlin
-commandEndpoint("background") {
-    // In handler scope - waits for completion
-    launch {
-        println("Completes before handler returns")
-    }
+command("background") {
+    handle {
+        // In handler scope - waits for completion
+        launch {
+            println("Completes before handler returns")
+        }
 
-    // In application scope - independent lifecycle
-    applicationScope.launch {
-        delay(10.seconds)
-        println("Continues after handler returned")
-        // Cancelled only when application stops
-    }
+        // In application scope - independent lifecycle
+        applicationScope.launch {
+            delay(10.seconds)
+            println("Continues after handler returned")
+            // Cancelled only when application stops
+        }
 
-    // Handler returns immediately, applicationScope continues
+        // Handler returns immediately, applicationScope continues
+    }
 }
 ```
 
@@ -597,260 +631,141 @@ applicationScope.launch {
 Use `maxPendingUpdates` to limit concurrent handlers in `CONCURRENT` mode:
 
 ```kotlin
-val app = TelegramBotApplication.longPolling(
-    botToken = "YOUR_TOKEN",
+val client = TelegramBotClient(botToken = "YOUR_TOKEN")
+val updateSource = LongPollingTelegramUpdateSource(
+  client = client,
     processingMode = ProcessingMode.CONCURRENT,
     maxPendingUpdates = 10,  // Max 10 concurrent handlers
+)
+
+val app = TelegramBotApplication(
+  client = client,
+  updateSource = updateSource,
+  interceptors = emptyList(),
     eventDispatcher = dispatcher
 )
 ```
 
 ## Handler DSL
 
-The `handling` DSL provides type-safe routing for Telegram events.
-
-### Event Type Routing
+The `handling` DSL builds a route tree from composable filters and explicit handlers.
 
 ```kotlin
-handling {
-    // Message events
-    onMessageEvent {
-        handle { println("Message received") }
+val routes = handling {
+  message {
+    privateChat {
+      command("start") {
+        handle {
+          replyMessage("Welcome!")
+        }
+      }
+
+      text("ping") {
+        handle {
+          replyMessage("pong")
+        }
+      }
+    }
     }
 
-    // Callback query events
-    onCallbackQueryEvent {
-        handle { println("Callback received") }
-    }
-
-    // Inline query events
-    onInlineQueryEvent {
-        handle { println("Inline query received") }
-    }
-
-    // Poll events
-    onPollEvent {
-        handle { println("Poll update") }
-    }
-}
-```
-
-### Text Matching
-
-```kotlin
-onMessageEvent {
-    // Exact text match
-    whenMessageEventText("hello") { /* ... */ }
-
-    // Regex match
-    whenMessageEventTextRegex(Regex("(?i)^hello")) { /* ... */ }
-
-    // Contains substring
-    whenMessageEventTextContains("help", ignoreCase = true) { /* ... */ }
-
-    // Starts with prefix
-    whenMessageEventTextStartsWith("/admin") { /* ... */ }
-
-    // Ends with suffix
-    whenMessageEventTextEndsWith("please") { /* ... */ }
-}
-```
-
-### Media Type Matching
-
-```kotlin
-onMessageEvent {
-    whenMessageEventPhoto { /* photo message */ }
-    whenMessageEventVideo { /* video message */ }
-    whenMessageEventDocument { /* document message */ }
-    whenMessageEventAudio { /* audio message */ }
-    whenMessageEventSticker { /* sticker message */ }
-    whenMessageEventVoice { /* voice message */ }
-    whenMessageEventAnimation { /* animation/GIF */ }
-}
-```
-
-### Chat Type Filters
-
-```kotlin
-onMessageEvent {
-    whenMessageEventPrivateChat { /* private chat only */ }
-    whenMessageEventGroupChat { /* group chat only */ }
-    whenMessageEventSupergroupChat { /* supergroup only */ }
-    whenMessageEventChannel { /* channel only */ }
-}
-```
-
-### User/Chat Filters
-
-```kotlin
-onMessageEvent {
-    // From specific user
-    whenMessageEventFromUser(123456L) { /* ... */ }
-
-    // From multiple users
-    whenMessageEventFromUsers(setOf(1L, 2L, 3L)) { /* ... */ }
-
-    // In specific chat
-    whenMessageEventInChat(-100123456L) { /* ... */ }
-
-    // In multiple chats
-    whenMessageEventInChats(setOf(100L, 200L)) { /* ... */ }
-}
-```
-
-### Reply Message Detection
-
-```kotlin
-onMessageEvent {
-    // Any reply
-    whenMessageEventReply { /* ... */ }
-
-    // Reply to specific message
-    whenMessageEventReplyTo(messageId = 42L) { /* ... */ }
-}
-```
-
-### Forwarded Message Detection
-
-```kotlin
-onMessageEvent {
-    // Any forwarded message
-    whenMessageEventForwarded { /* ... */ }
-
-    // Forwarded from specific user
-    whenMessageEventForwardedFromUser(123L) { /* ... */ }
-
-    // Forwarded from specific chat
-    whenMessageEventForwardedFromChat(-100L) { /* ... */ }
-}
-```
-
-### Composite Matchers
-
-```kotlin
-onMessageEvent {
-    // All conditions must be true
-    whenAllOf(
-        { it.event.message.text != null },
-        { it.event.message.chat.id == 100L }
-    ) {
-        println("Text message in chat 100")
-    }
-
-    // Any condition must be true
-    whenAnyOf(
-        { it.event.message.photo != null },
-        { it.event.message.video != null }
-    ) {
-        println("Photo or video")
-    }
-
-    // Condition must be false
-  whenNot({ it.event.message.isCommand }) {
-        println("Not a command")
-    }
-
-    // Nested composition
-    allOf({ it.event.message.text != null }) {
-        anyOf(
-            { it.event.message.chat.id == 100L },
-            { it.event.message.from?.id == 1L }
-        ) {
-          whenNot({ it.event.message.isCommand }) {
-                println("Complex condition matched")
+  callbackQuery {
+    data("confirm") {
+      handle {
+        client.answerCallbackQuery(event.callbackQuery.id)
             }
         }
     }
-}
-```
 
-### Custom Predicates
-
-```kotlin
-onMessageEvent {
-    whenMatch({ (it.event.message.text?.length ?: 0) > 10 }) {
-        sendMessage("Long message!")
+  handle {
+    println("Unhandled event: $event")
     }
 }
 ```
 
-### Fallback Handler
+Core rules:
 
-`handle` is invoked when no child route consumes the event, acting as a "dead letter" handler:
+- `filter({ ... }) { ... }` enters a child branch when the suspending predicate returns `true`.
+- `filter<T> { ... }` narrows the event type for the child branch.
+- Built-in matchers such as `message`, `privateChat`, `command`, `text`, and `photo` are filter wrappers.
+- `handle { ... }` runs business logic and consumes the event.
+- If a deep branch misses, matching backtracks through ancestors until another sibling branch can be tested.
+- A parent `handle` acts as fallback for its branch after child routes miss.
+
+Route blocks run once when the dispatcher is built. Do not put per-update side effects directly in route blocks:
 
 ```kotlin
 handling {
-    commandEndpoint("start") { /* ... */ }
-    commandEndpoint("help") { /* ... */ }
+  command("start") {
+    println("runs once while routes are built")
 
-    // Catch all unhandled events
     handle {
-        sendMessage("Unknown command. Type /help for available commands.")
+      println("runs for every matched update")
+    }
     }
 }
 ```
 
-**Note**: Child routes always take precedence over `handle`, regardless of declaration order.
+Per-update checks belong in `filter` predicates:
 
-### Route Modularization
+```kotlin
+message {
+  filter({ authService.isAllowed(event.message.from?.id) }) {
+    command("admin") {
+      handle {
+        replyMessage("admin ok")
+      }
+    }
+  }
+}
+```
 
-Use `include` to merge multiple route modules:
+Framework-provided filters are side-effect free. User-defined filters may perform side effects, but filter side effects
+are not rolled back if a deeper branch later misses.
+
+Use `include` to compose route modules:
 
 ```kotlin
 val adminRoutes = handling {
-    commandEndpoint("admin") { /* ... */ }
-    commandEndpoint("admin status") { /* ... */ }
-}
-
-val userRoutes = handling {
-    commandEndpoint("profile") { /* ... */ }
+  command("admin") {
+    handle { /* ... */ }
+  }
 }
 
 val mainRoutes = handling {
-    commandEndpoint("start") { /* ... */ }
+  command("start") {
+    handle { /* ... */ }
+  }
     include(adminRoutes)
-    include(userRoutes)
 }
 ```
 
 ## Command DSL
 
-The Command DSL provides structured command parsing and handling.
-
-### Simple Commands
+Commands are filters and consume events only when a `handle` runs.
 
 ```kotlin
 handling {
-    // Command without arguments
-    commandEndpoint("ping") {
-        replyMessage("pong")
+  command("ping") {
+    handle {
+      replyMessage("pong")
     }
-
-    // Supports /command@bot_username format
-    commandEndpoint("start") {
-        sendMessage("Welcome!")
     }
 }
 ```
 
-### Commands with Arguments
-
-Define argument classes extending `BotArguments`:
+Typed arguments use explicit `handle` too:
 
 ```kotlin
 class BanArgs : BotArguments("Ban a user") {
     val username: String by requireArgument("Username to ban")
-    val duration: String? by optionalArgument("Ban duration")
     val reason: String by optionalArgument("Ban reason", default = "Violation")
 }
 
 handling {
     command("ban", ::BanArgs) {
-        val username = arguments.username
-        val duration = arguments.duration
-        val reason = arguments.reason
-        sendMessage("Banned $username")
+      handle {
+        replyMessage("Banned ${arguments.username}: ${arguments.reason}")
+      }
     }
 }
 ```
@@ -871,15 +786,15 @@ handling {
         // Parent command handler (called when no subcommand matches)
         handle { showAdminHelp() }
 
-        subCommandEndpoint("status") {
-            showStatus()
+      subCommand("status") {
+        handle { showStatus() }
         }
 
         subCommand("user") {
-            subCommandEndpoint("list") { listUsers() }
-            subCommandEndpoint("add") { addUser() }
+          subCommand("list") { handle { listUsers() } }
+          subCommand("add") { handle { addUser() } }
             subCommand("ban", ::BanArgs) {
-                banUser(arguments.username)
+              handle { banUser(arguments.username) }
             }
         }
     }
@@ -911,10 +826,11 @@ By default, when argument parsing fails, a formatted help message is automatical
 
 ```kotlin
 command("ban", ::BanArgs) {
-  // If arguments fail to parse, help message is sent automatically
-  val username = arguments.username
-  val duration = arguments.duration
-  sendMessage("Banned $username")
+  handle {
+    // If arguments fail to parse, help message is sent automatically
+    val username = arguments.username
+    sendMessage("Banned $username")
+  }
 }
 ```
 
@@ -924,7 +840,9 @@ To customize error handling, provide an `onError` callback:
 command("ban", ::BanArgs, onError = { e ->
   sendMessage("Error: ${e.message}")
 }) {
-  // Custom error handling
+  handle {
+    // Custom error handling
+  }
 }
 ```
 
@@ -932,7 +850,9 @@ To catch exceptions at the interceptor level, rethrow from `onError`:
 
 ```kotlin
 command("ban", ::BanArgs, onError = { e -> throw e }) {
-  // ...
+  handle {
+    // ...
+  }
 }
 
 val interceptor: TelegramEventInterceptor = { context ->
@@ -962,7 +882,7 @@ val loggingInterceptor: TelegramEventInterceptor = { context ->
 
 val app = TelegramBotApplication.longPolling(
     botToken = "TOKEN",
-    interceptors = listOf(loggingInterceptor),
+  interceptors = listOf(loggingInterceptor()),
     eventDispatcher = dispatcher
 )
 ```
@@ -1043,7 +963,7 @@ val authInterceptor: TelegramEventInterceptor = { context ->
 
 // Read attributes in handler
 handling {
-    onMessageEvent {
+  message {
         handle {
             val isAuthenticated = attributes.getOrNull(userAuthenticatedKey) ?: false
             val userData = attributes.getOrNull(userDataKey)
@@ -1096,26 +1016,25 @@ Supports multi-turn conversations:
 val interceptors = listOf(conversationInterceptor())
 
 handling {
-    commandEndpoint("survey") {
-        startConversation(
-            timeout = 5.minutes,
-            onTimeout = {
-                sendMessage("Survey timed out")
-            },
-          onCancel = {
-            sendMessage("Survey cancelled")
-            }
-        ) {
-          // Use send() for simple messages
-          send("What is your name?")
-            val name = awaitText()
+  command("survey") {
+    handle {
+      startConversation(
+        timeout = 5.minutes,
+        onTimeout = {
+          sendMessage("Survey timed out")
+        },
+        onCancel = {
+          sendMessage("Survey cancelled")
+        }
+      ) {
+        send("What is your name?")
+        val name = awaitText()
 
-          // Use reply() to respond to the most recent user message
-          reply("How old are you, $name?")
-            val age = awaitText()
+        reply("How old are you, $name?")
+        val age = awaitText()
 
-          // reply() automatically responds to the last awaited message
-          reply("Thanks $name, you are $age years old")
+        reply("Thanks $name, you are $age years old")
+      }
         }
     }
 }
@@ -1202,72 +1121,27 @@ The `ConversationId` is a data class with `chatId`, `userId` (optional), and `th
 - `ConversationId(chatId, userId = userId)` - per-user conversation in a group
 - `ConversationId(chatId, threadId = threadId)` - per-thread conversation
 
-### Middleware
+### Custom Handler Filters
 
-Use `middleware` in Handler DSL for conditional control:
+Reusable handler filters are ordinary extension functions over `HandlerRoute<T>`:
 
 ```kotlin
 val adminUserIds = setOf(1L, 2L, 3L)
 
-handling {
-    onMessageEvent {
-        middleware(
-            predicate = { ctx -> ctx.event.message.from?.id in adminUserIds },
-            onRejected = {
-                sendMessage("Admin only")
-            }
-        ) {
-            commandEndpoint("admin") { /* admin commands */ }
-            commandEndpoint("config") { /* config commands */ }
-        }
-    }
-}
-```
-
-#### Custom Extensions
-
-```kotlin
-// Define extension function
-fun <T : TelegramBotEvent> HandlerRoute<T>.requireAuth(
+fun HandlerRoute<MessageEvent>.fromAllowedUser(
     allowedUsers: Set<Long>,
-    build: HandlerRoute<T>.() -> Unit
-) = middleware(
-    predicate = { ctx ->
-        when (val event = ctx.event) {
-            is MessageEvent -> event.message.from?.id in allowedUsers
-            else -> false
-        }
-    },
-    onRejected = {
-        if (event is MessageEvent) {
-            sendMessage("Unauthorized")
-        }
-    }
-) {
-    build()
-}
+    build: HandlerRoute<MessageEvent>.() -> Unit
+) = filter({ event.message.from?.id in allowedUsers }, build)
 
-// Usage
 handling {
-    onMessageEvent {
-        requireAuth(adminUserIds) {
-            commandEndpoint("admin") { /* ... */ }
+  message {
+    fromAllowedUser(adminUserIds) {
+      command("admin") {
+        handle {
+          replyMessage("Admin command")
         }
+      }
     }
-}
-```
-
-#### whenMiddleware
-
-Simplified middleware combining predicate and handler:
-
-```kotlin
-onMessageEvent {
-    whenMiddleware(
-        predicate = { it.event.message.from?.id == 123L },
-        onRejected = { sendMessage("Rejected") }
-    ) {
-        sendMessage("Allowed")
     }
 }
 ```

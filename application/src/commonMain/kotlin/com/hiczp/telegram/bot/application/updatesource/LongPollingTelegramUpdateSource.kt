@@ -22,7 +22,7 @@ private val logger = KotlinLogging.logger {}
  * Long polling update source with configurable processing modes.
  *
  * Processing modes control how updates are processed:
- * - [ProcessingMode.SEQUENTIAL]: Updates processed one at a time. CancellationException instantly breaks the loop.
+ * - [ProcessingMode.SEQUENTIAL]: Updates are processed one at a time.
  * - [ProcessingMode.CONCURRENT_BATCH]: Each batch is processed concurrently, but producer waits for batch completion.
  * - [ProcessingMode.CONCURRENT]: Updates launched individually for concurrent processing without waiting.
  *

@@ -49,7 +49,7 @@ private class InterceptedTelegramEventProcessor(
  *     this.process(context)
  *     println("After processing: ${context.event.updateId}")
  * }
- * val interceptors = listOf(loggingInterceptor)
+ * val interceptors = listOf(loggingInterceptor())
  *
  * val pipeline = TelegramEventPipeline(client, applicationScope, interceptors, eventDispatcher)
  * pipeline.execute(event)

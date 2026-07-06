@@ -22,19 +22,24 @@ private val logger = KotlinLogging.logger {}
  * Subsequent calls to [start] will resume consuming from where it left off.
  * The consumer loop will also naturally complete if the [source] channel is closed externally.
  *
+ * A [TelegramBotApplication][com.hiczp.telegram.bot.application.TelegramBotApplication] instance is single-use.
+ * Create a new application instance if you need another application lifecycle cycle.
+ *
  * Example usage:
  * ```kotlin
  * val channel = Channel<Update>(Channel.UNLIMITED)
  * val mockSource = MockTelegramUpdateSource(channel)
  *
- * // Cycle 1: Start and process
+ * val app = TelegramBotApplication(
+ *     client = client,
+ *     updateSource = mockSource,
+ *     interceptors = emptyList(),
+ *     eventDispatcher = dispatcher
+ * )
+ *
  * app.start()
- * channel.send(testUpdate1)
- * // Stop the application (mockSource suspends consumption, channel remains open)
- * app.stop()
- * * // Cycle 2: Restart and process
- * app.start()
- * channel.send(testUpdate2)
+ * channel.send(testUpdate)
+ * app.stopSuspend()
  * ```
  *
  * @param source The channel to receive updates from.

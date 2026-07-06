@@ -18,6 +18,26 @@ import kotlinx.coroutines.CoroutineScope
 annotation class TelegramBotDsl
 
 /**
+ * Runtime context for route filters.
+ *
+ * Filters are evaluated for each event while walking the handler route tree.
+ * They may run suspending checks and decide whether the dispatcher should enter
+ * the current route branch. Built-in filters are side-effect free; user-defined
+ * filters are ordinary suspending code and may perform side effects if needed.
+ *
+ * @param T The type of Telegram event visible at this route level.
+ */
+@TelegramBotDsl
+interface HandlerFilterCall<out T : TelegramBotEvent> : TelegramBotEventContext<T>
+
+/**
+ * Default implementation of [HandlerFilterCall].
+ */
+class DefaultHandlerFilterCall<out T : TelegramBotEvent>(
+    private val delegate: TelegramBotEventContext<T>
+) : HandlerFilterCall<T>, TelegramBotEventContext<T> by delegate
+
+/**
  * Execution-phase context for handler invocation.
  *
  * This interface combines [TelegramBotEventContext] with [CoroutineScope],
@@ -29,13 +49,17 @@ annotation class TelegramBotDsl
  *
  * Example:
  * ```kotlin
- * onText("ping") {
- *     // `this` is HandlerBotCall<MessageEvent>
- *     client.sendMessage(event.message.chat.id.toString(), "pong")
+ * message {
+ *     text("ping") {
+ *         handle {
+ *             // `this` is HandlerBotCall<MessageEvent>
+ *             client.sendMessage(event.message.chat.id.toString(), "pong")
  *
- *     // Can launch concurrent operations
- *     launch {
- *         someAsyncOperation()
+ *             // Can launch concurrent operations
+ *             launch {
+ *                 someAsyncOperation()
+ *             }
+ *         }
  *     }
  * }
  * ```
@@ -61,15 +85,16 @@ class DefaultHandlerBotCall<out T : TelegramBotEvent>(
  * Execution-phase context for command handlers.
  *
  * Extends [HandlerBotCall] with command-specific properties like parsed arguments
- * and command path. This context is provided to command handlers registered via
- * [command] or [commandEndpoint].
+ * and command path. This context is provided to handlers registered inside [command].
  *
  * Example:
  * ```kotlin
  * command("admin") {
- *     // `this` is CommandBotCall
- *     println("Command path: $commandPath")
- *     println("Arguments: $unconsumedArguments")
+ *     handle {
+ *         // `this` is CommandBotCall
+ *         println("Command path: $commandPath")
+ *         println("Arguments: $unconsumedArguments")
+ *     }
  * }
  * ```
  */

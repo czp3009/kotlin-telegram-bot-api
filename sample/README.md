@@ -46,7 +46,7 @@ A comprehensive command handling demo with typed arguments and subcommands.
 **Demonstrates:**
 
 - Handler DSL with `HandlerTelegramEventDispatcher`
-- Simple commands with `commandEndpoint`
+- Simple commands with `command { handle { ... } }`
 - Typed command arguments using `BotArguments`
 - Enum argument parsing
 - Nested subcommands
@@ -153,13 +153,13 @@ A bot demonstrating multi-turn conversation support for interactive flows like s
 
 ### [AuthDsl.kt](src/commonMain/kotlin/com/hiczp/telegram/bot/sample/dsl/AuthDsl.kt)
 
-A reusable authentication DSL built on top of `middleware`. This is not a standalone bot but a utility used by
+A reusable authentication DSL built on top of handler `filter`. This is not a standalone bot but a utility used by
 CommandBot.
 
 **Demonstrates:**
 
 - Creating custom DSL with async predicates
-- Using `middleware` for authorization guards
+- Using handler filters for authorization guards
 - Separating authentication logic from business logic
 
 ## Project Structure
