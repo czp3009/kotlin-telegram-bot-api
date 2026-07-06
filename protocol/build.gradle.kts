@@ -72,14 +72,12 @@ dependencies {
     add("kspCommonMainMetadata", project(":protocol-update-codegen"))
 }
 
-tasks.configureEach {
-    if (name == "kspCommonMainKotlinMetadata") {
-        dependsOn(generateKtorfitInterfaces)
-    }
+val kspCommonMainKotlinMetadata = tasks.matching { it.name == "kspCommonMainKotlinMetadata" }
+
+kspCommonMainKotlinMetadata.configureEach {
+    dependsOn(generateKtorfitInterfaces)
 }
 
-tasks.configureEach {
-    if (name == "sourcesJar") {
-        dependsOn("kspCommonMainKotlinMetadata")
-    }
+tasks.matching { it.name == "sourcesJar" || it.name.endsWith("SourcesJar") }.configureEach {
+    dependsOn(kspCommonMainKotlinMetadata)
 }
