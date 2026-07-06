@@ -476,44 +476,46 @@ handling {
 
 ### Conversations (Application Module)
 
-Multi-turn conversations are supported via the `conversationInterceptor` and `startConversation` DSL:
+Multi-turn conversations are supported via `conversationInterceptor()` plus handler DSL conversation starters:
 
 ```kotlin
 // Install the conversation interceptor
 val interceptors = listOf(conversationInterceptor())
 
-// In a handler, start a conversation
-command("survey") {
-  handle {
-    startConversation(
-      timeout = 5.minutes,
-      onTimeout = {
-        val chatId = event.extractChatId()
-        if (chatId != null) {
-          client.sendMessage(chatId.toString(), "Survey timed out.")
+val dispatcher = HandlerTelegramEventDispatcher(handling {
+  message {
+    privateChat {
+      conversationCommand(
+        name = "survey",
+        timeout = 5.minutes,
+        onTimeout = {
+          replyMessage("Survey timed out.")
+        },
+        onCancel = {
+          val chatId = event.extractChatId()
+          if (chatId != null) {
+            client.sendMessage(chatId.toString(), "Survey cancelled.")
+          }
         }
-      },
-      onCancel = {
-        val chatId = event.extractChatId()
-        if (chatId != null) {
-          client.sendMessage(chatId.toString(), "Survey cancelled.")
-        }
+      ) {
+        send("What is your name?")
+        val name = awaitText()
+
+        reply("Hello, $name! How old are you?")
+        val age = awaitText()
+
+        reply("Thanks! You are $age years old.")
       }
-    ) {
-      // Use send() for simple messages
-      send("What is your name?")
-      val name = awaitText()
-
-      // Use reply() to respond to the most recent user message
-      reply("Hello, $name! How old are you?")
-      val age = awaitText()
-
-      // reply() automatically responds to the last awaited message
-      reply("Thanks! You are $age years old.")
     }
   }
-}
+})
 ```
+
+`conversationCommand` and `conversation` are handler route starters. Parent filters such as `message` and `privateChat`
+only decide whether the current event can start the conversation. After a conversation is active,
+`conversationInterceptor()` restores it before normal handler routing, so later messages do not need to match the
+starting command or those parent route filters. The starting event still follows normal handler DSL order, so place
+starters before broad fallback handlers in the same route scope.
 
 **Messaging Methods:**
 
@@ -546,21 +548,37 @@ command("survey") {
   the default tracking behavior.
 - `id` - The `ConversationId` identifying this conversation
 - `channel` - The channel receiving events for this conversation
+- `client` - Telegram API client from the starting event context
+- `applicationScope` - Application coroutine scope
+- `attributes` - Shared attributes from the starting event context
+- `startEvent` - Event that started this conversation
 
 **Coroutine Support:**
 
 The `ConversationScope` implements `CoroutineScope`, allowing you to launch child coroutines that are tied to the
 conversation's lifecycle. When the conversation ends (completes, times out, or is cancelled), all child coroutines
-are automatically cancelled.
+are automatically cancelled. The conversation body runs in a `supervisorScope`, so a failed child coroutine does not
+automatically fail the main conversation flow. Await or join child work explicitly if its failure should stop the
+conversation.
 
-**Intercepted Event Types:**
+**Timeout and Persistence Semantics:**
 
-By default, conversations intercept `MessageEvent`, `BusinessMessageEvent`, and `CallbackQueryEvent`. You can customize
-this with the `interceptPredicate` parameter:
+- Any uncaught `TimeoutCancellationException` from inside the conversation block is treated as a conversation timeout
+  and invokes `onTimeout`. Catch local step timeouts inside the block if the conversation should continue.
+- `Channel.UNLIMITED` is the default because the library primarily targets low-traffic bots, where preserving user input
+  is usually more useful than applying back pressure. Use a bounded capacity for high-traffic or untrusted chats.
+- Conversation progress is held in coroutine execution state and channel buffers. It cannot be serialized, snapshotted,
+  restored after a crash, or shared across distributed bot instances.
+
+**Received Event Types:**
+
+By default, conversations receive `MessageEvent`, `BusinessMessageEvent`, and `CallbackQueryEvent`. You can customize
+this with the `receive` parameter on `conversation`/`conversationCommand`:
 
 ```kotlin
-startConversation(
-  interceptPredicate = { context ->
+conversationCommand(
+  name = "quiz",
+  receive = { context ->
     context.event is MessageEvent || context.event is CallbackQueryEvent
   }
 ) {
@@ -757,8 +775,8 @@ sample/src/commonMain/kotlin/com/hiczp/telegram/bot/sample/
 **Advanced Samples:**
 
 - **FileBot.kt** - File upload/download with progress, sticker echo
-- **ConversationBot.kt** - Multi-turn conversations using `startConversation`, `send`, `reply`, `awaitText`,
-  `awaitCallbackQuery`
+- **ConversationBot.kt** - Multi-turn conversations using `conversationCommand`, `conversation`, `send`, `reply`,
+  `awaitText`, `awaitCallbackQuery`
 
 ### Supported Platforms
 

@@ -124,7 +124,8 @@ A bot demonstrating multi-turn conversation support for interactive flows like s
 **Demonstrates:**
 
 - Installing `conversationInterceptor` for conversation support
-- Starting conversations with `startConversation`
+- Starting conversations with `conversationCommand`
+- Starting conversations with full `conversation` for custom start, id, receive, and cancel logic
 - Using `send` and `reply` for messaging within conversations
 - Awaiting user input with `awaitText()`, `awaitMessage()`, `awaitCommand()`, and `awaitCallbackQuery()`
 - Using `awaitReply()` to wait for replies to specific bot messages

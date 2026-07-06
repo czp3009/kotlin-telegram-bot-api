@@ -89,7 +89,7 @@ fun loggingInterceptor(
 
 ### Conversations
 
-`conversationInterceptor()` enables `startConversation`. Install it once.
+`conversationInterceptor()` enables `conversation` and `conversationCommand`. Install it once.
 
 ```kotlin
 import com.hiczp.telegram.bot.application.interceptor.builtin.conversation.conversationInterceptor

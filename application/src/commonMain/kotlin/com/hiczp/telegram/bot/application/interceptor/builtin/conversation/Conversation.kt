@@ -126,7 +126,8 @@ class ConversationCancelledException(
 /**
  * Creates an interceptor that enables conversation support for the bot application.
  *
- * This interceptor must be installed in the pipeline for [startConversation] to work.
+ * This interceptor must be installed in the pipeline for conversation starters such as
+ * [conversation] and [conversationCommand] to work.
  * It checks incoming events for active conversations and routes them to the appropriate
  * conversation channel instead of the normal processing pipeline.
  *
@@ -135,11 +136,13 @@ class ConversationCancelledException(
  * uses its own [ConversationManager] and overwrites the attribute key.
  *
  * **State Persistence Limitations:**
- * This implementation uses an in-memory state machine. All active conversation states are stored
- * in memory within the [ConversationManager.activeConversations] map. This means:
+ * This implementation uses in-memory conversation sessions. Active conversations are tracked in
+ * [ConversationManager.activeConversations], and each conversation's progress is represented by coroutine execution
+ * state plus channel buffers. This means:
  * - Conversation states are lost when the bot restarts or crashes
+ * - Conversation progress cannot be serialized, snapshotted, or restored
  * - This implementation is not suitable for distributed environments where multiple bot instances
- *   need to share the conversation state
+ *   need to share active conversation state
  * - Long-running conversations may be interrupted if the bot process is terminated
  *
  * **Message Handling Behavior:**

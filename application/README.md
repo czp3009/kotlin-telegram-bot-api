@@ -1010,21 +1010,26 @@ val app = TelegramBotApplication.longPolling(
 
 #### Conversation Interceptor
 
-Supports multi-turn conversations:
+Supports multi-turn conversations. Install `conversationInterceptor()` once; active conversations are restored before
+normal handler routing.
 
 ```kotlin
 val interceptors = listOf(conversationInterceptor())
 
 handling {
-  command("survey") {
-    handle {
-      startConversation(
+  message {
+    privateChat {
+      conversationCommand(
+        name = "survey",
         timeout = 5.minutes,
         onTimeout = {
-          sendMessage("Survey timed out")
+          replyMessage("Survey timed out")
         },
         onCancel = {
-          sendMessage("Survey cancelled")
+          val chatId = event.extractChatId()
+          if (chatId != null) {
+            client.sendMessage(chatId.toString(), "Survey cancelled")
+          }
         }
       ) {
         send("What is your name?")
@@ -1035,8 +1040,41 @@ handling {
 
         reply("Thanks $name, you are $age years old")
       }
-        }
     }
+  }
+}
+```
+
+`conversationCommand` and `conversation` are handler route starters. Parent filters such as `message` and `privateChat`
+only decide whether the current event can start the conversation. Once active, matching events are sent to the
+conversation by `conversationInterceptor()` before normal handlers run, so later messages do not need to match the
+starting command or those parent route filters. The starting event still follows normal handler DSL order, so place
+starters before broad fallback handlers in the same route scope.
+
+Use `conversation` for custom start conditions:
+
+```kotlin
+message {
+  privateChat {
+    conversation(
+      id = {
+        ConversationId(
+          chatId = event.message.chat.id,
+          threadId = event.message.messageThreadId,
+          userId = event.message.from?.id
+        )
+      },
+      start = {
+        event.message.text == "/survey"
+      },
+      receive = { context ->
+        context.event is MessageEvent || context.event is CallbackQueryEvent
+      }
+    ) {
+      val name = awaitText()
+      reply("Hello, $name")
+    }
+  }
 }
 ```
 
@@ -1072,42 +1110,65 @@ handling {
   the default tracking behavior.
 - `id` - The `ConversationId` identifying this conversation
 - `channel` - The channel receiving events for this conversation
+- `client` - Telegram API client from the starting event context
+- `applicationScope` - Application coroutine scope
+- `attributes` - Shared attributes from the starting event context
+- `startEvent` - Event that started this conversation
 
 **Coroutine Support:**
 
 The `ConversationScope` implements `CoroutineScope`, allowing you to launch child coroutines that are tied to the
 conversation's lifecycle. When the conversation ends (completes, times out, or is cancelled), all child coroutines
-are automatically cancelled.
+are automatically cancelled. The conversation body runs in a `supervisorScope`, so a failed child coroutine does not
+automatically fail the main conversation flow. Await or join child work explicitly if its failure should stop the
+conversation.
 
-**startConversation Parameters:**
+**Conversation Starter Parameters:**
 
-| Parameter            | Description                                                                                                               |
-|----------------------|---------------------------------------------------------------------------------------------------------------------------|
-| `id`                 | The `ConversationId` for this conversation. Defaults to per-user-in-thread-chat conversation.                             |
-| `timeout`            | Optional duration after which the conversation times out. Defaults to no timeout.                                         |
-| `capacity`           | Channel capacity for buffering events. Defaults to `Channel.UNLIMITED`. See below for options.                            |
-| `interceptPredicate` | Function determining which events to intercept. Defaults to `MessageEvent`, `BusinessMessageEvent`, `CallbackQueryEvent`. |
-| `cancelPredicate`    | Function determining if an event should cancel the conversation. Defaults to `/cancel` command.                           |
-| `onTimeout`          | Callback invoked when the conversation times out.                                                                         |
-| `onCancel`           | Callback invoked when the conversation is canceled.                                                                       |
-| `block`              | The conversation logic to execute within a `ConversationScope`.                                                           |
+| Parameter   | Description                                                                                                             |
+|-------------|-------------------------------------------------------------------------------------------------------------------------|
+| `id`        | The `ConversationId` for this conversation. Defaults to per-user-in-thread-chat conversation.                           |
+| `start`     | Predicate that starts a new conversation when no active conversation matches.                                           |
+| `timeout`   | Optional duration after which the conversation times out. Defaults to no timeout.                                       |
+| `capacity`  | Channel capacity for buffering events. Defaults to `Channel.UNLIMITED`. See below for options.                          |
+| `receive`   | Function determining which events an active conversation receives. Defaults to message, business message, and callback. |
+| `cancel`    | Function determining if an event should cancel the conversation. Defaults to `/cancel` command.                         |
+| `onTimeout` | Callback invoked when the conversation times out.                                                                       |
+| `onCancel`  | Callback invoked when the conversation is canceled.                                                                     |
+| `block`     | The conversation logic to execute within a `ConversationScope`.                                                         |
 
 **Capacity Options:**
 
-- **`Channel.UNLIMITED`** (default): All matching events are buffered. Use with caution in high-traffic scenarios.
+- **`Channel.UNLIMITED`** (default): All matching events are buffered. This default is chosen for low-traffic bots,
+  where preserving user input is usually more useful than applying back pressure. Use with caution in high-traffic
+  scenarios.
 - **Bounded (e.g., `Channel.BUFFERED` or a specific number)**: When the buffer is full, new events are dropped and
   a warning is logged. This protects against memory issues but may lose events.
 - **`Channel.RENDEZVOUS`** (capacity = 0): Events are only received when actively awaiting. Events sent while not
   waiting are dropped.
 
+**Timeout and Error Semantics:**
+
+- Any uncaught `TimeoutCancellationException` from inside the conversation block is treated as a conversation timeout
+  and invokes `onTimeout`. Catch local step timeouts inside the block if the conversation should continue.
+- `ConversationCancelledException` invokes `onCancel`.
+- Other uncaught `CancellationException` values are re-thrown.
+- Other uncaught throwables are logged and the conversation is cleaned up.
+
+**Persistence Limits:**
+
+Conversation progress is held in coroutine execution state and channel buffers. It cannot be serialized, snapshotted,
+restored after a crash, or shared across distributed bot instances.
+
 **Intercepted Event Types:**
 
-By default, conversations intercept `MessageEvent`, `BusinessMessageEvent`, and `CallbackQueryEvent`. Customize with
-the `interceptPredicate` parameter:
+By default, conversations receive `MessageEvent`, `BusinessMessageEvent`, and `CallbackQueryEvent`. Customize with
+the `receive` parameter:
 
 ```kotlin
-startConversation(
-  interceptPredicate = { context ->
+conversationCommand(
+  name = "quiz",
+  receive = { context ->
     context.event is MessageEvent || context.event is CallbackQueryEvent
   }
 ) {
