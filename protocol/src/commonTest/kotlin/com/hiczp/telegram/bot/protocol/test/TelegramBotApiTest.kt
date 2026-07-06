@@ -110,7 +110,7 @@ class TelegramBotApiTest {
 
     @AfterTest
     fun slowDown() {
-        sleepMillis(1_000)
+        sleepMillis(3_000)
     }
     
     @Test

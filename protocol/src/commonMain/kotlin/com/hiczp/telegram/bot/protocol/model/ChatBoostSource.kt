@@ -16,7 +16,9 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 @Serializable
 @JsonClassDiscriminator("source")
 @OptIn(ExperimentalSerializationApi::class)
-public sealed interface ChatBoostSource
+public sealed interface ChatBoostSource {
+    public val user: User?
+}
 
 /**
  * The boost was obtained by subscribing to Telegram Premium or by gifting a Telegram Premium subscription to another user.
@@ -27,7 +29,7 @@ public data class ChatBoostSourcePremium(
     /**
      * User that boosted the chat
      */
-    public val user: User,
+    override val user: User,
 ) : ChatBoostSource
 
 /**
@@ -39,7 +41,7 @@ public data class ChatBoostSourceGiftCode(
     /**
      * User for which the gift code was created
      */
-    public val user: User,
+    override val user: User,
 ) : ChatBoostSource
 
 /**
@@ -56,7 +58,7 @@ public data class ChatBoostSourceGiveaway(
     /**
      * *Optional*. User that won the prize in the giveaway if any; for Telegram Premium giveaways only
      */
-    public val user: User? = null,
+    override val user: User? = null,
     /**
      * *Optional*. The number of Telegram Stars to be split between giveaway winners; for Telegram Star giveaways only
      */

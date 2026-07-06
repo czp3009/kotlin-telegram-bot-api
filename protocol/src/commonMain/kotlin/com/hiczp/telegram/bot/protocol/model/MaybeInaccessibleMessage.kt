@@ -1,6 +1,7 @@
 // Auto-generated from Swagger specification, do not modify this file manually
 package com.hiczp.telegram.bot.protocol.model
 
+import kotlin.Long
 import kotlin.OptIn
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -24,7 +25,13 @@ import kotlinx.serialization.json.decodeFromJsonElement
  * Message InaccessibleMessage
  */
 @Serializable(with = MaybeInaccessibleMessageSerializer::class)
-public sealed interface MaybeInaccessibleMessage
+public sealed interface MaybeInaccessibleMessage {
+    public val chat: Chat
+
+    public val date: Long
+
+    public val messageId: Long
+}
 
 @OptIn(InternalSerializationApi::class)
 public object MaybeInaccessibleMessageSerializer : KSerializer<MaybeInaccessibleMessage> {

@@ -136,6 +136,8 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     private val collapsedUnionTypes = mutableMapOf<String, String>()
 
     private val unionParentInterfacesByMember = mutableMapOf<String, MutableSet<String>>()
+    private val commonUnionPropertiesByParent = mutableMapOf<String, List<CommonUnionProperty>>()
+    private val commonUnionPropertyNamesByMember = mutableMapOf<String, MutableSet<String>>()
 
     /**
      * Represents a member of a response union type.
@@ -253,6 +255,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         }
 
         collectUnionParentInterfaces()
+        collectCommonUnionProperties()
 
         // Generate Union generic classes as needed
         if (responseUnionSizes.isNotEmpty()) {
@@ -521,17 +524,6 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             val unionMembers = extractTypeNamesFromRefArray(oneOf)
             if (unionMembers.isEmpty()) return@forEach
 
-            val discriminatorResult = extractDiscriminatorFromSchema(schema, unionMembers)
-            val fallbackDiscriminatorInfo =
-                if (discriminatorResult == null) findDiscriminatorInfo(unionMembers) else null
-
-            // Incomplete explicit discriminator mappings intentionally generate standalone classes.
-            if (discriminatorResult != null && !discriminatorResult.isComplete) return@forEach
-
-            if (discriminatorResult == null && fallbackDiscriminatorInfo == null) {
-                // These still generate simple subclasses, so members can be shared safely.
-            }
-
             unionMembers.forEach { memberName ->
                 unionParentInterfacesByMember.getOrPut(memberName) { mutableSetOf() }.add(schemaName)
             }
@@ -557,6 +549,117 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
         return this
     }
+
+    private fun collectCommonUnionProperties() {
+        allSchemas.forEach { (schemaName, schema) ->
+            val oneOf = schema.get("oneOf")
+            if (oneOf == null || !oneOf.isArray) return@forEach
+            if (oneOf.any { it.get($$"$ref") == null }) return@forEach
+
+            val unionMembers = extractTypeNamesFromRefArray(oneOf)
+            if (unionMembers.size < 2) return@forEach
+
+            val discriminatorResult = extractDiscriminatorFromSchema(schema, unionMembers)
+            val fallbackDiscriminatorInfo =
+                if (discriminatorResult == null) findDiscriminatorInfo(unionMembers) else null
+            val discriminatorField = when {
+                discriminatorResult != null && discriminatorResult.canUseDefaultPolymorphism ->
+                    discriminatorResult.fieldName
+
+                fallbackDiscriminatorInfo != null -> fallbackDiscriminatorInfo.fieldName
+                else -> null
+            }
+            registerCommonUnionProperties(schemaName, unionMembers, discriminatorField)
+        }
+
+        syntheticUnionTypesByMembers.values.forEach { syntheticUnion ->
+            val discriminatorField = findDiscriminatorInfo(syntheticUnion.members)?.fieldName
+            registerCommonUnionProperties(syntheticUnion.name, syntheticUnion.members, discriminatorField)
+        }
+
+        if (commonUnionPropertiesByParent.isNotEmpty()) {
+            logger.lifecycle(
+                "Detected common union properties: " +
+                        commonUnionPropertiesByParent.mapValues { (_, properties) ->
+                            properties.map { it.propertyName }
+                        }
+            )
+        }
+    }
+
+    private fun registerCommonUnionProperties(
+        parentName: String,
+        unionMembers: List<String>,
+        discriminatorField: String?
+    ) {
+        val commonProperties = findCommonUnionProperties(parentName, unionMembers, discriminatorField)
+        if (commonProperties.isEmpty()) return
+
+        commonUnionPropertiesByParent[parentName] = commonProperties
+        unionMembers.forEach { memberName ->
+            val names = commonUnionPropertyNamesByMember.getOrPut(memberName) { mutableSetOf() }
+            commonProperties.forEach { names.add(it.originalName) }
+        }
+    }
+
+    private fun findCommonUnionProperties(
+        parentName: String,
+        unionMembers: List<String>,
+        discriminatorField: String?
+    ): List<CommonUnionProperty> {
+        val memberInfos = unionMembers.map { memberName ->
+            val schema = allSchemas[memberName] ?: return emptyList()
+            val info = extractClassGenerationInfo(schema) ?: return emptyList()
+            memberName to info
+        }
+
+        val commonPropertyNames = memberInfos
+            .map { (_, info) -> info.properties.properties().asSequence().map { it.key }.toSet() }
+            .reduceOrNull { left, right -> left.intersect(right) }
+            .orEmpty()
+            .filter { it != discriminatorField }
+            .sorted()
+
+        return commonPropertyNames.mapNotNull { propName ->
+            val finalTypes = memberInfos.map { (memberName, info) ->
+                val propSchema = info.properties.get(propName) ?: return@mapNotNull null
+                val propType = determinePropertyType(propSchema, context = "$memberName.$propName")
+                if (info.required.contains(propName)) propType else propType.copy(nullable = true)
+            }
+
+            val nonNullableTypes = finalTypes.map { it.copy(nullable = false) }.distinct()
+            if (nonNullableTypes.size != 1) return@mapNotNull null
+
+            val descriptions = memberInfos
+                .mapNotNull { (_, info) -> info.properties.get(propName)?.get("description")?.asText() }
+                .distinct()
+            val description = descriptions.singleOrNull()
+            val propertyType = nonNullableTypes.single().copy(nullable = finalTypes.any { it.isNullable })
+
+            CommonUnionProperty(
+                originalName = propName,
+                propertyName = snakeToCamelCase(propName),
+                typeName = propertyType,
+                description = description
+            )
+        }.also { properties ->
+            if (properties.isNotEmpty()) {
+                logger.debug("Common properties for $parentName: ${properties.map { it.propertyName }}")
+            }
+        }
+    }
+
+    private fun TypeSpec.Builder.addCommonUnionProperties(interfaceName: String): TypeSpec.Builder {
+        commonUnionPropertiesByParent[interfaceName].orEmpty().forEach { property ->
+            val propertyBuilder = PropertySpec.builder(property.propertyName, property.typeName)
+            property.description?.let { propertyBuilder.addKdoc(sanitizeKDoc(it)) }
+            addProperty(propertyBuilder.build())
+        }
+        return this
+    }
+
+    private fun shouldOverrideCommonUnionProperty(className: String?, propName: String): Boolean =
+        className != null && commonUnionPropertyNamesByMember[className]?.contains(propName) == true
 
     private fun collectSyntheticUnionTypes(swagger: JsonNode) {
         fun scanSchema(schema: JsonNode?, contextName: String, description: String? = null) {
@@ -761,6 +864,13 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         val required: Set<String>
     )
 
+    private data class CommonUnionProperty(
+        val originalName: String,
+        val propertyName: String,
+        val typeName: TypeName,
+        val description: String?
+    )
+
     private data class AdditionalUnionBranch(
         val className: String,
         val schema: JsonNode,
@@ -959,11 +1069,29 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
     private fun createPropertyBuilder(
         propName: String,
         propType: TypeName,
-        propDescription: String?
+        propDescription: String?,
+        override: Boolean = false,
+        encodeDefault: Boolean = false
     ): PropertySpec.Builder {
         val camelCaseName = snakeToCamelCase(propName)
         val propertyBuilder = PropertySpec.builder(camelCaseName, propType)
             .initializer(camelCaseName)
+
+        if (override) {
+            propertyBuilder.addModifiers(KModifier.OVERRIDE)
+        }
+
+        if (encodeDefault) {
+            propertyBuilder.addAnnotation(
+                AnnotationSpec.builder(ClassName("kotlin", "OptIn"))
+                    .addMember("%T::class", ClassName("kotlinx.serialization", "ExperimentalSerializationApi"))
+                    .build()
+            )
+            propertyBuilder.addAnnotation(
+                AnnotationSpec.builder(ClassName("kotlinx.serialization", "EncodeDefault"))
+                    .build()
+            )
+        }
 
         // Add @SerialName if the property name differs from snake_case
         if (camelCaseName != propName) {
@@ -1021,7 +1149,13 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         val finalType = if (isRequired) propType else propType.copy(nullable = true)
         val propDescription = propSchema.get("description")?.asText()
 
-        val propertyBuilder = createPropertyBuilder(propName, finalType, propDescription)
+        val propertyBuilder = createPropertyBuilder(
+            propName,
+            finalType,
+            propDescription,
+            override = shouldOverrideCommonUnionProperty(className, propName),
+            encodeDefault = defaultValue != null && isRequired
+        )
         val paramBuilder = createParameterBuilder(propName, finalType, isRequired, defaultValue)
 
         constructorBuilder.addParameter(paramBuilder.build())
@@ -1040,11 +1174,18 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         propType: TypeName,
         propDescription: String?,
         isRequired: Boolean,
-        defaultValue: CodeBlock? = null
+        defaultValue: CodeBlock? = null,
+        className: String? = null
     ) {
         val finalType = if (isRequired) propType else propType.copy(nullable = true)
 
-        val propertyBuilder = createPropertyBuilder(propName, finalType, propDescription)
+        val propertyBuilder = createPropertyBuilder(
+            propName,
+            finalType,
+            propDescription,
+            override = shouldOverrideCommonUnionProperty(className, propName),
+            encodeDefault = defaultValue != null && isRequired
+        )
         val paramBuilder = createParameterBuilder(propName, finalType, isRequired, defaultValue)
 
         constructorBuilder.addParameter(paramBuilder.build())
@@ -1494,7 +1635,14 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             val hasNonRefUnionMembers = oneOf.any { it.get($$"$ref") == null }
 
             if (hasNonRefUnionMembers) {
-                generateCustomSerializedUnionInterface(packageName, className, description, oneOf, unionMembers, outputDir)
+                generateCustomSerializedUnionInterface(
+                    packageName,
+                    className,
+                    description,
+                    oneOf,
+                    unionMembers,
+                    outputDir
+                )
                 processedSchemas.add(className)
                 return
             }
@@ -1504,25 +1652,15 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
             val fallbackDiscriminatorInfo =
                 if (discriminatorResult == null) findDiscriminatorInfo(unionMembers) else null
 
-            if (discriminatorResult != null && discriminatorResult.isComplete) {
-                // Complete discriminator mapping - generate polymorphic sealed interface
+            if (discriminatorResult != null && discriminatorResult.canUseDefaultPolymorphism) {
+                // Prefer kotlinx.serialization's sealed polymorphism whenever discriminator values identify
+                // subclasses uniquely. The OpenAPI mapping may be incomplete if member schemas provide constants.
                 generatePolymorphicSealedInterface(
                     packageName,
                     className,
                     description,
                     unionMembers,
-                    discriminatorResult.info,
-                    outputDir
-                )
-            } else if (discriminatorResult != null) {
-                // Incomplete discriminator mapping - warn and generate standalone classes
-                logger.warn("Discriminator mapping mismatch for $className: oneOf has ${unionMembers.size} members but mapping has fewer entries. Generating standalone classes.")
-                generateStandaloneClassesWithDiscriminator(
-                    packageName,
-                    className,
-                    description,
-                    unionMembers,
-                    discriminatorResult.info,
+                    discriminatorResult,
                     outputDir
                 )
             } else if (fallbackDiscriminatorInfo != null) {
@@ -1536,8 +1674,18 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                     outputDir
                 )
             } else {
-                logger.warn("Cannot determine discriminator for $className with members: $unionMembers")
-                generateCustomSerializedUnionInterface(packageName, className, description, oneOf, unionMembers, outputDir)
+                val reason = discriminatorResult?.let {
+                    "discriminator '${it.fieldName}' has non-unique values ${it.memberValues.values}"
+                } ?: "no unique discriminator could be determined"
+                logger.warn("Using custom serializer for $className: $reason")
+                generateCustomSerializedUnionInterface(
+                    packageName,
+                    className,
+                    description,
+                    oneOf,
+                    unionMembers,
+                    outputDir
+                )
             }
             processedSchemas.add(className)
             return
@@ -1592,7 +1740,8 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                             propName,
                             propType,
                             propDescription,
-                            isRequired
+                            isRequired,
+                            className = className
                         )
                     }
 
@@ -1617,7 +1766,8 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                                 "attachments",
                                 attachmentsType,
                                 attachmentsDescription,
-                                false // not required
+                                false, // not required
+                                className = className
                             )
                         }
                     }
@@ -1652,48 +1802,34 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         val memberValues: Map<String, String> // memberClassName -> discriminatorValue
     )
 
-    /**
-     * Result of extracting discriminator info from the schema.
-     * Contains both the discriminator info and whether the mapping is complete.
-     */
-    private data class DiscriminatorExtractionResult(
-        val info: DiscriminatorInfo,
-        val isComplete: Boolean // true if all oneOf members are in the mapping
-    )
+    private val DiscriminatorInfo.canUseDefaultPolymorphism: Boolean
+        get() = memberValues.values.toSet().size == memberValues.size
 
     /**
      * Extract discriminator info from the OpenAPI discriminator field in the schema.
-     * 
-     * Returns a DiscriminatorExtractionResult that includes:
-     * - The discriminator info (property name and member values)
-     * - Whether the mapping is complete (all oneOf members have mappings)
-     * 
-     * For incomplete mappings (e.g., InlineQueryResult with 20 members but only 13 in mapping),
-     * we still extract values from member schemas but mark the result as incomplete.
+     *
+     * OpenAPI mappings are treated as hints. Missing values can still be recovered from member schemas when
+     * discriminator fields are modeled as constants.
      */
     private fun extractDiscriminatorFromSchema(
         schema: JsonNode,
         unionMembers: List<String>
-    ): DiscriminatorExtractionResult? {
+    ): DiscriminatorInfo? {
         val discriminator = schema.get("discriminator") ?: return null
         val propertyName = discriminator.get("propertyName")?.asText() ?: return null
         val mapping = discriminator.get("mapping")
 
         val memberValues = mutableMapOf<String, String>()
-        var mappingCount = 0
 
         // Build reverse mapping from explicit discriminator mapping: className -> discriminatorValue
         if (mapping != null && mapping.isObject) {
             mapping.properties().forEach { (discriminatorValue, ref) ->
                 val className = ref.asText().substringAfterLast("/")
-                mappingCount++
                 if (className in unionMembers) {
                     memberValues[className] = discriminatorValue
                 }
             }
         }
-
-        val isComplete = mappingCount == unionMembers.size
 
         // For members not in the mapping, try to extract discriminator value from their schema
         val missingMembers = unionMembers.filter { it !in memberValues }
@@ -1710,7 +1846,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
         // Check if we have mappings for all members
         if (memberValues.size == unionMembers.size) {
-            return DiscriminatorExtractionResult(DiscriminatorInfo(propertyName, memberValues), isComplete)
+            return DiscriminatorInfo(propertyName, memberValues)
         }
 
         // Log which members are still missing for debugging
@@ -1878,6 +2014,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                     .addMember("%T::class", ClassName("kotlinx.serialization", "ExperimentalSerializationApi"))
                     .build()
             )
+            .addCommonUnionProperties(interfaceName)
 
         if (description != null) {
             interfaceBuilder.addKdoc(sanitizeKDoc(description))
@@ -1964,142 +2101,6 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
         return classBuilder.build()
     }
 
-    /**
-     * Generate standalone classes for union types with incomplete discriminator mapping.
-     * 
-     * This is used when the discriminator mapping in the swagger spec doesn't cover all oneOf members.
-     * For example, InlineQueryResult has 20 members but only 13 in the mapping.
-     * 
-     * Generates:
-     * - An empty interface with the parent name
-     * - Each member as a standalone class (no inheritance) with:
-     *   - @Serializable annotation
-     *   - @SerialName annotation with the discriminator value
-     *   - The discriminator field included with a default value
-     * 
-     * All classes are generated in the same file named after the parent interface.
-     */
-    private fun generateStandaloneClassesWithDiscriminator(
-        packageName: String,
-        parentName: String,
-        description: String?,
-        unionMembers: List<String>,
-        discriminatorInfo: DiscriminatorInfo,
-        outputDir: File
-    ) {
-        val fileSpec = createFileSpec(packageName, parentName)
-
-        // Generate an empty sealed interface (same as a normal parent, but subclasses don't inherit from it)
-        val interfaceBuilder = TypeSpec.interfaceBuilder(parentName)
-            .addModifiers(KModifier.SEALED)
-            .addAnnotation(
-                AnnotationSpec.builder(ClassName("kotlinx.serialization", "Serializable"))
-                    .build()
-            )
-        if (description != null) {
-            interfaceBuilder.addKdoc(sanitizeKDoc(description))
-        }
-        fileSpec.addType(interfaceBuilder.build())
-
-        // Generate each member as a standalone class in the same file
-        unionMembers.forEach { memberName ->
-            if (memberName in processedSchemas) return@forEach
-
-            val memberSchema = allSchemas[memberName]
-            if (memberSchema != null) {
-                val memberClass = generateStandaloneClassWithDiscriminator(
-                    packageName,
-                    memberName,
-                    memberSchema,
-                    discriminatorInfo
-                )
-                if (memberClass != null) {
-                    fileSpec.addType(memberClass)
-                    processedSchemas.add(memberName)
-                }
-            }
-        }
-
-        fileSpec.build().writeToWithUnixLineEndings(outputDir)
-    }
-
-    /**
-     * Generate a standalone class with the discriminator field and @SerialName annotation.
-     * Returns a TypeSpec to be added to the parent file.
-     */
-    private fun generateStandaloneClassWithDiscriminator(
-        packageName: String,
-        className: String,
-        schema: JsonNode,
-        discriminatorInfo: DiscriminatorInfo
-    ): TypeSpec? {
-        val info = extractClassGenerationInfo(schema) ?: return null
-        val discriminatorValue = discriminatorInfo.memberValues[className] ?: return null
-
-        val classBuilder = TypeSpec.classBuilder(className)
-            .addModifiers(KModifier.DATA)
-            .addAdditionalUnionParentInterfaces(className, packageName)
-            .addAnnotation(
-                AnnotationSpec.builder(ClassName("kotlinx.serialization", "Serializable"))
-                    .build()
-            )
-            .addAnnotation(
-                AnnotationSpec.builder(ClassName("kotlinx.serialization", "SerialName"))
-                    .addMember("%S", discriminatorValue)
-                    .build()
-            )
-            .addKDocIfPresent(info.description)
-
-        // Add IncomingUpdate interface if this class is used in Update's optional fields
-        if (isUpdateFieldType(className)) {
-            classBuilder.addSuperinterface(ClassName(ANNOTATION_PACKAGE, INCOMING_UPDATE_INTERFACE))
-        }
-
-        val constructorBuilder = FunSpec.constructorBuilder()
-
-        // Add the discriminator field first with a default value
-        val discriminatorFieldName = discriminatorInfo.fieldName
-        val discriminatorCamelName = snakeToCamelCase(discriminatorFieldName)
-
-        // Add the discriminator property with a default value
-        val discriminatorProperty = PropertySpec.builder(discriminatorCamelName, STRING)
-            .initializer(discriminatorCamelName)
-        if (discriminatorCamelName != discriminatorFieldName) {
-            discriminatorProperty.addAnnotation(
-                AnnotationSpec.builder(ClassName("kotlinx.serialization", "SerialName"))
-                    .addMember("%S", discriminatorFieldName)
-                    .build()
-            )
-        }
-        classBuilder.addProperty(discriminatorProperty.build())
-
-        // Add discriminator parameter with default value
-        constructorBuilder.addParameter(
-            ParameterSpec.builder(discriminatorCamelName, STRING)
-                .defaultValue("%S", discriminatorValue)
-                .build()
-        )
-
-        // Add other properties (skip the discriminator field since we already added it)
-        info.properties.properties().forEach { (propName, propSchema) ->
-            if (propName == discriminatorFieldName) {
-                return@forEach
-            }
-
-            addPropertyWithParameter(
-                classBuilder,
-                constructorBuilder,
-                propName,
-                propSchema,
-                info.required.contains(propName),
-                className
-            )
-        }
-
-        classBuilder.primaryConstructor(constructorBuilder.build())
-        return classBuilder.build()
-    }
-
     private fun generateSyntheticUnionInterfaces(outputDir: File) {
         syntheticUnionTypesByMembers.values.forEach { syntheticUnion ->
             val discriminatorInfo = findDiscriminatorInfo(syntheticUnion.members)
@@ -2140,6 +2141,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                     .addMember("%T::class", ClassName("kotlinx.serialization", "ExperimentalSerializationApi"))
                     .build()
             )
+            .addCommonUnionProperties(syntheticUnion.name)
             .addKDocIfPresent(syntheticUnion.description)
 
         fileSpec.addType(interfaceBuilder.build())
@@ -2168,6 +2170,7 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
                     .addMember("with = %T::class", ClassName(packageName, serializerName))
                     .build()
             )
+            .addCommonUnionProperties(interfaceName)
 
         if (description != null) {
             interfaceBuilder.addKdoc(sanitizeKDoc(description))
@@ -2499,7 +2502,8 @@ abstract class GenerateKtorfitInterfacesTask : DefaultTask() {
 
         val description = field.get("description")?.asText() ?: return null
 
-        val quotedPattern = Regex("(?i)(?:always|must be)\\s+[\"\\u201c\\u201d]([^\"\\u201c\\u201d]+)[\"\\u201c\\u201d]")
+        val quotedPattern =
+            Regex("(?i)(?:always|must be)\\s+[\"\\u201c\\u201d]([^\"\\u201c\\u201d]+)[\"\\u201c\\u201d]")
         quotedPattern.find(description)?.let { return it.groupValues[1] }
 
         val numberPattern = """(?i)(?:always|must be)\s+(-?\d+(?:\.\d+)?)\b""".toRegex()

@@ -17,7 +17,12 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 @Serializable
 @JsonClassDiscriminator("status")
 @OptIn(ExperimentalSerializationApi::class)
-public sealed interface ChatMember
+public sealed interface ChatMember {
+    /**
+     * Information about the user
+     */
+    public val user: User
+}
 
 /**
  * Represents a chat member that owns the chat and has all administrator privileges.
@@ -28,7 +33,7 @@ public data class ChatMemberOwner(
     /**
      * Information about the user
      */
-    public val user: User,
+    override val user: User,
     /**
      * *True*, if the user's presence in the chat is hidden
      */
@@ -50,7 +55,7 @@ public data class ChatMemberAdministrator(
     /**
      * Information about the user
      */
-    public val user: User,
+    override val user: User,
     /**
      * *True*, if the bot is allowed to edit administrator privileges of that user
      */
@@ -161,7 +166,7 @@ public data class ChatMemberMember(
     /**
      * Information about the user
      */
-    public val user: User,
+    override val user: User,
     /**
      * *Optional*. Date when the user's subscription will expire; Unix time
      */
@@ -182,7 +187,7 @@ public data class ChatMemberRestricted(
     /**
      * Information about the user
      */
-    public val user: User,
+    override val user: User,
     /**
      * *True*, if the user is a member of the chat at the moment of the request
      */
@@ -284,7 +289,7 @@ public data class ChatMemberLeft(
     /**
      * Information about the user
      */
-    public val user: User,
+    override val user: User,
 ) : ChatMember
 
 /**
@@ -296,7 +301,7 @@ public data class ChatMemberBanned(
     /**
      * Information about the user
      */
-    public val user: User,
+    override val user: User,
     /**
      * Date when restrictions will be lifted for this user; Unix time. If 0, then the user is banned forever.
      */

@@ -18,7 +18,7 @@ public data class Message(
      * Unique message identifier inside this chat. In specific instances (e.g., message containing a video sent to a big chat), the server might automatically schedule a message instead of sending it immediately. In such cases, this field will be 0 and the relevant message will be unusable until it is actually sent.
      */
     @SerialName("message_id")
-    public val messageId: Long,
+    override val messageId: Long,
     /**
      * *Optional*. Unique identifier of a message thread or forum topic to which the message belongs; for supergroups and private chats only
      */
@@ -56,7 +56,7 @@ public data class Message(
     /**
      * Date the message was sent in Unix time. It is always a positive number, representing a valid date.
      */
-    public val date: Long,
+    override val date: Long,
     /**
      * *Optional*. The unique identifier for the guest query. Use this identifier with the method [answerGuestQuery](https://core.telegram.org/bots/api#answerguestquery) to send a response message. If non-empty, the message belongs to the chat where the guest bot was summoned, which may not coincide with other existing bot chats sharing the same identifier.
      */
@@ -70,7 +70,7 @@ public data class Message(
     /**
      * Chat the message belongs to
      */
-    public val chat: Chat,
+    override val chat: Chat,
     /**
      * *Optional*. Information about the original message for forwarded messages
      */

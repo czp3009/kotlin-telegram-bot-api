@@ -5,6 +5,8 @@ import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
@@ -55,6 +57,8 @@ public data class RichTextBold(
     /**
      * Type of the rich text, always “bold”
      */
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
     public val type: String = "bold",
     /**
      * The text
@@ -70,6 +74,8 @@ public data class RichTextItalic(
     /**
      * Type of the rich text, always “italic”
      */
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
     public val type: String = "italic",
     /**
      * The text
@@ -85,6 +91,8 @@ public data class RichTextUnderline(
     /**
      * Type of the rich text, always “underline”
      */
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
     public val type: String = "underline",
     /**
      * The text
@@ -100,6 +108,8 @@ public data class RichTextStrikethrough(
     /**
      * Type of the rich text, always “strikethrough”
      */
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
     public val type: String = "strikethrough",
     /**
      * The text
@@ -115,6 +125,8 @@ public data class RichTextSpoiler(
     /**
      * Type of the rich text, always “spoiler”
      */
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
     public val type: String = "spoiler",
     /**
      * The text
@@ -130,6 +142,8 @@ public data class RichTextDateTime(
     /**
      * Type of the rich text, always “date_time”
      */
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
     public val type: String = "date_time",
     /**
      * The text
@@ -155,6 +169,8 @@ public data class RichTextTextMention(
     /**
      * Type of the rich text, always “text_mention”
      */
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
     public val type: String = "text_mention",
     /**
      * The text
@@ -174,6 +190,8 @@ public data class RichTextSubscript(
     /**
      * Type of the rich text, always “subscript”
      */
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
     public val type: String = "subscript",
     /**
      * The text
@@ -189,6 +207,8 @@ public data class RichTextSuperscript(
     /**
      * Type of the rich text, always “superscript”
      */
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
     public val type: String = "superscript",
     /**
      * The text
@@ -204,6 +224,8 @@ public data class RichTextMarked(
     /**
      * Type of the rich text, always “marked”
      */
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
     public val type: String = "marked",
     /**
      * The text
@@ -219,6 +241,8 @@ public data class RichTextCode(
     /**
      * Type of the rich text, always “code”
      */
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
     public val type: String = "code",
     /**
      * The text
@@ -234,6 +258,8 @@ public data class RichTextCustomEmoji(
     /**
      * Type of the rich text, always “custom_emoji”
      */
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
     public val type: String = "custom_emoji",
     /**
      * Unique identifier of the custom emoji. Use [getCustomEmojiStickers](https://core.telegram.org/bots/api#getcustomemojistickers) to get full information about the sticker.
@@ -255,6 +281,8 @@ public data class RichTextMathematicalExpression(
     /**
      * Type of the rich text, always “mathematical_expression”
      */
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
     public val type: String = "mathematical_expression",
     /**
      * The expression in LaTeX format
@@ -270,6 +298,8 @@ public data class RichTextUrl(
     /**
      * Type of the rich text, always “url”
      */
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
     public val type: String = "url",
     /**
      * The text
@@ -289,6 +319,8 @@ public data class RichTextEmailAddress(
     /**
      * Type of the rich text, always “email_address”
      */
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
     public val type: String = "email_address",
     /**
      * The text
@@ -309,6 +341,8 @@ public data class RichTextPhoneNumber(
     /**
      * Type of the rich text, always “phone_number”
      */
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
     public val type: String = "phone_number",
     /**
      * The text
@@ -329,6 +363,8 @@ public data class RichTextBankCardNumber(
     /**
      * Type of the rich text, always “bank_card_number”
      */
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
     public val type: String = "bank_card_number",
     /**
      * The text
@@ -349,6 +385,8 @@ public data class RichTextMention(
     /**
      * Type of the rich text, always “mention”
      */
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
     public val type: String = "mention",
     /**
      * The text
@@ -368,6 +406,8 @@ public data class RichTextHashtag(
     /**
      * Type of the rich text, always “hashtag”
      */
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
     public val type: String = "hashtag",
     /**
      * The text
@@ -387,6 +427,8 @@ public data class RichTextCashtag(
     /**
      * Type of the rich text, always “cashtag”
      */
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
     public val type: String = "cashtag",
     /**
      * The text
@@ -406,6 +448,8 @@ public data class RichTextBotCommand(
     /**
      * Type of the rich text, always “bot_command”
      */
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
     public val type: String = "bot_command",
     /**
      * The text
@@ -426,6 +470,8 @@ public data class RichTextAnchor(
     /**
      * Type of the rich text, always “anchor”
      */
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
     public val type: String = "anchor",
     /**
      * The name of the anchor
@@ -441,6 +487,8 @@ public data class RichTextAnchorLink(
     /**
      * Type of the rich text, always “anchor_link”
      */
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
     public val type: String = "anchor_link",
     /**
      * The link text
@@ -461,6 +509,8 @@ public data class RichTextReference(
     /**
      * Type of the rich text, always “reference”
      */
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
     public val type: String = "reference",
     /**
      * Text of the reference
@@ -480,6 +530,8 @@ public data class RichTextReferenceLink(
     /**
      * Type of the rich text, always “reference_link”
      */
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
     public val type: String = "reference_link",
     /**
      * The link text

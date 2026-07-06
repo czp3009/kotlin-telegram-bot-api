@@ -18,7 +18,24 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 @Serializable
 @JsonClassDiscriminator("type")
 @OptIn(ExperimentalSerializationApi::class)
-public sealed interface OwnedGift
+public sealed interface OwnedGift {
+    /**
+     * *Optional*. *True*, if the gift is displayed on the account's profile page; for gifts received on behalf of business accounts only
+     */
+    public val isSaved: Boolean?
+
+    public val ownedGiftId: String?
+
+    /**
+     * Date the gift was sent in Unix time
+     */
+    public val sendDate: Long
+
+    /**
+     * *Optional*. Sender of the gift if it is a known user
+     */
+    public val senderUser: User?
+}
 
 /**
  * Describes a regular gift owned by a user or a chat.
@@ -34,17 +51,17 @@ public data class OwnedGiftRegular(
      * *Optional*. Unique identifier of the gift for the bot; for gifts received on behalf of business accounts only
      */
     @SerialName("owned_gift_id")
-    public val ownedGiftId: String? = null,
+    override val ownedGiftId: String? = null,
     /**
      * *Optional*. Sender of the gift if it is a known user
      */
     @SerialName("sender_user")
-    public val senderUser: User? = null,
+    override val senderUser: User? = null,
     /**
      * Date the gift was sent in Unix time
      */
     @SerialName("send_date")
-    public val sendDate: Long,
+    override val sendDate: Long,
     /**
      * *Optional*. Text of the message that was added to the gift
      */
@@ -62,7 +79,7 @@ public data class OwnedGiftRegular(
      * *Optional*. *True*, if the gift is displayed on the account's profile page; for gifts received on behalf of business accounts only
      */
     @SerialName("is_saved")
-    public val isSaved: Boolean? = null,
+    override val isSaved: Boolean? = null,
     /**
      * *Optional*. *True*, if the gift can be upgraded to a unique gift; for gifts received on behalf of business accounts only
      */
@@ -109,22 +126,22 @@ public data class OwnedGiftUnique(
      * *Optional*. Unique identifier of the received gift for the bot; for gifts received on behalf of business accounts only
      */
     @SerialName("owned_gift_id")
-    public val ownedGiftId: String? = null,
+    override val ownedGiftId: String? = null,
     /**
      * *Optional*. Sender of the gift if it is a known user
      */
     @SerialName("sender_user")
-    public val senderUser: User? = null,
+    override val senderUser: User? = null,
     /**
      * Date the gift was sent in Unix time
      */
     @SerialName("send_date")
-    public val sendDate: Long,
+    override val sendDate: Long,
     /**
      * *Optional*. *True*, if the gift is displayed on the account's profile page; for gifts received on behalf of business accounts only
      */
     @SerialName("is_saved")
-    public val isSaved: Boolean? = null,
+    override val isSaved: Boolean? = null,
     /**
      * *Optional*. *True*, if the gift can be transferred to another owner; for gifts received on behalf of business accounts only
      */

@@ -23,6 +23,8 @@ import com.hiczp.telegram.bot.application.dispatcher.handler.matcher.onMessageEv
 import com.hiczp.telegram.bot.application.dispatcher.handler.matcher.whenMessageEventPhoto
 import com.hiczp.telegram.bot.application.dispatcher.handler.matcher.whenMessageEventSticker
 import com.hiczp.telegram.bot.protocol.constant.ChatAction
+import com.hiczp.telegram.bot.protocol.extension.asInputFile
+import com.hiczp.telegram.bot.protocol.extension.largestPhoto
 import com.hiczp.telegram.bot.protocol.type.InputFile
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
@@ -96,10 +98,10 @@ private suspend fun runFileBot(botToken: String) {
 
             // Echo photo
             whenMessageEventPhoto {
-                val photo = event.message.photo!!.maxByOrNull { it.fileSize ?: 0 }
+                val photo = event.message.largestPhoto
                 if (photo != null) {
                     replyPhoto(
-                        photo = InputFile.reference(photo.fileId),
+                        photo = photo.asInputFile(),
                         caption = "Echoed photo!\nFile ID: ${photo.fileId}"
                     )
                 } else {

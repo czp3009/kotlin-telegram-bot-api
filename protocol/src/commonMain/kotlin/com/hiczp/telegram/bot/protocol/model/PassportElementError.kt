@@ -16,7 +16,14 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 @Serializable
 @JsonClassDiscriminator("source")
 @OptIn(ExperimentalSerializationApi::class)
-public sealed interface PassportElementError
+public sealed interface PassportElementError {
+    /**
+     * Error message
+     */
+    public val message: String
+
+    public val type: String
+}
 
 /**
  * Represents an issue in one of the data fields that was provided by the user. The error is considered resolved when the field's value changes.
@@ -27,7 +34,7 @@ public data class PassportElementErrorDataField(
     /**
      * The section of the user's Telegram Passport which has the error, one of “personal_details”, “passport”, “driver_license”, “identity_card”, “internal_passport”, “address”
      */
-    public val type: String,
+    override val type: String,
     /**
      * Name of the data field which has the error
      */
@@ -41,7 +48,7 @@ public data class PassportElementErrorDataField(
     /**
      * Error message
      */
-    public val message: String,
+    override val message: String,
 ) : PassportElementError
 
 /**
@@ -53,7 +60,7 @@ public data class PassportElementErrorFrontSide(
     /**
      * The section of the user's Telegram Passport which has the issue, one of “passport”, “driver_license”, “identity_card”, “internal_passport”
      */
-    public val type: String,
+    override val type: String,
     /**
      * Base64-encoded hash of the file with the front side of the document
      */
@@ -62,7 +69,7 @@ public data class PassportElementErrorFrontSide(
     /**
      * Error message
      */
-    public val message: String,
+    override val message: String,
 ) : PassportElementError
 
 /**
@@ -74,7 +81,7 @@ public data class PassportElementErrorReverseSide(
     /**
      * The section of the user's Telegram Passport which has the issue, one of “driver_license”, “identity_card”
      */
-    public val type: String,
+    override val type: String,
     /**
      * Base64-encoded hash of the file with the reverse side of the document
      */
@@ -83,7 +90,7 @@ public data class PassportElementErrorReverseSide(
     /**
      * Error message
      */
-    public val message: String,
+    override val message: String,
 ) : PassportElementError
 
 /**
@@ -95,7 +102,7 @@ public data class PassportElementErrorSelfie(
     /**
      * The section of the user's Telegram Passport which has the issue, one of “passport”, “driver_license”, “identity_card”, “internal_passport”
      */
-    public val type: String,
+    override val type: String,
     /**
      * Base64-encoded hash of the file with the selfie
      */
@@ -104,7 +111,7 @@ public data class PassportElementErrorSelfie(
     /**
      * Error message
      */
-    public val message: String,
+    override val message: String,
 ) : PassportElementError
 
 /**
@@ -116,7 +123,7 @@ public data class PassportElementErrorFile(
     /**
      * The section of the user's Telegram Passport which has the issue, one of “utility_bill”, “bank_statement”, “rental_agreement”, “passport_registration”, “temporary_registration”
      */
-    public val type: String,
+    override val type: String,
     /**
      * Base64-encoded file hash
      */
@@ -125,7 +132,7 @@ public data class PassportElementErrorFile(
     /**
      * Error message
      */
-    public val message: String,
+    override val message: String,
 ) : PassportElementError
 
 /**
@@ -137,7 +144,7 @@ public data class PassportElementErrorFiles(
     /**
      * The section of the user's Telegram Passport which has the issue, one of “utility_bill”, “bank_statement”, “rental_agreement”, “passport_registration”, “temporary_registration”
      */
-    public val type: String,
+    override val type: String,
     /**
      * List of base64-encoded file hashes
      */
@@ -146,7 +153,7 @@ public data class PassportElementErrorFiles(
     /**
      * Error message
      */
-    public val message: String,
+    override val message: String,
 ) : PassportElementError
 
 /**
@@ -158,7 +165,7 @@ public data class PassportElementErrorTranslationFile(
     /**
      * Type of element of the user's Telegram Passport which has the issue, one of “passport”, “driver_license”, “identity_card”, “internal_passport”, “utility_bill”, “bank_statement”, “rental_agreement”, “passport_registration”, “temporary_registration”
      */
-    public val type: String,
+    override val type: String,
     /**
      * Base64-encoded file hash
      */
@@ -167,7 +174,7 @@ public data class PassportElementErrorTranslationFile(
     /**
      * Error message
      */
-    public val message: String,
+    override val message: String,
 ) : PassportElementError
 
 /**
@@ -179,7 +186,7 @@ public data class PassportElementErrorTranslationFiles(
     /**
      * Type of element of the user's Telegram Passport which has the issue, one of “passport”, “driver_license”, “identity_card”, “internal_passport”, “utility_bill”, “bank_statement”, “rental_agreement”, “passport_registration”, “temporary_registration”
      */
-    public val type: String,
+    override val type: String,
     /**
      * List of base64-encoded file hashes
      */
@@ -188,7 +195,7 @@ public data class PassportElementErrorTranslationFiles(
     /**
      * Error message
      */
-    public val message: String,
+    override val message: String,
 ) : PassportElementError
 
 /**
@@ -200,7 +207,7 @@ public data class PassportElementErrorUnspecified(
     /**
      * Type of element of the user's Telegram Passport which has the issue
      */
-    public val type: String,
+    override val type: String,
     /**
      * Base64-encoded element hash
      */
@@ -209,5 +216,5 @@ public data class PassportElementErrorUnspecified(
     /**
      * Error message
      */
-    public val message: String,
+    override val message: String,
 ) : PassportElementError

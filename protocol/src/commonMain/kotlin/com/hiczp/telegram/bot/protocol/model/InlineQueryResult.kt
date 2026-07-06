@@ -7,6 +7,8 @@ import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
@@ -31,7 +33,16 @@ import kotlinx.serialization.json.decodeFromJsonElement
  * Note: All URLs passed in inline query results will be available to end users and therefore must be assumed to be public.
  */
 @Serializable(with = InlineQueryResultSerializer::class)
-public sealed interface InlineQueryResult
+public sealed interface InlineQueryResult {
+    public val id: String
+
+    /**
+     * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
+     */
+    public val replyMarkup: InlineKeyboardMarkup?
+
+    public val type: String
+}
 
 /**
  * Represents a link to an MP3 audio file stored on the Telegram servers. By default, this audio file will be sent by the user. Alternatively, you can use input_message_content to send a message with the specified content instead of the audio.
@@ -41,11 +52,13 @@ public data class InlineQueryResultCachedAudio(
     /**
      * Type of the result, must be *audio*
      */
-    public val type: String = "audio",
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
+    override val type: String = "audio",
     /**
      * Unique identifier for this result, 1-64 bytes
      */
-    public val id: String,
+    override val id: String,
     /**
      * A valid file identifier for the audio file
      */
@@ -69,7 +82,7 @@ public data class InlineQueryResultCachedAudio(
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: InlineKeyboardMarkup? = null,
+    override val replyMarkup: InlineKeyboardMarkup? = null,
     /**
      * *Optional*. Content of the message to be sent instead of the audio
      */
@@ -85,11 +98,13 @@ public data class InlineQueryResultCachedDocument(
     /**
      * Type of the result, must be *document*
      */
-    public val type: String = "document",
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
+    override val type: String = "document",
     /**
      * Unique identifier for this result, 1-64 bytes
      */
-    public val id: String,
+    override val id: String,
     /**
      * Title for the result
      */
@@ -121,7 +136,7 @@ public data class InlineQueryResultCachedDocument(
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: InlineKeyboardMarkup? = null,
+    override val replyMarkup: InlineKeyboardMarkup? = null,
     /**
      * *Optional*. Content of the message to be sent instead of the file
      */
@@ -137,11 +152,13 @@ public data class InlineQueryResultCachedGif(
     /**
      * Type of the result, must be *gif*
      */
-    public val type: String = "gif",
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
+    override val type: String = "gif",
     /**
      * Unique identifier for this result, 1-64 bytes
      */
-    public val id: String,
+    override val id: String,
     /**
      * A valid file identifier for the GIF file
      */
@@ -174,7 +191,7 @@ public data class InlineQueryResultCachedGif(
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: InlineKeyboardMarkup? = null,
+    override val replyMarkup: InlineKeyboardMarkup? = null,
     /**
      * *Optional*. Content of the message to be sent instead of the GIF animation
      */
@@ -190,11 +207,13 @@ public data class InlineQueryResultCachedMpeg4Gif(
     /**
      * Type of the result, must be *mpeg4_gif*
      */
-    public val type: String = "mpeg4_gif",
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
+    override val type: String = "mpeg4_gif",
     /**
      * Unique identifier for this result, 1-64 bytes
      */
-    public val id: String,
+    override val id: String,
     /**
      * A valid file identifier for the MPEG4 file
      */
@@ -227,7 +246,7 @@ public data class InlineQueryResultCachedMpeg4Gif(
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: InlineKeyboardMarkup? = null,
+    override val replyMarkup: InlineKeyboardMarkup? = null,
     /**
      * *Optional*. Content of the message to be sent instead of the video animation
      */
@@ -243,11 +262,13 @@ public data class InlineQueryResultCachedPhoto(
     /**
      * Type of the result, must be *photo*
      */
-    public val type: String = "photo",
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
+    override val type: String = "photo",
     /**
      * Unique identifier for this result, 1-64 bytes
      */
-    public val id: String,
+    override val id: String,
     /**
      * A valid file identifier of the photo
      */
@@ -284,7 +305,7 @@ public data class InlineQueryResultCachedPhoto(
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: InlineKeyboardMarkup? = null,
+    override val replyMarkup: InlineKeyboardMarkup? = null,
     /**
      * *Optional*. Content of the message to be sent instead of the photo
      */
@@ -300,11 +321,13 @@ public data class InlineQueryResultCachedSticker(
     /**
      * Type of the result, must be *sticker*
      */
-    public val type: String = "sticker",
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
+    override val type: String = "sticker",
     /**
      * Unique identifier for this result, 1-64 bytes
      */
-    public val id: String,
+    override val id: String,
     /**
      * A valid file identifier of the sticker
      */
@@ -314,7 +337,7 @@ public data class InlineQueryResultCachedSticker(
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: InlineKeyboardMarkup? = null,
+    override val replyMarkup: InlineKeyboardMarkup? = null,
     /**
      * *Optional*. Content of the message to be sent instead of the sticker
      */
@@ -330,11 +353,13 @@ public data class InlineQueryResultCachedVideo(
     /**
      * Type of the result, must be *video*
      */
-    public val type: String = "video",
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
+    override val type: String = "video",
     /**
      * Unique identifier for this result, 1-64 bytes
      */
-    public val id: String,
+    override val id: String,
     /**
      * A valid file identifier for the video file
      */
@@ -371,7 +396,7 @@ public data class InlineQueryResultCachedVideo(
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: InlineKeyboardMarkup? = null,
+    override val replyMarkup: InlineKeyboardMarkup? = null,
     /**
      * *Optional*. Content of the message to be sent instead of the video
      */
@@ -387,11 +412,13 @@ public data class InlineQueryResultCachedVoice(
     /**
      * Type of the result, must be *voice*
      */
-    public val type: String = "voice",
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
+    override val type: String = "voice",
     /**
      * Unique identifier for this result, 1-64 bytes
      */
-    public val id: String,
+    override val id: String,
     /**
      * A valid file identifier for the voice message
      */
@@ -419,7 +446,7 @@ public data class InlineQueryResultCachedVoice(
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: InlineKeyboardMarkup? = null,
+    override val replyMarkup: InlineKeyboardMarkup? = null,
     /**
      * *Optional*. Content of the message to be sent instead of the voice message
      */
@@ -435,11 +462,13 @@ public data class InlineQueryResultArticle(
     /**
      * Type of the result, must be *article*
      */
-    public val type: String = "article",
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
+    override val type: String = "article",
     /**
      * Unique identifier for this result, 1-64 Bytes
      */
-    public val id: String,
+    override val id: String,
     /**
      * Title of the result
      */
@@ -453,7 +482,7 @@ public data class InlineQueryResultArticle(
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: InlineKeyboardMarkup? = null,
+    override val replyMarkup: InlineKeyboardMarkup? = null,
     /**
      * *Optional*. URL of the result
      */
@@ -487,11 +516,13 @@ public data class InlineQueryResultAudio(
     /**
      * Type of the result, must be *audio*
      */
-    public val type: String = "audio",
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
+    override val type: String = "audio",
     /**
      * Unique identifier for this result, 1-64 bytes
      */
-    public val id: String,
+    override val id: String,
     /**
      * A valid URL for the audio file
      */
@@ -528,7 +559,7 @@ public data class InlineQueryResultAudio(
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: InlineKeyboardMarkup? = null,
+    override val replyMarkup: InlineKeyboardMarkup? = null,
     /**
      * *Optional*. Content of the message to be sent instead of the audio
      */
@@ -544,11 +575,13 @@ public data class InlineQueryResultContact(
     /**
      * Type of the result, must be *contact*
      */
-    public val type: String = "contact",
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
+    override val type: String = "contact",
     /**
      * Unique identifier for this result, 1-64 Bytes
      */
-    public val id: String,
+    override val id: String,
     /**
      * Contact's phone number
      */
@@ -572,7 +605,7 @@ public data class InlineQueryResultContact(
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: InlineKeyboardMarkup? = null,
+    override val replyMarkup: InlineKeyboardMarkup? = null,
     /**
      * *Optional*. Content of the message to be sent instead of the contact
      */
@@ -603,11 +636,13 @@ public data class InlineQueryResultGame(
     /**
      * Type of the result, must be *game*
      */
-    public val type: String = "game",
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
+    override val type: String = "game",
     /**
      * Unique identifier for this result, 1-64 bytes
      */
-    public val id: String,
+    override val id: String,
     /**
      * Short name of the game
      */
@@ -617,7 +652,7 @@ public data class InlineQueryResultGame(
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: InlineKeyboardMarkup? = null,
+    override val replyMarkup: InlineKeyboardMarkup? = null,
 ) : InlineQueryResult
 
 /**
@@ -628,11 +663,13 @@ public data class InlineQueryResultDocument(
     /**
      * Type of the result, must be *document*
      */
-    public val type: String = "document",
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
+    override val type: String = "document",
     /**
      * Unique identifier for this result, 1-64 bytes
      */
-    public val id: String,
+    override val id: String,
     /**
      * Title for the result
      */
@@ -669,7 +706,7 @@ public data class InlineQueryResultDocument(
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: InlineKeyboardMarkup? = null,
+    override val replyMarkup: InlineKeyboardMarkup? = null,
     /**
      * *Optional*. Content of the message to be sent instead of the file
      */
@@ -700,11 +737,13 @@ public data class InlineQueryResultGif(
     /**
      * Type of the result, must be *gif*
      */
-    public val type: String = "gif",
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
+    override val type: String = "gif",
     /**
      * Unique identifier for this result, 1-64 bytes
      */
-    public val id: String,
+    override val id: String,
     /**
      * A valid URL for the GIF file
      */
@@ -762,7 +801,7 @@ public data class InlineQueryResultGif(
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: InlineKeyboardMarkup? = null,
+    override val replyMarkup: InlineKeyboardMarkup? = null,
     /**
      * *Optional*. Content of the message to be sent instead of the GIF animation
      */
@@ -778,11 +817,13 @@ public data class InlineQueryResultLocation(
     /**
      * Type of the result, must be *location*
      */
-    public val type: String = "location",
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
+    override val type: String = "location",
     /**
      * Unique identifier for this result, 1-64 Bytes
      */
-    public val id: String,
+    override val id: String,
     /**
      * Location latitude in degrees
      */
@@ -818,7 +859,7 @@ public data class InlineQueryResultLocation(
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: InlineKeyboardMarkup? = null,
+    override val replyMarkup: InlineKeyboardMarkup? = null,
     /**
      * *Optional*. Content of the message to be sent instead of the location
      */
@@ -849,11 +890,13 @@ public data class InlineQueryResultMpeg4Gif(
     /**
      * Type of the result, must be *mpeg4_gif*
      */
-    public val type: String = "mpeg4_gif",
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
+    override val type: String = "mpeg4_gif",
     /**
      * Unique identifier for this result, 1-64 bytes
      */
-    public val id: String,
+    override val id: String,
     /**
      * A valid URL for the MPEG4 file
      */
@@ -911,7 +954,7 @@ public data class InlineQueryResultMpeg4Gif(
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: InlineKeyboardMarkup? = null,
+    override val replyMarkup: InlineKeyboardMarkup? = null,
     /**
      * *Optional*. Content of the message to be sent instead of the video animation
      */
@@ -927,11 +970,13 @@ public data class InlineQueryResultPhoto(
     /**
      * Type of the result, must be *photo*
      */
-    public val type: String = "photo",
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
+    override val type: String = "photo",
     /**
      * Unique identifier for this result, 1-64 bytes
      */
-    public val id: String,
+    override val id: String,
     /**
      * A valid URL of the photo. Photo must be in **JPEG** format. Photo size must not exceed 5MB.
      */
@@ -983,7 +1028,7 @@ public data class InlineQueryResultPhoto(
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: InlineKeyboardMarkup? = null,
+    override val replyMarkup: InlineKeyboardMarkup? = null,
     /**
      * *Optional*. Content of the message to be sent instead of the photo
      */
@@ -999,11 +1044,13 @@ public data class InlineQueryResultVenue(
     /**
      * Type of the result, must be *venue*
      */
-    public val type: String = "venue",
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
+    override val type: String = "venue",
     /**
      * Unique identifier for this result, 1-64 Bytes
      */
-    public val id: String,
+    override val id: String,
     /**
      * Latitude of the venue location in degrees
      */
@@ -1044,7 +1091,7 @@ public data class InlineQueryResultVenue(
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: InlineKeyboardMarkup? = null,
+    override val replyMarkup: InlineKeyboardMarkup? = null,
     /**
      * *Optional*. Content of the message to be sent instead of the venue
      */
@@ -1076,11 +1123,13 @@ public data class InlineQueryResultVideo(
     /**
      * Type of the result, must be *video*
      */
-    public val type: String = "video",
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
+    override val type: String = "video",
     /**
      * Unique identifier for this result, 1-64 bytes
      */
-    public val id: String,
+    override val id: String,
     /**
      * A valid URL for the embedded video player or video file
      */
@@ -1142,7 +1191,7 @@ public data class InlineQueryResultVideo(
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: InlineKeyboardMarkup? = null,
+    override val replyMarkup: InlineKeyboardMarkup? = null,
     /**
      * *Optional*. Content of the message to be sent instead of the video. This field is **required** if InlineQueryResultVideo is used to send an HTML-page as a result (e.g., a YouTube video).
      */
@@ -1158,11 +1207,13 @@ public data class InlineQueryResultVoice(
     /**
      * Type of the result, must be *voice*
      */
-    public val type: String = "voice",
+    @OptIn(ExperimentalSerializationApi::class)
+    @EncodeDefault
+    override val type: String = "voice",
     /**
      * Unique identifier for this result, 1-64 bytes
      */
-    public val id: String,
+    override val id: String,
     /**
      * A valid URL for the voice recording
      */
@@ -1195,7 +1246,7 @@ public data class InlineQueryResultVoice(
      * *Optional*. [Inline keyboard](https://core.telegram.org/bots/features#inline-keyboards) attached to the message
      */
     @SerialName("reply_markup")
-    public val replyMarkup: InlineKeyboardMarkup? = null,
+    override val replyMarkup: InlineKeyboardMarkup? = null,
     /**
      * *Optional*. Content of the message to be sent instead of the voice recording
      */

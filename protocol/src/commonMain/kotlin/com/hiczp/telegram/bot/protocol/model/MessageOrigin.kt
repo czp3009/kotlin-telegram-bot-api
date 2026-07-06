@@ -16,7 +16,12 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 @Serializable
 @JsonClassDiscriminator("type")
 @OptIn(ExperimentalSerializationApi::class)
-public sealed interface MessageOrigin
+public sealed interface MessageOrigin {
+    /**
+     * Date the message was sent originally in Unix time
+     */
+    public val date: Long
+}
 
 /**
  * The message was originally sent by a known user.
@@ -27,7 +32,7 @@ public data class MessageOriginUser(
     /**
      * Date the message was sent originally in Unix time
      */
-    public val date: Long,
+    override val date: Long,
     /**
      * User that sent the message originally
      */
@@ -44,7 +49,7 @@ public data class MessageOriginHiddenUser(
     /**
      * Date the message was sent originally in Unix time
      */
-    public val date: Long,
+    override val date: Long,
     /**
      * Name of the user that sent the message originally
      */
@@ -61,7 +66,7 @@ public data class MessageOriginChat(
     /**
      * Date the message was sent originally in Unix time
      */
-    public val date: Long,
+    override val date: Long,
     /**
      * Chat that sent the message originally
      */
@@ -83,7 +88,7 @@ public data class MessageOriginChannel(
     /**
      * Date the message was sent originally in Unix time
      */
-    public val date: Long,
+    override val date: Long,
     /**
      * Channel chat to which the message was originally sent
      */
